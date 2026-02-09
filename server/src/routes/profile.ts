@@ -152,12 +152,13 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
             }
 
             if (userEmail) {
-                await sendPasswordChangeEmail({
+                // Send email in background without blocking the response
+                sendPasswordChangeEmail({
                     userEmail,
                     userName,
                     username: user.username,
-                    newPassword: newPassword  // Include the new password
-                });
+                    newPassword: newPassword
+                }).catch(err => console.error('Background email error:', err));
             }
         } catch (emailError) {
             console.error('Failed to send password change email:', emailError);
