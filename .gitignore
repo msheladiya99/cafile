@@ -53,3 +53,10 @@ server/uploads/
 *credentials*.json
 *.key
 *.pem
+
+node_modules
+dist
+.env
+uploads
+*.log
+.DS_Store
