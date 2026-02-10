@@ -48,7 +48,7 @@ export const adminService = {
     },
 
     deleteFile: async (fileId: string): Promise<void> => {
-        await api.delete(`/admin/files/${fileId}`);
+        await api.delete(`/files/${fileId}`);
     },
 
     getClientCredentials: async (clientId: string): Promise<{ username: string; note: string }> => {
@@ -66,7 +66,7 @@ export const adminService = {
     },
 
     downloadFile: async (fileId: string, fileName: string): Promise<void> => {
-        const response = await api.get(`/admin/download/${fileId}`, {
+        const response = await api.get(`/files/${fileId}/download`, {
             responseType: 'blob',
         });
 
