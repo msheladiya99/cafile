@@ -7,8 +7,9 @@ node_modules/
 /coverage
 
 # Production
-/build
-/dist
+/build/
+/dist/
+/out/
 
 # Environment variables
 .env
@@ -29,6 +30,7 @@ lerna-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # IDE
 .vscode/
@@ -53,10 +55,3 @@ server/uploads/
 *credentials*.json
 *.key
 *.pem
-
-node_modules
-dist
-.env
-uploads
-*.log
-.DS_Store
