@@ -131,41 +131,49 @@ export const UploadFile: React.FC = () => {
         setError('');
         setLoading(true);
 
+        // Process files in batches to avoid overwhelming the server/browser
+        const BATCH_SIZE = 3;
+        const filesToProcess = selectedFiles.map((file, index) => ({ file, index })).filter(({ file }) => file.status !== 'success');
         const updatedFiles = [...selectedFiles];
 
-        for (let i = 0; i < updatedFiles.length; i++) {
-            if (updatedFiles[i].status === 'success') continue;
+        for (let i = 0; i < filesToProcess.length; i += BATCH_SIZE) {
+            const batch = filesToProcess.slice(i, i + BATCH_SIZE);
 
-            updatedFiles[i] = { ...updatedFiles[i], status: 'uploading' };
-            setSelectedFiles([...updatedFiles]);
+            await Promise.all(batch.map(async ({ file: item, index }) => {
+                updatedFiles[index] = { ...updatedFiles[index], status: 'uploading' };
+                setSelectedFiles([...updatedFiles]);
 
-            try {
-                const formData = new FormData();
-                formData.append('file', updatedFiles[i].file);
-                formData.append('clientId', selectedClient);
-                if (category !== 'USER_DOCS') {
-                    formData.append('year', year);
+                try {
+                    const formData = new FormData();
+                    formData.append('file', item.file);
+                    formData.append('clientId', selectedClient);
+                    formData.append('category', category);
+
+                    if (category !== 'USER_DOCS') {
+                        formData.append('year', year);
+                    }
+                    if (category === 'GST') {
+                        if (month) formData.append('month', month);
+                        if (docType) formData.append('docType', docType);
+                    }
+
+                    formData.append('fileName', item.file.name);
+                    formData.append('useGoogleDrive', 'true');
+
+                    await adminService.uploadFile(formData);
+
+                    updatedFiles[index] = { ...updatedFiles[index], status: 'success', message: 'Uploaded' };
+                } catch (err: unknown) {
+                    console.error('Upload Error:', err);
+                    const message = err instanceof AxiosError
+                        ? err.response?.data?.message || 'Failed'
+                        : 'Failed';
+                    updatedFiles[index] = { ...updatedFiles[index], status: 'error', message };
                 }
-                if (category === 'GST') {
-                    if (month) formData.append('month', month);
-                    if (docType) formData.append('docType', docType);
-                }
-                formData.append('category', category);
-                formData.append('fileName', updatedFiles[i].file.name);
-                formData.append('useGoogleDrive', 'true');
 
-                await adminService.uploadFile(formData);
-
-                updatedFiles[i] = { ...updatedFiles[i], status: 'success', message: 'Uploaded' };
-            } catch (err: unknown) {
-                console.error('Upload Error:', err);
-                const message = err instanceof AxiosError
-                    ? err.response?.data?.message || 'Failed'
-                    : 'Failed';
-                updatedFiles[i] = { ...updatedFiles[i], status: 'error', message };
-            }
-
-            setSelectedFiles([...updatedFiles]);
+                // Update state to reflect progress
+                setSelectedFiles([...updatedFiles]);
+            }));
         }
 
         setLoading(false);
