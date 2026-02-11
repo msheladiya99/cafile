@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SocketProvider } from './contexts/SocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { AdminLayout } from './layouts/AdminLayout';
@@ -172,9 +171,7 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
-            <SocketProvider>
-              <AppRoutes />
-            </SocketProvider>
+            <AppRoutes />
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

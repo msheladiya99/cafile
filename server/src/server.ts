@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
 import { connectDB } from './config/database';
-import { socketService } from './services/socketService';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import clientRoutes from './routes/client';
@@ -74,15 +73,11 @@ const startServer = async () => {
         // Connect to database
         await connectDB();
 
-        // Initialize Socket.io
-        socketService.initialize(httpServer);
-
         // Start listening
         httpServer.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🌐 API URL: http://localhost:${PORT}/api`);
-            console.log(`🔌 WebSocket server ready`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);

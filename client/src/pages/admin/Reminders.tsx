@@ -25,6 +25,10 @@ import {
     Card,
     CardContent,
     CircularProgress,
+    useMediaQuery,
+    useTheme,
+    Stack,
+    Divider,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -201,6 +205,8 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
 
 export const Reminders: React.FC = () => {
     const queryClient = useQueryClient();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const { data: reminders = [], isLoading: isLoadingReminders } = useQuery<Reminder[]>({
         queryKey: ['reminders'],
@@ -216,7 +222,7 @@ export const Reminders: React.FC = () => {
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-    const [filter, setFilter] = useState('ALL');
+    const [filter, setFilter] = useState('PENDING');
     const [notifying, setNotifying] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
@@ -308,8 +314,14 @@ export const Reminders: React.FC = () => {
     };
 
     const filteredReminders = reminders.filter(r => {
+        // Check if reminder is overdue
+        const isOverdue = r.status === 'OVERDUE' || (r.status === 'PENDING' && new Date(r.dueDate) < new Date());
+
         if (filter === 'ALL') return true;
-        if (filter === 'OVERDUE') return r.status === 'OVERDUE' || (r.status === 'PENDING' && new Date(r.dueDate) < new Date());
+        if (filter === 'OVERDUE') return isOverdue;
+        if (filter === 'PENDING') return r.status === 'PENDING' && !isOverdue; // Only show non-overdue pending
+        if (filter === 'COMPLETED') return r.status === 'COMPLETED';
+
         return r.status === filter;
     });
 
@@ -320,8 +332,15 @@ export const Reminders: React.FC = () => {
 
     return (
         <Box sx={{ py: 3, px: { xs: 2, md: 4 } }}>
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={4}>
-                <Box>
+            <Box
+                display="flex"
+                flexDirection={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', md: 'flex-start' }}
+                gap={{ xs: 2, md: 0 }}
+                mb={4}
+            >
+                <Box mb={{ xs: 2, md: 0 }}>
                     <Typography variant="h4" fontWeight="700" gutterBottom>
                         Reminders & Deadlines
                     </Typography>
@@ -329,13 +348,19 @@ export const Reminders: React.FC = () => {
                         Manage ITR, GST, and other filing deadlines for your clients.
                     </Typography>
                 </Box>
-                <Box display="flex" gap={2}>
+                <Box
+                    display="flex"
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    gap={2}
+                    width={{ xs: '100%', md: 'auto' }}
+                >
                     <Button
                         variant="outlined"
                         startIcon={notifying ? <CircularProgress size={20} /> : <NotificationsIcon />}
                         disabled={notifying}
                         onClick={handleSendNotifications}
                         sx={{
+                            width: { xs: '100%', sm: 'auto' },
                             borderRadius: 2,
                             textTransform: 'none',
                             fontWeight: 600,
@@ -357,6 +382,7 @@ export const Reminders: React.FC = () => {
                             setDialogOpen(true);
                         }}
                         sx={{
+                            width: { xs: '100%', sm: 'auto' },
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             borderRadius: 2,
                             px: 3,
@@ -419,108 +445,97 @@ export const Reminders: React.FC = () => {
             </Grid>
 
             <Paper sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box p={2.5} display="flex" justifyContent="space-between" alignItems="center" borderBottom="1px solid #f0f0f0">
-                    <Box display="flex" gap={1}>
-                        <FilterIcon sx={{ color: 'text.secondary', mr: 1 }} />
+                <Box
+                    p={{ xs: 2, md: 2.5 }}
+                    display="flex"
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    gap={{ xs: 1.5, sm: 0 }}
+                    borderBottom="1px solid #f0f0f0"
+                >
+                    <Box
+                        display="flex"
+                        gap={1}
+                        alignItems="center"
+                        sx={{
+                            overflowX: 'auto',
+                            width: { xs: '100%', sm: 'auto' },
+                            pb: { xs: 0.5, sm: 0 },
+                            '&::-webkit-scrollbar': {
+                                height: '4px',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '4px',
+                            },
+                        }}
+                    >
+                        <FilterIcon sx={{ color: 'text.secondary', mr: { xs: 0, sm: 1 }, flexShrink: 0 }} />
                         <Chip
                             label="All"
                             onClick={() => setFilter('ALL')}
                             color={filter === 'ALL' ? 'primary' : 'default'}
                             variant={filter === 'ALL' ? 'filled' : 'outlined'}
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 600, flexShrink: 0 }}
                         />
                         <Chip
                             label="Pending"
                             onClick={() => setFilter('PENDING')}
                             color={filter === 'PENDING' ? 'primary' : 'default'}
                             variant={filter === 'PENDING' ? 'filled' : 'outlined'}
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 600, flexShrink: 0 }}
                         />
                         <Chip
                             label="Overdue"
                             onClick={() => setFilter('OVERDUE')}
                             color={filter === 'OVERDUE' ? 'error' : 'default'}
                             variant={filter === 'OVERDUE' ? 'filled' : 'outlined'}
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 600, flexShrink: 0 }}
                         />
                         <Chip
                             label="Completed"
                             onClick={() => setFilter('COMPLETED')}
                             color={filter === 'COMPLETED' ? 'success' : 'default'}
                             variant={filter === 'COMPLETED' ? 'filled' : 'outlined'}
-                            sx={{ fontWeight: 600 }}
+                            sx={{ fontWeight: 600, flexShrink: 0 }}
                         />
                     </Box>
                 </Box>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: '#fbfbfb' }}>
-                                <TableCell sx={{ fontWeight: 700 }}>Task / Title</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Client</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Priority</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {isLoading ? (
-                                [1, 2, 3, 4, 5].map((i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={7}><Skeleton height={40} /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : filteredReminders.map((reminder) => (
-                                <TableRow key={reminder._id} hover>
-                                    <TableCell>
-                                        <Typography variant="subtitle2" fontWeight="700">{reminder.title}</Typography>
-                                        {reminder.description && (
-                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200, display: 'block' }}>
-                                                {reminder.description}
-                                            </Typography>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" fontWeight="600">{(reminder.clientId as Client)?.name || 'Unknown Client'}</Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                            <EventIcon sx={{ color: 'text.secondary', fontSize: '1rem' }} />
-                                            <Typography variant="body2">
-                                                {new Date(reminder.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={reminder.reminderType}
-                                            size="small"
-                                            variant="outlined"
-                                            sx={{ fontWeight: 600, borderRadius: 1.5 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={reminder.priority}
-                                            size="small"
-                                            color={getPriorityColor(reminder.priority)}
-                                            sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: '0.65rem' }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={reminder.status}
-                                            size="small"
-                                            color={getStatusColor(reminder.status, reminder.dueDate)}
-                                            sx={{ fontWeight: 700, borderRadius: 1.5 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
-                                            {reminder.status !== 'COMPLETED' && (
-                                                <Tooltip title="Mark Complete">
+                {isMobile ? (
+                    <Box sx={{ p: 2, bgcolor: '#f8fafc' }}>
+                        {isLoading ? (
+                            [1, 2, 3].map((i) => <Skeleton key={i} height={180} sx={{ mb: 2, borderRadius: 3 }} />)
+                        ) : filteredReminders.length === 0 ? (
+                            <Box display="flex" flexDirection="column" alignItems="center" py={8} color="text.secondary">
+                                <EventIcon sx={{ fontSize: 60, mb: 2, opacity: 0.2 }} />
+                                <Typography variant="h6" fontWeight="600" color="text.secondary" gutterBottom>
+                                    No reminders found
+                                </Typography>
+                                <Typography variant="body2">
+                                    {filter === 'ALL' ? 'Start by creating your first reminder.' : `No reminders match the "${filter}" filter.`}
+                                </Typography>
+                            </Box>
+                        ) : (
+                            filteredReminders.map((reminder) => (
+                                <Card key={reminder._id} sx={{ mb: 2, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
+                                            <Box flex={1}>
+                                                <Typography variant="subtitle1" fontWeight={700} color="text.primary" mb={0.5}>
+                                                    {reminder.title}
+                                                </Typography>
+                                                {reminder.description && (
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                                        {reminder.description}
+                                                    </Typography>
+                                                )}
+                                                <Typography variant="body2" fontWeight={600} color="primary.main">
+                                                    {(reminder.clientId as Client)?.name || 'Unknown Client'}
+                                                </Typography>
+                                            </Box>
+                                            <Stack direction="row" spacing={0.5}>
+                                                {reminder.status !== 'COMPLETED' && (
                                                     <IconButton
                                                         size="small"
                                                         color="success"
@@ -528,9 +543,7 @@ export const Reminders: React.FC = () => {
                                                     >
                                                         <CheckCircleIcon fontSize="small" />
                                                     </IconButton>
-                                                </Tooltip>
-                                            )}
-                                            <Tooltip title="Edit">
+                                                )}
                                                 <IconButton
                                                     size="small"
                                                     color="primary"
@@ -541,8 +554,6 @@ export const Reminders: React.FC = () => {
                                                 >
                                                     <EditIcon fontSize="small" />
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Delete">
                                                 <IconButton
                                                     size="small"
                                                     color="error"
@@ -550,29 +561,166 @@ export const Reminders: React.FC = () => {
                                                 >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
-                                            </Tooltip>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {filteredReminders.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
-                                        <Box display="flex" flexDirection="column" alignItems="center" color="text.secondary">
-                                            <EventIcon sx={{ fontSize: 60, mb: 2, opacity: 0.2 }} />
-                                            <Typography variant="h6" fontWeight="600" color="text.secondary" gutterBottom>
-                                                No reminders found
+                                            </Stack>
+                                        </Stack>
+
+                                        <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
+
+                                        <Stack direction="row" spacing={1} mb={1.5} flexWrap="wrap" gap={1}>
+                                            <Chip
+                                                label={reminder.reminderType}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontWeight: 600, borderRadius: 1.5 }}
+                                            />
+                                            <Chip
+                                                label={reminder.priority}
+                                                size="small"
+                                                color={getPriorityColor(reminder.priority)}
+                                                sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: '0.65rem' }}
+                                            />
+                                            <Chip
+                                                label={reminder.status}
+                                                size="small"
+                                                color={getStatusColor(reminder.status, reminder.dueDate)}
+                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                            />
+                                        </Stack>
+
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <EventIcon sx={{ color: 'text.secondary', fontSize: '1rem' }} />
+                                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                                Due: {new Date(reminder.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </Typography>
-                                            <Typography variant="body2">
-                                                {filter === 'ALL' ? 'Start by creating your first reminder.' : `No reminders match the "${filter}" filter.`}
-                                            </Typography>
                                         </Box>
-                                    </TableCell>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </Box>
+                ) : (
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: '#fbfbfb' }}>
+                                    <TableCell sx={{ fontWeight: 700 }}>Task / Title</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Client</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Priority</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {isLoading ? (
+                                    [1, 2, 3, 4, 5].map((i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={7}><Skeleton height={40} /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : filteredReminders.map((reminder) => (
+                                    <TableRow key={reminder._id} hover>
+                                        <TableCell>
+                                            <Typography variant="subtitle2" fontWeight="700">{reminder.title}</Typography>
+                                            {reminder.description && (
+                                                <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200, display: 'block' }}>
+                                                    {reminder.description}
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="600">{(reminder.clientId as Client)?.name || 'Unknown Client'}</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <EventIcon sx={{ color: 'text.secondary', fontSize: '1rem' }} />
+                                                <Typography variant="body2">
+                                                    {new Date(reminder.dueDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </Typography>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={reminder.reminderType}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontWeight: 600, borderRadius: 1.5 }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={reminder.priority}
+                                                size="small"
+                                                color={getPriorityColor(reminder.priority)}
+                                                sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: '0.65rem' }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={reminder.status}
+                                                size="small"
+                                                color={getStatusColor(reminder.status, reminder.dueDate)}
+                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                            />
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                                                {reminder.status !== 'COMPLETED' && (
+                                                    <Tooltip title="Mark Complete">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="success"
+                                                            onClick={() => handleComplete(reminder._id)}
+                                                        >
+                                                            <CheckCircleIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                                <Tooltip title="Edit">
+                                                    <IconButton
+                                                        size="small"
+                                                        color="primary"
+                                                        onClick={() => {
+                                                            setEditingReminder(reminder);
+                                                            setDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Delete">
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleDelete(reminder._id)}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {filteredReminders.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                                            <Box display="flex" flexDirection="column" alignItems="center" color="text.secondary">
+                                                <EventIcon sx={{ fontSize: 60, mb: 2, opacity: 0.2 }} />
+                                                <Typography variant="h6" fontWeight="600" color="text.secondary" gutterBottom>
+                                                    No reminders found
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    {filter === 'ALL' ? 'Start by creating your first reminder.' : `No reminders match the "${filter}" filter.`}
+                                                </Typography>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
             </Paper>
 
             <ReminderDialog

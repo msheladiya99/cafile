@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Container,
     Typography,
@@ -178,25 +178,25 @@ const ServiceDialog: React.FC<{
     onSubmit: (data: Partial<ServiceItem>) => void;
     initialData?: ServiceItem | null;
 }> = ({ open, onClose, onSubmit, initialData }) => {
-    const [formData, setFormData] = useState(() => ({
-        name: initialData?.name || '',
-        description: initialData?.description || '',
-        basePrice: initialData?.basePrice || 0,
-        category: (initialData?.category || 'ITR') as 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER',
-        isActive: initialData?.isActive ?? true,
-    }));
+    const getInitialState = (data: ServiceItem | null | undefined) => ({
+        name: data?.name || '',
+        description: data?.description || '',
+        basePrice: data?.basePrice || 0,
+        category: (data?.category || 'ITR') as 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER',
+        isActive: data?.isActive ?? true,
+    });
 
-    useEffect(() => {
+    const [formData, setFormData] = useState(() => getInitialState(initialData));
+    const [prevOpen, setPrevOpen] = useState(open);
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+
+    if (open !== prevOpen || initialData !== prevInitialData) {
+        setPrevOpen(open);
+        setPrevInitialData(initialData);
         if (open) {
-            setFormData({
-                name: initialData?.name || '',
-                description: initialData?.description || '',
-                basePrice: initialData?.basePrice || 0,
-                category: (initialData?.category || 'ITR') as 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER',
-                isActive: initialData?.isActive ?? true,
-            });
+            setFormData(getInitialState(initialData));
         }
-    }, [open, initialData]);
+    }
 
 
 
@@ -285,27 +285,26 @@ const InvoiceDialog: React.FC<{
     services: ServiceItem[];
     initialData?: Invoice | null;
 }> = ({ open, onClose, onSubmit, clients, services, initialData }) => {
-    const [formData, setFormData] = useState(() => ({
-        clientId: '',
-        dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-        invoiceNumber: '',
-        items: [] as InvoiceItem[],
-        notes: '',
-        tax: 0,
-    }));
+    const getInitialState = (data: Invoice | null | undefined) => ({
+        clientId: data ? (typeof data.clientId === 'object' ? data.clientId._id : data.clientId) : '',
+        dueDate: data?.dueDate ? data.dueDate.split('T')[0] : new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        invoiceNumber: data?.invoiceNumber || '',
+        items: data?.items || [],
+        notes: data?.notes || '',
+        tax: data?.tax || 0,
+    });
 
-    useEffect(() => {
+    const [formData, setFormData] = useState(() => getInitialState(initialData));
+    const [prevOpen, setPrevOpen] = useState(open);
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+
+    if (open !== prevOpen || initialData !== prevInitialData) {
+        setPrevOpen(open);
+        setPrevInitialData(initialData);
         if (open) {
-            setFormData({
-                clientId: initialData ? (typeof initialData.clientId === 'object' ? initialData.clientId._id : initialData.clientId) : '',
-                dueDate: initialData?.dueDate ? initialData.dueDate.split('T')[0] : new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-                invoiceNumber: initialData?.invoiceNumber || '',
-                items: initialData?.items || [],
-                notes: initialData?.notes || '',
-                tax: initialData?.tax || 0,
-            });
+            setFormData(getInitialState(initialData));
         }
-    }, [open, initialData]);
+    }
 
 
 
@@ -904,11 +903,11 @@ export const Billing: React.FC = () => {
                                             <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
 
                                             <Grid container spacing={2} sx={{ mb: 2 }}>
-                                                <Grid item xs={6}>
+                                                <Grid size={{ xs: 6 }}>
                                                     <Typography variant="caption" color="text.secondary">Total</Typography>
                                                     <Typography variant="body2" fontWeight={700}>₹{inv.totalAmount.toLocaleString()}</Typography>
                                                 </Grid>
-                                                <Grid item xs={6}>
+                                                <Grid size={{ xs: 6 }}>
                                                     <Typography variant="caption" color="text.secondary">Balance</Typography>
                                                     <Typography variant="body2" fontWeight={700} color="error.main">₹{inv.balanceAmount.toLocaleString()}</Typography>
                                                 </Grid>
