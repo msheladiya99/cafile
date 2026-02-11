@@ -33,6 +33,7 @@ import {
     Menu as MenuIcon,
     Assessment as ReportsIcon,
     Settings as SettingsIcon,
+    Inventory as InventoryIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
@@ -78,6 +79,7 @@ export const AdminLayout: React.FC = () => {
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
+        { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
         ...(isAdmin ? [{ text: 'Company Settings', icon: <SettingsIcon />, path: '/admin/settings' }] : []),
     ];
 

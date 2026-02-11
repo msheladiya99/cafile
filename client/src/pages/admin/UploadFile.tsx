@@ -198,7 +198,7 @@ export const UploadFile: React.FC = () => {
                             <CardContent sx={{ p: 4 }}>
                                 <Typography variant="h6" fontWeight={700} sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                     <StorageIcon color="primary" />
-                                    Upload Context
+                                    Upload Files
                                 </Typography>
 
                                 <Stack spacing={4}>
@@ -379,7 +379,6 @@ export const UploadFile: React.FC = () => {
                                 multiple
                                 style={{ display: 'none' }}
                                 onChange={handleFileChange}
-                                accept=".pdf,.xlsx,.xls,.doc,.docx,.jpg,.jpeg,.png"
                             />
 
                             <Zoom in={true}>
@@ -395,12 +394,12 @@ export const UploadFile: React.FC = () => {
                             </Zoom>
 
                             <Typography variant="h5" fontWeight={800} color="text.primary" gutterBottom>
-                                {dragActive ? "Release to stage files" : "Drop files to automate"}
+                                {dragActive ? "Release to stage files" : "Drop files to upload"}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
                                 Drag and drop files here, or click to browse your system<br />
                                 <Typography variant="caption" sx={{ mt: 1, opacity: 0.7 }}>
-                                    Supports PDF, Excel, Word & Images (Max 25MB)
+                                    Supports all file types (Max 25MB per file)
                                 </Typography>
                             </Typography>
 

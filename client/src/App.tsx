@@ -16,6 +16,7 @@ import { UploadFile } from './pages/admin/UploadFile';
 import { ManageFiles } from './pages/admin/ManageFiles';
 import { Reminders } from './pages/admin/Reminders';
 import { Billing } from './pages/admin/Billing';
+import { FileRegister } from './pages/admin/FileRegister';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
 import { ClientDashboard } from './pages/client/Dashboard';
 import { ClientInvoices } from './pages/client/Invoices';
@@ -116,6 +117,7 @@ const AppRoutes: React.FC = () => {
         <Route path="reminders" element={<Reminders />} />
 
         <Route path="billing" element={<Billing />} />
+        <Route path="fileregister" element={<FileRegister />} />
 
         <Route
           path="settings"

@@ -7,6 +7,8 @@ export interface Client {
     panNumber?: string;
     aadharNumber?: string;
     gstNumber?: string;
+    physicalFileNumber?: string;
+    rackLocation?: string;
 }
 
 export interface CreateClientData {

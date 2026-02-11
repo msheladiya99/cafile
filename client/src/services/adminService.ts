@@ -19,6 +19,11 @@ export const adminService = {
         return response.data;
     },
 
+    updateClient: async (id: string, data: Partial<Client>): Promise<Client> => {
+        const response = await api.patch(`/admin/clients/${id}`, data);
+        return response.data;
+    },
+
     uploadFile: async (formData: FormData): Promise<FileData> => {
         const response = await api.post('/files/upload', formData, {
             headers: {

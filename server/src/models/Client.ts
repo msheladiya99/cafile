@@ -14,6 +14,9 @@ export interface IClient extends Document {
     panNumber?: string;
     aadharNumber?: string;
     gstNumber?: string;
+    // Office File Tracking
+    physicalFileNumber?: string;
+    rackLocation?: string;
 }
 
 const clientSchema = new Schema<IClient>({
@@ -63,6 +66,16 @@ const clientSchema = new Schema<IClient>({
         type: String,
         trim: true,
         uppercase: true
+    },
+    // Office File Tracking
+    physicalFileNumber: {
+        type: String,
+        trim: true,
+        uppercase: true
+    },
+    rackLocation: {
+        type: String,
+        trim: true
     }
 });
 

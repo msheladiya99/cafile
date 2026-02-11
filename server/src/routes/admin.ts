@@ -129,6 +129,35 @@ router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Update client details (Admin and Manager only)
+router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        // Prevent updating sensitive fields directly
+        delete updates.password;
+        delete updates.createdAt;
+        delete updates._id;
+
+        const client = await Client.findByIdAndUpdate(
+            id,
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+
+        if (!client) {
+            res.status(404).json({ message: 'Client not found' });
+            return;
+        }
+
+        res.json(client);
+    } catch (error) {
+        console.error('Update client error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Upload file for client
 router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
