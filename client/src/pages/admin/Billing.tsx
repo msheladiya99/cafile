@@ -25,6 +25,12 @@ import {
     Divider,
     Menu,
     ListItemIcon,
+    useMediaQuery,
+    useTheme,
+    Card,
+    CardContent,
+    Stack,
+    alpha,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -531,6 +537,8 @@ const DeleteConfirmationDialog: React.FC<{
 
 export const Billing: React.FC = () => {
     const queryClient = useQueryClient();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [activeTab, setActiveTab] = useState(0);
 
     const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery<Invoice[]>({
@@ -789,17 +797,29 @@ export const Billing: React.FC = () => {
                 ))}
             </Grid>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                justifyContent: 'space-between',
+                alignItems: { xs: 'stretch', md: 'center' },
+                mb: 3,
+                gap: 2
+            }}>
                 <Tabs
                     value={activeTab}
                     onChange={(_: React.SyntheticEvent, val: number) => setActiveTab(val)}
+                    variant="standard"
                     sx={{
+                        width: { xs: '100%', md: 'auto' },
+                        borderBottom: { xs: 1, md: 'none' },
+                        borderColor: { xs: 'divider', md: 'transparent' },
                         '& .MuiTab-root': {
                             fontWeight: 600,
                             textTransform: 'none',
                             fontSize: '1rem',
-                            minWidth: 100,
-                            mr: 2
+                            minWidth: { xs: 'auto', md: 100 },
+                            mr: { xs: 0, md: 2 },
+                            flex: { xs: 1, md: 'none' },
                         },
                         '& .Mui-selected': { color: '#667eea' },
                         '& .MuiTabs-indicator': { backgroundColor: '#667eea', height: 3, borderRadius: 3 }
@@ -809,8 +829,9 @@ export const Billing: React.FC = () => {
                     <Tab label="Services Library" />
                 </Tabs>
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
                     <Button
+                        fullWidth
                         variant="outlined"
                         startIcon={<ServiceIcon />}
                         onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
@@ -819,12 +840,14 @@ export const Billing: React.FC = () => {
                             textTransform: 'none',
                             borderColor: '#e0e0e0',
                             color: 'text.primary',
-                            '&:hover': { borderColor: '#bdbdbd', bgcolor: '#f5f5f5' }
+                            '&:hover': { borderColor: '#bdbdbd', bgcolor: '#f5f5f5' },
+                            whiteSpace: 'nowrap'
                         }}
                     >
                         Manage Services
                     </Button>
                     <Button
+                        fullWidth
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setInvoiceDialogOpen(true)}
@@ -833,7 +856,8 @@ export const Billing: React.FC = () => {
                             textTransform: 'none',
                             borderRadius: 2,
                             boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                            '&:hover': { boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)' }
+                            '&:hover': { boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)' },
+                            whiteSpace: 'nowrap'
                         }}
                     >
                         New Invoice
@@ -848,113 +872,222 @@ export const Billing: React.FC = () => {
                 border: '1px solid #f0f0f0'
             }}>
                 {activeTab === 0 && (
-                    <TableContainer>
-                        <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
-                            <TableHead sx={{ bgcolor: '#f8f9fa' }}>
-                                <TableRow>
-                                    {['Invoice #', 'Client', 'Date', 'Due Date', 'Total', 'Paid', 'Balance', 'Status', 'Actions'].map((head) => (
-                                        <TableCell key={head} sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.85rem' }}>{head}</TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    [1, 2, 3, 4, 5].map((i) => (
-                                        <TableRow key={i}>
-                                            <TableCell colSpan={9}><Skeleton height={40} /></TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : invoices.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
-                                            <Box display="flex" flexDirection="column" alignItems="center">
-                                                <Typography color="text.secondary" variant="h6">No invoices found</Typography>
-                                                <Typography color="text.disabled" variant="body2">Create your first invoice to get started</Typography>
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    invoices.map((inv) => (
-                                        <TableRow key={inv._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
-                                            <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{inv.invoiceNumber}</TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={500}>{inv.clientId?.name}</Typography>
-                                                <Typography variant="caption" color="text.secondary">{inv.clientId?.email}</Typography>
-                                            </TableCell>
-                                            <TableCell>{new Date(inv.issueDate).toLocaleDateString()}</TableCell>
-                                            <TableCell>{new Date(inv.dueDate).toLocaleDateString()}</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>₹{inv.totalAmount.toLocaleString()}</TableCell>
-                                            <TableCell sx={{ color: 'success.main' }}>₹{inv.paidAmount.toLocaleString()}</TableCell>
-                                            <TableCell sx={{ color: 'error.main', fontWeight: 500 }}>₹{inv.balanceAmount.toLocaleString()}</TableCell>
-                                            <TableCell>
+                    isMobile ? (
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc' }}>
+                            {isLoading ? (
+                                [1, 2, 3].map((i) => <Skeleton key={i} height={150} sx={{ mb: 2, borderRadius: 3 }} />)
+                            ) : invoices.length === 0 ? (
+                                <Box display="flex" flexDirection="column" alignItems="center" py={4}>
+                                    <Typography color="text.secondary" variant="subtitle1">No invoices found</Typography>
+                                </Box>
+                            ) : (
+                                invoices.map((inv) => (
+                                    <Card key={inv._id} sx={{ mb: 2, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                                                <Box>
+                                                    <Typography variant="subtitle1" fontWeight={700} color="primary.main">
+                                                        {inv.invoiceNumber}
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600} color="text.primary">
+                                                        {inv.clientId?.name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {new Date(inv.issueDate).toLocaleDateString()}
+                                                    </Typography>
+                                                </Box>
+                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, inv)}>
+                                                    <MoreVertIcon fontSize="small" />
+                                                </IconButton>
+                                            </Stack>
+
+                                            <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
+
+                                            <Grid container spacing={2} sx={{ mb: 2 }}>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="caption" color="text.secondary">Total</Typography>
+                                                    <Typography variant="body2" fontWeight={700}>₹{inv.totalAmount.toLocaleString()}</Typography>
+                                                </Grid>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="caption" color="text.secondary">Balance</Typography>
+                                                    <Typography variant="body2" fontWeight={700} color="error.main">₹{inv.balanceAmount.toLocaleString()}</Typography>
+                                                </Grid>
+                                            </Grid>
+
+                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
                                                 <Chip
                                                     label={inv.status}
                                                     size="small"
                                                     color={getStatusColor(inv.status)}
-                                                    sx={{ fontWeight: 600, borderRadius: 2 }}
+                                                    sx={{ borderRadius: 1.5, fontWeight: 600, height: 24 }}
                                                 />
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, inv)}>
-                                                    <MoreVertIcon fontSize="small" />
-                                                </IconButton>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                                    Due: {new Date(inv.dueDate).toLocaleDateString()}
+                                                </Typography>
+                                            </Stack>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </Box>
+                    ) : (
+                        <TableContainer>
+                            <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
+                                <TableHead sx={{ bgcolor: '#f8f9fa' }}>
+                                    <TableRow>
+                                        {['Invoice #', 'Client', 'Date', 'Due Date', 'Total', 'Paid', 'Balance', 'Status', 'Actions'].map((head) => (
+                                            <TableCell key={head} sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.85rem' }}>{head}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {isLoading ? (
+                                        [1, 2, 3, 4, 5].map((i) => (
+                                            <TableRow key={i}>
+                                                <TableCell colSpan={9}><Skeleton height={40} /></TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : invoices.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
+                                                <Box display="flex" flexDirection="column" alignItems="center">
+                                                    <Typography color="text.secondary" variant="h6">No invoices found</Typography>
+                                                    <Typography color="text.disabled" variant="body2">Create your first invoice to get started</Typography>
+                                                </Box>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        invoices.map((inv) => (
+                                            <TableRow key={inv._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
+                                                <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{inv.invoiceNumber}</TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" fontWeight={500}>{inv.clientId?.name}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">{inv.clientId?.email}</Typography>
+                                                </TableCell>
+                                                <TableCell>{new Date(inv.issueDate).toLocaleDateString()}</TableCell>
+                                                <TableCell>{new Date(inv.dueDate).toLocaleDateString()}</TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }}>₹{inv.totalAmount.toLocaleString()}</TableCell>
+                                                <TableCell sx={{ color: 'success.main' }}>₹{inv.paidAmount.toLocaleString()}</TableCell>
+                                                <TableCell sx={{ color: 'error.main', fontWeight: 500 }}>₹{inv.balanceAmount.toLocaleString()}</TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={inv.status}
+                                                        size="small"
+                                                        color={getStatusColor(inv.status)}
+                                                        sx={{ fontWeight: 600, borderRadius: 2 }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, inv)}>
+                                                        <MoreVertIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )
                 )}
 
                 {activeTab === 1 && (
-                    <TableContainer>
-                        <Table sx={{ minWidth: { xs: 650, md: 'auto' } }}>
-                            <TableHead sx={{ bgcolor: '#f8f9fa' }}>
-                                <TableRow>
-                                    {['Service Name', 'Category', 'Base Price', 'Description', 'Status', 'Actions'].map((head) => (
-                                        <TableCell key={head} sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.85rem' }}>{head}</TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    [1, 2, 3, 4, 5].map((i) => (
-                                        <TableRow key={i}>
-                                            <TableCell colSpan={6}><Skeleton height={40} /></TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : services.map((service) => (
-                                    <TableRow key={service._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
-                                        <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{service.name}</TableCell>
-                                        <TableCell>
-                                            <Chip label={service.category} size="small" sx={{ borderRadius: 1.5, bgcolor: '#f5f5f5', fontWeight: 500 }} />
-                                        </TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>₹{service.basePrice.toLocaleString()}</TableCell>
-                                        <TableCell sx={{ maxWidth: 350, color: 'text.secondary' }}>
-                                            <Typography variant="body2" noWrap>{service.description}</Typography>
-                                        </TableCell>
-                                        <TableCell>
+                    isMobile ? (
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc' }}>
+                            {isLoading ? (
+                                [1, 2, 3].map((i) => <Skeleton key={i} height={120} sx={{ mb: 2, borderRadius: 3 }} />)
+                            ) : services.map((service) => (
+                                <Card key={service._id} sx={{ mb: 2, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
+                                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                                            <Box>
+                                                <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                                                    {service.name}
+                                                </Typography>
+                                                <Chip
+                                                    label={service.category}
+                                                    size="small"
+                                                    sx={{ mt: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontSize: '0.7rem', fontWeight: 600 }}
+                                                />
+                                            </Box>
+                                            <Stack direction="row" spacing={0}>
+                                                <IconButton size="small" onClick={() => { setEditingService(service); setServiceDialogOpen(true); }} sx={{ color: 'primary.main' }}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton size="small" color="error" onClick={() => handleDeleteService(service._id!)}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Stack>
+                                        </Stack>
+
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                            {service.description}
+                                        </Typography>
+
+                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                            <Typography variant="h6" fontWeight={700} color="primary.main">
+                                                ₹{service.basePrice.toLocaleString()}
+                                            </Typography>
                                             <Box display="flex" alignItems="center" gap={1}>
                                                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: service.isActive ? 'success.main' : 'text.disabled' }} />
-                                                <Typography variant="body2" color={service.isActive ? 'success.main' : 'text.secondary'} fontWeight={500}>
+                                                <Typography variant="caption" color={service.isActive ? 'success.main' : 'text.secondary'} fontWeight={600}>
                                                     {service.isActive ? 'Active' : 'Inactive'}
                                                 </Typography>
                                             </Box>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <IconButton size="small" onClick={() => { setEditingService(service); setServiceDialogOpen(true); }} sx={{ color: 'primary.main', mr: 1 }}>
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => handleDeleteService(service._id!)}>
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </TableCell>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </Box>
+                    ) : (
+                        <TableContainer>
+                            <Table sx={{ minWidth: { xs: 650, md: 'auto' } }}>
+                                <TableHead sx={{ bgcolor: '#f8f9fa' }}>
+                                    <TableRow>
+                                        {['Service Name', 'Category', 'Base Price', 'Description', 'Status', 'Actions'].map((head) => (
+                                            <TableCell key={head} sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.85rem' }}>{head}</TableCell>
+                                        ))}
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                </TableHead>
+                                <TableBody>
+                                    {isLoading ? (
+                                        [1, 2, 3, 4, 5].map((i) => (
+                                            <TableRow key={i}>
+                                                <TableCell colSpan={6}><Skeleton height={40} /></TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : services.map((service) => (
+                                        <TableRow key={service._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{service.name}</TableCell>
+                                            <TableCell>
+                                                <Chip label={service.category} size="small" sx={{ borderRadius: 1.5, bgcolor: '#f5f5f5', fontWeight: 500 }} />
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>₹{service.basePrice.toLocaleString()}</TableCell>
+                                            <TableCell sx={{ maxWidth: 350, color: 'text.secondary' }}>
+                                                <Typography variant="body2" noWrap>{service.description}</Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box display="flex" alignItems="center" gap={1}>
+                                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: service.isActive ? 'success.main' : 'text.disabled' }} />
+                                                    <Typography variant="body2" color={service.isActive ? 'success.main' : 'text.secondary'} fontWeight={500}>
+                                                        {service.isActive ? 'Active' : 'Inactive'}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <IconButton size="small" onClick={() => { setEditingService(service); setServiceDialogOpen(true); }} sx={{ color: 'primary.main', mr: 1 }}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton size="small" color="error" onClick={() => handleDeleteService(service._id!)}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )
                 )}
             </Paper>
 

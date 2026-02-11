@@ -131,41 +131,49 @@ export const UploadFile: React.FC = () => {
         setError('');
         setLoading(true);
 
+        // Process files in batches to avoid overwhelming the server/browser
+        const BATCH_SIZE = 3;
+        const filesToProcess = selectedFiles.map((file, index) => ({ file, index })).filter(({ file }) => file.status !== 'success');
         const updatedFiles = [...selectedFiles];
 
-        for (let i = 0; i < updatedFiles.length; i++) {
-            if (updatedFiles[i].status === 'success') continue;
+        for (let i = 0; i < filesToProcess.length; i += BATCH_SIZE) {
+            const batch = filesToProcess.slice(i, i + BATCH_SIZE);
 
-            updatedFiles[i] = { ...updatedFiles[i], status: 'uploading' };
-            setSelectedFiles([...updatedFiles]);
+            await Promise.all(batch.map(async ({ file: item, index }) => {
+                updatedFiles[index] = { ...updatedFiles[index], status: 'uploading' };
+                setSelectedFiles([...updatedFiles]);
 
-            try {
-                const formData = new FormData();
-                formData.append('file', updatedFiles[i].file);
-                formData.append('clientId', selectedClient);
-                if (category !== 'USER_DOCS') {
-                    formData.append('year', year);
+                try {
+                    const formData = new FormData();
+                    formData.append('file', item.file);
+                    formData.append('clientId', selectedClient);
+                    formData.append('category', category);
+
+                    if (category !== 'USER_DOCS') {
+                        formData.append('year', year);
+                    }
+                    if (category === 'GST') {
+                        if (month) formData.append('month', month);
+                        if (docType) formData.append('docType', docType);
+                    }
+
+                    formData.append('fileName', item.file.name);
+                    formData.append('useGoogleDrive', 'true');
+
+                    await adminService.uploadFile(formData);
+
+                    updatedFiles[index] = { ...updatedFiles[index], status: 'success', message: 'Uploaded' };
+                } catch (err: unknown) {
+                    console.error('Upload Error:', err);
+                    const message = err instanceof AxiosError
+                        ? err.response?.data?.message || 'Failed'
+                        : 'Failed';
+                    updatedFiles[index] = { ...updatedFiles[index], status: 'error', message };
                 }
-                if (category === 'GST') {
-                    if (month) formData.append('month', month);
-                    if (docType) formData.append('docType', docType);
-                }
-                formData.append('category', category);
-                formData.append('fileName', updatedFiles[i].file.name);
-                formData.append('useGoogleDrive', 'true');
 
-                await adminService.uploadFile(formData);
-
-                updatedFiles[i] = { ...updatedFiles[i], status: 'success', message: 'Uploaded' };
-            } catch (err: unknown) {
-                console.error('Upload Error:', err);
-                const message = err instanceof AxiosError
-                    ? err.response?.data?.message || 'Failed'
-                    : 'Failed';
-                updatedFiles[i] = { ...updatedFiles[i], status: 'error', message };
-            }
-
-            setSelectedFiles([...updatedFiles]);
+                // Update state to reflect progress
+                setSelectedFiles([...updatedFiles]);
+            }));
         }
 
         setLoading(false);
@@ -438,7 +446,7 @@ export const UploadFile: React.FC = () => {
                                             <Fade in={true} key={item.id} style={{ transitionDelay: `${index * 50}ms` }}>
                                                 <ListItem
                                                     sx={{
-                                                        px: 2,
+                                                        px: { xs: 1.5, sm: 2 },
                                                         py: 2,
                                                         mb: 1.5,
                                                         borderRadius: 4,
@@ -447,20 +455,8 @@ export const UploadFile: React.FC = () => {
                                                         borderColor: item.status === 'error' ? alpha(theme.palette.error.main, 0.1) : 'transparent',
                                                         '&:last-child': { mb: 0 }
                                                     }}
-                                                    secondaryAction={
-                                                        <IconButton
-                                                            onClick={() => handleRemoveFile(item.id)}
-                                                            disabled={loading || item.status === 'success'}
-                                                            sx={{
-                                                                color: 'text.secondary',
-                                                                '&:hover': { color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) }
-                                                            }}
-                                                        >
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    }
                                                 >
-                                                    <ListItemIcon sx={{ minWidth: 50 }}>
+                                                    <ListItemIcon sx={{ minWidth: { xs: 40, sm: 50 } }}>
                                                         {item.status === 'uploading' ? (
                                                             <CircularProgress size={24} thickness={5} />
                                                         ) : item.status === 'success' ? (
@@ -472,20 +468,27 @@ export const UploadFile: React.FC = () => {
                                                         )}
                                                     </ListItemIcon>
                                                     <ListItemText
+                                                        sx={{ my: 0, mr: 1, overflow: 'hidden' }}
                                                         primary={
-                                                            <Typography variant="body2" fontWeight={700} sx={{ color: '#2d3748' }}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                fontWeight={700}
+                                                                noWrap
+                                                                title={item.file.name}
+                                                                sx={{ color: '#2d3748' }}
+                                                            >
                                                                 {item.file.name}
                                                             </Typography>
                                                         }
                                                         secondary={
                                                             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                                                                <Typography variant="caption" color="text.secondary">
+                                                                <Typography variant="caption" color="text.secondary" noWrap>
                                                                     {(item.file.size / (1024 * 1024)).toFixed(2)} MB
                                                                 </Typography>
                                                                 {item.message && (
                                                                     <>
                                                                         <Divider orientation="vertical" flexItem sx={{ height: 10, alignSelf: 'center' }} />
-                                                                        <Typography variant="caption" color={item.status === 'error' ? 'error.main' : 'success.main'} fontWeight={700}>
+                                                                        <Typography variant="caption" color={item.status === 'error' ? 'error.main' : 'success.main'} fontWeight={700} noWrap>
                                                                             {item.message}
                                                                         </Typography>
                                                                     </>
@@ -493,6 +496,18 @@ export const UploadFile: React.FC = () => {
                                                             </Stack>
                                                         }
                                                     />
+                                                    <IconButton
+                                                        onClick={() => handleRemoveFile(item.id)}
+                                                        disabled={loading || item.status === 'success'}
+                                                        size="small"
+                                                        sx={{
+                                                            color: 'text.secondary',
+                                                            '&:hover': { color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) },
+                                                            flexShrink: 0
+                                                        }}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
                                                 </ListItem>
                                             </Fade>
                                         ))}
