@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Paper,
@@ -41,6 +42,7 @@ import { billingService, type PaymentStatus } from '../../services/billingServic
 
 export const MyFiles: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [files, setFiles] = useState<IFile[]>([]);
@@ -485,7 +487,16 @@ export const MyFiles: React.FC = () => {
 
                     {/* Row 2: Actions Bar */}
                     <Box sx={{ display: 'flex', alignItems: 'center', px: 1, height: 56 }}>
-                        <IconButton onClick={() => setCurrentPath(prev => prev.slice(0, -1))} disabled={isRoot} sx={{ color: '#5f6368' }}>
+                        <IconButton
+                            onClick={() => {
+                                if (currentPath.length > 0) {
+                                    setCurrentPath(prev => prev.slice(0, -1));
+                                } else {
+                                    navigate('/client/dashboard');
+                                }
+                            }}
+                            sx={{ color: '#5f6368' }}
+                        >
                             <ArrowBackIcon />
                         </IconButton>
                         <Box sx={{ flex: 1 }} />

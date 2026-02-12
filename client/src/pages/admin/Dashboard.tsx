@@ -345,6 +345,7 @@ export const AdminDashboard: React.FC = () => {
                                             dates.push(
                                                 <Tooltip
                                                     key={date}
+                                                    enterTouchDelay={0}
                                                     title={
                                                         <Box sx={{ p: 0.5 }}>
                                                             <Typography variant="caption" fontWeight={700} display="block">
