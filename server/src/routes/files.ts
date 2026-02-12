@@ -130,12 +130,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 let userDocsFolderId: string | undefined;
 
                 try {
-                    const clientFolders = await driveService.listFiles(client.driveFolderId!);
-                    userDocsFolderId = clientFolders.find(f => f.name === 'USER_DOCS' && f.mimeType === 'application/vnd.google-apps.folder')?.id;
-
-                    if (!userDocsFolderId) {
-                        userDocsFolderId = await driveService.createFolder('USER_DOCS', client.driveFolderId!);
-                    }
+                    userDocsFolderId = await driveService.ensureFolder('USER_DOCS', client.driveFolderId!);
                 } catch (error) {
                     console.error('Error creating USER_DOCS folder:', error);
                     return res.status(500).json({ message: 'Failed to create USER_DOCS folder' });
@@ -174,88 +169,102 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
             // Get the appropriate category folder for ITR, GST, ACCOUNTING
             let categoryFolderId: string;
-            switch (category) {
-                case 'ITR':
-                    categoryFolderId = client.driveItrFolderId!;
-                    break;
-                case 'GST':
-                    categoryFolderId = client.driveGstFolderId!;
-                    break;
-                case 'ACCOUNTING':
-                    categoryFolderId = client.driveAccountingFolderId!;
-                    break;
-                default:
-                    return res.status(400).json({ message: 'Invalid category' });
+
+            // Proactively ensure the category folder exists. 
+            // If the user manually deleted the "ITR" folder, this will recreate it and update the DB immediately.
+            try {
+                const checkedCategoryFolderId = await driveService.ensureFolder(category, client.driveFolderId!);
+
+                // Update client record if the folder ID has changed (e.g. it was recreated)
+                let dbUpdated = false;
+                if (category === 'ITR' && client.driveItrFolderId !== checkedCategoryFolderId) {
+                    client.driveItrFolderId = checkedCategoryFolderId;
+                    dbUpdated = true;
+                } else if (category === 'GST' && client.driveGstFolderId !== checkedCategoryFolderId) {
+                    client.driveGstFolderId = checkedCategoryFolderId;
+                    dbUpdated = true;
+                } else if (category === 'ACCOUNTING' && client.driveAccountingFolderId !== checkedCategoryFolderId) {
+                    client.driveAccountingFolderId = checkedCategoryFolderId;
+                    dbUpdated = true;
+                }
+
+                if (dbUpdated) {
+                    await client.save();
+                    console.log(`Updated Client DB with new ${category} folder ID: ${checkedCategoryFolderId}`);
+                }
+
+                categoryFolderId = checkedCategoryFolderId;
+
+            } catch (error) {
+                console.error(`Error ensuring category folder ${category}:`, error);
+                // If this fails (e.g. Client Root deleted), let it fall through to the catch block 
+                // where the full structure repair logic resides.
+                switch (category) {
+                    case 'ITR': categoryFolderId = client.driveItrFolderId!; break;
+                    case 'GST': categoryFolderId = client.driveGstFolderId!; break;
+                    case 'ACCOUNTING': categoryFolderId = client.driveAccountingFolderId!; break;
+                    default: return res.status(400).json({ message: 'Invalid category' });
+                }
             }
 
             // Create or get year folder
             const yearFolderName = `FY ${year}`;
-            let existingFolders: any[] = [];
+
+            // Ensure year folder
+            let yearFolderId: string;
             try {
-                existingFolders = await driveService.listFiles(categoryFolderId);
-            } catch (error) {
-                console.warn(`Could not list files for folder ${categoryFolderId}, it might be missing.`);
-            }
+                // Try optimized check & create first
+                yearFolderId = await driveService.ensureFolder(yearFolderName, categoryFolderId);
+            } catch (error: any) {
+                console.log('Error accessing year folder, checking context...', error.message);
 
-            let yearFolderId = existingFolders.find(f => f.name === yearFolderName)?.id;
+                // Handle folder structure repair if parent is missing
+                if (error.code === 404 || (error.response && error.response.status === 404) || error.message.includes('File not found')) {
+                    console.log('Category folder missing, attempting to repair folder structure...');
 
-            if (!yearFolderId) {
-                try {
-                    yearFolderId = await driveService.createYearFolder(categoryFolderId, year);
-                } catch (error: any) {
-                    console.log('Error creating year folder, checking for missing parent...', error.message);
+                    // Check client root
+                    let clientFolderId = client.driveFolderId;
+                    let clientFolderExists = false;
 
-                    // Check if error is due to missing parent folder (404)
-                    if (error.message.includes('File not found') || error.code === 404 || (error.response && error.response.status === 404)) {
-                        console.log('Category folder missing, attempting to repair folder structure...');
-
-                        // Check if main client folder exists
-                        let clientFolderId = client.driveFolderId;
-                        let clientFolderExists = false;
-
-                        if (clientFolderId) {
-                            try {
-                                await driveService.getFileMetadata(clientFolderId);
-                                clientFolderExists = true;
-                            } catch (e) {
-                                console.log('Client root folder also missing');
-                            }
+                    if (clientFolderId) {
+                        try {
+                            await driveService.getFileMetadata(clientFolderId);
+                            clientFolderExists = true;
+                        } catch (e) {
+                            console.log('Client root folder also missing');
+                            clientFolderExists = false;
                         }
-
-                        if (!clientFolderExists) {
-                            // Recreate entire structure
-                            const folderStructure = await driveService.createClientFolderStructure(client.name);
-                            client.driveFolderId = folderStructure.clientFolderId;
-                            client.driveItrFolderId = folderStructure.itrFolderId;
-                            client.driveGstFolderId = folderStructure.gstFolderId;
-                            client.driveAccountingFolderId = folderStructure.accountingFolderId;
-                            await client.save();
-
-                            // Update category folder ID
-                            switch (category) {
-                                case 'ITR': categoryFolderId = client.driveItrFolderId!; break;
-                                case 'GST': categoryFolderId = client.driveGstFolderId!; break;
-                                case 'ACCOUNTING': categoryFolderId = client.driveAccountingFolderId!; break;
-                            }
-                        } else {
-                            // Client root exists, re-create specific category folder
-                            console.log(`Recreating missing category folder: ${category}`);
-
-                            const newCategoryFolderId = await driveService.createFolder(category, clientFolderId!);
-                            switch (category) {
-                                case 'ITR': client.driveItrFolderId = newCategoryFolderId; break;
-                                case 'GST': client.driveGstFolderId = newCategoryFolderId; break;
-                                case 'ACCOUNTING': client.driveAccountingFolderId = newCategoryFolderId; break;
-                            }
-                            await client.save();
-                            categoryFolderId = newCategoryFolderId;
-                        }
-
-                        // Retry creating year folder with new parent ID
-                        yearFolderId = await driveService.createYearFolder(categoryFolderId, year);
-                    } else {
-                        throw error;
                     }
+
+                    if (!clientFolderExists) {
+                        // Recreate ALL structure
+                        const folderStructure = await driveService.createClientFolderStructure(client.name);
+                        client.driveFolderId = folderStructure.clientFolderId;
+                        client.driveItrFolderId = folderStructure.itrFolderId;
+                        client.driveGstFolderId = folderStructure.gstFolderId;
+                        client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                        await client.save();
+                    } else {
+                        // Recreate CATEGORY folder
+                        console.log(`Recreating missing category folder: ${category}`);
+                        const newCategoryFolderId = await driveService.ensureFolder(category, clientFolderId!);
+                        switch (category) {
+                            case 'ITR': client.driveItrFolderId = newCategoryFolderId; break;
+                            case 'GST': client.driveGstFolderId = newCategoryFolderId; break;
+                            case 'ACCOUNTING': client.driveAccountingFolderId = newCategoryFolderId; break;
+                        }
+                        await client.save();
+                    }
+
+                    // Retry ensuring the year folder with the potentially corrected parent ID
+                    switch (category) {
+                        case 'ITR': categoryFolderId = client.driveItrFolderId!; break;
+                        case 'GST': categoryFolderId = client.driveGstFolderId!; break;
+                        case 'ACCOUNTING': categoryFolderId = client.driveAccountingFolderId!; break;
+                    }
+                    yearFolderId = await driveService.ensureFolder(yearFolderName, categoryFolderId);
+                } else {
+                    throw error;
                 }
             }
 
@@ -265,24 +274,16 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
             if (category === 'GST' && month) {
                 try {
                     // 1. Handle Month Folder
-                    const monthFolders = await driveService.listFiles(yearFolderId);
                     const monthFolderName = month;
-                    let monthFolderId = monthFolders.find(f => f.name === monthFolderName && f.mimeType === 'application/vnd.google-apps.folder')?.id;
+                    const monthFolderId = await driveService.ensureFolder(monthFolderName, yearFolderId);
 
-                    if (!monthFolderId) {
-                        monthFolderId = await driveService.createFolder(monthFolderName, yearFolderId);
-                    }
                     targetFolderId = monthFolderId;
 
                     // 2. Handle DocType Folder (if provided)
                     if (req.body.docType) {
                         const docType = req.body.docType;
-                        const docTypeFolders = await driveService.listFiles(monthFolderId);
-                        let docTypeFolderId = docTypeFolders.find(f => f.name === docType && f.mimeType === 'application/vnd.google-apps.folder')?.id;
+                        const docTypeFolderId = await driveService.ensureFolder(docType, monthFolderId);
 
-                        if (!docTypeFolderId) {
-                            docTypeFolderId = await driveService.createFolder(docType, monthFolderId);
-                        }
                         targetFolderId = docTypeFolderId;
                     }
 

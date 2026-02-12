@@ -138,6 +138,48 @@ export class GoogleDriveService {
         }
     }
 
+    async findFolder(folderName: string, parentId?: string): Promise<string | undefined> {
+        try {
+            // Escape single quotes in folder name for the query
+            const sanitizedName = folderName.replace(/'/g, "\\'");
+            const query = `name = '${sanitizedName}' and mimeType = 'application/vnd.google-apps.folder' and '${parentId || this.rootFolderId}' in parents and trashed=false`;
+
+            const response = await this.drive.files.list({
+                q: query,
+                fields: 'files(id)',
+                orderBy: 'modifiedTime desc', // Get the most recently modified usage if duplicates exist
+                pageSize: 1,
+                includeItemsFromAllDrives: true,
+                supportsAllDrives: true,
+            });
+
+            const files = response.data.files;
+            if (files && files.length > 0) {
+                return files[0].id!;
+            }
+            return undefined;
+        } catch (error) {
+            console.error('Error finding folder:', error);
+            return undefined;
+        }
+    }
+
+    async ensureFolder(folderName: string, parentId?: string): Promise<string> {
+        // 1. Check if folder exists using fast search
+        const existingId = await this.findFolder(folderName, parentId);
+        if (existingId) return existingId;
+
+        // 2. Create if not exists
+        try {
+            return await this.createFolder(folderName, parentId);
+        } catch (error) {
+            // Handle race conditions where folder might have been created by another request concurrently
+            const retryId = await this.findFolder(folderName, parentId);
+            if (retryId) return retryId;
+            throw error;
+        }
+    }
+
     /**
      * List files in a folder
      */
@@ -239,13 +281,13 @@ export class GoogleDriveService {
         accountingFolderId: string;
     }> {
         try {
-            // Create main client folder
-            const clientFolderId = await this.createFolder(clientName);
+            // Create or get main client folder
+            const clientFolderId = await this.ensureFolder(clientName);
 
-            // Create category folders
-            const itrFolderId = await this.createFolder('ITR', clientFolderId);
-            const gstFolderId = await this.createFolder('GST', clientFolderId);
-            const accountingFolderId = await this.createFolder('ACCOUNTING', clientFolderId);
+            // Create or get category folders
+            const itrFolderId = await this.ensureFolder('ITR', clientFolderId);
+            const gstFolderId = await this.ensureFolder('GST', clientFolderId);
+            const accountingFolderId = await this.ensureFolder('ACCOUNTING', clientFolderId);
 
             return {
                 clientFolderId,
@@ -264,7 +306,7 @@ export class GoogleDriveService {
      */
     async createYearFolder(categoryFolderId: string, year: string): Promise<string> {
         try {
-            return await this.createFolder(`FY ${year}`, categoryFolderId);
+            return await this.ensureFolder(`FY ${year}`, categoryFolderId);
         } catch (error) {
             console.error('Error creating folder:', error);
             throw error;
