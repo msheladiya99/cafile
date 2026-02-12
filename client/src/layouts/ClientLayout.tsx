@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     Box,
@@ -20,6 +20,7 @@ import {
     CssBaseline,
     Avatar,
     Tooltip,
+    Skeleton
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -31,6 +32,8 @@ import {
     AccountBalance,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import settingsService from '../services/settingsService';
+
 const drawerWidth = 260;
 
 export const ClientLayout: React.FC = () => {
@@ -39,11 +42,28 @@ export const ClientLayout: React.FC = () => {
     const { user, logout } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [companyName, setCompanyName] = useState<string>('CA Office Portal');
+    const [loadingName, setLoadingName] = useState(true);
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const settings = await settingsService.getSettings();
+                if (settings && settings.companyName) {
+                    setCompanyName(settings.companyName);
+                }
+            } catch (error) {
+                console.error('Failed to load company name', error);
+            } finally {
+                setLoadingName(false);
+            }
+        };
+        fetchSettings();
+    }, []);
+    // ... (rest of the file until the header section)
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -128,7 +148,7 @@ export const ClientLayout: React.FC = () => {
                     )}
                     <AccountBalance sx={{ mr: 2 }} />
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                        Client Portal
+                        {loadingName ? <Skeleton width={200} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} /> : companyName}
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
                         {user?.name || user?.username}
