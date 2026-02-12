@@ -560,6 +560,68 @@ router.delete('/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']),
 });
 
 /**
+ * Bulk Delete files
+ * POST /api/files/bulk-delete
+ */
+router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { fileIds } = req.body;
+
+        if (!Array.isArray(fileIds) || fileIds.length === 0) {
+            return res.status(400).json({ message: 'No files selected' });
+        }
+
+        const files = await File.find({ _id: { $in: fileIds } });
+
+        if (files.length === 0) {
+            return res.status(404).json({ message: 'No files found' });
+        }
+
+        let deletedCount = 0;
+        const errors: string[] = [];
+
+        for (const file of files) {
+            try {
+                if (file.storedIn === 'drive' && file.driveFileId) {
+                    // Delete from Google Drive
+                    try {
+                        const driveService = getDriveService();
+                        await driveService.deleteFile(file.driveFileId);
+                    } catch (error) {
+                        console.error(`Google Drive delete error for ${file.fileName}:`, error);
+                        // Continue to delete from DB
+                    }
+                } else {
+                    // Delete from local storage
+                    try {
+                        await fs.unlink(file.filePath);
+                    } catch (error) {
+                        console.error(`Local file delete error for ${file.fileName}:`, error);
+                        // Continue to delete from DB
+                    }
+                }
+
+                await file.deleteOne();
+                deletedCount++;
+            } catch (err) {
+                console.error(`Error deleting file ${file._id}:`, err);
+                errors.push(file.fileName);
+            }
+        }
+
+        res.json({
+            message: `Successfully deleted ${deletedCount} files`,
+            deletedCount,
+            errors: errors.length > 0 ? errors : undefined
+        });
+
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ message: 'Error processing bulk delete' });
+    }
+});
+
+/**
  * Get files for a client with filters and search
  * GET /api/files/client/:clientId
  */

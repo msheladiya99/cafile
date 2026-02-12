@@ -319,7 +319,7 @@ export const Reminders: React.FC = () => {
 
         if (filter === 'ALL') return true;
         if (filter === 'OVERDUE') return isOverdue;
-        if (filter === 'PENDING') return r.status === 'PENDING' && !isOverdue; // Only show non-overdue pending
+        if (filter === 'PENDING') return r.status === 'PENDING';
         if (filter === 'COMPLETED') return r.status === 'COMPLETED';
 
         return r.status === filter;

@@ -34,6 +34,7 @@ import {
     ListItemIcon,
     Menu,
     Breadcrumbs,
+    Checkbox,
 } from '@mui/material';
 import {
     Delete as DeleteIcon,
@@ -67,6 +68,8 @@ export const ManageFiles: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [menuFile, setMenuFile] = useState<FileData | null>(null);
+    const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, file: FileData) => {
         event.stopPropagation();
@@ -182,6 +185,49 @@ export const ManageFiles: React.FC = () => {
 
         setFilteredFiles(filtered);
     }, [searchQuery, files]);
+
+    // Clear selection when filters change
+    useEffect(() => {
+        setSelectedFileIds([]);
+    }, [selectedClient, selectedYear, selectedCategory, searchQuery]);
+
+    const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            setSelectedFileIds(filteredFiles.map(f => f._id));
+        } else {
+            setSelectedFileIds([]);
+        }
+    };
+
+    const handleSelectOne = (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        if (event.target.checked) {
+            setSelectedFileIds(prev => [...prev, id]);
+        } else {
+            setSelectedFileIds(prev => prev.filter(fileId => fileId !== id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedFileIds.length === 0) return;
+
+        if (window.confirm(`Are you sure you want to delete ${selectedFileIds.length} files? This action cannot be undone.`)) {
+            setLoading(true);
+            try {
+                const result = await adminService.deleteFiles(selectedFileIds);
+                if (result.errors && result.errors.length > 0) {
+                    alert(`Deleted ${result.deletedCount} files. Errors: ${result.errors.join(', ')}`);
+                }
+                setSelectedFileIds([]);
+                loadFiles();
+            } catch (error) {
+                console.error('Error deleting files:', error);
+                alert('Failed to delete selected files');
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
 
     const handleEdit = (file: FileData) => {
         setEditingFile(file);
@@ -315,6 +361,19 @@ export const ManageFiles: React.FC = () => {
                         }}
                     />
                 </Stack>
+                {selectedFileIds.length > 0 && (
+                    <Box mt={2} display="flex" justifyContent="flex-end">
+                        <Button
+                            variant="contained"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={handleBulkDelete}
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Delete Selected ({selectedFileIds.length})
+                        </Button>
+                    </Box>
+                )}
             </Paper>
 
             {loading ? (
@@ -477,6 +536,15 @@ export const ManageFiles: React.FC = () => {
                         <Table>
                             <TableHead>
                                 <TableRow sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            color="primary"
+                                            indeterminate={selectedFileIds.length > 0 && selectedFileIds.length < filteredFiles.length}
+                                            checked={filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length}
+                                            onChange={handleSelectAll}
+                                            disabled={filteredFiles.length === 0}
+                                        />
+                                    </TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>File Name</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
@@ -488,7 +556,7 @@ export const ManageFiles: React.FC = () => {
                             <TableBody>
                                 {!selectedClient ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                                             <Typography color="text.secondary">
                                                 Please select a client to view files
                                             </Typography>
@@ -496,7 +564,7 @@ export const ManageFiles: React.FC = () => {
                                     </TableRow>
                                 ) : filteredFiles.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                                             <Typography color="text.secondary">
                                                 {searchQuery ? 'No files match your search' : 'No files found'}
                                             </Typography>
@@ -504,7 +572,14 @@ export const ManageFiles: React.FC = () => {
                                     </TableRow>
                                 ) : (
                                     filteredFiles.map((file) => (
-                                        <TableRow key={file._id} hover>
+                                        <TableRow key={file._id} hover selected={selectedFileIds.includes(file._id)}>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    checked={selectedFileIds.includes(file._id)}
+                                                    onChange={(event) => handleSelectOne(event, file._id)}
+                                                />
+                                            </TableCell>
                                             <TableCell>
                                                 <Box>
                                                     <Box display="flex" alignItems="center" gap={1}>

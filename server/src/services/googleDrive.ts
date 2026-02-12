@@ -128,7 +128,10 @@ export class GoogleDriveService {
      */
     async deleteFile(fileId: string): Promise<void> {
         try {
-            await this.drive.files.delete({ fileId });
+            await this.drive.files.delete({
+                fileId: fileId,
+                supportsAllDrives: true,
+            });
         } catch (error) {
             console.error('Error deleting file:', error);
             throw new Error('Failed to delete file from Google Drive');

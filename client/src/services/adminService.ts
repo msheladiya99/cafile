@@ -56,6 +56,11 @@ export const adminService = {
         await api.delete(`/files/${fileId}`);
     },
 
+    deleteFiles: async (fileIds: string[]): Promise<{ message: string; deletedCount: number; errors?: string[] }> => {
+        const response = await api.post('/files/bulk-delete', { fileIds });
+        return response.data;
+    },
+
     getClientCredentials: async (clientId: string): Promise<{ username: string; note: string }> => {
         const response = await api.get(`/admin/clients/${clientId}/credentials`);
         return response.data;
