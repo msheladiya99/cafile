@@ -107,7 +107,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
         const clients = await Client.find()
-            .select('name email phone panNumber aadharNumber gstNumber createdAt')
+            .select('name email phone panNumber aadharNumber gstNumber physicalFileNumber rackLocation createdAt')
             .sort({ createdAt: -1 })
             .lean();
         res.json(clients);
@@ -132,8 +132,8 @@ router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     }
 });
 
-// Update client details (Admin and Manager only)
-router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+// Update client details (Admin, Manager, and Staff)
+router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const updates = req.body;
