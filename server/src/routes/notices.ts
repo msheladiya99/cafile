@@ -14,7 +14,7 @@ router.get('/active', authenticate, async (req: AuthRequest, res: Response) => {
                 { expiresAt: { $exists: false } }, // No expiry
                 { expiresAt: { $gt: now } }        // Not yet expired
             ]
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: -1 }).lean();
 
         res.json(notices);
     } catch (error) {
@@ -33,7 +33,8 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         const notices = await Notice.find()
             .sort({ createdAt: -1 })
-            .populate('createdBy', 'username');
+            .populate('createdBy', 'username')
+            .lean();
 
         res.json(notices);
     } catch (error) {

@@ -27,7 +27,7 @@ const checkFileAccess = async (req: AuthRequest, res: Response, next: Function) 
         }
 
         // Find all invoices for this client
-        const invoices = await Invoice.find({ clientId });
+        const invoices = await Invoice.find({ clientId }).lean();
 
         // If no invoices, allow access (new client)
         if (invoices.length === 0) {
@@ -649,7 +649,8 @@ router.get('/client/:clientId', authenticate, checkFileAccess, async (req: AuthR
 
         const files = await File.find(query)
             .sort({ uploadedAt: -1 })
-            .populate('uploadedBy', 'username');
+            .populate('uploadedBy', 'username')
+            .lean();
 
         res.json(files);
     } catch (error) {

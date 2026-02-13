@@ -106,7 +106,10 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
-        const clients = await Client.find().sort({ createdAt: -1 });
+        const clients = await Client.find()
+            .select('name email phone panNumber aadharNumber gstNumber createdAt')
+            .sort({ createdAt: -1 })
+            .lean();
         res.json(clients);
     } catch (error) {
         console.error('Get clients error:', error);
@@ -117,7 +120,7 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
 // Get single client
 router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const client = await Client.findById(req.params.id);
+        const client = await Client.findById(req.params.id).lean();
         if (!client) {
             res.status(404).json({ message: 'Client not found' });
             return;
@@ -235,7 +238,8 @@ router.get('/files/:clientId', async (req: AuthRequest, res: Response) => {
 
         const files = await File.find(query)
             .populate('uploadedBy', 'username')
-            .sort({ uploadedAt: -1 });
+            .sort({ uploadedAt: -1 })
+            .lean();
 
         res.json(files);
     } catch (error) {

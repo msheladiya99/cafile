@@ -89,7 +89,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     try {
         const staff = await User.find({
             role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
-        }).select('-passwordHash').sort({ createdAt: -1 });
+        }).select('-passwordHash').sort({ createdAt: -1 }).lean();
 
         res.json(staff);
     } catch (error) {
