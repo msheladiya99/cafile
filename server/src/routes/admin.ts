@@ -24,29 +24,11 @@ const generatePassword = (): string => {
     return password;
 };
 
-// Generate a unique username (short name + random 4-digit number)
-const generateUsername = async (name: string): Promise<string> => {
-    // Get first part of name, remove special characters, and limit to 4 chars
-    const baseName = name.split(' ')[0]
-        .toLowerCase()
-        .replace(/[^a-z]/g, '')
-        .slice(0, 4);
-
-    let username = '';
-    let isUnique = false;
-
-    while (!isUnique) {
-        const randomNum = Math.floor(1000 + Math.random() * 9000);
-        username = `${baseName}${randomNum}`;
-
-        // Check if it already exists in the database
-        const existingUser = await User.findOne({ username });
-        if (!existingUser) {
-            isUnique = true;
-        }
-    }
-
-    return username;
+// Generate username from name
+const generateUsername = (name: string): string => {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `${cleanName}${randomNum}`;
 };
 
 // Create client (Admin and Manager only)
@@ -87,7 +69,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         await client.save();
 
         // Generate credentials
-        const username = customUsername || await generateUsername(name);
+        const username = customUsername || generateUsername(name);
         const password = generatePassword();
         const passwordHash = await bcrypt.hash(password, 10);
 
