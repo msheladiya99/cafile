@@ -248,4 +248,220 @@ router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Re
     }
 });
 
+// Get client-wise ledger (Complete financial history)
+router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
+    try {
+        const { clientId, startDate, endDate, staffId } = req.query;
+
+        // Build date filter
+        const dateFilter: any = {};
+        if (startDate) {
+            dateFilter.createdAt = { $gte: new Date(startDate as string) };
+        }
+        if (endDate) {
+            dateFilter.createdAt = { ...dateFilter.createdAt, $lte: new Date(endDate as string) };
+        }
+
+        // Get all clients or specific client
+        const clientFilter: any = {};
+        if (clientId) {
+            clientFilter._id = clientId;
+        }
+
+        const Client = mongoose.model('Client');
+        const clients = await Client.find(clientFilter).select('name email phone address').lean();
+
+        // Get ledger for each client
+        let clientLedgers = await Promise.all(
+            clients.map(async (client: any) => {
+                const invoiceFilter: any = {
+                    clientId: client._id,
+                    ...dateFilter
+                };
+
+                // Filter by staff if provided
+                if (staffId) {
+                    invoiceFilter.createdBy = staffId;
+                }
+
+                const invoices = await Invoice.find(invoiceFilter)
+                    .sort({ createdAt: -1 })
+                    .lean();
+
+                // Calculate financial metrics
+                const totalInvoices = invoices.length;
+                const totalBilled = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+                const totalPaid = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+                const totalDue = invoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+
+                // Status breakdown
+                const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length;
+                const partialInvoices = invoices.filter(inv => inv.status === 'PARTIAL').length;
+                const pendingInvoices = invoices.filter(inv => inv.status === 'PENDING').length;
+                const cancelledInvoices = invoices.filter(inv => inv.status === 'CANCELLED').length;
+
+                // Overdue calculation
+                const now = new Date();
+                const overdueInvoices = invoices.filter(inv =>
+                    inv.status !== 'PAID' &&
+                    inv.status !== 'CANCELLED' &&
+                    new Date(inv.dueDate) < now
+                );
+                const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+
+                // Payment history (all payments from all invoices)
+                const allPayments: any[] = [];
+                invoices.forEach(invoice => {
+                    invoice.payments.forEach((payment: any) => {
+                        allPayments.push({
+                            ...payment,
+                            invoiceNumber: invoice.invoiceNumber,
+                            invoiceId: invoice._id,
+                            invoiceDate: invoice.issueDate
+                        });
+                    });
+                });
+                allPayments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                // Last payment info
+                const lastPayment = allPayments.length > 0 ? allPayments[0] : null;
+
+                // Average payment time (days from invoice to full payment)
+                const fullyPaidInvoices = invoices.filter(inv => inv.status === 'PAID');
+                let avgPaymentDays = 0;
+                if (fullyPaidInvoices.length > 0) {
+                    const totalDays = fullyPaidInvoices.reduce((sum, inv) => {
+                        const issueDate = new Date(inv.issueDate);
+                        const lastPaymentDate = inv.payments.length > 0
+                            ? new Date(inv.payments[inv.payments.length - 1].date)
+                            : issueDate;
+                        const days = Math.floor((lastPaymentDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
+                        return sum + days;
+                    }, 0);
+                    avgPaymentDays = Math.round(totalDays / fullyPaidInvoices.length);
+                }
+
+                // Ledger entries (chronological list of all transactions)
+                const ledgerEntries: any[] = [];
+
+                invoices.forEach(invoice => {
+                    // Invoice entry
+                    ledgerEntries.push({
+                        date: invoice.issueDate,
+                        type: 'INVOICE',
+                        description: `Invoice ${invoice.invoiceNumber}`,
+                        invoiceNumber: invoice.invoiceNumber,
+                        invoiceId: invoice._id,
+                        debit: invoice.totalAmount, // Amount owed
+                        credit: 0,
+                        balance: 0, // Will calculate running balance
+                        status: invoice.status,
+                        dueDate: invoice.dueDate,
+                        items: invoice.items
+                    });
+
+                    // Payment entries
+                    invoice.payments.forEach((payment: any) => {
+                        ledgerEntries.push({
+                            date: payment.date,
+                            type: 'PAYMENT',
+                            description: `Payment - ${payment.method}${payment.reference ? ` (${payment.reference})` : ''}`,
+                            invoiceNumber: invoice.invoiceNumber,
+                            invoiceId: invoice._id,
+                            paymentId: payment._id,
+                            debit: 0,
+                            credit: payment.amount, // Amount paid
+                            balance: 0, // Will calculate running balance
+                            method: payment.method,
+                            reference: payment.reference
+                        });
+                    });
+                });
+
+                // Sort ledger entries by date (oldest first for running balance)
+                ledgerEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                // Calculate running balance
+                let runningBalance = 0;
+                ledgerEntries.forEach(entry => {
+                    runningBalance += entry.debit - entry.credit;
+                    entry.balance = runningBalance;
+                });
+
+                // Reverse for display (newest first)
+                ledgerEntries.reverse();
+
+                return {
+                    client: {
+                        _id: client._id,
+                        name: client.name,
+                        email: client.email,
+                        phone: client.phone,
+                        address: client.address
+                    },
+                    summary: {
+                        totalInvoices,
+                        totalBilled,
+                        totalPaid,
+                        totalDue,
+                        totalOverdue,
+                        paidInvoices,
+                        partialInvoices,
+                        pendingInvoices,
+                        cancelledInvoices,
+                        overdueInvoices: overdueInvoices.length,
+                        avgPaymentDays,
+                        lastPaymentDate: lastPayment?.date || null,
+                        lastPaymentAmount: lastPayment?.amount || 0,
+                        paymentRate: totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0
+                    },
+                    ledgerEntries,
+                    invoices: invoices.map(inv => ({
+                        _id: inv._id,
+                        invoiceNumber: inv.invoiceNumber,
+                        issueDate: inv.issueDate,
+                        dueDate: inv.dueDate,
+                        totalAmount: inv.totalAmount,
+                        paidAmount: inv.paidAmount,
+                        balanceAmount: inv.balanceAmount,
+                        status: inv.status,
+                        items: inv.items,
+                        payments: inv.payments,
+                        notes: inv.notes
+                    })),
+                    paymentHistory: allPayments
+                };
+            })
+        );
+
+        // If filtering by staff, remove empty ledgers to reduce noise
+        if (staffId) {
+            clientLedgers = clientLedgers.filter(cl => cl.summary.totalInvoices > 0);
+        }
+
+        // Sort by total due (descending)
+        clientLedgers.sort((a, b) => b.summary.totalDue - a.summary.totalDue);
+
+        // Overall summary
+        const overallSummary = {
+            totalClients: clientLedgers.length,
+            totalBilled: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalBilled, 0),
+            totalPaid: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalPaid, 0),
+            totalDue: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalDue, 0),
+            totalOverdue: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalOverdue, 0),
+            clientsWithDues: clientLedgers.filter(cl => cl.summary.totalDue > 0).length,
+            clientsWithOverdue: clientLedgers.filter(cl => cl.summary.totalOverdue > 0).length
+        };
+
+        res.json({
+            clientLedgers,
+            overallSummary,
+            generatedAt: new Date()
+        });
+    } catch (error) {
+        console.error('Get client ledger error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;

@@ -15,6 +15,7 @@ import staffRoutes from './routes/staff';
 import analyticsRoutes from './routes/analytics';
 import profileRoutes from './routes/profile';
 import settingsRoutes from './routes/settings';
+import taskRoutes from './routes/tasks';
 
 // Load environment variables
 dotenv.config();
@@ -47,6 +48,7 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

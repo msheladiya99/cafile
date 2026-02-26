@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import { Client } from '../models/Client';
 import { User } from '../models/User';
 import { File } from '../models/File';
+import { ClientGroup } from '../models/ClientGroup';
+import { ITStatus } from '../models/ITStatus';
+import { SubMaster } from '../models/SubMaster';
 import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import { sendFileUploadEmail, sendWelcomeEmail } from '../services/emailService';
@@ -34,7 +37,15 @@ const generateUsername = (name: string): string => {
 // Create client (Admin and Manager only)
 router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const { name, email, phone, panNumber, aadharNumber, gstNumber, username: customUsername } = req.body;
+        const {
+            name, email, phone, panNumber, aadharNumber, gstNumber, username: customUsername,
+            clientCode, groupName, itStatus, masterType, subMaster, birthDate,
+            address, country, state, city, postalCode, currency,
+            incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
+            trnNo, description, supportEmployee, status, financialYear,
+            altAddress, altPhoneM, altPhoneL, altFax,
+            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7
+        } = req.body;
 
         if (!name || !email || !phone) {
             res.status(400).json({ message: 'Name, email, and phone are required' });
@@ -59,12 +70,14 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 
         // Create client
         const client = new Client({
-            name,
-            email,
-            phone,
-            panNumber,
-            aadharNumber,
-            gstNumber
+            name, email, phone, panNumber, aadharNumber, gstNumber,
+            clientCode, groupName: groupName || undefined, itStatus: itStatus || undefined,
+            masterType, subMaster: subMaster || undefined, birthDate,
+            address, country, state, city, postalCode, currency,
+            incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
+            trnNo, description, supportEmployee: supportEmployee || undefined, status, financialYear,
+            altAddress, altPhoneM, altPhoneL, altFax,
+            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7
         });
         await client.save();
 
@@ -107,7 +120,9 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
         const clients = await Client.find()
-            .select('name email phone panNumber aadharNumber gstNumber physicalFileNumber rackLocation createdAt')
+            .populate('groupName', 'groupName')
+            .populate('itStatus', 'name')
+            .populate('subMaster', 'name')
             .sort({ createdAt: -1 })
             .lean();
         res.json(clients);
@@ -464,6 +479,125 @@ router.post('/migrate-lastlogin', requireAdmin, async (req: AuthRequest, res: Re
         });
     } catch (error) {
         console.error('Migration error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get all staff users (Admin and Manager only)
+router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const users = await User.find({ role: { $ne: 'CLIENT' } })
+            .select('_id username name email role')
+            .sort({ name: 1 })
+            .lean();
+        res.json(users);
+    } catch (error) {
+        console.error('Get users error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// -- Client Group Routes --
+
+// Create Client Group (Admin and Manager only)
+router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
+
+        if (!groupName || !email || !mobileNumber) {
+            res.status(400).json({ message: 'Group Name, Email, and Mobile Number are required.' });
+            return;
+        }
+
+        const existingGroup = await ClientGroup.findOne({ groupName });
+        if (existingGroup) {
+            res.status(400).json({ message: 'Group with this name already exists' });
+            return;
+        }
+
+        const newGroup = new ClientGroup({
+            groupName,
+            address,
+            description,
+            status,
+            email,
+            mobileNumber,
+            gstin
+        });
+        await newGroup.save();
+
+        res.status(201).json(newGroup);
+    } catch (error) {
+        console.error('Create client group error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get all Client Groups
+router.get('/client-groups', async (req: AuthRequest, res: Response) => {
+    try {
+        const groups = await ClientGroup.find()
+            .sort({ createdAt: -1 })
+            .lean();
+        res.json(groups);
+    } catch (error) {
+        console.error('Get client groups error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// -- IT Status Routes --
+router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { name, description, status } = req.body;
+        if (!name) return res.status(400).json({ message: 'Name is required' });
+
+        const existing = await ITStatus.findOne({ name });
+        if (existing) return res.status(400).json({ message: 'IT Status with this name already exists' });
+
+        const item = new ITStatus({ name, description, status });
+        await item.save();
+
+        res.status(201).json(item);
+    } catch (error) {
+        console.error('Create IT Status error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/it-status', async (req: AuthRequest, res: Response) => {
+    try {
+        const items = await ITStatus.find().sort({ createdAt: -1 }).lean();
+        res.json(items);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// -- Sub Master Routes --
+router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { name, description, status } = req.body;
+        if (!name) return res.status(400).json({ message: 'Name is required' });
+
+        const existing = await SubMaster.findOne({ name });
+        if (existing) return res.status(400).json({ message: 'Sub Master with this name already exists' });
+
+        const item = new SubMaster({ name, description, status });
+        await item.save();
+
+        res.status(201).json(item);
+    } catch (error) {
+        console.error('Create Sub Master error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/sub-master', async (req: AuthRequest, res: Response) => {
+    try {
+        const items = await SubMaster.find().sort({ createdAt: -1 }).lean();
+        res.json(items);
+    } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
 });

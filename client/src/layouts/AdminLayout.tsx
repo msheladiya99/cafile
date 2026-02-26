@@ -19,6 +19,7 @@ import {
     useTheme,
     Avatar,
     Tooltip,
+    Collapse,
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -34,6 +35,10 @@ import {
     Assessment as ReportsIcon,
     Settings as SettingsIcon,
     Inventory as InventoryIcon,
+    Assignment as AssignmentIcon,
+    History as HistoryIcon,
+    ExpandLess,
+    ExpandMore,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
@@ -47,6 +52,11 @@ export const AdminLayout: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [companyName, setCompanyName] = useState('CA Admin Panel');
+    const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({ Client: true });
+
+    const handleMenuToggle = (text: string) => {
+        setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
+    };
 
     // Fetch company name from settings
     useEffect(() => {
@@ -71,12 +81,24 @@ export const AdminLayout: React.FC = () => {
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports' },
-        { text: 'Clients', icon: <PeopleIcon />, path: '/admin/clients' },
+        {
+            text: 'Client',
+            icon: <PeopleIcon />,
+            children: [
+                { text: 'Add Group + List', path: '/admin/client/add-group' },
+                { text: 'Client Master', path: '/admin/client/master' },
+                { text: 'Client List', path: '/admin/client/list' },
+                { text: 'Client Contact Detail', path: '/admin/client/contact-detail' },
+                { text: 'Cancel Client Task', path: '/admin/client/cancel-task' },
+                { text: 'Visitor Master', path: '/admin/client/visitor-master' },
+            ]
+        },
         ...(isAdmin ? [{ text: 'Staff', icon: <GroupIcon />, path: '/admin/staff' }] : []),
-
-
+        { text: 'Tasks', icon: <AssignmentIcon />, path: '/admin/tasks' },
+        ...(isAdmin ? [{ text: 'Staff Task Ledger', icon: <HistoryIcon />, path: '/admin/staff-task-history' }] : []),
         { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
+        ...(isAdmin ? [{ text: 'Client Ledger', icon: <AccountBalance />, path: '/admin/client-ledger' }] : []),
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
@@ -105,28 +127,79 @@ export const AdminLayout: React.FC = () => {
             <Box sx={{ overflow: 'auto', mt: 2 }}>
                 <List>
                     {menuItems.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ mb: 0.5, px: 1 }}>
-                            <ListItemButton
-                                selected={location.pathname === item.path}
-                                onClick={() => handleMenuItemClick(item.path)}
-                                sx={{
-                                    borderRadius: 2,
-                                    '&.Mui-selected': {
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        color: 'white',
-                                        '& .MuiListItemIcon-root': {
-                                            color: 'white',
-                                        },
-                                        '&:hover': {
-                                            background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                                        },
-                                    },
-                                }}
-                            >
-                                <ListItemIcon>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} />
-                            </ListItemButton>
-                        </ListItem>
+                        <React.Fragment key={item.text}>
+                            {item.children ? (
+                                <>
+                                    <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
+                                        <ListItemButton
+                                            onClick={() => handleMenuToggle(item.text)}
+                                            sx={{
+                                                borderRadius: 2,
+                                                ...(item.children.some(c => location.pathname === c.path) && {
+                                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                                                    color: 'primary.main',
+                                                    '& .MuiListItemIcon-root': {
+                                                        color: 'primary.main',
+                                                    },
+                                                }),
+                                            }}
+                                        >
+                                            <ListItemIcon>{item.icon}</ListItemIcon>
+                                            <ListItemText primary={item.text} />
+                                            {openMenus[item.text] ? <ExpandLess /> : <ExpandMore />}
+                                        </ListItemButton>
+                                    </ListItem>
+                                    <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
+                                        <List component="div" disablePadding>
+                                            {item.children.map((child) => (
+                                                <ListItem key={child.text} disablePadding sx={{ mb: 0.5, pl: 4, pr: 1 }}>
+                                                    <ListItemButton
+                                                        selected={location.pathname === child.path}
+                                                        onClick={() => handleMenuItemClick(child.path)}
+                                                        sx={{
+                                                            py: 0.5,
+                                                            borderRadius: 2,
+                                                            '&.Mui-selected': {
+                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                                color: 'white',
+                                                                '&:hover': {
+                                                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                                                                },
+                                                            },
+                                                        }}
+                                                    >
+                                                        <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </Collapse>
+                                </>
+                            ) : (
+                                <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
+                                    <ListItemButton
+                                        selected={location.pathname === item.path}
+                                        onClick={() => handleMenuItemClick(item.path!)}
+                                        sx={{
+                                            borderRadius: 2,
+                                            '&.Mui-selected': {
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                color: 'white',
+                                                '& .MuiListItemIcon-root': {
+                                                    color: 'white',
+                                                },
+                                                '&:hover': {
+                                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        <ListItemIcon>{item.icon}</ListItemIcon>
+                                        <ListItemText primary={item.text} />
+                                    </ListItemButton>
+                                </ListItem>
+                            )}
+                        </React.Fragment>
                     ))}
                 </List>
             </Box>

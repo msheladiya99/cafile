@@ -102,8 +102,19 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user || user.role === 'CLIENT' || user.role === 'ADMIN') {
+        if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+
+        // Prevent password reset for CLIENT and ADMIN users
+        if (user.role === 'CLIENT') {
+            res.status(400).json({ message: 'Cannot reset password for client users from staff management' });
+            return;
+        }
+
+        if (user.role === 'ADMIN') {
+            res.status(403).json({ message: 'Cannot reset admin password for security reasons' });
             return;
         }
 
@@ -130,8 +141,19 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
         const { role, permissions } = req.body;
 
         const user = await User.findById(req.params.id);
-        if (!user || user.role === 'CLIENT' || user.role === 'ADMIN') {
+        if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+
+        // Prevent updating CLIENT and ADMIN users
+        if (user.role === 'CLIENT') {
+            res.status(400).json({ message: 'Cannot update client users from staff management' });
+            return;
+        }
+
+        if (user.role === 'ADMIN') {
+            res.status(403).json({ message: 'Cannot update admin users for security reasons' });
             return;
         }
 
@@ -170,8 +192,19 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user || user.role === 'CLIENT' || user.role === 'ADMIN') {
+        if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+
+        // Prevent deletion of CLIENT and ADMIN users
+        if (user.role === 'CLIENT') {
+            res.status(400).json({ message: 'Cannot delete client users from staff management' });
+            return;
+        }
+
+        if (user.role === 'ADMIN') {
+            res.status(403).json({ message: 'Cannot delete admin users for security reasons' });
             return;
         }
 

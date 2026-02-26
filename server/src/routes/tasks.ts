@@ -1,0 +1,779 @@
+import { Router, Response } from 'express';
+import { Task, TaskStatus } from '../models/Task';
+import { User } from '../models/User';
+import { AuthRequest, authenticate, requireRoles } from '../middleware/auth';
+import { v4 as uuidv4 } from 'uuid';
+
+const router = Router();
+
+// All routes require authentication
+router.use(authenticate);
+
+// ============================================
+// ADMIN FEATURES - Task Creation & Oversight
+// ============================================
+
+// Create a new task (Admin, Manager, Staff)
+router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const {
+            title,
+            description,
+            category,
+            assignedTo,
+            clientId,
+            priority,
+            targetDate,
+            estimatedHours,
+            tags,
+            checklist
+        } = req.body;
+
+        if (!title || !targetDate || !estimatedHours) {
+            res.status(400).json({ message: 'Title, target date, and estimated hours are required' });
+            return;
+        }
+
+        // Validate assigned users exist
+        if (assignedTo && assignedTo.length > 0) {
+            const users = await User.find({ _id: { $in: assignedTo } });
+            if (users.length !== assignedTo.length) {
+                res.status(400).json({ message: 'One or more assigned users not found' });
+                return;
+            }
+        }
+
+        const task = new Task({
+            title,
+            description,
+            category,
+            createdBy: req.user!.userId,
+            assignedTo: assignedTo || [],
+            clientId,
+            priority: priority || 'MEDIUM',
+            targetDate: new Date(targetDate),
+            estimatedHours,
+            tags: tags || [],
+            checklist: checklist ? checklist.map((item: string) => ({
+                id: uuidv4(),
+                text: item,
+                completed: false
+            })) : []
+        });
+
+        await task.save();
+
+        const populatedTask = await Task.findById(task._id)
+            .populate('createdBy', 'username name email')
+            .populate('assignedTo', 'username name email role')
+            .populate('clientId', 'name email phone');
+
+        res.status(201).json({
+            task: populatedTask,
+            message: 'Task created successfully'
+        });
+    } catch (error) {
+        console.error('Create task error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get all tasks with filters (Admin Dashboard)
+router.get('/', async (req: AuthRequest, res: Response) => {
+    try {
+        const { status, priority, assignedTo, clientId, overdue, myTasks } = req.query;
+
+        const filter: any = {};
+
+        // Role-based filtering
+        if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {
+            // Staff/Interns only see tasks assigned to them
+            filter.assignedTo = req.user!.userId;
+        } else if (myTasks === 'true') {
+            // Admin/Manager can choose to see only their tasks
+            filter.assignedTo = req.user!.userId;
+        }
+
+        // Apply filters
+        if (status) {
+            filter.status = status;
+        }
+        if (priority) {
+            filter.priority = priority;
+        }
+        if (assignedTo) {
+            filter.assignedTo = assignedTo;
+        }
+        if (clientId) {
+            filter.clientId = clientId;
+        }
+        if (overdue === 'true') {
+            filter.isOverdue = true;
+            filter.status = { $nin: ['DONE', 'CANCELLED'] };
+        }
+
+        const tasks = await Task.find(filter)
+            .populate('createdBy', 'username name email')
+            .populate('assignedTo', 'username name email role')
+            .populate('clientId', 'name email phone')
+            .sort({ priority: -1, targetDate: 1 })
+            .lean();
+
+        res.json(tasks);
+    } catch (error) {
+        console.error('Get tasks error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get staff-wise task history (Ledger style)
+router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { staffId, startDate, endDate, status } = req.query;
+
+        // Build date filter
+        const dateFilter: any = {};
+        if (startDate) {
+            const sDate = new Date(startDate as string);
+            if (!isNaN(sDate.getTime())) {
+                dateFilter.createdAt = { $gte: sDate };
+            }
+        }
+        if (endDate) {
+            const eDate = new Date(endDate as string);
+            if (!isNaN(eDate.getTime())) {
+                dateFilter.createdAt = { ...dateFilter.createdAt, $lte: eDate };
+            }
+        }
+
+        // Get all staff members (anyone who is not a client)
+        const staffFilter: any = { role: { $ne: 'CLIENT' } };
+        if (staffId) {
+            staffFilter._id = staffId;
+        }
+
+        console.log('Staff History Request:', {
+            query: req.query,
+            staffFilter,
+            dateFilter
+        });
+
+        const staffMembers = await User.find(staffFilter).select('_id username name email role').lean();
+        console.log(`Found ${staffMembers.length} staff members for history ledger`);
+
+        // Get tasks for each staff member
+        const staffHistory = await Promise.all(
+            staffMembers.map(async (staff) => {
+                try {
+                    const taskFilter: any = {
+                        assignedTo: staff._id,
+                        ...dateFilter
+                    };
+
+                    if (status) {
+                        taskFilter.status = status;
+                    }
+
+                    const tasks = await Task.find(taskFilter)
+                        .populate('createdBy', 'username name')
+                        .populate('clientId', 'name email phone')
+                        .sort({ createdAt: -1 })
+                        .lean();
+
+                    // Calculate staff metrics
+                    const totalTasks = tasks.length;
+                    const completedTasks = tasks.filter(t => t.status === 'DONE').length;
+                    const pendingTasks = tasks.filter(t => t.status === 'PENDING').length;
+                    const inProgressTasks = tasks.filter(t => t.status === 'STARTED').length;
+                    const underReviewTasks = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
+                    const overdueTasks = tasks.filter(t => t.isOverdue && t.status !== 'DONE').length;
+
+                    // Time tracking metrics
+                    const totalEstimatedHours = tasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
+                    const totalActualMinutes = tasks.reduce((sum, t) => sum + (t.actualTimeSpent || 0), 0);
+                    const totalActualHours = Math.round((totalActualMinutes / 60) * 100) / 100;
+
+                    // Efficiency calculation
+                    const completedTasksWithTime = tasks.filter(t => t.status === 'DONE' && (t.actualTimeSpent || 0) > 0);
+                    const avgEfficiency = completedTasksWithTime.length > 0
+                        ? Math.round(
+                            completedTasksWithTime.reduce((acc, task) => {
+                                const estimated = (task.estimatedHours || 0) * 60;
+                                const actual = task.actualTimeSpent || 0;
+                                return acc + (estimated / actual) * 100;
+                            }, 0) / completedTasksWithTime.length
+                        )
+                        : 0;
+
+                    // On-time completion rate
+                    const completedOnTime = tasks.filter(t =>
+                        t.status === 'DONE' &&
+                        t.completedAt &&
+                        new Date(t.completedAt) <= new Date(t.targetDate)
+                    ).length;
+                    const onTimeRate = completedTasks > 0
+                        ? Math.round((completedOnTime / completedTasks) * 100)
+                        : 0;
+
+                    // Average revision count
+                    const avgRevisions = completedTasks > 0
+                        ? Math.round((tasks.filter(t => t.status === 'DONE').reduce((sum, t) => sum + (t.revisionCount || 0), 0) / completedTasks) * 100) / 100
+                        : 0;
+
+                    return {
+                        staff: {
+                            _id: staff._id,
+                            username: staff.username,
+                            name: staff.name,
+                            email: staff.email,
+                            role: staff.role
+                        },
+                        summary: {
+                            totalTasks,
+                            completedTasks,
+                            pendingTasks,
+                            inProgressTasks,
+                            underReviewTasks,
+                            overdueTasks,
+                            totalEstimatedHours,
+                            totalActualHours,
+                            avgEfficiency,
+                            onTimeRate,
+                            avgRevisions,
+                            completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+                        },
+                        tasks: tasks.map(task => ({
+                            _id: task._id,
+                            title: task.title,
+                            description: task.description,
+                            category: task.category,
+                            status: task.status,
+                            priority: task.priority,
+                            createdBy: task.createdBy,
+                            client: task.clientId,
+                            targetDate: task.targetDate,
+                            startDate: task.startDate,
+                            completedAt: task.completedAt,
+                            estimatedHours: task.estimatedHours || 0,
+                            actualTimeSpent: task.actualTimeSpent || 0,
+                            actualHours: Math.round(((task.actualTimeSpent || 0) / 60) * 100) / 100,
+                            progressPercentage: task.progressPercentage || 0,
+                            revisionCount: task.revisionCount || 0,
+                            isOverdue: !!task.isOverdue,
+                            tags: task.tags || [],
+                            commentsCount: (task.comments || []).length,
+                            checklistProgress: (task.checklist || []).length > 0
+                                ? `${(task.checklist || []).filter((c: any) => c.completed).length}/${(task.checklist || []).length}`
+                                : '0/0',
+                            createdAt: task.createdAt,
+                            updatedAt: task.updatedAt
+                        }))
+                    };
+                } catch (staffError) {
+                    console.error(`Error processing history for staff ${staff.username}:`, staffError);
+                    // Return basic info so other staff members' data can still load
+                    return {
+                        staff: {
+                            _id: staff._id,
+                            username: staff.username,
+                            role: staff.role
+                        },
+                        summary: { totalTasks: 0, completedTasks: 0, pendingTasks: 0, inProgressTasks: 0, underReviewTasks: 0, overdueTasks: 0, totalEstimatedHours: 0, totalActualHours: 0, avgEfficiency: 0, onTimeRate: 0, avgRevisions: 0, completionRate: 0 },
+                        tasks: [],
+                        error: 'Failed to load details for this staff member'
+                    };
+                }
+            })
+        );
+
+        // Sort by total tasks (descending)
+        staffHistory.sort((a, b) => b.summary.totalTasks - a.summary.totalTasks);
+
+        res.json({
+            staffHistory,
+            totalStaff: staffHistory.length,
+            generatedAt: new Date()
+        });
+    } catch (error) {
+        console.error('Get staff history error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get single task by ID
+router.get('/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const task = await Task.findById(req.params.id)
+            .populate('createdBy', 'username name email')
+            .populate('assignedTo', 'username name email role')
+            .populate('clientId', 'name email phone')
+            .populate('comments.userId', 'username name');
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        // Check permissions
+        const isAssigned = task.assignedTo.some((user: any) => user._id.toString() === req.user!.userId);
+        const isCreator = task.createdBy._id.toString() === req.user!.userId;
+        const isAdminOrManager = ['ADMIN', 'MANAGER'].includes(req.user!.role);
+
+        if (!isAssigned && !isCreator && !isAdminOrManager) {
+            res.status(403).json({ message: 'Access denied' });
+            return;
+        }
+
+        res.json(task);
+    } catch (error) {
+        console.error('Get task error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ============================================
+// STAFF FEATURES - Execution & Progress
+// ============================================
+
+// Update task status (Staff Workflow: PENDING → STARTED → UNDER_REVIEW → DONE)
+router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
+    try {
+        const { status } = req.body;
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        const validStatuses: TaskStatus[] = ['PENDING', 'STARTED', 'UNDER_REVIEW', 'DONE', 'CANCELLED'];
+        if (!validStatuses.includes(status)) {
+            res.status(400).json({ message: 'Invalid status' });
+            return;
+        }
+
+        const previousStatus = task.status;
+        task.status = status;
+
+        // Track revision count (quality metric)
+        if (previousStatus === 'UNDER_REVIEW' && status === 'STARTED') {
+            task.revisionCount += 1;
+        }
+
+        // Set start date when task is started
+        if (status === 'STARTED' && !task.startDate) {
+            task.startDate = new Date();
+        }
+
+        // Set completion date when task is done
+        if (status === 'DONE' && !task.completedAt) {
+            task.completedAt = new Date();
+            task.progressPercentage = 100;
+
+            // Stop timer if running
+            if (task.currentTimerStart) {
+                const duration = Math.floor((new Date().getTime() - task.currentTimerStart.getTime()) / 60000);
+                task.timeEntries.push({
+                    startTime: task.currentTimerStart,
+                    endTime: new Date(),
+                    duration
+                });
+                task.actualTimeSpent += duration;
+                task.currentTimerStart = undefined;
+            }
+        }
+
+        await task.save();
+
+        const updatedTask = await Task.findById(task._id)
+            .populate('createdBy', 'username name email')
+            .populate('assignedTo', 'username name email role')
+            .populate('clientId', 'name email phone');
+
+        res.json({
+            task: updatedTask,
+            message: 'Task status updated successfully'
+        });
+    } catch (error) {
+        console.error('Update task status error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Start/Stop Timer for time tracking
+router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
+    try {
+        const { action } = req.params; // 'start' or 'stop'
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        // Check if user is assigned to this task
+        const isAssigned = task.assignedTo.some(userId => userId.toString() === req.user!.userId);
+        if (!isAssigned && !['ADMIN', 'MANAGER'].includes(req.user!.role)) {
+            res.status(403).json({ message: 'You are not assigned to this task' });
+            return;
+        }
+
+        if (action === 'start') {
+            if (task.currentTimerStart) {
+                res.status(400).json({ message: 'Timer is already running' });
+                return;
+            }
+            task.currentTimerStart = new Date();
+
+            // Auto-update status to STARTED if it's PENDING
+            if (task.status === 'PENDING') {
+                task.status = 'STARTED';
+                if (!task.startDate) {
+                    task.startDate = new Date();
+                }
+            }
+        } else if (action === 'stop') {
+            if (!task.currentTimerStart) {
+                res.status(400).json({ message: 'Timer is not running' });
+                return;
+            }
+
+            const duration = Math.floor((new Date().getTime() - task.currentTimerStart.getTime()) / 60000);
+            task.timeEntries.push({
+                startTime: task.currentTimerStart,
+                endTime: new Date(),
+                duration
+            });
+            task.actualTimeSpent += duration;
+            task.currentTimerStart = undefined;
+        } else {
+            res.status(400).json({ message: 'Invalid action. Use "start" or "stop"' });
+            return;
+        }
+
+        await task.save();
+
+        res.json({
+            task: {
+                _id: task._id,
+                currentTimerStart: task.currentTimerStart,
+                actualTimeSpent: task.actualTimeSpent,
+                status: task.status
+            },
+            message: `Timer ${action}ed successfully`
+        });
+    } catch (error) {
+        console.error('Timer action error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update progress percentage (0-100%)
+router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
+    try {
+        const { progressPercentage } = req.body;
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        if (progressPercentage < 0 || progressPercentage > 100) {
+            res.status(400).json({ message: 'Progress must be between 0 and 100' });
+            return;
+        }
+
+        task.progressPercentage = progressPercentage;
+
+        // Auto-update status based on progress
+        if (progressPercentage === 100 && task.status !== 'DONE') {
+            task.status = 'UNDER_REVIEW';
+        } else if (progressPercentage > 0 && task.status === 'PENDING') {
+            task.status = 'STARTED';
+            if (!task.startDate) {
+                task.startDate = new Date();
+            }
+        }
+
+        await task.save();
+
+        res.json({
+            task: {
+                _id: task._id,
+                progressPercentage: task.progressPercentage,
+                status: task.status
+            },
+            message: 'Progress updated successfully'
+        });
+    } catch (error) {
+        console.error('Update progress error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Add comment to task
+router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
+    try {
+        const { text } = req.body;
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        if (!text || text.trim().length === 0) {
+            res.status(400).json({ message: 'Comment text is required' });
+            return;
+        }
+
+        const user = await User.findById(req.user!.userId);
+
+        task.comments.push({
+            id: uuidv4(),
+            userId: req.user!.userId as any,
+            userName: user?.name || user?.username || 'Unknown',
+            text: text.trim(),
+            createdAt: new Date()
+        });
+
+        await task.save();
+
+        const updatedTask = await Task.findById(task._id)
+            .populate('comments.userId', 'username name');
+
+        res.json({
+            task: updatedTask,
+            message: 'Comment added successfully'
+        });
+    } catch (error) {
+        console.error('Add comment error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update checklist item
+router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) => {
+    try {
+        const { completed } = req.body;
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        const item = task.checklist.find(i => i.id === req.params.itemId);
+        if (!item) {
+            res.status(404).json({ message: 'Checklist item not found' });
+            return;
+        }
+
+        item.completed = completed;
+        if (completed) {
+            item.completedBy = req.user!.userId as any;
+            item.completedAt = new Date();
+        } else {
+            item.completedBy = undefined;
+            item.completedAt = undefined;
+        }
+
+        // Auto-calculate progress based on checklist
+        const completedItems = task.checklist.filter(i => i.completed).length;
+        const totalItems = task.checklist.length;
+        if (totalItems > 0) {
+            task.progressPercentage = Math.round((completedItems / totalItems) * 100);
+        }
+
+        await task.save();
+
+        res.json({
+            task: {
+                _id: task._id,
+                checklist: task.checklist,
+                progressPercentage: task.progressPercentage
+            },
+            message: 'Checklist updated successfully'
+        });
+    } catch (error) {
+        console.error('Update checklist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update task (Admin/Manager only)
+router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const updates = req.body;
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        // Update allowed fields
+        const allowedUpdates = [
+            'title', 'description', 'category', 'assignedTo', 'clientId',
+            'priority', 'targetDate', 'estimatedHours', 'tags'
+        ];
+
+        allowedUpdates.forEach(field => {
+            if (updates[field] !== undefined) {
+                (task as any)[field] = updates[field];
+            }
+        });
+
+        await task.save();
+
+        const updatedTask = await Task.findById(task._id)
+            .populate('createdBy', 'username name email')
+            .populate('assignedTo', 'username name email role')
+            .populate('clientId', 'name email phone');
+
+        res.json({
+            task: updatedTask,
+            message: 'Task updated successfully'
+        });
+    } catch (error) {
+        console.error('Update task error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete task (Admin/Manager only)
+router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+
+        await Task.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Task deleted successfully' });
+    } catch (error) {
+        console.error('Delete task error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ============================================
+// ANALYTICS & REPORTING
+// ============================================
+
+// Get analytics dashboard data
+router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        const dateFilter: any = {};
+        if (startDate) {
+            dateFilter.createdAt = { $gte: new Date(startDate as string) };
+        }
+        if (endDate) {
+            dateFilter.createdAt = { ...dateFilter.createdAt, $lte: new Date(endDate as string) };
+        }
+
+        // Total tasks by status
+        const tasksByStatus = await Task.aggregate([
+            { $match: dateFilter },
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+
+        // Overdue tasks
+        const overdueTasks = await Task.countDocuments({
+            ...dateFilter,
+            isOverdue: true,
+            status: { $nin: ['DONE', 'CANCELLED'] }
+        });
+
+        // Completion rate (tasks finished before deadline)
+        const completedTasks = await Task.find({
+            ...dateFilter,
+            status: 'DONE',
+            completedAt: { $exists: true }
+        });
+
+        const onTimeCompletions = completedTasks.filter(task =>
+            task.completedAt! <= task.targetDate
+        ).length;
+
+        const completionRate = completedTasks.length > 0
+            ? Math.round((onTimeCompletions / completedTasks.length) * 100)
+            : 0;
+
+        // Efficiency metric (estimated vs actual time)
+        const tasksWithTime = await Task.find({
+            ...dateFilter,
+            status: 'DONE',
+            actualTimeSpent: { $gt: 0 }
+        });
+
+        const avgEfficiency = tasksWithTime.length > 0
+            ? tasksWithTime.reduce((acc, task) => {
+                const estimated = task.estimatedHours * 60; // convert to minutes
+                const actual = task.actualTimeSpent;
+                const efficiency = (estimated / actual) * 100;
+                return acc + efficiency;
+            }, 0) / tasksWithTime.length
+            : 100;
+
+        // Staff workload distribution
+        const workloadByStaff = await Task.aggregate([
+            { $match: { status: { $nin: ['DONE', 'CANCELLED'] } } },
+            { $unwind: '$assignedTo' },
+            {
+                $group: {
+                    _id: '$assignedTo',
+                    taskCount: { $sum: 1 },
+                    totalEstimatedHours: { $sum: '$estimatedHours' }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            { $unwind: '$user' },
+            {
+                $project: {
+                    userId: '$_id',
+                    userName: '$user.name',
+                    username: '$user.username',
+                    taskCount: 1,
+                    totalEstimatedHours: 1
+                }
+            }
+        ]);
+
+        // Average revision count
+        const avgRevisions = await Task.aggregate([
+            { $match: { ...dateFilter, status: 'DONE' } },
+            { $group: { _id: null, avgRevisions: { $avg: '$revisionCount' } } }
+        ]);
+
+        res.json({
+            tasksByStatus,
+            overdueTasks,
+            completionRate,
+            avgEfficiency: Math.round(avgEfficiency),
+            workloadByStaff,
+            avgRevisions: avgRevisions[0]?.avgRevisions || 0,
+            totalTasks: await Task.countDocuments(dateFilter)
+        });
+    } catch (error) {
+        console.error('Get analytics error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
+export default router;

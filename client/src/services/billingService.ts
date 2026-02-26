@@ -126,5 +126,22 @@ export const billingService = {
         const response = await api.get(`/billing/payment-status/${clientId}`);
         return response.data;
     },
+
+    // --- Client Ledger ---
+    getClientLedger: async (filters?: {
+        clientId?: string;
+        staffId?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<any> => {
+        const params = new URLSearchParams();
+        if (filters) {
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) params.append(key, value);
+            });
+        }
+        const response = await api.get(`/billing/client-ledger?${params.toString()}`);
+        return response.data;
+    },
 };
 

@@ -11,11 +11,20 @@ import { AdminDashboard } from './pages/admin/Dashboard';
 // AnalyticsDashboard removed
 import { MonthlyReports } from './pages/admin/MonthlyReports';
 import { Clients } from './pages/admin/Clients';
+import { AddGroupList } from './pages/admin/client_process/AddGroupList';
+import { ClientMaster } from './pages/admin/client_process/ClientMaster';
+import { ClientList } from './pages/admin/client_process/ClientList';
+import { ClientContactDetail } from './pages/admin/client_process/ClientContactDetail';
+import { CancelClientTask } from './pages/admin/client_process/CancelClientTask';
+import { VisitorMaster } from './pages/admin/client_process/VisitorMaster';
 import { Staff } from './pages/admin/Staff';
+import { Tasks } from './pages/admin/Tasks';
+import { StaffTaskHistory } from './pages/admin/StaffTaskHistory';
 import { UploadFile } from './pages/admin/UploadFile';
 import { ManageFiles } from './pages/admin/ManageFiles';
 import { Reminders } from './pages/admin/Reminders';
 import { Billing } from './pages/admin/Billing';
+import { ClientLedger } from './pages/admin/ClientLedger';
 import { FileRegister } from './pages/admin/FileRegister';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
 import { ClientDashboard } from './pages/client/Dashboard';
@@ -104,6 +113,14 @@ const AppRoutes: React.FC = () => {
         {/* Analytics route removed */}
         <Route path="reports" element={<MonthlyReports />} />
         <Route path="clients" element={<Clients />} />
+        <Route path="client">
+          <Route path="add-group" element={<AddGroupList />} />
+          <Route path="master" element={<ClientMaster />} />
+          <Route path="list" element={<ClientList />} />
+          <Route path="contact-detail" element={<ClientContactDetail />} />
+          <Route path="cancel-task" element={<CancelClientTask />} />
+          <Route path="visitor-master" element={<VisitorMaster />} />
+        </Route>
         <Route
           path="staff"
           element={
@@ -112,11 +129,28 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="tasks" element={<Tasks />} />
+        <Route
+          path="staff-task-history"
+          element={
+            <ProtectedRoute requireAdmin>
+              <StaffTaskHistory />
+            </ProtectedRoute>
+          }
+        />
         <Route path="upload" element={<UploadFile />} />
         <Route path="files" element={<ManageFiles />} />
         <Route path="reminders" element={<Reminders />} />
 
         <Route path="billing" element={<Billing />} />
+        <Route
+          path="client-ledger"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ClientLedger />
+            </ProtectedRoute>
+          }
+        />
         <Route path="fileregister" element={<FileRegister />} />
 
         <Route

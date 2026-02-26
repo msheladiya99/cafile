@@ -1,0 +1,742 @@
+import React, { useState } from 'react';
+import {
+    Box,
+    Paper,
+    Typography,
+    TextField,
+    Button,
+    Switch,
+    Tabs,
+    Tab,
+    Select,
+    MenuItem,
+    Divider,
+    IconButton,
+    Dialog,
+    DialogContent,
+    Snackbar,
+    Alert,
+} from '@mui/material';
+import {
+    GridView as GridViewIcon,
+    ContactPhone as ContactPhoneIcon,
+    MoreHoriz as MoreHorizIcon,
+    Image as ImageIcon,
+    CalendarToday as CalendarTodayIcon,
+    ContactMail as ContactMailIcon,
+    AddBox as AddBoxIcon,
+    PhotoCamera as PhotoCameraIcon,
+} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
+import { masterService, type ITStatus, type SubMaster } from '../../../services/masterService';
+import { adminService } from '../../../services/adminService';
+import type { CreateClientData } from '../../../types';
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ pt: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
+}
+
+interface FormRowProps {
+    label: string;
+    required?: boolean;
+    children?: React.ReactNode;
+    helperText?: string;
+}
+
+const FormRow = ({ label, required, children, helperText }: FormRowProps) => {
+    // Type checking for child element to safely access props
+    const childIsElement = React.isValidElement(children);
+    return (
+        <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
+                <Typography sx={{ width: { xs: '100%', sm: '160px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, pt: { xs: 0, sm: childIsElement && (children as React.ReactElement<{ multiline?: boolean }>).props.multiline ? 1 : 0 }, flexShrink: 0 }}>
+                    {label} {required && <span style={{ color: 'red' }}>*</span>}
+                </Typography>
+                <Box sx={{ flex: 1, width: '100%' }}>
+                    {children}
+                </Box>
+            </Box>
+            {helperText && (
+                <Box sx={{ display: 'flex', mt: 0.5 }}>
+                    <Box sx={{ width: { xs: 0, sm: '160px' }, display: { xs: 'none', sm: 'block' }, flexShrink: 0 }} />
+                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, display: 'inline-block', fontSize: '0.75rem' }}>
+                        <strong style={{ marginRight: '4px' }}>NOTE!</strong> {helperText}
+                    </Typography>
+                </Box>
+            )}
+        </Box>
+    );
+};
+
+interface SectionProps {
+    title: string;
+    icon: React.ReactElement<{ sx?: Record<string, unknown> }>;
+    children?: React.ReactNode;
+}
+
+const Section = ({ title, icon, children }: SectionProps) => (
+    <Paper elevation={0} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+            {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
+            <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
+        </Box>
+        <Box sx={{ p: 2, bgcolor: '#ffffff' }}>
+            {children}
+        </Box>
+    </Paper>
+);
+
+interface MasterModalProps {
+    open: boolean;
+    onClose: () => void;
+    title: string;
+    itemName: string;
+    onSave: (data: { name: string; description: string; status: boolean }) => void;
+    isSaving: boolean;
+    dataList: { _id?: string; name: string; status?: boolean }[];
+    showSnackbar: (message: string, severity?: 'success' | 'error') => void;
+}
+
+const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataList, showSnackbar }: MasterModalProps) => {
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [status, setStatus] = useState(true);
+
+    const handleSave = () => {
+        if (!name.trim()) {
+            showSnackbar('Name is required', 'error');
+            return;
+        }
+        onSave({ name, description, status });
+        setName('');
+        setDescription('');
+        setStatus(true);
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.1rem' }}>{title}</Typography>
+                <IconButton onClick={onClose} size="small" sx={{ color: 'white' }} disabled={isSaving}>
+                    <CloseIcon />
+                </IconButton>
+            </Box>
+            <DialogContent sx={{ p: 0 }}>
+                <Box sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, mb: 2 }}>
+                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', fontWeight: 500 }}>
+                            Name <span style={{ color: 'red' }}>*</span>
+                        </Typography>
+                        <TextField fullWidth size="small" value={name} onChange={e => setName(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'flex-start' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, mb: 3 }}>
+                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', pt: 1, fontWeight: 500 }}>
+                            Description
+                        </Typography>
+                        <TextField fullWidth size="small" multiline rows={3} value={description} onChange={e => setDescription(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, mb: 3 }}>
+                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', fontWeight: 500 }}>
+                            Status
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: status ? '#e8f5e9' : '#ffebee', borderRadius: 4, px: 2, height: 32, width: 'fit-content' }}>
+                            <Switch size="small" color="primary" sx={{ ml: -1 }} checked={status} onChange={e => setStatus(e.target.checked)} />
+                            <Typography variant="body2" sx={{ color: status ? 'success.main' : 'error.main', ml: 0.5, fontWeight: 600 }}>{status ? 'Active' : 'Inactive'}</Typography>
+                        </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                        <Button variant="contained" onClick={handleSave} disabled={isSaving} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                        <Button variant="contained" onClick={onClose} disabled={isSaving} sx={{ bgcolor: '#fb7165', '&:hover': { bgcolor: '#eb6155' }, px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, boxShadow: 'none', fontWeight: 600 }}>
+                            Cancel
+                        </Button>
+                    </Box>
+                </Box>
+
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FormatListBulletedIcon fontSize="small" />
+                    <Typography variant="subtitle1" fontWeight="600" sx={{ fontSize: '1rem' }}>List</Typography>
+                </Box>
+                <Box sx={{ p: 2 }}>
+                    {dataList.length === 0 ? (
+                        <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+                            <Typography variant="body2" color="text.secondary">{itemName} Not Found</Typography>
+                        </Box>
+                    ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: '200px', overflowY: 'auto' }}>
+                            {dataList.map(item => (
+                                <Box key={item._id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body2" fontWeight="500">{item.name}</Typography>
+                                    <Typography variant="caption" sx={{ color: item.status ? 'success.main' : 'error.main', fontWeight: 600 }}>{item.status ? 'Active' : 'Inactive'}</Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+                </Box>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+export const ClientMaster: React.FC = () => {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
+    const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
+
+    const [tabValue, setTabValue] = useState(0);
+    const [itStatusModalOpen, setItStatusModalOpen] = useState(false);
+    const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
+
+    // Form State
+    const [formData, setFormData] = useState<CreateClientData>({
+        name: '',
+        clientCode: '',
+        groupName: '',
+        itStatus: '',
+        masterType: '',
+        subMaster: '',
+        birthDate: '',
+        address: '',
+        country: '',
+        state: '',
+        city: '',
+        postalCode: '',
+        phone: '', // Mapped to Mobile Number
+        email: '',
+        currency: '',
+        panNumber: '',
+        gstNumber: '',
+        aadharNumber: '',
+        incorporationDateFrom: '',
+        incorporationDateTo: '',
+        licenceNo: '',
+        licenceAuthority: '',
+        trnNo: '',
+        description: '',
+        supportEmployee: '',
+        status: true,
+        financialYear: 'april-march',
+        altAddress: '',
+        altPhoneM: '',
+        altPhoneL: '',
+        altFax: '',
+        extraField1: '',
+        extraField2: '',
+        extraField3: '',
+        extraField4: '',
+        extraField5: '',
+        extraField6: '',
+        extraField7: '',
+    });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name as string]: value }));
+    };
+
+    const handleSwitchChange = (name: string, checked: boolean) => {
+        setFormData(prev => ({ ...prev, [name]: checked }));
+    };
+
+    // Fetch lists
+    const { data: groups = [] } = useQuery<ClientGroup[]>({
+        queryKey: ['clientGroups'],
+        queryFn: clientGroupService.getGroups
+    });
+    const { data: itStatuses = [] } = useQuery<ITStatus[]>({
+        queryKey: ['itStatus'],
+        queryFn: masterService.getITStatuses
+    });
+    const { data: subMasters = [] } = useQuery<SubMaster[]>({
+        queryKey: ['subMaster'],
+        queryFn: masterService.getSubMasters
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: staffList = [] } = useQuery<any[]>({
+        queryKey: ['staffUsers'],
+        queryFn: adminService.getStaffUsers
+    });
+
+    // Mutations
+    const itStatusMutation = useMutation({
+        mutationFn: masterService.createITStatus,
+        onSuccess: () => {
+            showSnackbar('IT Status created successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['itStatus'] });
+            setItStatusModalOpen(false);
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (err: any) => {
+            showSnackbar(err.response?.data?.message || 'Failed to create IT Status', 'error');
+        }
+    });
+
+    const subMasterMutation = useMutation({
+        mutationFn: masterService.createSubMaster,
+        onSuccess: () => {
+            showSnackbar('Sub Master created successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['subMaster'] });
+            setSubMasterModalOpen(false);
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (err: any) => {
+            showSnackbar(err.response?.data?.message || 'Failed to create Sub Master', 'error');
+        }
+    });
+
+    const createClientMutation = useMutation({
+        mutationFn: adminService.createClient,
+        onSuccess: () => {
+            showSnackbar('Client saved successfully', 'success');
+            navigate('/admin/client/list');
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (err: any) => {
+            showSnackbar(err.response?.data?.message || 'Failed to save client', 'error');
+        }
+    });
+
+    const handleSaveClient = () => {
+        if (!formData.name || !formData.groupName || !formData.itStatus || !formData.masterType) {
+            showSnackbar('Please complete the required Basic Form fields', 'error');
+            return;
+        }
+        if (!formData.address || !formData.country || !formData.state || !formData.city || !formData.phone || !formData.email) {
+            showSnackbar('Please complete the required Primary Contact forms', 'error');
+            return;
+        }
+        createClientMutation.mutate(formData);
+    };
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+    };
+
+    return (
+        <Box sx={{ p: { xs: 2, md: 3 } }}>
+            {/* Header Section */}
+            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                    <Typography variant="h5" fontWeight="600">Client Master</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            Add IT Status
+                        </Button>
+                        <Button variant="contained" size="small" onClick={() => setSubMasterModalOpen(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            Add Sub Master
+                        </Button>
+                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            Add New
+                        </Button>
+                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            List
+                        </Button>
+                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            Field Master
+                        </Button>
+                    </Box>
+                </Box>
+            </Paper>
+
+            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#f8fafc' }}>
+                    <Tabs
+                        value={tabValue}
+                        onChange={handleTabChange}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        sx={{
+                            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.9rem', color: 'text.secondary', minHeight: 48 },
+                            '& .Mui-selected': { color: 'primary.main', bgcolor: 'rgba(102, 126, 234, 0.08)' },
+                            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' }
+                        }}
+                    >
+                        <Tab label="Client Information" />
+                        <Tab label="Multiple Contact" />
+                        <Tab label="Legal Document" />
+                        <Tab label="Login Rights" />
+                        <Tab label="Work Assign" />
+                    </Tabs>
+                </Box>
+
+                <CustomTabPanel value={tabValue} index={0}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: 3, pb: 3 }}>
+
+                        {/* LEFT COLUMN */}
+                        <Box sx={{ flex: 15 }}>
+                            <Section title="Basic Form" icon={<GridViewIcon />}>
+                                <FormRow label="Client Name" required>
+                                    <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Client Code">
+                                    <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Group Name" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="groupName"
+                                        value={formData.groupName}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.groupName ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a Group...</MenuItem>
+                                        {groups.map((group) => (
+                                            <MenuItem key={group._id} value={group._id as string}>
+                                                {group.groupName}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="IT Status" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="itStatus"
+                                        value={formData.itStatus}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.itStatus ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a IT Status...</MenuItem>
+                                        {itStatuses.map((it) => (
+                                            <MenuItem key={it._id} value={it._id as string}>
+                                                {it.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="Master Type" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="masterType"
+                                        value={formData.masterType}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.masterType ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a Master type...</MenuItem>
+                                        {[
+                                            'Individual', 'HUF', 'Partnership', 'Company', 'LLP', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
+                                        ].map((t) => (
+                                            <MenuItem key={t} value={t}>{t}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="Sub Master">
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="subMaster"
+                                        value={formData.subMaster}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.subMaster ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a Sub Master...</MenuItem>
+                                        {subMasters.map((sub) => (
+                                            <MenuItem key={sub._id} value={sub._id as string}>
+                                                {sub.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="Birth Date">
+                                    <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                </FormRow>
+                            </Section>
+
+                            <Section title="Primary Contact Detail" icon={<ContactPhoneIcon />}>
+                                <FormRow label="Address" required>
+                                    <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Country" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.country ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a Country...</MenuItem>
+                                        <MenuItem value="India">India</MenuItem>
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="State" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.state ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a State...</MenuItem>
+                                        <MenuItem value="Gujarat">Gujarat</MenuItem>
+                                        <MenuItem value="Maharashtra">Maharashtra</MenuItem>
+                                        <MenuItem value="Delhi">Delhi</MenuItem>
+                                        <MenuItem value="Rajasthan">Rajasthan</MenuItem>
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="City" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.city ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a City...</MenuItem>
+                                        <MenuItem value="Surat">Surat</MenuItem>
+                                        <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
+                                        <MenuItem value="Mumbai">Mumbai</MenuItem>
+                                        <MenuItem value="Pune">Pune</MenuItem>
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="Postal Code">
+                                    <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Mobile Number" required helperText="Separate multiple Mobile with &quot;,&quot; (Comma).">
+                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Email" required helperText="Separate multiple Email with &quot;,&quot; (Comma).">
+                                    <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                            </Section>
+
+                            <Section title="Other Details" icon={<MoreHorizIcon />}>
+                                <FormRow label="Currency">
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="currency"
+                                        value={formData.currency}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.currency ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose a Currency...</MenuItem>
+                                        <MenuItem value="INR">Indian Rupee (INR)</MenuItem>
+                                        <MenuItem value="USD">US Dollar (USD)</MenuItem>
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="PAN No">
+                                    <TextField name="panNumber" value={formData.panNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="GSTIN">
+                                    <TextField name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Aadhar No.">
+                                    <TextField name="aadharNumber" value={formData.aadharNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Incorporation Date">
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                        <TextField name="incorporationDateFrom" value={formData.incorporationDateFrom} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                        <Typography color="text.secondary">To</Typography>
+                                        <TextField name="incorporationDateTo" value={formData.incorporationDateTo} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    </Box>
+                                </FormRow>
+                                <FormRow label="Licence No">
+                                    <TextField name="licenceNo" value={formData.licenceNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Licence Authority">
+                                    <TextField name="licenceAuthority" value={formData.licenceAuthority} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="TRN No">
+                                    <TextField name="trnNo" value={formData.trnNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Description">
+                                    <TextField name="description" value={formData.description} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Support Employee">
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        name="supportEmployee"
+                                        value={formData.supportEmployee}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5, color: formData.supportEmployee ? 'text.primary' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="" disabled>Choose Employee...</MenuItem>
+                                        {staffList.filter(user => user.role !== 'CLIENT').map(user => (
+                                            <MenuItem key={user._id} value={user._id}>{user.username} ({user.role})</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormRow>
+                                <FormRow label="Status">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: formData.status ? '#e8f5e9' : '#ffebee', borderRadius: 4, px: 2, height: 32, width: 'fit-content' }}>
+                                        <Switch size="small" color="primary" sx={{ ml: -1 }} checked={formData.status} onChange={e => handleSwitchChange('status', e.target.checked)} />
+                                        <Typography variant="body2" sx={{ color: formData.status ? 'success.main' : 'error.main', ml: 0.5, fontWeight: 600 }}>{formData.status ? 'Active' : 'Inactive'}</Typography>
+                                    </Box>
+                                </FormRow>
+                            </Section>
+
+                        </Box>
+
+                        {/* RIGHT COLUMN */}
+                        <Box sx={{ flex: 10 }}>
+                            <Section title="Profile Image" icon={<ImageIcon />}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
+                                    <Box sx={{ width: 150, height: 150, border: '2px dashed #ccc', borderRadius: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
+                                        <PhotoCameraIcon sx={{ fontSize: 40, color: '#ccc' }} />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%', maxWidth: 300 }}>
+                                        <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500 }}>
+                                            Choose File
+                                            <input type="file" hidden accept="image/jpeg, image/png" />
+                                        </Button>
+                                        <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            No file chosen
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, fontSize: '0.75rem' }}>
+                                        <strong style={{ marginRight: '4px' }}>NOTE!</strong> JPEG or PNG Image Format only
+                                    </Typography>
+                                </Box>
+                            </Section>
+
+                            <Section title="Financial Year" icon={<CalendarTodayIcon />}>
+                                <FormRow label="Year" required>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        name="financialYear"
+                                        value={formData.financialYear}
+                                        onChange={handleInputChange as any}
+                                        sx={{ borderRadius: 1.5 }}
+                                    >
+                                        <MenuItem value="april-march">April-March</MenuItem>
+                                        <MenuItem value="jan-dec">Jan-Dec</MenuItem>
+                                    </Select>
+                                </FormRow>
+                            </Section>
+
+                            <Section title="Alternate Contact" icon={<ContactMailIcon />}>
+                                <FormRow label="Address">
+                                    <TextField name="altAddress" value={formData.altAddress} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Phone(M)">
+                                    <TextField name="altPhoneM" value={formData.altPhoneM} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="Phone(L)">
+                                    <TextField name="altPhoneL" value={formData.altPhoneL} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                                <FormRow label="FAX">
+                                    <TextField name="altFax" value={formData.altFax} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                </FormRow>
+                            </Section>
+
+                            <Section title="Extra Fields" icon={<AddBoxIcon />}>
+                                {([1, 2, 3, 4, 5, 6, 7] as const).map((num) => {
+                                    const fieldName = `extraField${num}` as keyof CreateClientData;
+                                    return (
+                                        <FormRow key={num} label={`Field ${num}`}>
+                                            <TextField name={fieldName} value={formData[fieldName]} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        </FormRow>
+                                    );
+                                })}
+                            </Section>
+                        </Box>
+
+                    </Box>
+
+                    <Divider />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, p: 3, bgcolor: '#f8fafc' }}>
+                        <Button variant="contained" onClick={handleSaveClient} disabled={createClientMutation.isPending} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 4, py: 1, textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
+                            {createClientMutation.isPending ? 'Saving...' : 'Save'}
+                        </Button>
+                        <Button variant="outlined" onClick={() => navigate('/admin/client/list')} disabled={createClientMutation.isPending} sx={{ px: 4, py: 1, textTransform: 'none', borderRadius: 2, color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' }, fontWeight: 600 }}>
+                            Cancel
+                        </Button>
+                    </Box>
+                </CustomTabPanel>
+
+                {/* Placeholders for other tabs */}
+                <CustomTabPanel value={tabValue} index={1}>
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">Multiple Contact Information (Coming Soon)</Typography>
+                    </Box>
+                </CustomTabPanel>
+                <CustomTabPanel value={tabValue} index={2}>
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">Legal Document Management (Coming Soon)</Typography>
+                    </Box>
+                </CustomTabPanel>
+                <CustomTabPanel value={tabValue} index={3}>
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">Login Rights Assignment (Coming Soon)</Typography>
+                    </Box>
+                </CustomTabPanel>
+                <CustomTabPanel value={tabValue} index={4}>
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">Work Assignment Console (Coming Soon)</Typography>
+                    </Box>
+                </CustomTabPanel>
+            </Paper>
+
+            {/* Modals */}
+            <MasterModal
+                open={itStatusModalOpen}
+                onClose={() => setItStatusModalOpen(false)}
+                title="IT Status"
+                itemName="It Status"
+                onSave={(data) => itStatusMutation.mutate(data)}
+                isSaving={itStatusMutation.isPending}
+                dataList={itStatuses}
+                showSnackbar={showSnackbar}
+            />
+            <MasterModal
+                open={subMasterModalOpen}
+                onClose={() => setSubMasterModalOpen(false)}
+                title="Sub Master"
+                itemName="Sub Master"
+                onSave={(data) => subMasterMutation.mutate(data)}
+                isSaving={subMasterMutation.isPending}
+                dataList={subMasters}
+                showSnackbar={showSnackbar}
+            />
+            <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>{snackbar.message}</Alert>
+            </Snackbar>
+        </Box>
+    );
+};

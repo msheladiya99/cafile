@@ -127,4 +127,8 @@ export const adminService = {
         const response = await api.get(`/files/client/${clientId}/tags`);
         return response.data;
     },
+    getStaffUsers: async (): Promise<any[]> => {
+        const response = await api.get('/admin/users');
+        return response.data;
+    },
 };
