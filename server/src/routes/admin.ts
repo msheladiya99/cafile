@@ -44,7 +44,8 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
             trnNo, description, supportEmployee, status, financialYear,
             altAddress, altPhoneM, altPhoneL, altFax,
-            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7
+            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7,
+            multipleContacts, legalDocuments
         } = req.body;
 
         if (!name || !email || !phone) {
@@ -77,7 +78,8 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
             trnNo, description, supportEmployee: supportEmployee || undefined, status, financialYear,
             altAddress, altPhoneM, altPhoneL, altFax,
-            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7
+            extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7,
+            multipleContacts, legalDocuments
         });
         await client.save();
 
@@ -122,7 +124,6 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
         const clients = await Client.find()
             .populate('groupName', 'groupName')
             .populate('itStatus', 'name')
-            .populate('subMaster', 'name')
             .sort({ createdAt: -1 })
             .lean();
         res.json(clients);

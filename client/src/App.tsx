@@ -116,6 +116,7 @@ const AppRoutes: React.FC = () => {
         <Route path="client">
           <Route path="add-group" element={<AddGroupList />} />
           <Route path="master" element={<ClientMaster />} />
+          <Route path="master/:id" element={<ClientMaster />} />
           <Route path="list" element={<ClientList />} />
           <Route path="contact-detail" element={<ClientContactDetail />} />
           <Route path="cancel-task" element={<CancelClientTask />} />

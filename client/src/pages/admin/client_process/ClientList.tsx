@@ -19,7 +19,11 @@ import { FormatListBulleted as FormatListBulletedIcon, TableChart as TableChartI
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '../../../services/adminService';
+import { clientGroupService } from '../../../services/clientGroupService';
+import { masterService } from '../../../services/masterService';
 import type { Client } from '../../../types';
+import type { ClientGroup } from '../../../services/clientGroupService';
+import type { ITStatus } from '../../../services/masterService';
 
 interface FilterRowProps {
     label: string;
@@ -44,6 +48,65 @@ export const ClientList: React.FC = () => {
         queryKey: ['clients'],
         queryFn: adminService.getClients
     });
+
+    const { data: groups = [] } = useQuery<ClientGroup[]>({
+        queryKey: ['clientGroups'],
+        queryFn: clientGroupService.getGroups
+    });
+
+    const { data: itStatuses = [] } = useQuery<ITStatus[]>({
+        queryKey: ['itStatus'],
+        queryFn: masterService.getITStatuses
+    });
+
+    // Filter States
+    const [filterGroup, setFilterGroup] = React.useState('');
+    const [filterClient, setFilterClient] = React.useState('');
+    const [filterSearchType, setFilterSearchType] = React.useState('name');
+    const [filterSearchText, setFilterSearchText] = React.useState('');
+    const [filterMasterType, setFilterMasterType] = React.useState('');
+    const [filterItStatus, setFilterItStatus] = React.useState('');
+    const [filterSubMaster, setFilterSubMaster] = React.useState('');
+    const [filterStatus, setFilterStatus] = React.useState('all');
+    const [filterFYear, setFilterFYear] = React.useState('');
+
+    const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+
+    // Computed Filtered Clients
+    const filteredClients = React.useMemo(() => {
+        return clients.filter((client) => {
+            // Group Filter
+            if (filterGroup && typeof client.groupName === 'object' && client.groupName?._id !== filterGroup) return false;
+            // Client Dropdown Filter (by _id)
+            if (filterClient && client._id !== filterClient) return false;
+
+            // Search Text Filter
+            if (filterSearchText) {
+                const searchLower = filterSearchText.toLowerCase();
+                if (filterSearchType === 'name' && !client.name.toLowerCase().includes(searchLower)) return false;
+                if (filterSearchType === 'email' && !client.email?.toLowerCase().includes(searchLower)) return false;
+                if (filterSearchType === 'phone' && !client.phone?.includes(filterSearchText)) return false;
+                if (filterSearchType === 'clientCode' && !client.clientCode?.toLowerCase().includes(searchLower)) return false;
+            }
+
+            // Other Dropdowns
+            if (filterMasterType && client.masterType !== filterMasterType) return false;
+            if (filterItStatus && typeof client.itStatus === 'object' && client.itStatus?._id !== filterItStatus) return false;
+
+            // @ts-expect-error Types mismatch on dynamic property
+            if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
+
+            if (filterStatus !== 'all') {
+                const isActive = filterStatus === 'active';
+                if (client.status !== isActive) return false;
+            }
+
+            // @ts-expect-error UI filter not present on model
+            if (filterFYear && client.financialYear !== filterFYear) return false;
+
+            return true;
+        });
+    }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
@@ -70,26 +133,38 @@ export const ClientList: React.FC = () => {
                     {/* Left Column */}
                     <Box sx={{ flex: 1 }}>
                         <FilterRow label="Group Name">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a Group...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a Group...</MenuItem>
+                                {groups.map(group => (
+                                    <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
+                                ))}
                             </Select>
                         </FilterRow>
                         <FilterRow label="Client Name">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a Client...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterClient} onChange={(e) => setFilterClient(e.target.value)} sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a Client...</MenuItem>
+                                {clients.map(client => (
+                                    <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
+                                ))}
                             </Select>
                         </FilterRow>
                         <FilterRow label="Search">
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Select size="small" defaultValue="name" sx={{ width: '150px', borderRadius: 1.5 }}>
+                                <Select size="small" value={filterSearchType} onChange={(e) => setFilterSearchType(e.target.value)} sx={{ width: '150px', borderRadius: 1.5 }}>
                                     <MenuItem value="name">By Name</MenuItem>
+                                    <MenuItem value="clientCode">By Client Code</MenuItem>
+                                    <MenuItem value="email">By Email</MenuItem>
+                                    <MenuItem value="phone">By Phone</MenuItem>
                                 </Select>
-                                <TextField fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                <TextField fullWidth size="small" value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                             </Box>
                         </FilterRow>
                         <FilterRow label="Master Type">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a Master type...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterMasterType} onChange={(e) => setFilterMasterType(e.target.value)} sx={{ borderRadius: 1.5, color: filterMasterType ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a Master type...</MenuItem>
+                                {['Client', 'Department', 'Follow Up', 'Other'].map(type => (
+                                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                                ))}
                             </Select>
                         </FilterRow>
                     </Box>
@@ -97,23 +172,33 @@ export const ClientList: React.FC = () => {
                     {/* Right Column */}
                     <Box sx={{ flex: 1 }}>
                         <FilterRow label="IT Status">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a IT Status...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterItStatus} onChange={(e) => setFilterItStatus(e.target.value)} sx={{ borderRadius: 1.5, color: filterItStatus ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a IT Status...</MenuItem>
+                                {itStatuses.map(status => (
+                                    <MenuItem key={status._id} value={status._id}>{status.name}</MenuItem>
+                                ))}
                             </Select>
                         </FilterRow>
                         <FilterRow label="Sub Master">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a Sub Master...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterSubMaster} onChange={(e) => setFilterSubMaster(e.target.value)} sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a Sub Master...</MenuItem>
+                                {subMasterOptions.map(option => (
+                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                ))}
                             </Select>
                         </FilterRow>
                         <FilterRow label="Status">
-                            <Select fullWidth size="small" defaultValue="all" sx={{ borderRadius: 1.5 }}>
+                            <Select fullWidth size="small" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} sx={{ borderRadius: 1.5 }}>
                                 <MenuItem value="all">All Client</MenuItem>
+                                <MenuItem value="active">Active</MenuItem>
+                                <MenuItem value="inactive">Inactive</MenuItem>
                             </Select>
                         </FilterRow>
                         <FilterRow label="F Year">
-                            <Select fullWidth size="small" displayEmpty value="" sx={{ borderRadius: 1.5, color: 'text.secondary' }}>
-                                <MenuItem value="" disabled>Choose a Period...</MenuItem>
+                            <Select fullWidth size="small" displayEmpty value={filterFYear} onChange={(e) => setFilterFYear(e.target.value)} sx={{ borderRadius: 1.5, color: filterFYear ? 'inherit' : 'text.secondary' }}>
+                                <MenuItem value="">Choose a Period...</MenuItem>
+                                <MenuItem value="april-march">April - March</MenuItem>
+                                <MenuItem value="jan-dec">January - December</MenuItem>
                             </Select>
                         </FilterRow>
                     </Box>
@@ -147,14 +232,14 @@ export const ClientList: React.FC = () => {
                                 <TableRow>
                                     <TableCell colSpan={5} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
                                 </TableRow>
-                            ) : clients.length === 0 ? (
+                            ) : filteredClients.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} align="center" sx={{ color: 'text.secondary', py: 4 }}>
                                         No clients found.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                clients.map((client) => (
+                                filteredClients.map((client) => (
                                     <TableRow key={client._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
                                         <TableCell sx={{ fontWeight: 500 }}>
                                             {client.name}
@@ -181,7 +266,7 @@ export const ClientList: React.FC = () => {
                                             <IconButton size="small" sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }} onClick={() => navigate(`/admin/client/${client._id}`)}>
                                                 <VisibilityIcon fontSize="small" />
                                             </IconButton>
-                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}>
+                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/client/master/${client._id}`)}>
                                                 <EditIcon fontSize="small" />
                                             </IconButton>
                                             <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}>

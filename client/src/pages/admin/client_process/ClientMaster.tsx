@@ -16,6 +16,7 @@ import {
     DialogContent,
     Snackbar,
     Alert,
+    Autocomplete,
 } from '@mui/material';
 import {
     GridView as GridViewIcon,
@@ -29,7 +30,7 @@ import {
 } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
 import { masterService, type ITStatus, type SubMaster } from '../../../services/masterService';
@@ -207,6 +208,7 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataLis
 
 export const ClientMaster: React.FC = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
     const queryClient = useQueryClient();
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
@@ -258,7 +260,176 @@ export const ClientMaster: React.FC = () => {
         extraField5: '',
         extraField6: '',
         extraField7: '',
+        multipleContacts: [],
+        legalDocuments: [],
     });
+
+    // Multiple Contact Form State
+    const [contactForm, setContactForm] = useState({
+        name: '',
+        designation: '',
+        mobile: '',
+        email: '',
+        description: '',
+        status: true
+    });
+
+    const handleContactFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setContactForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddContactForm = () => {
+        if (!contactForm.name || !contactForm.designation || !contactForm.mobile || !contactForm.email) {
+            showSnackbar('Name, Designation, Mobile and Email are required', 'error');
+            return;
+        }
+        setFormData(prev => ({
+            ...prev,
+            multipleContacts: [...(prev.multipleContacts || []), contactForm]
+        }));
+        setContactForm({
+            name: '',
+            designation: '',
+            mobile: '',
+            email: '',
+            description: '',
+            status: true
+        });
+        showSnackbar('Contact added temporarily. Client must be saved.', 'info');
+    };
+
+    // Edit Client Data Fetching
+    const { data: clientToEdit, isLoading: isClientLoading } = useQuery({
+        queryKey: ['client', id],
+        queryFn: () => adminService.getClient(id!),
+        enabled: !!id
+    });
+
+    React.useEffect(() => {
+        if (clientToEdit) {
+            setFormData({
+                name: clientToEdit.name || '',
+                clientCode: clientToEdit.clientCode || '',
+                groupName: (typeof clientToEdit.groupName === 'object' ? clientToEdit.groupName._id : clientToEdit.groupName) || '',
+                itStatus: (typeof clientToEdit.itStatus === 'object' ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
+                masterType: clientToEdit.masterType || '',
+                subMaster: (typeof clientToEdit.subMaster === 'object' ? clientToEdit.subMaster._id : clientToEdit.subMaster) || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                birthDate: clientToEdit.birthDate ? clientToEdit.birthDate.split('T')[0] : '',
+                address: clientToEdit.address || '',
+                country: clientToEdit.country || '',
+                state: clientToEdit.state || '',
+                city: clientToEdit.city || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                postalCode: clientToEdit.postalCode || '',
+                phone: clientToEdit.phone || '', // Mapped to Mobile Number
+                email: clientToEdit.email || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                currency: clientToEdit.currency || '',
+                panNumber: clientToEdit.panNumber || '',
+                gstNumber: clientToEdit.gstNumber || '',
+                aadharNumber: clientToEdit.aadharNumber || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                incorporationDateFrom: clientToEdit.incorporationDateFrom ? clientToEdit.incorporationDateFrom.split('T')[0] : '',
+                // @ts-expect-error Types mismatch on dynamic property
+                incorporationDateTo: clientToEdit.incorporationDateTo ? clientToEdit.incorporationDateTo.split('T')[0] : '',
+                // @ts-expect-error Types mismatch on dynamic property
+                licenceNo: clientToEdit.licenceNo || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                licenceAuthority: clientToEdit.licenceAuthority || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                trnNo: clientToEdit.trnNo || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                description: clientToEdit.description || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                supportEmployee: clientToEdit.supportEmployee || '',
+                status: clientToEdit.status !== false,
+                // @ts-expect-error UI field
+                financialYear: clientToEdit.financialYear || 'april-march',
+                // @ts-expect-error Types mismatch on dynamic property
+                altAddress: clientToEdit.altAddress || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                altPhoneM: clientToEdit.altPhoneM || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                altPhoneL: clientToEdit.altPhoneL || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                altFax: clientToEdit.altFax || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField1: clientToEdit.extraField1 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField2: clientToEdit.extraField2 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField3: clientToEdit.extraField3 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField4: clientToEdit.extraField4 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField5: clientToEdit.extraField5 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField6: clientToEdit.extraField6 || '',
+                // @ts-expect-error Types mismatch on dynamic property
+                extraField7: clientToEdit.extraField7 || '',
+                multipleContacts: clientToEdit.multipleContacts || [],
+                legalDocuments: clientToEdit.legalDocuments || [],
+            });
+        }
+    }, [clientToEdit]);
+
+    const handleCancelContactForm = () => {
+        setContactForm({
+            name: '',
+            designation: '',
+            mobile: '',
+            email: '',
+            description: '',
+            status: true
+        });
+    };
+
+    // Legal Document Form State
+    const [legalForm, setLegalForm] = useState<{
+        documentName: string;
+        description: string;
+        file: File | null;
+    }>({
+        documentName: '',
+        description: '',
+        file: null
+    });
+
+    const handleLegalFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setLegalForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddLegalForm = () => {
+        if (!legalForm.documentName || !legalForm.file) {
+            showSnackbar('Document name and Browse Document are required', 'error');
+            return;
+        }
+        setFormData(prev => ({
+            ...prev,
+            legalDocuments: [...(prev.legalDocuments || []), {
+                documentName: legalForm.documentName,
+                description: legalForm.description,
+                fileName: legalForm.file!.name
+            }]
+        }));
+        setLegalForm({
+            documentName: '',
+            description: '',
+            file: null
+        });
+        showSnackbar('Document added temporarily. Client must be saved.', 'info');
+    };
+
+    const handleCancelLegalForm = () => {
+        setLegalForm({
+            documentName: '',
+            description: '',
+            file: null
+        });
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
         const { name, value } = e.target;
@@ -327,6 +498,18 @@ export const ClientMaster: React.FC = () => {
         }
     });
 
+    const updateClientMutation = useMutation({
+        mutationFn: (data: Partial<CreateClientData>) => adminService.updateClient(id!, data),
+        onSuccess: () => {
+            showSnackbar('Client updated successfully', 'success');
+            navigate('/admin/client/list');
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (err: any) => {
+            showSnackbar(err.response?.data?.message || 'Failed to update client', 'error');
+        }
+    });
+
     const handleSaveClient = () => {
         if (!formData.name || !formData.groupName || !formData.itStatus || !formData.masterType) {
             showSnackbar('Please complete the required Basic Form fields', 'error');
@@ -336,7 +519,12 @@ export const ClientMaster: React.FC = () => {
             showSnackbar('Please complete the required Primary Contact forms', 'error');
             return;
         }
-        createClientMutation.mutate(formData);
+
+        if (id) {
+            updateClientMutation.mutate(formData);
+        } else {
+            createClientMutation.mutate(formData);
+        }
     };
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -352,9 +540,6 @@ export const ClientMaster: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
                             Add IT Status
-                        </Button>
-                        <Button variant="contained" size="small" onClick={() => setSubMasterModalOpen(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
-                            Add Sub Master
                         </Button>
                         <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
                             Add New
@@ -385,7 +570,6 @@ export const ClientMaster: React.FC = () => {
                         <Tab label="Client Information" />
                         <Tab label="Multiple Contact" />
                         <Tab label="Legal Document" />
-                        <Tab label="Login Rights" />
                         <Tab label="Work Assign" />
                     </Tabs>
                 </Box>
@@ -439,40 +623,48 @@ export const ClientMaster: React.FC = () => {
                                     </Select>
                                 </FormRow>
                                 <FormRow label="Master Type" required>
-                                    <Select
+                                    <Autocomplete
                                         fullWidth
                                         size="small"
-                                        displayEmpty
-                                        name="masterType"
-                                        value={formData.masterType}
-                                        onChange={handleInputChange as any}
-                                        sx={{ borderRadius: 1.5, color: formData.masterType ? 'text.primary' : 'text.secondary' }}
-                                    >
-                                        <MenuItem value="" disabled>Choose a Master type...</MenuItem>
-                                        {[
-                                            'Individual', 'HUF', 'Partnership', 'Company', 'LLP', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
-                                        ].map((t) => (
-                                            <MenuItem key={t} value={t}>{t}</MenuItem>
-                                        ))}
-                                    </Select>
+                                        options={['Client', 'Department', 'Follow Up', 'Other']}
+                                        value={formData.masterType || null}
+                                        onChange={(_, newValue) => {
+                                            setFormData(prev => ({ ...prev, masterType: newValue || '' }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                placeholder="Choose a Master type..."
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                    '& input::placeholder': { color: 'text.secondary', opacity: 1 }
+                                                }}
+                                            />
+                                        )}
+                                    />
                                 </FormRow>
                                 <FormRow label="Sub Master">
-                                    <Select
+                                    <Autocomplete
                                         fullWidth
                                         size="small"
-                                        displayEmpty
-                                        name="subMaster"
-                                        value={formData.subMaster}
-                                        onChange={handleInputChange as any}
-                                        sx={{ borderRadius: 1.5, color: formData.subMaster ? 'text.primary' : 'text.secondary' }}
-                                    >
-                                        <MenuItem value="" disabled>Choose a Sub Master...</MenuItem>
-                                        {subMasters.map((sub) => (
-                                            <MenuItem key={sub._id} value={sub._id as string}>
-                                                {sub.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                        options={[
+                                            'Individual', 'HUF', 'Partnership', 'Company', 'LLP', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
+                                        ]}
+                                        value={formData.subMaster || null}
+                                        onChange={(_, newValue) => {
+                                            setFormData(prev => ({ ...prev, subMaster: newValue || '' }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                placeholder="Choose a Sub Master..."
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                    '& input::placeholder': { color: 'text.secondary', opacity: 1 }
+                                                }}
+                                            />
+                                        )}
+                                    />
                                 </FormRow>
                                 <FormRow label="Birth Date">
                                     <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
@@ -692,21 +884,186 @@ export const ClientMaster: React.FC = () => {
 
                 {/* Placeholders for other tabs */}
                 <CustomTabPanel value={tabValue} index={1}>
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">Multiple Contact Information (Coming Soon)</Typography>
+                    <Box sx={{ p: { xs: 2, md: 3 } }}>
+                        {/* Multiple Contact Form */}
+                        <Paper elevation={0} sx={{ mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <GridViewIcon sx={{ width: 20, height: 20, color: 'text.secondary' }} />
+                                <Typography variant="subtitle2" fontWeight="700" color="text.primary">Client Multiple Contact</Typography>
+                            </Box>
+                            <Box sx={{ p: 3 }}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Client</Typography>
+                                        <Typography sx={{ flex: 1, color: 'text.primary', fontSize: '0.9rem' }}>{formData.name || 'N/A'}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: { xs: 'none', md: 'block' } }}></Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Name <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="name" value={contactForm.name} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Designation <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="designation" value={contactForm.designation} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Mobile <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="mobile" value={contactForm.mobile} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Email <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="email" value={contactForm.email} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem', pt: 1 }}>Description</Typography>
+                                        <TextField name="description" value={contactForm.description} onChange={handleContactFormChange} multiline rows={2} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: contactForm.status ? '#2e3a47' : '#e0e0e0', borderRadius: 4, px: 2, height: 32 }}>
+                                            <Typography variant="body2" sx={{ color: contactForm.status ? '#00e5ff' : 'text.secondary', mr: 1, fontWeight: 600, fontSize: '0.75rem' }}>{contactForm.status ? 'Active' : 'Inactive'}</Typography>
+                                            <Switch size="small" sx={{ mr: -1, '& .MuiSwitch-switchBase.Mui-checked': { color: '#00e5ff' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#00e5ff' } }} checked={contactForm.status} onChange={e => setContactForm(prev => ({ ...prev, status: e.target.checked }))} />
+                                        </Box>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                                    <Button variant="contained" onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                        Save
+                                    </Button>
+                                    <Button variant="contained" onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                        Cancel
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* Contacts List Section */}
+                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#00bfa5', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
+                                <Typography variant="subtitle1" fontWeight="600">Multiple Contact List</Typography>
+                            </Box>
+                            <Box sx={{ p: 2 }}>
+                                {(!formData.multipleContacts || formData.multipleContacts.length === 0) ? (
+                                    <Typography variant="body2" color="text.secondary">Multiple contact Not Found</Typography>
+                                ) : (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        {formData.multipleContacts.map((contact, index) => (
+                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <Box>
+                                                    <Typography variant="subtitle2" fontWeight="600">{contact.name} <span style={{ fontWeight: 400, color: 'gray' }}>- {contact.designation}</span></Typography>
+                                                    <Typography variant="body2" color="text.secondary">{contact.mobile} | {contact.email}</Typography>
+                                                    {contact.description && <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>{contact.description}</Typography>}
+                                                </Box>
+                                                <Typography variant="caption" sx={{ bgcolor: contact.status ? '#e8f5e9' : '#ffebee', color: contact.status ? 'success.main' : 'error.main', px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600 }}>{contact.status ? 'Active' : 'Inactive'}</Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Paper>
                     </Box>
                 </CustomTabPanel>
                 <CustomTabPanel value={tabValue} index={2}>
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">Legal Document Management (Coming Soon)</Typography>
+                    <Box sx={{ p: { xs: 2, md: 3 } }}>
+                        {/* Legal Document Form */}
+                        <Paper elevation={0} sx={{ mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <span>📄</span> Legal Document
+                                </Typography>
+                            </Box>
+                            <Box sx={{ p: 3 }}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Client</Typography>
+                                        <Typography sx={{ flex: 1, color: 'text.primary', fontSize: '0.9rem' }}>{formData.name || 'N/A'}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: { xs: 'none', md: 'block' } }}></Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Document name <span style={{ color: 'red' }}>*</span></Typography>
+                                        <Autocomplete
+                                            fullWidth
+                                            size="small"
+                                            options={['PAN', 'Aadhar', 'GST Certificate', 'Incorporation Certificate', 'Other']}
+                                            value={legalForm.documentName || null}
+                                            onChange={(_, newValue) => {
+                                                setLegalForm(prev => ({ ...prev, documentName: newValue || '' }));
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    placeholder="Choose a Type..."
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                        '& input::placeholder': { color: 'text.secondary', opacity: 1 }
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Description</Typography>
+                                        <TextField name="description" value={legalForm.description} onChange={handleLegalFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem', flexShrink: 0 }}>Browse Document <span style={{ color: 'red' }}>*</span></Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
+                                            <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                                Choose File
+                                                <input type="file" hidden onChange={e => setLegalForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))} />
+                                            </Button>
+                                            <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {legalForm.file ? legalForm.file.name : 'No file chosen'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                                    <Button variant="contained" onClick={handleAddLegalForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                        Save
+                                    </Button>
+                                    <Button variant="contained" onClick={handleCancelLegalForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                        Cancel
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Paper>
+
+                        {/* Legal Document List Section */}
+                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#00bfa5', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
+                                <Typography variant="subtitle1" fontWeight="600">Legal Document List</Typography>
+                            </Box>
+                            <Box sx={{ p: 2 }}>
+                                {(!formData.legalDocuments || formData.legalDocuments.length === 0) ? (
+                                    <Typography variant="body2" color="text.secondary">Client Legal Detail Not Found</Typography>
+                                ) : (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        {formData.legalDocuments.map((doc, index) => (
+                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <Box>
+                                                    <Typography variant="subtitle2" fontWeight="600">{doc.documentName}</Typography>
+                                                    <Typography variant="body2" color="text.secondary">File: {doc.fileName}</Typography>
+                                                    {doc.description && <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>{doc.description}</Typography>}
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Paper>
                     </Box>
                 </CustomTabPanel>
                 <CustomTabPanel value={tabValue} index={3}>
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">Login Rights Assignment (Coming Soon)</Typography>
-                    </Box>
-                </CustomTabPanel>
-                <CustomTabPanel value={tabValue} index={4}>
                     <Box sx={{ p: 4, textAlign: 'center' }}>
                         <Typography variant="h6" color="text.secondary">Work Assignment Console (Coming Soon)</Typography>
                     </Box>

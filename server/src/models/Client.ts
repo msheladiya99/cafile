@@ -10,7 +10,7 @@ export interface IClient extends Document {
     groupName?: mongoose.Types.ObjectId;
     itStatus?: mongoose.Types.ObjectId;
     masterType?: string;
-    subMaster?: mongoose.Types.ObjectId;
+    subMaster?: string;
     birthDate?: Date;
 
     // Contact & Location
@@ -63,6 +63,19 @@ export interface IClient extends Document {
     // Office File Tracking
     physicalFileNumber?: string;
     rackLocation?: string;
+    multipleContacts?: {
+        name: string;
+        designation: string;
+        mobile: string;
+        email: string;
+        description: string;
+        status: boolean;
+    }[];
+    legalDocuments?: {
+        documentName: string;
+        description: string;
+        fileName: string;
+    }[];
 }
 
 const clientSchema = new Schema<IClient>({
@@ -92,7 +105,7 @@ const clientSchema = new Schema<IClient>({
     groupName: { type: Schema.Types.ObjectId, ref: 'ClientGroup' },
     itStatus: { type: Schema.Types.ObjectId, ref: 'ITStatus' },
     masterType: { type: String, trim: true },
-    subMaster: { type: Schema.Types.ObjectId, ref: 'SubMaster' },
+    subMaster: { type: String, trim: true },
     birthDate: { type: Date },
 
     address: { type: String, trim: true },
@@ -161,7 +174,20 @@ const clientSchema = new Schema<IClient>({
     rackLocation: {
         type: String,
         trim: true
-    }
+    },
+    multipleContacts: [{
+        name: { type: String, trim: true },
+        designation: { type: String, trim: true },
+        mobile: { type: String, trim: true },
+        email: { type: String, trim: true, lowercase: true },
+        description: { type: String, trim: true },
+        status: { type: Boolean, default: true }
+    }],
+    legalDocuments: [{
+        documentName: { type: String, trim: true },
+        description: { type: String, trim: true },
+        fileName: { type: String, trim: true }
+    }]
 });
 
 // Add indexes for faster searching

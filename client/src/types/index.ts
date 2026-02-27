@@ -15,6 +15,19 @@ export interface Client {
     status?: boolean;
     masterType?: string;
     subMaster?: { _id: string; name: string };
+    multipleContacts?: {
+        name: string;
+        designation: string;
+        mobile: string;
+        email: string;
+        description: string;
+        status: boolean;
+    }[];
+    legalDocuments?: {
+        documentName: string;
+        description: string;
+        fileName: string;
+    }[];
 }
 
 export interface CreateClientData {
@@ -57,6 +70,19 @@ export interface CreateClientData {
     extraField5?: string;
     extraField6?: string;
     extraField7?: string;
+    multipleContacts?: {
+        name: string;
+        designation: string;
+        mobile: string;
+        email: string;
+        description: string;
+        status: boolean;
+    }[];
+    legalDocuments?: {
+        documentName: string;
+        description: string;
+        fileName: string;
+    }[];
 }
 
 export interface CreateClientResponse {
