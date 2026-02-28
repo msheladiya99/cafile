@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     Box,
@@ -43,6 +43,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
+import firmService from '../services/firmService';
+import { useQuery } from '@tanstack/react-query';
 
 const drawerWidth = 240;
 
@@ -52,27 +54,26 @@ export const AdminLayout: React.FC = () => {
     const { user, logout, isAdmin } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [companyName, setCompanyName] = useState('CA Admin Panel');
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
+    // Fetch firm details and settings using React Query
+    const { data: firm } = useQuery({
+        queryKey: ['firm'],
+        queryFn: firmService.getFirm,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    const { data: settings } = useQuery({
+        queryKey: ['settings'],
+        queryFn: settingsService.getSettings,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const companyName = firm?.firmName || settings?.companyName || 'CA Admin Panel';
+    const logoUrl = (firm?.showLogo !== false && (firm?.logoUrl || settings?.logoUrl)) ? (firm?.logoUrl || settings?.logoUrl) : null;
     const handleMenuToggle = (text: string) => {
         setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
     };
-
-    // Fetch company name from settings
-    useEffect(() => {
-        const fetchCompanyName = async () => {
-            try {
-                const settings = await settingsService.getSettings();
-                if (settings.companyName) {
-                    setCompanyName(settings.companyName);
-                }
-            } catch (error) {
-                console.error('Error fetching company name:', error);
-            }
-        };
-        fetchCompanyName();
-    }, []);
 
 
 
@@ -229,8 +230,25 @@ export const AdminLayout: React.FC = () => {
                             <MenuIcon />
                         </IconButton>
                     )}
-                    <AccountBalance sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }} />
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                    {logoUrl ? (
+                        <Box
+                            component="img"
+                            src={logoUrl}
+                            sx={{
+                                height: 32,
+                                width: 'auto',
+                                mr: 2,
+                                display: { xs: 'none', sm: 'block' },
+                                borderRadius: 1,
+                                objectFit: 'contain',
+                                bgcolor: 'white',
+                                p: 0.5
+                            }}
+                        />
+                    ) : (
+                        <AccountBalance sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }} />
+                    )}
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                         {companyName}
                     </Typography>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>

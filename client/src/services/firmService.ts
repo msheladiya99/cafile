@@ -65,6 +65,7 @@ export interface FirmMasterData {
     invoiceTerms?: string;
     invoiceTemplate?: string;
     extraFieldLabels?: string[];
+    showLogo?: boolean;
 }
 
 export interface IFirmDocument {
@@ -137,6 +138,7 @@ export interface IMultiFirmData {
     supportMobile?: string;
     logoUrl?: string;
     signImageUrl?: string;
+    showLogo?: boolean;
     createdAt?: string;
 }
 

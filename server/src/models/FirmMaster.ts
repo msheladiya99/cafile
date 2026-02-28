@@ -83,7 +83,7 @@ export interface IFirmMaster extends Document {
     invoiceTerms?: string;
     invoiceTemplate?: string; // e.g. 'template1', 'template2'
     extraFieldLabels?: string[]; // Array of strings for labels of extra fields 1-7
-
+    showLogo?: boolean;
     updatedAt?: Date;
 }
 
@@ -158,6 +158,7 @@ const FirmMasterSchema = new Schema<IFirmMaster>(
         invoiceTerms: String,
         invoiceTemplate: { type: String, default: 'template1' },
         extraFieldLabels: { type: [String], default: ['', '', '', '', '', '', ''] },
+        showLogo: { type: Boolean, default: true },
         partners: [PartnerSchema],
     },
     { timestamps: true }

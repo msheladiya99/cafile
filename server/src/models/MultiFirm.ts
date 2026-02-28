@@ -48,6 +48,7 @@ export interface IMultiFirm extends Document {
     // Images
     logoUrl?: string;
     signImageUrl?: string;
+    showLogo?: boolean;
 }
 
 const MultiFirmSchema = new Schema<IMultiFirm>(
@@ -88,6 +89,7 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
         supportMobile: String,
         logoUrl: String,
         signImageUrl: String,
+        showLogo: { type: Boolean, default: true },
     },
     { timestamps: true }
 );

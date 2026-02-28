@@ -80,6 +80,7 @@ const BLANK: FirmMasterData = {
     website: '', facebook: '', twitter: '', googlePlus: '', pmsAppUrl: '',
     extraField1: '', extraField2: '', extraField3: '', extraField4: '', extraField5: '', extraField6: '', extraField7: '',
     partners: [],
+    showLogo: true,
 };
 
 const COUNTRY_LIST = ['India', 'USA', 'UAE', 'UK', 'Canada', 'Australia'];
@@ -493,7 +494,7 @@ const MF_BLANK: IMultiFirmData = {
     accountHolderName: '', accountNumber: '', ifscCode: '', ibanNo: '', swiftCode: '', micrCode: '',
     panNumber: '', gstin: '', licenceNo: '', licenceAuthority: '', invoicePrefix: 'INV-', status: true,
     extraField1: '', extraField2: '', extraField3: '', extraField4: '', extraField5: '', extraField6: '', extraField7: '',
-    supportEmails: '', supportMobile: '',
+    supportEmails: '', supportMobile: '', showLogo: true,
 };
 
 const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }> = ({ toast }) => {
@@ -579,8 +580,17 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                             <Row label="Mobile Number *"><TextField value={mf.supportMobile || ''} onChange={mff('supportMobile')} fullWidth {...sx} /></Row>
                         </Paper>
                     </Box>
-                    <Box sx={{ width: { xs: '100%', lg: 300 }, flexShrink: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}><ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} loading={logoLoading} /></Paper>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                            <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={mf.showLogo !== false} onChange={(e) => setMf(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                    label={<Typography fontSize="0.75rem" fontWeight={600} color={mf.showLogo !== false ? 'primary' : 'text.secondary'}>{mf.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
+                                />
+                            </Box>
+                            <ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} loading={logoLoading} />
+                        </Paper>
                         <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
                             <SectionHead title="Other Detail" />
                             <Row label="PAN No"><TextField value={mf.panNumber || ''} onChange={mff('panNumber')} fullWidth {...sx} /></Row>
@@ -813,7 +823,7 @@ export const FirmMasterPage: React.FC = () => {
             <Paper sx={{ mb: 2, borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
                 <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2.5, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        {form.logoUrl
+                        {(form.showLogo !== false && form.logoUrl)
                             ? <Avatar src={form.logoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(255,255,255,0.5)' }} />
                             : <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 36, height: 36 }}><BusinessIcon fontSize="small" /></Avatar>}
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
@@ -937,8 +947,15 @@ export const FirmMasterPage: React.FC = () => {
                     </Box>
 
                     {/* RIGHT COLUMN */}
-                    <Box sx={{ width: { xs: '100%', lg: 340 }, flexShrink: 0 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={form.showLogo !== false} onChange={(e) => setForm(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                    label={<Typography fontSize="0.75rem" fontWeight={600} color={form.showLogo !== false ? 'primary' : 'text.secondary'}>{form.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
+                                />
+                            </Box>
                             <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} loading={logoLoading} />
                         </Paper>
 
@@ -1232,7 +1249,7 @@ export const FirmMasterPage: React.FC = () => {
                                         <Typography variant="body2" color="text.secondary">Original for Recipient</Typography>
                                     </Box>
                                     <Box sx={{ textAlign: 'right' }}>
-                                        {form.logoUrl && <Box component="img" src={form.logoUrl} sx={{ height: 60, mb: 1.5, display: 'block', ml: 'auto' }} />}
+                                        {form.showLogo !== false && form.logoUrl && <Box component="img" src={form.logoUrl} sx={{ height: 60, mb: 1.5, display: 'block', ml: 'auto' }} />}
                                         <Typography fontWeight={800} fontSize="1.1rem">{form.firmName}</Typography>
                                         <Typography fontSize="0.75rem" color="text.secondary" sx={{ maxWidth: 200, ml: 'auto' }}>
                                             {form.address}, {form.city}, {form.state} - {form.postalCode}
