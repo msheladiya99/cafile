@@ -51,35 +51,23 @@ export const PDFPreview: React.FC<PDFPreviewProps> = ({
 
             const token = localStorage.getItem('token');
 
-            console.log('Fetching PDF from:', fileUrl);
-            console.log('Auth token present:', !!token);
-
             fetch(fileUrl, {
                 headers: token ? {
                     'Authorization': `Bearer ${token}`
                 } : {}
             })
                 .then(response => {
-                    console.log('PDF fetch response status:', response.status);
-                    console.log('PDF fetch response ok:', response.ok);
-                    console.log('PDF content-type:', response.headers.get('content-type'));
-
                     if (!response.ok) {
                         throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
                     }
                     return response.blob();
                 })
                 .then(blob => {
-                    console.log('PDF blob size:', blob.size);
-                    console.log('PDF blob type:', blob.type);
-
                     const url = URL.createObjectURL(blob);
-                    console.log('PDF object URL created:', url);
                     setPdfBlob(url);
                 })
                 .catch(err => {
-                    console.error('Error fetching PDF:', err);
-                    console.error('Error details:', err.message);
+                    console.error('Error fetching PDF:', err.message);
                     setError(`Failed to load PDF: ${err.message}. Please try downloading the file instead.`);
                     setLoading(false);
                 });
@@ -87,7 +75,6 @@ export const PDFPreview: React.FC<PDFPreviewProps> = ({
 
         return () => {
             if (pdfBlob) {
-                console.log('Revoking PDF object URL');
                 URL.revokeObjectURL(pdfBlob);
             }
         };

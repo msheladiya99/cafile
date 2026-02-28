@@ -68,7 +68,6 @@ export const ClientContactDetail: React.FC = () => {
             if (filterClient && client._id !== filterClient) return false;
 
             // Sub Master Filter
-            // @ts-expect-error Types mismatch on dynamic property
             if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
 
             // Search Text Filter
@@ -199,7 +198,6 @@ export const ClientContactDetail: React.FC = () => {
                                             <TableCell>{idx === 0 ? client.name : ''}</TableCell>
                                             <TableCell>
                                                 {contact.name}
-                                                {/* @ts-expect-error Types mismatch on dynamic property */}
                                                 {contact.isPrimary && <Chip label="Primary" size="small" color="primary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />}
                                             </TableCell>
                                             <TableCell>{contact.designation}</TableCell>

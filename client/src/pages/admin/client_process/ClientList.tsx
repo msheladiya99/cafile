@@ -93,15 +93,14 @@ export const ClientList: React.FC = () => {
             if (filterMasterType && client.masterType !== filterMasterType) return false;
             if (filterItStatus && typeof client.itStatus === 'object' && client.itStatus?._id !== filterItStatus) return false;
 
-            // @ts-expect-error Types mismatch on dynamic property
-            if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
+            const clientSubMasterStr = typeof client.subMaster === 'object' ? client.subMaster?.name : client.subMaster;
+            if (filterSubMaster && clientSubMasterStr !== filterSubMaster) return false;
 
             if (filterStatus !== 'all') {
                 const isActive = filterStatus === 'active';
                 if (client.status !== isActive) return false;
             }
 
-            // @ts-expect-error UI filter not present on model
             if (filterFYear && client.financialYear !== filterFYear) return false;
 
             return true;

@@ -1,5 +1,5 @@
 import api from './api';
-import type { Client, CreateClientData, CreateClientResponse, FileData } from '../types';
+import type { Client, CreateClientData, CreateClientResponse, FileData, User } from '../types';
 
 export type { Client, CreateClientData, CreateClientResponse, FileData };
 
@@ -31,6 +31,17 @@ export const adminService = {
             },
         });
         return response.data.file; // Return the file object from the response
+    },
+
+    uploadProfileImage: async (clientId: string, file: File): Promise<{ profileImageUrl: string }> => {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+        const response = await api.post(`/admin/clients/${clientId}/profile-image`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
     },
 
     getClientFiles: async (clientId: string, year?: string, category?: string): Promise<FileData[]> => {
@@ -127,7 +138,7 @@ export const adminService = {
         const response = await api.get(`/files/client/${clientId}/tags`);
         return response.data;
     },
-    getStaffUsers: async (): Promise<any[]> => {
+    getStaffUsers: async (): Promise<User[]> => {
         const response = await api.get('/admin/users');
         return response.data;
     },

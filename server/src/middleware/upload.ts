@@ -26,13 +26,15 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/png'
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only PDF, Excel, and Word documents are allowed.'));
+        cb(new Error('Invalid file type. Only PDF, Excel, Word, JPEG, and PNG are allowed.'));
     }
 };
 
@@ -43,3 +45,10 @@ export const upload = multer({
         fileSize: 10 * 1024 * 1024 // 10MB limit
     }
 });
+
+// For firm documents — accepts any file type up to 10MB
+export const uploadAny = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+});
+

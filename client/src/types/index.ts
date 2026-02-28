@@ -10,11 +10,38 @@ export interface Client {
     physicalFileNumber?: string;
     rackLocation?: string;
     clientCode?: string;
-    groupName?: { _id: string; groupName: string };
-    itStatus?: { _id: string; name: string };
+    profileImageUrl?: string;
+    groupName?: { _id: string; groupName: string } | string;
+    itStatus?: { _id: string; name: string } | string;
     status?: boolean;
     masterType?: string;
-    subMaster?: { _id: string; name: string };
+    subMaster?: { _id: string; name: string } | string;
+    birthDate?: string;
+    address?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    postalCode?: string;
+    currency?: string;
+    incorporationDateFrom?: string;
+    incorporationDateTo?: string;
+    licenceNo?: string;
+    licenceAuthority?: string;
+    trnNo?: string;
+    description?: string;
+    supportEmployee?: { _id: string; username: string } | string;
+    financialYear?: string;
+    altAddress?: string;
+    altPhoneM?: string;
+    altPhoneL?: string;
+    altFax?: string;
+    extraField1?: string;
+    extraField2?: string;
+    extraField3?: string;
+    extraField4?: string;
+    extraField5?: string;
+    extraField6?: string;
+    extraField7?: string;
     multipleContacts?: {
         name: string;
         designation: string;
@@ -28,6 +55,7 @@ export interface Client {
         description: string;
         fileName: string;
     }[];
+    updatedAt?: string;
 }
 
 export interface CreateClientData {
@@ -39,6 +67,7 @@ export interface CreateClientData {
     gstNumber?: string;
     username?: string;
     clientCode?: string;
+    profileImageUrl?: string;
     groupName?: string;
     itStatus?: string;
     masterType?: string;

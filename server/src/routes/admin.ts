@@ -9,10 +9,44 @@ import { SubMaster } from '../models/SubMaster';
 import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import { sendFileUploadEmail, sendWelcomeEmail } from '../services/emailService';
+import { getDriveService } from '../services/googleDrive';
 import fs from 'fs';
 import path from 'path';
 
 const router = Router();
+
+// Serve Profile Image for client (Public to allow <img> tags)
+router.get('/clients/:id/profile-image/view', async (req: any, res: Response) => {
+    try {
+        const client = await Client.findById(req.params.id);
+        if (!client || !client.profileImageUrl) {
+            res.status(404).send('Not found');
+            return;
+        }
+
+        let driveId = client.profileImageUrl;
+        // Parse ID backwards if we stored directLink
+        if (driveId.includes('id=')) {
+            driveId = new URL(driveId).searchParams.get('id') || driveId;
+        }
+
+        const driveService = getDriveService();
+        const buffer = await driveService.downloadFile(driveId);
+
+        let mimeType = 'image/jpeg';
+        if (buffer.length > 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+            mimeType = 'image/png';
+        }
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.send(buffer);
+    } catch (e) {
+        console.error('Proxy profile image error:', e);
+        res.status(500).send('Error');
+    }
+});
 
 // Most admin routes require authentication and staff role (ADMIN, MANAGER, STAFF, INTERN)
 router.use(authenticate, requireStaff);
@@ -65,6 +99,15 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             const existingUser = await User.findOne({ username: customUsername });
             if (existingUser) {
                 res.status(400).json({ message: 'Username is already taken' });
+                return;
+            }
+        }
+
+        // Check if client code is already taken
+        if (clientCode) {
+            const existingClientCode = await Client.findOne({ clientCode });
+            if (existingClientCode) {
+                res.status(400).json({ message: 'Client Code is already in use' });
                 return;
             }
         }
@@ -159,6 +202,20 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
         delete updates.createdAt;
         delete updates._id;
 
+        // Check if clientCode is being updated and if it's already taken
+        if (updates.clientCode) {
+            const existingClientCode = await Client.findOne({ _id: { $ne: id }, clientCode: updates.clientCode } as any);
+            if (existingClientCode) {
+                res.status(400).json({ message: 'Client Code is already in use' });
+                return;
+            }
+        }
+
+        // Fix Mongoose CastError by converting empty strings to null for ObjectId fields
+        if (updates.groupName === '') updates.groupName = null;
+        if (updates.itStatus === '') updates.itStatus = null;
+        if (updates.supportEmployee === '') updates.supportEmployee = null;
+
         const client = await Client.findByIdAndUpdate(
             id,
             { $set: updates },
@@ -176,6 +233,68 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// Upload Profile Image for client
+router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ message: 'No file uploaded' });
+            return;
+        }
+
+        const { id } = req.params;
+        const client = await Client.findById(id);
+
+        if (!client) {
+            fs.unlinkSync(req.file.path);
+            res.status(404).json({ message: 'Client not found' });
+            return;
+        }
+
+        // Upload to Google Drive under client's "Documents" folder
+        const driveService = getDriveService();
+
+        // 1. Get/Create Client Home folder
+        const { clientFolderId } = await driveService.createClientFolderStructure(client.name);
+
+        // 2. Ensure "Documents" folder exists inside client's home
+        const documentsFolderId = await driveService.ensureFolder('Documents', clientFolderId);
+
+        // 3. Upload file to Documents folder
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const uploadResult = await driveService.uploadFile(
+            fileBuffer,
+            `profile_${client._id}_${req.file.originalname}`,
+            req.file.mimetype,
+            documentsFolderId
+        );
+
+        // 4. Delete local temporary file
+        fs.unlinkSync(req.file.path);
+
+        // 5. Make it shareable and get the link
+        await driveService.createShareableLink(uploadResult.fileId);
+
+        // Google Drive direct image display link
+        const directLink = `https://drive.google.com/uc?export=view&id=${uploadResult.fileId}`;
+
+        // 6. Update Database
+        client.profileImageUrl = directLink;
+        await client.save();
+
+        res.json({
+            message: 'Profile image uploaded successfully',
+            profileImageUrl: directLink
+        });
+    } catch (error) {
+        console.error('Upload profile image error:', error);
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // Upload file for client
 router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('file'), async (req: AuthRequest, res: Response) => {

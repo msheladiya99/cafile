@@ -59,6 +59,7 @@ export interface IClient extends Document {
     panNumber?: string;
     aadharNumber?: string;
     gstNumber?: string;
+    profileImageUrl?: string;
 
     // Office File Tracking
     physicalFileNumber?: string;
@@ -164,6 +165,10 @@ const clientSchema = new Schema<IClient>({
         type: String,
         trim: true,
         uppercase: true
+    },
+    profileImageUrl: {
+        type: String,
+        trim: true
     },
     // Office File Tracking
     physicalFileNumber: {

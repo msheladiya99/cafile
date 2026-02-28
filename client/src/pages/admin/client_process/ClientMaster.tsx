@@ -28,6 +28,7 @@ import {
     AddBox as AddBoxIcon,
     PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
+import { AxiosError } from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -35,7 +36,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
 import { masterService, type ITStatus, type SubMaster } from '../../../services/masterService';
 import { adminService } from '../../../services/adminService';
-import type { CreateClientData } from '../../../types';
+import type { CreateClientData, User, CreateClientResponse } from '../../../types';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -128,7 +129,6 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataLis
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState(true);
-
     const handleSave = () => {
         if (!name.trim()) {
             showSnackbar('Name is required', 'error');
@@ -219,6 +219,7 @@ export const ClientMaster: React.FC = () => {
     const [tabValue, setTabValue] = useState(0);
     const [itStatusModalOpen, setItStatusModalOpen] = useState(false);
     const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
+    const [profileImage, setProfileImage] = useState<File | null>(null);
 
     // Form State
     const [formData, setFormData] = useState<CreateClientData>({
@@ -300,7 +301,7 @@ export const ClientMaster: React.FC = () => {
     };
 
     // Edit Client Data Fetching
-    const { data: clientToEdit, isLoading: isClientLoading } = useQuery({
+    const { data: clientToEdit } = useQuery({
         queryKey: ['client', id],
         queryFn: () => adminService.getClient(id!),
         enabled: !!id
@@ -315,60 +316,39 @@ export const ClientMaster: React.FC = () => {
                 itStatus: (typeof clientToEdit.itStatus === 'object' ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
                 masterType: clientToEdit.masterType || '',
                 subMaster: (typeof clientToEdit.subMaster === 'object' ? clientToEdit.subMaster._id : clientToEdit.subMaster) || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 birthDate: clientToEdit.birthDate ? clientToEdit.birthDate.split('T')[0] : '',
                 address: clientToEdit.address || '',
                 country: clientToEdit.country || '',
                 state: clientToEdit.state || '',
                 city: clientToEdit.city || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 postalCode: clientToEdit.postalCode || '',
                 phone: clientToEdit.phone || '', // Mapped to Mobile Number
                 email: clientToEdit.email || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 currency: clientToEdit.currency || '',
                 panNumber: clientToEdit.panNumber || '',
                 gstNumber: clientToEdit.gstNumber || '',
                 aadharNumber: clientToEdit.aadharNumber || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 incorporationDateFrom: clientToEdit.incorporationDateFrom ? clientToEdit.incorporationDateFrom.split('T')[0] : '',
-                // @ts-expect-error Types mismatch on dynamic property
                 incorporationDateTo: clientToEdit.incorporationDateTo ? clientToEdit.incorporationDateTo.split('T')[0] : '',
-                // @ts-expect-error Types mismatch on dynamic property
                 licenceNo: clientToEdit.licenceNo || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 licenceAuthority: clientToEdit.licenceAuthority || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 trnNo: clientToEdit.trnNo || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 description: clientToEdit.description || '',
-                // @ts-expect-error Types mismatch on dynamic property
-                supportEmployee: clientToEdit.supportEmployee || '',
+                supportEmployee: (typeof clientToEdit.supportEmployee === 'object' && clientToEdit.supportEmployee !== null && '_id' in clientToEdit.supportEmployee ? clientToEdit.supportEmployee._id : clientToEdit.supportEmployee) || '',
                 status: clientToEdit.status !== false,
-                // @ts-expect-error UI field
                 financialYear: clientToEdit.financialYear || 'april-march',
-                // @ts-expect-error Types mismatch on dynamic property
                 altAddress: clientToEdit.altAddress || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 altPhoneM: clientToEdit.altPhoneM || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 altPhoneL: clientToEdit.altPhoneL || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 altFax: clientToEdit.altFax || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField1: clientToEdit.extraField1 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField2: clientToEdit.extraField2 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField3: clientToEdit.extraField3 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField4: clientToEdit.extraField4 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField5: clientToEdit.extraField5 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField6: clientToEdit.extraField6 || '',
-                // @ts-expect-error Types mismatch on dynamic property
                 extraField7: clientToEdit.extraField7 || '',
+                profileImageUrl: clientToEdit.profileImageUrl || '',
                 multipleContacts: clientToEdit.multipleContacts || [],
                 legalDocuments: clientToEdit.legalDocuments || [],
             });
@@ -453,8 +433,7 @@ export const ClientMaster: React.FC = () => {
         queryKey: ['subMaster'],
         queryFn: masterService.getSubMasters
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: staffList = [] } = useQuery<any[]>({
+    const { data: staffList = [] } = useQuery<User[]>({
         queryKey: ['staffUsers'],
         queryFn: adminService.getStaffUsers
     });
@@ -467,8 +446,7 @@ export const ClientMaster: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['itStatus'] });
             setItStatusModalOpen(false);
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
+        onError: (err: AxiosError<{ message: string }>) => {
             showSnackbar(err.response?.data?.message || 'Failed to create IT Status', 'error');
         }
     });
@@ -480,32 +458,45 @@ export const ClientMaster: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
             setSubMasterModalOpen(false);
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
+        onError: (err: AxiosError<{ message: string }>) => {
             showSnackbar(err.response?.data?.message || 'Failed to create Sub Master', 'error');
         }
     });
 
     const createClientMutation = useMutation({
         mutationFn: adminService.createClient,
-        onSuccess: () => {
-            showSnackbar('Client saved successfully', 'success');
-            navigate('/admin/client/list');
+        onSuccess: async (data: CreateClientResponse) => {
+            try {
+                if (profileImage && data?.client?._id) {
+                    await adminService.uploadProfileImage(data.client._id, profileImage);
+                }
+                showSnackbar('Client saved successfully', 'success');
+                navigate('/admin/client/list');
+            } catch {
+                showSnackbar('Client saved, but failed to upload profile image', 'error');
+                navigate('/admin/client/list');
+            }
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
+        onError: (err: AxiosError<{ message: string }>) => {
             showSnackbar(err.response?.data?.message || 'Failed to save client', 'error');
         }
     });
 
     const updateClientMutation = useMutation({
         mutationFn: (data: Partial<CreateClientData>) => adminService.updateClient(id!, data),
-        onSuccess: () => {
-            showSnackbar('Client updated successfully', 'success');
-            navigate('/admin/client/list');
+        onSuccess: async () => {
+            try {
+                if (profileImage && id) {
+                    await adminService.uploadProfileImage(id, profileImage);
+                }
+                showSnackbar('Client updated successfully', 'success');
+                navigate('/admin/client/list');
+            } catch {
+                showSnackbar('Client updated, but failed to upload profile image', 'error');
+                navigate('/admin/client/list');
+            }
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
+        onError: (err: AxiosError<{ message: string }>) => {
             showSnackbar(err.response?.data?.message || 'Failed to update client', 'error');
         }
     });
@@ -592,13 +583,13 @@ export const ClientMaster: React.FC = () => {
                                         size="small"
                                         displayEmpty
                                         name="groupName"
-                                        value={formData.groupName}
-                                        onChange={handleInputChange as any}
+                                        value={formData.groupName || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value as string }))}
                                         sx={{ borderRadius: 1.5, color: formData.groupName ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Group...</MenuItem>
                                         {groups.map((group) => (
-                                            <MenuItem key={group._id} value={group._id as string}>
+                                            <MenuItem key={group._id} value={group._id}>
                                                 {group.groupName}
                                             </MenuItem>
                                         ))}
@@ -610,8 +601,8 @@ export const ClientMaster: React.FC = () => {
                                         size="small"
                                         displayEmpty
                                         name="itStatus"
-                                        value={formData.itStatus}
-                                        onChange={handleInputChange as any}
+                                        value={formData.itStatus || ''}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, itStatus: e.target.value as string }))}
                                         sx={{ borderRadius: 1.5, color: formData.itStatus ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a IT Status...</MenuItem>
@@ -682,7 +673,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="country"
                                         value={formData.country}
-                                        onChange={handleInputChange as any}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
                                         sx={{ borderRadius: 1.5, color: formData.country ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Country...</MenuItem>
@@ -696,7 +687,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="state"
                                         value={formData.state}
-                                        onChange={handleInputChange as any}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                                         sx={{ borderRadius: 1.5, color: formData.state ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a State...</MenuItem>
@@ -713,7 +704,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="city"
                                         value={formData.city}
-                                        onChange={handleInputChange as any}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                                         sx={{ borderRadius: 1.5, color: formData.city ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a City...</MenuItem>
@@ -785,7 +776,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="supportEmployee"
                                         value={formData.supportEmployee}
-                                        onChange={handleInputChange as any}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, supportEmployee: e.target.value }))}
                                         sx={{ borderRadius: 1.5, color: formData.supportEmployee ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose Employee...</MenuItem>
@@ -809,15 +800,21 @@ export const ClientMaster: React.FC = () => {
                             <Section title="Profile Image" icon={<ImageIcon />}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
                                     <Box sx={{ width: 150, height: 150, border: '2px dashed #ccc', borderRadius: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
-                                        <PhotoCameraIcon sx={{ fontSize: 40, color: '#ccc' }} />
+                                        {profileImage ? (
+                                            <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : formData?.profileImageUrl && clientToEdit?._id ? (
+                                            <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                        ) : (
+                                            <PhotoCameraIcon sx={{ fontSize: 40, color: '#ccc' }} />
+                                        )}
                                     </Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%', maxWidth: 300 }}>
                                         <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500 }}>
                                             Choose File
-                                            <input type="file" hidden accept="image/jpeg, image/png" />
+                                            <input type="file" hidden accept="image/jpeg, image/png" onChange={(e) => setProfileImage(e.target.files?.[0] || null)} />
                                         </Button>
                                         <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            No file chosen
+                                            {profileImage ? profileImage.name : (formData?.profileImageUrl ? 'Image already set' : 'No file chosen')}
                                         </Typography>
                                     </Box>
                                     <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, fontSize: '0.75rem' }}>
@@ -833,7 +830,7 @@ export const ClientMaster: React.FC = () => {
                                         size="small"
                                         name="financialYear"
                                         value={formData.financialYear}
-                                        onChange={handleInputChange as any}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, financialYear: e.target.value }))}
                                         sx={{ borderRadius: 1.5 }}
                                     >
                                         <MenuItem value="april-march">April-March</MenuItem>

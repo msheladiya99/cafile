@@ -15,8 +15,6 @@ import { AddGroupList } from './pages/admin/client_process/AddGroupList';
 import { ClientMaster } from './pages/admin/client_process/ClientMaster';
 import { ClientList } from './pages/admin/client_process/ClientList';
 import { ClientContactDetail } from './pages/admin/client_process/ClientContactDetail';
-import { CancelClientTask } from './pages/admin/client_process/CancelClientTask';
-import { VisitorMaster } from './pages/admin/client_process/VisitorMaster';
 import { Staff } from './pages/admin/Staff';
 import { Tasks } from './pages/admin/Tasks';
 import { StaffTaskHistory } from './pages/admin/StaffTaskHistory';
@@ -27,6 +25,7 @@ import { Billing } from './pages/admin/Billing';
 import { ClientLedger } from './pages/admin/ClientLedger';
 import { FileRegister } from './pages/admin/FileRegister';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
+import { FirmMasterPage } from './pages/admin/FirmMaster';
 import { ClientDashboard } from './pages/client/Dashboard';
 import { ClientInvoices } from './pages/client/Invoices';
 import { ProfileSettings } from './pages/client/ProfileSettings';
@@ -119,8 +118,6 @@ const AppRoutes: React.FC = () => {
           <Route path="master/:id" element={<ClientMaster />} />
           <Route path="list" element={<ClientList />} />
           <Route path="contact-detail" element={<ClientContactDetail />} />
-          <Route path="cancel-task" element={<CancelClientTask />} />
-          <Route path="visitor-master" element={<VisitorMaster />} />
         </Route>
         <Route
           path="staff"
@@ -153,6 +150,15 @@ const AppRoutes: React.FC = () => {
           }
         />
         <Route path="fileregister" element={<FileRegister />} />
+
+        <Route
+          path="firm-master"
+          element={
+            <ProtectedRoute requireAdmin>
+              <FirmMasterPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="settings"

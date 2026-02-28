@@ -39,11 +39,12 @@ import {
     History as HistoryIcon,
     ExpandLess,
     ExpandMore,
+    Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
 
-const drawerWidth = 260;
+const drawerWidth = 240;
 
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -52,7 +53,7 @@ export const AdminLayout: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [companyName, setCompanyName] = useState('CA Admin Panel');
-    const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({ Client: true });
+    const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
     const handleMenuToggle = (text: string) => {
         setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
@@ -80,6 +81,7 @@ export const AdminLayout: React.FC = () => {
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
+        ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports' },
         {
             text: 'Client',
@@ -89,8 +91,6 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Client Master', path: '/admin/client/master' },
                 { text: 'Client List', path: '/admin/client/list' },
                 { text: 'Client Contact Detail', path: '/admin/client/contact-detail' },
-                { text: 'Cancel Client Task', path: '/admin/client/cancel-task' },
-                { text: 'Visitor Master', path: '/admin/client/visitor-master' },
             ]
         },
         ...(isAdmin ? [{ text: 'Staff', icon: <GroupIcon />, path: '/admin/staff' }] : []),
@@ -124,7 +124,7 @@ export const AdminLayout: React.FC = () => {
     const drawerContent = (
         <>
             <Toolbar />
-            <Box sx={{ overflow: 'auto', mt: 2 }}>
+            <Box sx={{ overflow: 'auto', mt: 2, '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                 <List>
                     {menuItems.map((item) => (
                         <React.Fragment key={item.text}>
@@ -134,31 +134,32 @@ export const AdminLayout: React.FC = () => {
                                         <ListItemButton
                                             onClick={() => handleMenuToggle(item.text)}
                                             sx={{
-                                                borderRadius: 2,
+                                                borderRadius: 1.5,
+                                                py: 1,
                                                 ...(item.children.some(c => location.pathname === c.path) && {
-                                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                                                    color: 'primary.main',
+                                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+                                                    color: '#667eea',
                                                     '& .MuiListItemIcon-root': {
-                                                        color: 'primary.main',
+                                                        color: '#667eea',
                                                     },
                                                 }),
                                             }}
                                         >
-                                            <ListItemIcon>{item.icon}</ListItemIcon>
-                                            <ListItemText primary={item.text} />
-                                            {openMenus[item.text] ? <ExpandLess /> : <ExpandMore />}
+                                            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                                            <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
+                                            {openMenus[item.text] ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
                                         </ListItemButton>
                                     </ListItem>
                                     <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
                                         <List component="div" disablePadding>
                                             {item.children.map((child) => (
-                                                <ListItem key={child.text} disablePadding sx={{ mb: 0.5, pl: 4, pr: 1 }}>
+                                                <ListItem key={child.text} disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
                                                     <ListItemButton
                                                         selected={location.pathname === child.path}
                                                         onClick={() => handleMenuItemClick(child.path)}
                                                         sx={{
-                                                            py: 0.5,
-                                                            borderRadius: 2,
+                                                            py: 0.6,
+                                                            borderRadius: 1.5,
                                                             '&.Mui-selected': {
                                                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                                 color: 'white',
@@ -168,7 +169,7 @@ export const AdminLayout: React.FC = () => {
                                                             },
                                                         }}
                                                     >
-                                                        <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+                                                        <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
                                                     </ListItemButton>
                                                 </ListItem>
                                             ))}
@@ -181,7 +182,8 @@ export const AdminLayout: React.FC = () => {
                                         selected={location.pathname === item.path}
                                         onClick={() => handleMenuItemClick(item.path!)}
                                         sx={{
-                                            borderRadius: 2,
+                                            borderRadius: 1.5,
+                                            py: 1,
                                             '&.Mui-selected': {
                                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                 color: 'white',
@@ -194,8 +196,8 @@ export const AdminLayout: React.FC = () => {
                                             },
                                         }}
                                     >
-                                        <ListItemIcon>{item.icon}</ListItemIcon>
-                                        <ListItemText primary={item.text} />
+                                        <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
                                     </ListItemButton>
                                 </ListItem>
                             )}
