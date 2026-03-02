@@ -198,7 +198,7 @@ export const ClientContactDetail: React.FC = () => {
                                             <TableCell>{idx === 0 ? client.name : ''}</TableCell>
                                             <TableCell>
                                                 {contact.name}
-                                                {contact.isPrimary && <Chip label="Primary" size="small" color="primary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />}
+                                                {('isPrimary' in contact && contact.isPrimary) && <Chip label="Primary" size="small" color="primary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />}
                                             </TableCell>
                                             <TableCell>{contact.designation}</TableCell>
                                             <TableCell>{contact.mobile}</TableCell>

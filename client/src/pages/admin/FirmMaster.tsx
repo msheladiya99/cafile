@@ -390,7 +390,7 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
 };
 
 // ─── Tax Detail Sub-component ─────────────────────────────────────────────────
-const TAX_BLANK = { name: '', percentageType: 'Percentage' as const, percentageValue: 0, isDefault: false, status: true };
+const TAX_BLANK: { name: string; percentageType: 'Percentage' | 'Fixed'; percentageValue: number; isDefault: boolean; status: boolean } = { name: '', percentageType: 'Percentage', percentageValue: 0, isDefault: false, status: true };
 
 const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }> = ({ toast }) => {
     const queryClient = useQueryClient();
@@ -697,15 +697,15 @@ const PartnersTab: React.FC<{
             <Paper sx={{ p: 2.5, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Typography fontSize="0.9rem" fontWeight={700} color="#444" mb={2}>{editIdx !== null ? 'Edit Partner' : 'Add New Partner'}</Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Row label="Full Name*"><TextField value={curr.name} onChange={(e) => setCurr(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} /></Row>
                         <Row label="Designation*"><TextField value={curr.designation} onChange={(e) => setCurr(p => ({ ...p, designation: e.target.value }))} fullWidth {...sx} /></Row>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Row label="ICAI Mem. No."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
                         <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: 1, textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
                             {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
@@ -1029,11 +1029,11 @@ export const FirmMasterPage: React.FC = () => {
                     <Paper sx={{ p: 3, mb: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', maxWidth: 800 }}>
                         <SectionHead icon={<ReceiptIcon fontSize="small" />} title="Invoice Settings" />
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <Row label="Invoice Prefix *"><TextField value={form.invoicePrefix || ''} onChange={f('invoicePrefix')} placeholder="e.g. INV-" fullWidth {...sx} /></Row>
                                 <Row label="Client Code Prefix"><TextField value={form.clientCodePrefix || ''} onChange={f('clientCodePrefix')} placeholder="e.g. CA" fullWidth {...sx} /></Row>
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <Row label="Invoice Email(s)">
                                     <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx}
                                         helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />

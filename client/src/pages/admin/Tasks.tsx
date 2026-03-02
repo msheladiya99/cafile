@@ -49,11 +49,13 @@ export const Tasks: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [filterStatus, setFilterStatus] = useState<TaskStatus | 'ALL'>('ALL');
+    void selectedTask;
+    void setFilterStatus;
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
     // Fetch tasks
-    const { data: tasks = [], isLoading } = useQuery<Task[]>({
+    const { data: tasks = [] } = useQuery<Task[]>({
         queryKey: ['tasks', filterStatus],
         queryFn: () => taskService.getTasks(filterStatus === 'ALL' ? {} : { status: filterStatus })
     });
@@ -97,7 +99,7 @@ export const Tasks: React.FC = () => {
     });
 
     // Update status mutation
-    const updateStatusMutation = useMutation({
+    useMutation({
         mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) =>
             taskService.updateStatus(taskId, status),
         onSuccess: () => {
@@ -110,14 +112,14 @@ export const Tasks: React.FC = () => {
     });
 
     // Timer mutations
-    const startTimerMutation = useMutation({
+    useMutation({
         mutationFn: (taskId: string) => taskService.startTimer(taskId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tasks'] });
         }
     });
 
-    const stopTimerMutation = useMutation({
+    useMutation({
         mutationFn: (taskId: string) => taskService.stopTimer(taskId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tasks'] });

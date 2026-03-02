@@ -40,6 +40,7 @@ import {
     ExpandLess,
     ExpandMore,
     Business as BusinessIcon,
+    Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
@@ -92,6 +93,18 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Client Master', path: '/admin/client/master' },
                 { text: 'Client List', path: '/admin/client/list' },
                 { text: 'Client Contact Detail', path: '/admin/client/contact-detail' },
+            ]
+        },
+        {
+            text: 'Employee',
+            icon: <PersonIcon />,
+            children: [
+                { text: 'Employee Master', path: '/admin/employee/master' },
+                { text: 'Employee List', path: '/admin/employee/list' },
+                { text: 'Emp Task Schedule', path: '/admin/employee/tasks' },
+                { text: 'Time Sheet', path: '/admin/employee/timesheet' },
+                { text: 'Free Employee List', path: '/admin/employee/free-list' },
+                { text: 'Employee Login Detail', path: '/admin/employee/login-detail' },
             ]
         },
         ...(isAdmin ? [{ text: 'Staff', icon: <GroupIcon />, path: '/admin/staff' }] : []),

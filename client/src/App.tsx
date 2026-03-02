@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -26,6 +27,7 @@ import { ClientLedger } from './pages/admin/ClientLedger';
 import { FileRegister } from './pages/admin/FileRegister';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
 import { FirmMasterPage } from './pages/admin/FirmMaster';
+import { EmployeeMaster } from './pages/admin/employee/EmployeeMaster';
 import { ClientDashboard } from './pages/client/Dashboard';
 import { ClientInvoices } from './pages/client/Invoices';
 import { ProfileSettings } from './pages/client/ProfileSettings';
@@ -160,6 +162,10 @@ const AppRoutes: React.FC = () => {
           }
         />
 
+        <Route path="employee">
+          <Route path="master" element={<EmployeeMaster />} />
+        </Route>
+
         <Route
           path="settings"
           element={
@@ -211,12 +217,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
+        <HelmetProvider>
+          <CssBaseline />
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </HelmetProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

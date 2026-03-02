@@ -34,6 +34,7 @@ import { adminService } from '../../services/adminService';
 import { reminderService } from '../../services/reminderService';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 
 interface ToDoItem {
     id: number;
@@ -123,6 +124,11 @@ export const AdminDashboard: React.FC = () => {
 
     return (
         <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
+            <Helmet>
+                <title>Dashboard | CA Office Portal</title>
+                <meta name="description" content="View statistics, tasks, filing deadlines, and quick actions for your CA Office." />
+            </Helmet>
+
             {/* Header Section */}
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
                 <Box>
@@ -538,6 +544,7 @@ export const AdminDashboard: React.FC = () => {
                                 </Box>
                             </Box>
 
+                            {/* Upload Action */}
                             <Box
                                 onClick={() => navigate('/admin/upload')}
                                 sx={{
@@ -575,6 +582,7 @@ export const AdminDashboard: React.FC = () => {
                                 </Box>
                             </Box>
 
+                            {/* Invoice Action */}
                             <Box
                                 onClick={() => navigate('/admin/billing')}
                                 sx={{

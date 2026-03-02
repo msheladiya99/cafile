@@ -2,8 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Folder as FolderIcon,
-    EventNote,
-    CheckCircleOutline,
     TrendingUp,
     AccountBalance,
     ReceiptLong,
@@ -27,7 +25,6 @@ import {
     Chip,
     Button,
     Container,
-    Stack,
     Skeleton,
     Fade,
     IconButton,
@@ -54,6 +51,7 @@ export const ClientDashboard: React.FC = () => {
     });
 
     const reminders = remindersData.filter(r => r.status !== 'COMPLETED');
+    void reminders;
     const isLoading = isLoadingStats || isLoadingReminders;
 
     // Process stats

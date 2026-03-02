@@ -38,6 +38,17 @@ router.put('/', requireAdmin, async (req: AuthRequest, res: Response) => {
         delete updates.logoUrl;           // use dedicated endpoints
         delete updates.signatureImageUrl; // use dedicated endpoints
 
+        // Sanitize empty strings for Date fields to prevent Mongoose CastError
+        if (updates.membershipDate === '') updates.membershipDate = null;
+        if (updates.frnDate === '') updates.frnDate = null;
+
+        if (updates.partners) {
+            updates.partners = updates.partners.map((p: any) => {
+                if (p.joiningDate === '') p.joiningDate = null;
+                return p;
+            });
+        }
+
         let firm = await FirmMaster.findOne();
         if (!firm) {
             firm = await FirmMaster.create({ firmName: 'My CA Firm', ...updates });

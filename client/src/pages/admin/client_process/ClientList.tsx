@@ -244,8 +244,8 @@ export const ClientList: React.FC = () => {
                                             {client.name}
                                             {client.clientCode && <Typography variant="caption" display="block" color="text.secondary">{client.clientCode}</Typography>}
                                         </TableCell>
-                                        <TableCell>{client.groupName?.groupName || '-'}</TableCell>
-                                        <TableCell>{client.itStatus?.name || '-'}</TableCell>
+                                        <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
+                                        <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
                                         <TableCell>
                                             <Box sx={{
                                                 display: 'inline-flex',

@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
+import { Helmet } from 'react-helmet-async';
 
 const drawerWidth = 260;
 
@@ -126,6 +127,10 @@ export const ClientLayout: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
+            <Helmet>
+                <title>{companyName ? `${companyName} | Client Portal` : 'Client Portal'}</title>
+                <meta name="description" content="View your important invoices, files, and documents securely through the Client Portal." />
+            </Helmet>
             <CssBaseline />
             <AppBar
                 position="fixed"
