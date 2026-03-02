@@ -151,9 +151,11 @@ const TaskSchema = new Schema<ITask>({
 
 // Indexes for performance
 TaskSchema.index({ assignedTo: 1, status: 1 });
+TaskSchema.index({ assignedTo: 1, createdAt: -1 }); // Speeds up staff history aggregation
 TaskSchema.index({ createdBy: 1 });
 TaskSchema.index({ clientId: 1 });
 TaskSchema.index({ targetDate: 1 });
 TaskSchema.index({ status: 1, priority: 1 });
+TaskSchema.index({ createdAt: -1 });
 
 export const Task = mongoose.model<ITask>('Task', TaskSchema);

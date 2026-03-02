@@ -161,129 +161,142 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
         const staffMembers = await User.find(staffFilter).select('_id username name email role').lean();
         console.log(`Found ${staffMembers.length} staff members for history ledger`);
 
-        // Get tasks for each staff member
-        const staffHistory = await Promise.all(
-            staffMembers.map(async (staff) => {
-                try {
-                    const taskFilter: any = {
-                        assignedTo: staff._id,
-                        ...dateFilter
-                    };
+        // [PERFORMANCE] Pre-fetch all tasks for these staff members
+        const allTasksFilter: any = {
+            assignedTo: { $in: staffMembers.map(s => s._id) },
+            ...dateFilter
+        };
+        if (status) {
+            allTasksFilter.status = status;
+        }
 
-                    if (status) {
-                        taskFilter.status = status;
-                    }
+        const allTasks = await Task.find(allTasksFilter)
+            .populate('createdBy', 'username name')
+            .populate('clientId', 'name email phone')
+            .sort({ createdAt: -1 })
+            .lean();
 
-                    const tasks = await Task.find(taskFilter)
-                        .populate('createdBy', 'username name')
-                        .populate('clientId', 'name email phone')
-                        .sort({ createdAt: -1 })
-                        .lean();
-
-                    // Calculate staff metrics
-                    const totalTasks = tasks.length;
-                    const completedTasks = tasks.filter(t => t.status === 'DONE').length;
-                    const pendingTasks = tasks.filter(t => t.status === 'PENDING').length;
-                    const inProgressTasks = tasks.filter(t => t.status === 'STARTED').length;
-                    const underReviewTasks = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
-                    const overdueTasks = tasks.filter(t => t.isOverdue && t.status !== 'DONE').length;
-
-                    // Time tracking metrics
-                    const totalEstimatedHours = tasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
-                    const totalActualMinutes = tasks.reduce((sum, t) => sum + (t.actualTimeSpent || 0), 0);
-                    const totalActualHours = Math.round((totalActualMinutes / 60) * 100) / 100;
-
-                    // Efficiency calculation
-                    const completedTasksWithTime = tasks.filter(t => t.status === 'DONE' && (t.actualTimeSpent || 0) > 0);
-                    const avgEfficiency = completedTasksWithTime.length > 0
-                        ? Math.round(
-                            completedTasksWithTime.reduce((acc, task) => {
-                                const estimated = (task.estimatedHours || 0) * 60;
-                                const actual = task.actualTimeSpent || 0;
-                                return acc + (estimated / actual) * 100;
-                            }, 0) / completedTasksWithTime.length
-                        )
-                        : 0;
-
-                    // On-time completion rate
-                    const completedOnTime = tasks.filter(t =>
-                        t.status === 'DONE' &&
-                        t.completedAt &&
-                        new Date(t.completedAt) <= new Date(t.targetDate)
-                    ).length;
-                    const onTimeRate = completedTasks > 0
-                        ? Math.round((completedOnTime / completedTasks) * 100)
-                        : 0;
-
-                    // Average revision count
-                    const avgRevisions = completedTasks > 0
-                        ? Math.round((tasks.filter(t => t.status === 'DONE').reduce((sum, t) => sum + (t.revisionCount || 0), 0) / completedTasks) * 100) / 100
-                        : 0;
-
-                    return {
-                        staff: {
-                            _id: staff._id,
-                            username: staff.username,
-                            name: staff.name,
-                            email: staff.email,
-                            role: staff.role
-                        },
-                        summary: {
-                            totalTasks,
-                            completedTasks,
-                            pendingTasks,
-                            inProgressTasks,
-                            underReviewTasks,
-                            overdueTasks,
-                            totalEstimatedHours,
-                            totalActualHours,
-                            avgEfficiency,
-                            onTimeRate,
-                            avgRevisions,
-                            completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-                        },
-                        tasks: tasks.map(task => ({
-                            _id: task._id,
-                            title: task.title,
-                            description: task.description,
-                            category: task.category,
-                            status: task.status,
-                            priority: task.priority,
-                            createdBy: task.createdBy,
-                            client: task.clientId,
-                            targetDate: task.targetDate,
-                            startDate: task.startDate,
-                            completedAt: task.completedAt,
-                            estimatedHours: task.estimatedHours || 0,
-                            actualTimeSpent: task.actualTimeSpent || 0,
-                            actualHours: Math.round(((task.actualTimeSpent || 0) / 60) * 100) / 100,
-                            progressPercentage: task.progressPercentage || 0,
-                            revisionCount: task.revisionCount || 0,
-                            isOverdue: !!task.isOverdue,
-                            tags: task.tags || [],
-                            commentsCount: (task.comments || []).length,
-                            checklistProgress: (task.checklist || []).length > 0
-                                ? `${(task.checklist || []).filter((c: any) => c.completed).length}/${(task.checklist || []).length}`
-                                : '0/0',
-                            createdAt: task.createdAt,
-                            updatedAt: task.updatedAt
-                        }))
-                    };
-                } catch (staffError) {
-                    console.error(`Error processing history for staff ${staff.username}:`, staffError);
-                    // Return basic info so other staff members' data can still load
-                    return {
-                        staff: {
-                            _id: staff._id,
-                            username: staff.username,
-                            role: staff.role
-                        },
-                        summary: { totalTasks: 0, completedTasks: 0, pendingTasks: 0, inProgressTasks: 0, underReviewTasks: 0, overdueTasks: 0, totalEstimatedHours: 0, totalActualHours: 0, avgEfficiency: 0, onTimeRate: 0, avgRevisions: 0, completionRate: 0 },
-                        tasks: [],
-                        error: 'Failed to load details for this staff member'
-                    };
+        // [PERFORMANCE] Group tasks by staff ID
+        const tasksByStaff = new Map<string, any[]>();
+        allTasks.forEach(task => {
+            task.assignedTo.forEach((assignedUserId: any) => {
+                const uid = assignedUserId.toString();
+                if (!tasksByStaff.has(uid)) {
+                    tasksByStaff.set(uid, []);
                 }
-            })
+                tasksByStaff.get(uid)!.push(task);
+            });
+        });
+
+        // Get tasks for each staff member
+        const staffHistory = staffMembers.map((staff) => {
+            try {
+                const tasks: any[] = tasksByStaff.get(staff._id.toString()) || [];
+
+                // Calculate staff metrics
+                const totalTasks = tasks.length;
+                const completedTasks = tasks.filter(t => t.status === 'DONE').length;
+                const pendingTasks = tasks.filter(t => t.status === 'PENDING').length;
+                const inProgressTasks = tasks.filter(t => t.status === 'STARTED').length;
+                const underReviewTasks = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
+                const overdueTasks = tasks.filter(t => t.isOverdue && t.status !== 'DONE').length;
+
+                // Time tracking metrics
+                const totalEstimatedHours = tasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
+                const totalActualMinutes = tasks.reduce((sum, t) => sum + (t.actualTimeSpent || 0), 0);
+                const totalActualHours = Math.round((totalActualMinutes / 60) * 100) / 100;
+
+                // Efficiency calculation
+                const completedTasksWithTime = tasks.filter(t => t.status === 'DONE' && (t.actualTimeSpent || 0) > 0);
+                const avgEfficiency = completedTasksWithTime.length > 0
+                    ? Math.round(
+                        completedTasksWithTime.reduce((acc, task) => {
+                            const estimated = (task.estimatedHours || 0) * 60;
+                            const actual = task.actualTimeSpent || 0;
+                            return acc + (estimated / actual) * 100;
+                        }, 0) / completedTasksWithTime.length
+                    )
+                    : 0;
+
+                // On-time completion rate
+                const completedOnTime = tasks.filter(t =>
+                    t.status === 'DONE' &&
+                    t.completedAt &&
+                    new Date(t.completedAt) <= new Date(t.targetDate)
+                ).length;
+                const onTimeRate = completedTasks > 0
+                    ? Math.round((completedOnTime / completedTasks) * 100)
+                    : 0;
+
+                // Average revision count
+                const avgRevisions = completedTasks > 0
+                    ? Math.round((tasks.filter(t => t.status === 'DONE').reduce((sum, t) => sum + (t.revisionCount || 0), 0) / completedTasks) * 100) / 100
+                    : 0;
+
+                return {
+                    staff: {
+                        _id: staff._id,
+                        username: staff.username,
+                        name: staff.name,
+                        email: staff.email,
+                        role: staff.role
+                    },
+                    summary: {
+                        totalTasks,
+                        completedTasks,
+                        pendingTasks,
+                        inProgressTasks,
+                        underReviewTasks,
+                        overdueTasks,
+                        totalEstimatedHours,
+                        totalActualHours,
+                        avgEfficiency,
+                        onTimeRate,
+                        avgRevisions,
+                        completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+                    },
+                    tasks: tasks.map(task => ({
+                        _id: task._id,
+                        title: task.title,
+                        description: task.description,
+                        category: task.category,
+                        status: task.status,
+                        priority: task.priority,
+                        createdBy: task.createdBy,
+                        client: task.clientId,
+                        targetDate: task.targetDate,
+                        startDate: task.startDate,
+                        completedAt: task.completedAt,
+                        estimatedHours: task.estimatedHours || 0,
+                        actualTimeSpent: task.actualTimeSpent || 0,
+                        actualHours: Math.round(((task.actualTimeSpent || 0) / 60) * 100) / 100,
+                        progressPercentage: task.progressPercentage || 0,
+                        revisionCount: task.revisionCount || 0,
+                        isOverdue: !!task.isOverdue,
+                        tags: task.tags || [],
+                        commentsCount: (task.comments || []).length,
+                        checklistProgress: (task.checklist || []).length > 0
+                            ? `${(task.checklist || []).filter((c: any) => c.completed).length}/${(task.checklist || []).length}`
+                            : '0/0',
+                        createdAt: task.createdAt,
+                        updatedAt: task.updatedAt
+                    }))
+                };
+            } catch (staffError) {
+                console.error(`Error processing history for staff ${staff.username}:`, staffError);
+                // Return basic info so other staff members' data can still load
+                return {
+                    staff: {
+                        _id: staff._id,
+                        username: staff.username,
+                        role: staff.role
+                    },
+                    summary: { totalTasks: 0, completedTasks: 0, pendingTasks: 0, inProgressTasks: 0, underReviewTasks: 0, overdueTasks: 0, totalEstimatedHours: 0, totalActualHours: 0, avgEfficiency: 0, onTimeRate: 0, avgRevisions: 0, completionRate: 0 },
+                    tasks: [],
+                    error: 'Failed to load details for this staff member'
+                };
+            }
+        }
         );
 
         // Sort by total tasks (descending)
