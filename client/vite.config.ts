@@ -11,5 +11,13 @@ export default defineConfig({
     commonjsOptions: {
       include: [/pdfjs-dist/, /node_modules/],
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+        },
+      },
+    },
   },
 })
