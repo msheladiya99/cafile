@@ -6,16 +6,20 @@ import {
     Grid, RadioGroup,
 } from '@mui/material';
 import {
-    Business as BusinessIcon,
-    Save as SaveIcon,
-    PhotoCamera as PhotoCameraIcon,
-    Add as AddIcon,
-    Delete as DeleteIcon,
-    Remove as RemoveIcon,
-    Info as InfoIcon,
-    ReceiptLong as ReceiptIcon,
-    FileDownload as DownloadIcon,
-} from '@mui/icons-material';
+    Building2,
+    Save,
+    Camera,
+    Plus,
+    Trash2,
+    Minus,
+    Info,
+    Receipt,
+    Download,
+    List,
+    FileSpreadsheet,
+    Pencil,
+    Check
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
 import type { FirmMasterData, IMultiFirmData } from '../../services/firmService';
@@ -49,7 +53,7 @@ const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, loading }) => (
             <Box sx={{ width: 120, height: 100, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden' }}>
                 {loading ? <CircularProgress size={20} /> : url
                     ? <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    : <PhotoCameraIcon sx={{ color: '#ccc', fontSize: 30 }} />}
+                    : <Camera size={30} color="#ccc" />}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
                 <Button component="label" size="small"
@@ -190,7 +194,7 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
             <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <BusinessIcon fontSize="small" />
+                        <Building2 size={16} />
                         <Typography fontWeight={700} fontSize="0.875rem">Firm Document List</Typography>
                     </Box>
                     <Tooltip title="Export to CSV">
@@ -237,14 +241,14 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
                                                             component="a"
                                                             href={`https://drive.google.com/uc?export=download&id=${doc.fileId}`}
                                                             target="_blank"
-                                                            sx={{ color: '#20bfa9' }}
+                                                            sx={{ color: '#667eea' }}
                                                         >
-                                                            <DownloadIcon sx={{ fontSize: 16 }} />
+                                                            <Download size={16} />
                                                         </IconButton>
                                                     </Tooltip>
                                                 )}
                                                 <IconButton size="small" color="error" onClick={() => doc._id && deleteMutation.mutate(doc._id)}>
-                                                    <DeleteIcon sx={{ fontSize: 16 }} />
+                                                    <Trash2 size={16} />
                                                 </IconButton>
                                             </Box>
                                         </td>
@@ -330,7 +334,7 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
                             sx={{ width: 120, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 0, step: 0.01 }} />
                         <Button size="small" variant="outlined" sx={{ textTransform: 'none', borderRadius: 1, fontSize: '0.8rem', px: 1.5, minWidth: 'auto', color: '#555', borderColor: '#ccc' }}>Rate.</Button>
                         <Tooltip title="Exchange rate relative to the default currency (e.g. INR = 1.00)">
-                            <InfoIcon sx={{ fontSize: 18, color: '#aaa', cursor: 'pointer' }} />
+                            <Info size={18} color="#aaa" style={{ cursor: 'pointer' }} />
                         </Tooltip>
                     </Box>
                 </Row>
@@ -345,9 +349,9 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
             </Paper>
 
             <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #20bfa9 0%, #17a589 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" /></svg>
+                        <List size={16} />
                         <Typography fontWeight={700} fontSize="0.875rem">Currency List</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -356,7 +360,7 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
                         </Tooltip>
                         <Tooltip title="Export to Excel/CSV">
                             <IconButton size="small" onClick={exportCSV} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, width: 28, height: 28 }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 16h8v1H8v-1zm0-2h8v1H8v-1zm0-2h5v1H8v-1z" /></svg>
+                                <FileSpreadsheet size={14} />
                             </IconButton>
                         </Tooltip>
                     </Box>
@@ -373,12 +377,12 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
                                         <td style={{ padding: '8px 12px', fontWeight: 600 }}>{c.currencyCode}<span style={{ color: '#888', fontWeight: 400, marginLeft: 6, fontSize: '0.78rem' }}>{c.currencyName}</span></td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{c.rate.toFixed(2)}</td>
                                         <td style={{ padding: '8px 12px' }}>{c.status ? 'Active' : 'Inactive'}</td>
-                                        <td style={{ padding: '8px 12px' }}>{c.isDefault ? <span style={{ color: '#20bfa9', fontWeight: 700 }}>Default</span> : '—'}</td>
+                                        <td style={{ padding: '8px 12px' }}>{c.isDefault ? <span style={{ color: '#667eea', fontWeight: 700 }}>Default</span> : '—'}</td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton size="small" onClick={() => { setCurr({ currencyCode: c.currencyCode, currencyName: c.currencyName, rate: c.rate, isDefault: c.isDefault, status: c.status }); setEditId(c._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                                <Pencil size={14} />
                                             </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => c._id && deleteMutation.mutate(c._id)}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
+                                            <IconButton size="small" color="error" onClick={() => c._id && deleteMutation.mutate(c._id)}><Trash2 size={16} /></IconButton>
                                         </td>
                                     </tr>
                                 ))}</tbody>
@@ -436,12 +440,12 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
                 </Row>
                 <Row label="Default">
                     <Box component="input" type="checkbox" checked={tax.isDefault} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTax(p => ({ ...p, isDefault: e.target.checked }))}
-                        sx={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#20bfa9' }} />
+                        sx={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#667eea' }} />
                 </Row>
                 <Row label="Status">
                     <FormControlLabel
-                        control={<Switch size="small" checked={tax.status} onChange={(e) => setTax(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#20bfa9' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#20bfa9' } }} />}
-                        label={<Typography fontSize="0.8rem" fontWeight={600} color={tax.status ? '#20bfa9' : 'text.secondary'}>{tax.status ? 'Active' : 'Inactive'}</Typography>}
+                        control={<Switch size="small" checked={tax.status} onChange={(e) => setTax(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                        label={<Typography fontSize="0.8rem" fontWeight={600} color={tax.status ? '#667eea' : 'text.secondary'}>{tax.status ? 'Active' : 'Inactive'}</Typography>}
                     />
                 </Row>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
@@ -456,7 +460,7 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
 
             <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <BusinessIcon fontSize="small" />
+                    <Building2 size={16} />
                     <Typography fontWeight={700} fontSize="0.875rem">Tax List</Typography>
                 </Box>
                 {isLoading ? (<Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>)
@@ -470,13 +474,13 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
                                         <td style={{ padding: '8px 12px', fontWeight: 600 }}>{t.name}</td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{t.percentageType}</td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{t.percentageValue}{t.percentageType === 'Percentage' ? '%' : ''}</td>
-                                        <td style={{ padding: '8px 12px' }}>{t.isDefault ? <Box sx={{ color: '#20bfa9', fontWeight: 700, fontSize: '0.75rem' }}>✔ Default</Box> : '—'}</td>
+                                        <td style={{ padding: '8px 12px' }}>{t.isDefault ? <Box sx={{ color: '#667eea', fontWeight: 700, fontSize: '0.75rem' }}>✔ Default</Box> : '—'}</td>
                                         <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, bgcolor: t.status ? '#e8f5e9' : '#ffebee', color: t.status ? '#2e7d32' : '#c62828' }}>{t.status ? 'Active' : 'Inactive'}</Box></td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton size="small" onClick={() => { setTax({ name: t.name, percentageType: t.percentageType, percentageValue: t.percentageValue, isDefault: t.isDefault, status: t.status }); setEditId(t._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                                <Pencil size={14} />
                                             </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => t._id && deleteMutation.mutate(t._id)}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
+                                            <IconButton size="small" color="error" onClick={() => t._id && deleteMutation.mutate(t._id)}><Trash2 size={16} /></IconButton>
                                         </td>
                                     </tr>
                                 ))}</tbody>
@@ -550,7 +554,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', lg: 'row' } }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
-                            <SectionHead icon={<BusinessIcon fontSize="small" />} title="Basic Form" />
+                            <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
                             <Row label="Firm Name *"><TextField value={mf.firmName} onChange={mff('firmName')} fullWidth {...sx} /></Row>
                             <Row label="Short Name *"><TextField value={mf.shortName || ''} onChange={mff('shortName')} fullWidth {...sx} /></Row>
                             <Row label="Address *"><TextField value={mf.address || ''} onChange={mff('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} /></Row>
@@ -564,7 +568,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                             <Row label="Firm Type *"><Select value={mf.firmType || ''} onChange={mfsel('firmType')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>{FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}</Select></Row>
                         </Paper>
                         <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
-                            <SectionHead icon={<BusinessIcon fontSize="small" />} title="Bank Detail" />
+                            <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
                             <Row label="Bank Name *"><TextField value={mf.bankName || ''} onChange={mff('bankName')} fullWidth {...sx} /></Row>
                             <Row label="Bank Branch *"><TextField value={mf.bankBranch || ''} onChange={mff('bankBranch')} fullWidth {...sx} /></Row>
                             <Row label="Account Holder Name *"><TextField value={mf.accountHolderName || ''} onChange={mff('accountHolderName')} fullWidth {...sx} /></Row>
@@ -608,7 +612,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                         <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
                                 <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
-                                <Tooltip title="Custom fields for this firm"><InfoIcon sx={{ fontSize: 14, color: '#aaa' }} /></Tooltip>
+                                <Tooltip title="Custom fields for this firm"><Info size={14} color="#aaa" /></Tooltip>
                             </Box>
                             {([1, 2, 3, 4, 5, 6, 7] as const).map(n => (
                                 <Row key={n} label={`Field ${n}`}><TextField value={(mf as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={mff(`extraField${n}` as keyof IMultiFirmData)} fullWidth {...sx} /></Row>
@@ -628,8 +632,8 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
             </Paper>
             <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><BusinessIcon fontSize="small" /><Typography fontWeight={700} fontSize="0.875rem">Multi Firm List</Typography></Box>
-                    <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setMf(MF_BLANK); setEditId(null); }}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Building2 size={16} /><Typography fontWeight={700} fontSize="0.875rem">Multi Firm List</Typography></Box>
+                    <Button size="small" variant="contained" startIcon={<Plus size={18} />} onClick={() => { setMf(MF_BLANK); setEditId(null); }}
                         sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', fontWeight: 700, borderRadius: 1.5, fontSize: '0.78rem', boxShadow: 'none' }}>Add New</Button>
                 </Box>
                 {isLoading ? (<Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>)
@@ -647,9 +651,9 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                                         <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, bgcolor: firm.status ? '#e8f5e9' : '#ffebee', color: firm.status ? '#2e7d32' : '#c62828' }}>{firm.status ? 'Active' : 'Inactive'}</Box></td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton size="small" onClick={() => { setMf({ ...MF_BLANK, ...firm }); setEditId(firm._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                                                <Pencil size={14} />
                                             </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => firm._id && deleteMutation.mutate(firm._id)}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
+                                            <IconButton size="small" color="error" onClick={() => firm._id && deleteMutation.mutate(firm._id)}><Trash2 size={16} /></IconButton>
                                         </td>
                                     </tr>
                                 ))}</tbody>
@@ -710,7 +714,7 @@ const PartnersTab: React.FC<{
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
                             {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
                                 <Box component="img" src={curr.signatureImageUrl} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
-                            ) : <PhotoCameraIcon sx={{ color: '#ccc', fontSize: 24 }} />}
+                            ) : <Camera size={24} color="#ccc" />}
                             <Button component="label" size="small" variant="outlined" sx={{ textTransform: 'none', py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
                                 {curr.signatureImageUrl ? 'Change' : 'Upload'}
                                 <input type="file" hidden accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSignUpload(f); }} />
@@ -729,7 +733,7 @@ const PartnersTab: React.FC<{
 
             <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <BusinessIcon fontSize="small" />
+                    <Building2 size={16} />
                     <Typography fontWeight={700} fontSize="0.875rem">Firm Partners List</Typography>
                 </Box>
                 {partners.length === 0 ? (
@@ -749,8 +753,8 @@ const PartnersTab: React.FC<{
                                             {p.signatureImageUrl ? <img src={p.signatureImageUrl} style={{ height: 24, objectFit: 'contain' }} alt="sign" /> : '—'}
                                         </td>
                                         <td style={{ padding: '8px 12px' }}>
-                                            <IconButton size="small" onClick={() => { setCurr({ ...PARTNER_BLANK, ...p }); setEditIdx(idx); }} sx={{ color: '#667eea', mr: 0.5 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg></IconButton>
-                                            <IconButton size="small" color="error" onClick={() => onUpdate(partners.filter((_, i) => i !== idx))}><DeleteIcon sx={{ fontSize: 16 }} /></IconButton>
+                                            <IconButton size="small" onClick={() => { setCurr({ ...PARTNER_BLANK, ...p }); setEditIdx(idx); }} sx={{ color: '#667eea', mr: 0.5 }}><Pencil size={14} /></IconButton>
+                                            <IconButton size="small" color="error" onClick={() => onUpdate(partners.filter((_, i) => i !== idx))}><Trash2 size={16} /></IconButton>
                                         </td>
                                     </tr>
                                 ))}
@@ -825,7 +829,7 @@ export const FirmMasterPage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         {(form.showLogo !== false && form.logoUrl)
                             ? <Avatar src={form.logoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(255,255,255,0.5)' }} />
-                            : <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 36, height: 36 }}><BusinessIcon fontSize="small" /></Avatar>}
+                            : <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 36, height: 36 }}><Building2 size={16} /></Avatar>}
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -834,7 +838,7 @@ export const FirmMasterPage: React.FC = () => {
                             sx={{ bgcolor: 'rgba(255,255,255,0.15)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, borderRadius: 1.5, boxShadow: 'none', textTransform: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
                             Field Master
                         </Button>
-                        <Button variant="contained" size="small" startIcon={saveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <SaveIcon fontSize="small" />}
+                        <Button variant="contained" size="small" startIcon={saveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <Save size={16} />}
                             onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
                             disabled={saveMutation.isPending}
                             sx={{ bgcolor: 'rgba(255,255,255,0.22)', '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, borderRadius: 1.5, boxShadow: 'none', textTransform: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
@@ -859,7 +863,7 @@ export const FirmMasterPage: React.FC = () => {
                     {/* LEFT COLUMN */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead icon={<BusinessIcon fontSize="small" />} title="Basic Form" />
+                            <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
                             <Row label="Firm Name*"><TextField value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
                             <Row label="Short Name*"><TextField value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
                             <Row label="Address*">
@@ -896,7 +900,7 @@ export const FirmMasterPage: React.FC = () => {
                         </Paper>
 
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead icon={<BusinessIcon fontSize="small" />} title="Bank Detail" />
+                            <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
                             <Row label="Bank Name*"><TextField value={form.bankName || ''} onChange={f('bankName')} fullWidth {...sx} /></Row>
                             <Row label="Bank Branch*"><TextField value={form.bankBranch || ''} onChange={f('bankBranch')} fullWidth {...sx} /></Row>
                             <Row label="Account Holder Name*"><TextField value={form.accountHolderName || ''} onChange={f('accountHolderName')} fullWidth {...sx} /></Row>
@@ -938,9 +942,9 @@ export const FirmMasterPage: React.FC = () => {
                             <SectionHead title="Timer Auto Close" />
                             <Row label="Auto Close Hours">
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#667eea', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#5a6fd6' }, width: 28, height: 28 }}><AddIcon fontSize="small" /></IconButton>
+                                    <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#667eea', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#5a6fd6' }, width: 28, height: 28 }}><Plus size={16} /></IconButton>
                                     <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
-                                    <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><RemoveIcon fontSize="small" /></IconButton>
+                                    <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
                                 </Box>
                             </Row>
                         </Paper>
@@ -982,7 +986,7 @@ export const FirmMasterPage: React.FC = () => {
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
                                 <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
-                                <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><InfoIcon sx={{ fontSize: 14, color: '#aaa', cursor: 'pointer' }} /></Tooltip>
+                                <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
                             </Box>
                             {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
                                 <Row key={n} label={(form.extraFieldLabels && form.extraFieldLabels[i]) || `Field ${n}`}>
@@ -1027,7 +1031,7 @@ export const FirmMasterPage: React.FC = () => {
             {tab === 6 && (
                 <Box>
                     <Paper sx={{ p: 3, mb: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', maxWidth: 800 }}>
-                        <SectionHead icon={<ReceiptIcon fontSize="small" />} title="Invoice Settings" />
+                        <SectionHead icon={<Receipt size={16} />} title="Invoice Settings" />
                         <Grid container spacing={3}>
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <Row label="Invoice Prefix *"><TextField value={form.invoicePrefix || ''} onChange={f('invoicePrefix')} placeholder="e.g. INV-" fullWidth {...sx} /></Row>
@@ -1111,7 +1115,7 @@ export const FirmMasterPage: React.FC = () => {
 
                                             {form.invoiceTemplate === t.id && (
                                                 <Box sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#667eea', color: 'white', borderRadius: '50%', p: 0.3, boxShadow: '0 2px 8px rgba(102,126,234,0.4)' }}>
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>
+                                                    <Check size={18} />
                                                 </Box>
                                             )}
                                         </Box>
@@ -1178,7 +1182,7 @@ export const FirmMasterPage: React.FC = () => {
                         width: 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 24, p: 4, outline: 'none'
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                            <BusinessIcon color="primary" />
+                            <Building2 size={24} color="#667eea" />
                             <Typography variant="h6" component="h2" fontWeight={700}>Field Master</Typography>
                         </Box>
                         <Typography fontSize="0.85rem" color="text.secondary" mb={3}>

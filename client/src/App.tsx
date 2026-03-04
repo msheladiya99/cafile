@@ -1,37 +1,45 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { AdminLayout } from './layouts/AdminLayout';
 import { ClientLayout } from './layouts/ClientLayout';
-import { AdminDashboard } from './pages/admin/Dashboard';
-// AnalyticsDashboard removed
-import { MonthlyReports } from './pages/admin/MonthlyReports';
-import { Clients } from './pages/admin/Clients';
-import { AddGroupList } from './pages/admin/client_process/AddGroupList';
-import { ClientMaster } from './pages/admin/client_process/ClientMaster';
-import { ClientList } from './pages/admin/client_process/ClientList';
-import { ClientContactDetail } from './pages/admin/client_process/ClientContactDetail';
-import { Staff } from './pages/admin/Staff';
-import { Tasks } from './pages/admin/Tasks';
-import { StaffTaskHistory } from './pages/admin/StaffTaskHistory';
-import { UploadFile } from './pages/admin/UploadFile';
-import { ManageFiles } from './pages/admin/ManageFiles';
-import { Reminders } from './pages/admin/Reminders';
-import { Billing } from './pages/admin/Billing';
-import { ClientLedger } from './pages/admin/ClientLedger';
-import { FileRegister } from './pages/admin/FileRegister';
-import { CompanySettingsPage } from './pages/admin/CompanySettings';
-import { FirmMasterPage } from './pages/admin/FirmMaster';
-import { EmployeeMaster } from './pages/admin/employee/EmployeeMaster';
-import { ClientDashboard } from './pages/client/Dashboard';
-import { ClientInvoices } from './pages/client/Invoices';
-import { ProfileSettings } from './pages/client/ProfileSettings';
-import { MyFiles } from './pages/client/MyFiles';
+
+// Lazy load route pages
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
+const MonthlyReports = lazy(() => import('./pages/admin/MonthlyReports').then(module => ({ default: module.MonthlyReports })));
+const Clients = lazy(() => import('./pages/admin/Clients').then(module => ({ default: module.Clients })));
+const AddGroupList = lazy(() => import('./pages/admin/client_process/AddGroupList').then(module => ({ default: module.AddGroupList })));
+const ClientMaster = lazy(() => import('./pages/admin/client_process/ClientMaster').then(module => ({ default: module.ClientMaster })));
+const ClientList = lazy(() => import('./pages/admin/client_process/ClientList').then(module => ({ default: module.ClientList })));
+const ClientContactDetail = lazy(() => import('./pages/admin/client_process/ClientContactDetail').then(module => ({ default: module.ClientContactDetail })));
+const Staff = lazy(() => import('./pages/admin/Staff').then(module => ({ default: module.Staff })));
+const Tasks = lazy(() => import('./pages/admin/Tasks').then(module => ({ default: module.Tasks })));
+const StaffTaskHistory = lazy(() => import('./pages/admin/StaffTaskHistory').then(module => ({ default: module.StaffTaskHistory })));
+const UploadFile = lazy(() => import('./pages/admin/UploadFile').then(module => ({ default: module.UploadFile })));
+const ManageFiles = lazy(() => import('./pages/admin/ManageFiles').then(module => ({ default: module.ManageFiles })));
+const Reminders = lazy(() => import('./pages/admin/Reminders').then(module => ({ default: module.Reminders })));
+const Billing = lazy(() => import('./pages/admin/Billing').then(module => ({ default: module.Billing })));
+const ClientLedger = lazy(() => import('./pages/admin/ClientLedger').then(module => ({ default: module.ClientLedger })));
+const FileRegister = lazy(() => import('./pages/admin/FileRegister').then(module => ({ default: module.FileRegister })));
+const CompanySettingsPage = lazy(() => import('./pages/admin/CompanySettings').then(module => ({ default: module.CompanySettingsPage })));
+const FirmMasterPage = lazy(() => import('./pages/admin/FirmMaster').then(module => ({ default: module.FirmMasterPage })));
+const EmployeeMaster = lazy(() => import('./pages/admin/employee/EmployeeMaster').then(module => ({ default: module.EmployeeMaster })));
+const EmployeeList = lazy(() => import('./pages/admin/employee/EmployeeList').then(module => ({ default: module.EmployeeList })));
+const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.ClientDashboard })));
+const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
+const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
+const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
+
+const LoadingScreen = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+    <CircularProgress />
+  </Box>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,128 +96,132 @@ const AppRoutes: React.FC = () => {
   const { isAuthenticated, isStaff } = useAuth();
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          isAuthenticated ? (
-            <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
-          ) : (
-            <Login />
-          )
-        }
-      />
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
+            ) : (
+              <Login />
+            )
+          }
+        />
 
-      {/* Admin/Staff Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requireStaff>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        {/* Analytics route removed */}
-        <Route path="reports" element={<MonthlyReports />} />
-        <Route path="clients" element={<Clients />} />
-        <Route path="client">
-          <Route path="add-group" element={<AddGroupList />} />
-          <Route path="master" element={<ClientMaster />} />
-          <Route path="master/:id" element={<ClientMaster />} />
-          <Route path="list" element={<ClientList />} />
-          <Route path="contact-detail" element={<ClientContactDetail />} />
+        {/* Admin/Staff Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireStaff>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          {/* Analytics route removed */}
+          <Route path="reports" element={<MonthlyReports />} />
+          <Route path="clients" element={<Clients />} />
+          <Route path="client">
+            <Route path="add-group" element={<AddGroupList />} />
+            <Route path="master" element={<ClientMaster />} />
+            <Route path="master/:id" element={<ClientMaster />} />
+            <Route path="list" element={<ClientList />} />
+            <Route path="contact-detail" element={<ClientContactDetail />} />
+          </Route>
+          <Route
+            path="staff"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Staff />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="tasks" element={<Tasks />} />
+          <Route
+            path="staff-task-history"
+            element={
+              <ProtectedRoute requireAdmin>
+                <StaffTaskHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="upload" element={<UploadFile />} />
+          <Route path="files" element={<ManageFiles />} />
+          <Route path="reminders" element={<Reminders />} />
+
+          <Route path="billing" element={<Billing />} />
+          <Route
+            path="client-ledger"
+            element={
+              <ProtectedRoute requireAdmin>
+                <ClientLedger />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="fileregister" element={<FileRegister />} />
+
+          <Route
+            path="firm-master"
+            element={
+              <ProtectedRoute requireAdmin>
+                <FirmMasterPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="employee">
+            <Route path="master" element={<EmployeeMaster />} />
+            <Route path="master/:id" element={<EmployeeMaster />} />
+            <Route path="list" element={<EmployeeList />} />
+          </Route>
+
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute requireAdmin>
+                <CompanySettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="profile" element={<ProfileSettings />} />
         </Route>
-        <Route
-          path="staff"
-          element={
-            <ProtectedRoute requireAdmin>
-              <Staff />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="tasks" element={<Tasks />} />
-        <Route
-          path="staff-task-history"
-          element={
-            <ProtectedRoute requireAdmin>
-              <StaffTaskHistory />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="upload" element={<UploadFile />} />
-        <Route path="files" element={<ManageFiles />} />
-        <Route path="reminders" element={<Reminders />} />
 
-        <Route path="billing" element={<Billing />} />
+
+        {/* Client Routes */}
         <Route
-          path="client-ledger"
+          path="/client"
           element={
-            <ProtectedRoute requireAdmin>
-              <ClientLedger />
+            <ProtectedRoute requireClient>
+              <ClientLayout />
             </ProtectedRoute>
           }
-        />
-        <Route path="fileregister" element={<FileRegister />} />
+        >
+          <Route index element={<Navigate to="/client/dashboard" replace />} />
+          <Route path="dashboard" element={<ClientDashboard />} />
+          <Route path="invoices" element={<ClientInvoices />} />
+          <Route path="profile" element={<ProfileSettings />} />
 
-        <Route
-          path="firm-master"
-          element={
-            <ProtectedRoute requireAdmin>
-              <FirmMasterPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="employee">
-          <Route path="master" element={<EmployeeMaster />} />
+          <Route path="files" element={<MyFiles />} />
         </Route>
 
+        {/* Default Route */}
         <Route
-          path="settings"
+          path="/"
           element={
-            <ProtectedRoute requireAdmin>
-              <CompanySettingsPage />
-            </ProtectedRoute>
+            isAuthenticated ? (
+              <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
-        <Route path="profile" element={<ProfileSettings />} />
-      </Route>
 
-
-      {/* Client Routes */}
-      <Route
-        path="/client"
-        element={
-          <ProtectedRoute requireClient>
-            <ClientLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="/client/dashboard" replace />} />
-        <Route path="dashboard" element={<ClientDashboard />} />
-        <Route path="invoices" element={<ClientInvoices />} />
-        <Route path="profile" element={<ProfileSettings />} />
-
-        <Route path="files" element={<MyFiles />} />
-      </Route>
-
-      {/* Default Route */}
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? (
-            <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-
-      {/* 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 

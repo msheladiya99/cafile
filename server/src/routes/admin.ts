@@ -116,9 +116,12 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         const client = new Client({
             name, email, phone, panNumber, aadharNumber, gstNumber,
             clientCode, groupName: groupName || undefined, itStatus: itStatus || undefined,
-            masterType, subMaster: subMaster || undefined, birthDate,
+            masterType, subMaster: subMaster || undefined,
+            birthDate: birthDate || undefined,
             address, country, state, city, postalCode, currency,
-            incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
+            incorporationDateFrom: incorporationDateFrom || undefined,
+            incorporationDateTo: incorporationDateTo || undefined,
+            licenceNo, licenceAuthority,
             trnNo, description, supportEmployee: supportEmployee || undefined, status, financialYear,
             altAddress, altPhoneM, altPhoneL, altFax,
             extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7,
@@ -211,10 +214,16 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
             }
         }
 
-        // Fix Mongoose CastError by converting empty strings to null for ObjectId fields
+        // Fix Mongoose CastError by converting empty strings to null for ObjectId fields and Dates
         if (updates.groupName === '') updates.groupName = null;
         if (updates.itStatus === '') updates.itStatus = null;
         if (updates.supportEmployee === '') updates.supportEmployee = null;
+        if (updates.subMaster === '') updates.subMaster = null;
+
+        // Handle Date fields specifically so empty string translates to missing/unset
+        if (updates.birthDate === '') updates.birthDate = null;
+        if (updates.incorporationDateFrom === '') updates.incorporationDateFrom = null;
+        if (updates.incorporationDateTo === '') updates.incorporationDateTo = null;
 
         const client = await Client.findByIdAndUpdate(
             id,
