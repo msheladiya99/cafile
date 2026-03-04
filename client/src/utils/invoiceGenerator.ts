@@ -1,8 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { Invoice } from '../services/billingService';
 import { format } from 'date-fns';
-import settingsService from '../services/settingsService';
+import firmService from '../services/firmService';
+import type { Invoice } from '../services/billingService';
 
 export const generateInvoicePDF = async (invoice: Invoice) => {
     // Fetch company settings
@@ -11,12 +11,29 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     let companyEmail = 'contact@caoffice.com';
     let companyPhone = '+91 98765 43210';
 
+    let invoiceTemplate = 'template1';
+    let invoiceTerms = '1. Payment is due within 15 days of invoice date.\n2. Please include invoice number in payment reference.\n3. This is a computer generated invoice.';
+
     try {
-        const settings = await settingsService.getSettings();
-        companyName = settings.companyName || companyName;
-        companyAddress = settings.address || companyAddress;
-        companyEmail = settings.email || companyEmail;
-        companyPhone = settings.phone || companyPhone;
+        if (invoice.firmId) {
+            // Use multi-firm details
+            const mf = invoice.firmId as any;
+            companyName = mf.firmName || companyName;
+            companyAddress = mf.address || companyAddress;
+            companyEmail = mf.email || companyEmail;
+            companyPhone = mf.mobile || mf.phoneL || companyPhone;
+            if (mf.invoiceTemplate) invoiceTemplate = mf.invoiceTemplate;
+            if (mf.invoiceTerms) invoiceTerms = mf.invoiceTerms;
+        } else {
+            // Use FirmMaster as primary
+            const firmData = await firmService.getFirm();
+            companyName = firmData.firmName || companyName;
+            companyAddress = firmData.address || companyAddress;
+            companyEmail = firmData.email || companyEmail;
+            companyPhone = firmData.mobile || firmData.phoneL || companyPhone;
+            if (firmData.invoiceTemplate) invoiceTemplate = firmData.invoiceTemplate;
+            if (firmData.invoiceTerms) invoiceTerms = firmData.invoiceTerms;
+        }
     } catch (error) {
         console.warn('Failed to fetch company settings, using defaults:', error);
     }
@@ -27,7 +44,8 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     const padding = 15;
 
     // --- Colors (Premium Palette) ---
-    const primaryColor: [number, number, number] = [30, 58, 138]; // Deep Blue
+    // Change to purple theme if template2
+    const primaryColor: [number, number, number] = invoiceTemplate === 'template2' ? [102, 126, 234] : [30, 58, 138];
     const secondaryColor: [number, number, number] = [100, 116, 139]; // Slate Grey
     const borderColor: [number, number, number] = [226, 232, 240]; // Light Border
 
@@ -61,7 +79,7 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     doc.setFontSize(36);
     doc.setTextColor(226, 232, 240); // Very light grey watermark-like
     doc.setFont('helvetica', 'bold');
-    doc.text('INVOICE', pageWidth - padding, 35, { align: 'right' });
+    doc.text(invoiceTemplate === 'template2' ? 'TAX INVOICE' : 'INVOICE', pageWidth - padding, 35, { align: 'right' });
 
     // Status Badge
     let statusColor: [number, number, number] = [100, 116, 139]; // Default Grey
@@ -97,15 +115,44 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     doc.setFont('helvetica', 'normal');
     yPos += 7;
 
-    const clientName = typeof invoice.clientId === 'object' ? (invoice.clientId.name || invoice.clientId.username || 'Valued Client') : 'Valued Client';
-    const clientAddress = typeof invoice.clientId === 'object' ? (invoice.clientId.address || '') : '';
-    const clientEmail = typeof invoice.clientId === 'object' ? (invoice.clientId.email || '') : '';
+    const isGroupBilling = invoice.billingType === 'CLIENT_GROUP';
+    const billedEntity = isGroupBilling ? invoice.clientGroupId : invoice.clientId;
+
+    const clientName = typeof billedEntity === 'object' && billedEntity ? (billedEntity.groupName || billedEntity.name || billedEntity.username || 'Valued Client') : 'Valued Client';
+    const clientAddress = typeof billedEntity === 'object' && billedEntity ? (billedEntity.address || '') : '';
+    const clientEmail = typeof billedEntity === 'object' && billedEntity ? (billedEntity.email || '') : '';
+
+    let clientsText = '';
+    if (isGroupBilling && typeof billedEntity === 'object' && billedEntity && billedEntity._id) {
+        try {
+            const { adminService } = await import('../services/adminService');
+            const allClients = await adminService.getClients();
+            const groupClients = allClients.filter(c => {
+                if (!c.groupName) return false;
+                if (typeof c.groupName === 'string') return c.groupName === billedEntity._id;
+                return c.groupName._id === billedEntity._id;
+            });
+            if (groupClients.length > 0) {
+                clientsText = `Associated Clients: ${groupClients.map(c => c.name).join(', ')}`;
+            }
+        } catch (e) {
+            console.error('Failed to fetch group clients', e);
+        }
+    }
 
     doc.setFont('helvetica', 'bold');
-    doc.text(clientName, padding, yPos);
+    doc.text(clientName + (isGroupBilling ? ' (Group)' : ''), padding, yPos);
     yPos += 5;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
+
+    if (isGroupBilling && clientsText) {
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        const lines = doc.splitTextToSize(clientsText, 80);
+        doc.text(lines, padding, yPos);
+        yPos += (lines.length * 5);
+        doc.setTextColor(30, 41, 59); // reset color
+    }
 
     if (clientAddress) {
         const addressLines = doc.splitTextToSize(clientAddress, 80);
@@ -247,9 +294,14 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     doc.setFontSize(8);
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     doc.setFont('helvetica', 'normal');
-    doc.text('1. Payment is due within 15 days of invoice date.', padding, bottomY + 5);
-    doc.text('2. Please include invoice number in payment reference.', padding, bottomY + 10);
-    doc.text('3. This is a computer generated invoice.', padding, bottomY + 15);
+
+    // Split lines for invoice terms
+    const splitTerms = doc.splitTextToSize(invoiceTerms, pageWidth - 80);
+    let termY = bottomY + 5;
+    splitTerms.forEach((line: string) => {
+        doc.text(line, padding, termY);
+        termY += 5;
+    });
 
     // Auth Signatory
     doc.setFontSize(10);

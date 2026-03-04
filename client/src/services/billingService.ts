@@ -30,7 +30,10 @@ export interface Payment {
 export interface Invoice {
     _id: string;
     invoiceNumber: string;
-    clientId: any; // Populated client object
+    billingType: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
+    clientId?: any; // Populated client object
+    clientGroupId?: any; // Populated client group object
+    firmId?: any; // Populated multi-firm object
     items: InvoiceItem[];
     subtotal: number;
     tax: number;

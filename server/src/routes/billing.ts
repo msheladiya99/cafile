@@ -56,18 +56,23 @@ router.delete('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']
 // Get all invoices (Admin) or client's invoices
 router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
     try {
-        let query = {};
+        let query: any = {};
         if (req.user.role === 'CLIENT') {
             query = { clientId: req.user.clientId };
         } else {
-            // Admin can filter by client
+            // Admin can filter by client or group
             if (req.query.clientId) {
                 query = { clientId: req.query.clientId };
+            }
+            if (req.query.clientGroupId) {
+                query = { clientGroupId: req.query.clientGroupId };
             }
         }
 
         const invoices = await Invoice.find(query)
             .populate('clientId', 'name email')
+            .populate('clientGroupId', 'groupName email')
+            .populate('firmId', 'firmName logoUrl')
             .sort({ createdAt: -1 });
         res.json(invoices);
     } catch (error) {
@@ -78,11 +83,14 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
 // Get single invoice
 router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
     try {
-        const invoice = await Invoice.findById(req.params.id).populate('clientId', 'name email phone');
+        const invoice = await Invoice.findById(req.params.id)
+            .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName email')
+            .populate('firmId');
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Security check for clients
-        if (req.user.role === 'CLIENT' && invoice.clientId.toString() !== req.user.clientId) {
+        if (req.user.role === 'CLIENT' && invoice.clientId?.toString() !== req.user.clientId) {
             return res.status(403).json({ message: 'Unauthorized' });
         }
 
@@ -95,12 +103,29 @@ router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
 // Create invoice (Admin only)
 router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: any, res: Response) => {
     try {
-        // Generate invoice number if not provided (simple logic: INV-TIMESTAMP)
+        // Find prefix
+        let prefix = 'INV-';
+        if (req.body.firmId) {
+            const MultiFirm = mongoose.model('MultiFirm');
+            const mf = await MultiFirm.findById(req.body.firmId);
+            if (mf && mf.invoicePrefix) prefix = mf.invoicePrefix;
+        } else {
+            const FirmMaster = mongoose.model('FirmMaster');
+            const fm = await FirmMaster.findOne();
+            if (fm && fm.invoicePrefix) prefix = fm.invoicePrefix;
+        }
+
+        // Generate invoice number if not provided
         if (!req.body.invoiceNumber) {
-            req.body.invoiceNumber = `INV-${Date.now()}`;
+            req.body.invoiceNumber = `${prefix}${Date.now()}`;
         }
 
         req.body.createdBy = req.user.userId;
+
+        // Clean up empty strings to avoid Object ID CastErrors
+        if (req.body.clientId === '') delete req.body.clientId;
+        if (req.body.clientGroupId === '') delete req.body.clientGroupId;
+        if (req.body.firmId === '') delete req.body.firmId;
 
         const invoice = new Invoice(req.body);
         await invoice.save();
@@ -151,7 +176,10 @@ router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Update fields
-        if (req.body.clientId) invoice.clientId = req.body.clientId;
+        if (req.body.billingType) invoice.billingType = req.body.billingType;
+        if (req.body.clientId !== undefined) invoice.clientId = req.body.clientId || undefined;
+        if (req.body.clientGroupId !== undefined) invoice.clientGroupId = req.body.clientGroupId || undefined;
+        if (req.body.firmId !== undefined) invoice.firmId = req.body.firmId || undefined;
         if (req.body.invoiceNumber) invoice.invoiceNumber = req.body.invoiceNumber;
         if (req.body.dueDate) invoice.dueDate = req.body.dueDate;
         if (req.body.issueDate) invoice.issueDate = req.body.issueDate;

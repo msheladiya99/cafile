@@ -45,6 +45,8 @@ import {
 import { billingService } from '../../services/billingService';
 import type { Invoice, ServiceItem, InvoiceItem } from '../../services/billingService';
 import { adminService } from '../../services/adminService';
+import { clientGroupService } from '../../services/clientGroupService';
+import firmService from '../../services/firmService';
 import type { Client } from '../../types';
 import { generateInvoicePDF } from '../../utils/invoiceGenerator';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -282,11 +284,16 @@ const InvoiceDialog: React.FC<{
     onClose: () => void;
     onSubmit: (data: Partial<Invoice>) => void;
     clients: Client[];
+    clientGroups: any[];
+    multiFirms: any[];
     services: ServiceItem[];
     initialData?: Invoice | null;
-}> = ({ open, onClose, onSubmit, clients, services, initialData }) => {
+}> = ({ open, onClose, onSubmit, clients, clientGroups, multiFirms, services, initialData }) => {
     const getInitialState = (data: Invoice | null | undefined) => ({
-        clientId: data ? (typeof data.clientId === 'object' ? data.clientId._id : data.clientId) : '',
+        billingType: data?.billingType || 'SINGLE_CLIENT',
+        clientId: data?.clientId ? (typeof data.clientId === 'object' ? data.clientId._id : data.clientId) : '',
+        clientGroupId: data?.clientGroupId ? (typeof data.clientGroupId === 'object' ? data.clientGroupId._id : data.clientGroupId) : '',
+        firmId: data?.firmId ? (typeof data.firmId === 'object' ? data.firmId._id : data.firmId) : '',
         dueDate: data?.dueDate ? data.dueDate.split('T')[0] : new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
         invoiceNumber: data?.invoiceNumber || '',
         items: data?.items || [],
@@ -362,18 +369,88 @@ const InvoiceDialog: React.FC<{
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             select
-                            label="Select Client"
+                            label="Billing Type"
                             fullWidth
-                            value={formData.clientId}
-                            onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                            value={formData.billingType}
+                            onChange={(e) => setFormData({ ...formData, billingType: e.target.value as any, clientId: '', clientGroupId: '' })}
                             InputProps={{ sx: { borderRadius: 2 } }}
-                            disabled={!!initialData} // Lock client on edit
+                            disabled={!!initialData}
                         >
-                            {clients.map(c => (
-                                <MenuItem key={c._id} value={c._id}>{c.name} ({c.email}) </MenuItem>
+                            <MenuItem value="SINGLE_CLIENT">Single Client</MenuItem>
+                            <MenuItem value="CLIENT_GROUP">Client Group</MenuItem>
+                        </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                            select
+                            label="Issuing Firm"
+                            fullWidth
+                            value={formData.firmId}
+                            onChange={(e) => setFormData({ ...formData, firmId: e.target.value })}
+                            InputProps={{ sx: { borderRadius: 2 } }}
+                            disabled={!!initialData}
+                        >
+                            <MenuItem value="">Primary Firm</MenuItem>
+                            {multiFirms.map((f: any) => (
+                                <MenuItem key={f._id} value={f._id}>{f.firmName} (Multi Firm)</MenuItem>
                             ))}
                         </TextField>
                     </Grid>
+                    {formData.billingType === 'SINGLE_CLIENT' && (
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                select
+                                label="Select Client"
+                                fullWidth
+                                value={formData.clientId}
+                                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                                InputProps={{ sx: { borderRadius: 2 } }}
+                                disabled={!!initialData} // Lock client on edit
+                            >
+                                {clients.map(c => (
+                                    <MenuItem key={c._id} value={c._id}>{c.name} ({c.email}) </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                    )}
+                    {formData.billingType === 'CLIENT_GROUP' && (
+                        <>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    select
+                                    label="Select Client Group"
+                                    fullWidth
+                                    value={formData.clientGroupId}
+                                    onChange={(e) => setFormData({ ...formData, clientGroupId: e.target.value })}
+                                    InputProps={{ sx: { borderRadius: 2 } }}
+                                    disabled={!!initialData} // Lock group on edit
+                                >
+                                    {clientGroups.map((g: any) => (
+                                        <MenuItem key={g._id} value={g._id}>{g.groupName} ({g.email}) </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Grid>
+                            {formData.clientGroupId && (
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                        <Typography variant="caption" color="primary" fontWeight={700} sx={{ display: 'block', mb: 0.5 }}>
+                                            Associated Clients:
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                            {clients
+                                                .filter(c => {
+                                                    if (!c.groupName) return false;
+                                                    if (typeof c.groupName === 'string') return c.groupName === formData.clientGroupId;
+                                                    return (c.groupName as any)._id === formData.clientGroupId;
+                                                })
+                                                .map(c => c.name)
+                                                .join(', ') || 'No clients mapped to this group'}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            )}
+                        </>
+                    )}
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             label="Invoice Number"
@@ -491,7 +568,7 @@ const InvoiceDialog: React.FC<{
                     onClick={() => onSubmit({ ...formData, subtotal, totalAmount: total, balanceAmount: total })}
                     variant="contained"
                     color="primary"
-                    disabled={!formData.clientId || formData.items.length === 0}
+                    disabled={(!formData.clientId && !formData.clientGroupId) || formData.items.length === 0}
                     sx={{ borderRadius: 2, px: 3, boxShadow: 'none' }}
                 >
                     {initialData ? 'Update Invoice' : 'Generate Invoice'}
@@ -555,7 +632,17 @@ export const Billing: React.FC = () => {
         queryFn: () => adminService.getClients()
     });
 
-    const isLoading = isLoadingInvoices || isLoadingServices || isLoadingClients;
+    const { data: clientGroups = [], isLoading: isLoadingGroups } = useQuery({
+        queryKey: ['clientGroups'],
+        queryFn: () => clientGroupService.getGroups()
+    });
+
+    const { data: multiFirms = [], isLoading: isLoadingFirms } = useQuery({
+        queryKey: ['multiFirms'],
+        queryFn: () => firmService.getMultiFirms()
+    });
+
+    const isLoading = isLoadingInvoices || isLoadingServices || isLoadingClients || isLoadingGroups || isLoadingFirms;
 
     const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(null);
@@ -889,10 +976,10 @@ export const Billing: React.FC = () => {
                                                         {inv.invoiceNumber}
                                                     </Typography>
                                                     <Typography variant="body2" fontWeight={600} color="text.primary">
-                                                        {inv.clientId?.name}
+                                                        {inv.billingType === 'CLIENT_GROUP' ? `Group: ${inv.clientGroupId?.groupName}` : inv.clientId?.name}
                                                     </Typography>
                                                     <Typography variant="caption" color="text.secondary">
-                                                        {new Date(inv.issueDate).toLocaleDateString()}
+                                                        Firm: {inv.firmId ? inv.firmId.firmName : 'Primary'} | {new Date(inv.issueDate).toLocaleDateString()}
                                                     </Typography>
                                                 </Box>
                                                 <IconButton size="small" onClick={(e) => handleMenuOpen(e, inv)}>
@@ -934,7 +1021,7 @@ export const Billing: React.FC = () => {
                             <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
                                 <TableHead sx={{ bgcolor: '#f8f9fa' }}>
                                     <TableRow>
-                                        {['Invoice #', 'Client', 'Date', 'Due Date', 'Total', 'Paid', 'Balance', 'Status', 'Actions'].map((head) => (
+                                        {['Invoice #', 'Billed To', 'Issuing Firm', 'Date', 'Due Date', 'Total', 'Paid', 'Balance', 'Status', 'Actions'].map((head) => (
                                             <TableCell key={head} sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.85rem' }}>{head}</TableCell>
                                         ))}
                                     </TableRow>
@@ -960,8 +1047,15 @@ export const Billing: React.FC = () => {
                                             <TableRow key={inv._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
                                                 <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{inv.invoiceNumber}</TableCell>
                                                 <TableCell>
-                                                    <Typography variant="body2" fontWeight={500}>{inv.clientId?.name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{inv.clientId?.email}</Typography>
+                                                    <Typography variant="body2" fontWeight={500}>
+                                                        {inv.billingType === 'CLIENT_GROUP' ? `[Group] ${inv.clientGroupId?.groupName}` : inv.clientId?.name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {inv.billingType === 'CLIENT_GROUP' ? inv.clientGroupId?.email : inv.clientId?.email}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" fontWeight={500}>{inv.firmId ? inv.firmId.firmName : 'Primary Firm'}</Typography>
                                                 </TableCell>
                                                 <TableCell>{new Date(inv.issueDate).toLocaleDateString()}</TableCell>
                                                 <TableCell>{new Date(inv.dueDate).toLocaleDateString()}</TableCell>
@@ -1102,6 +1196,8 @@ export const Billing: React.FC = () => {
                 onClose={() => { setInvoiceDialogOpen(false); setEditingInvoice(null); }}
                 onSubmit={handleCreateOrUpdateInvoice}
                 clients={clients}
+                clientGroups={clientGroups}
+                multiFirms={multiFirms}
                 services={services}
                 initialData={editingInvoice}
             />

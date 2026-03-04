@@ -19,7 +19,10 @@ export interface IPayment {
 
 export interface IInvoice extends Document {
     invoiceNumber: string;
-    clientId: mongoose.Types.ObjectId;
+    billingType: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
+    clientId?: mongoose.Types.ObjectId;
+    clientGroupId?: mongoose.Types.ObjectId;
+    firmId?: mongoose.Types.ObjectId;
     items: IInvoiceItem[];
     subtotal: number;
     tax: number;
@@ -65,10 +68,24 @@ const InvoiceSchema: Schema = new Schema(
             unique: true,
             trim: true,
         },
+        billingType: {
+            type: String,
+            enum: ['SINGLE_CLIENT', 'CLIENT_GROUP'],
+            default: 'SINGLE_CLIENT',
+        },
         clientId: {
             type: Schema.Types.ObjectId,
             ref: 'Client',
-            required: true,
+            required: function (this: any) { return this.billingType === 'SINGLE_CLIENT'; }
+        },
+        clientGroupId: {
+            type: Schema.Types.ObjectId,
+            ref: 'ClientGroup',
+            required: function (this: any) { return this.billingType === 'CLIENT_GROUP'; }
+        },
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'MultiFirm',
         },
         items: [InvoiceItemSchema],
         subtotal: {
