@@ -10,7 +10,6 @@ import {
     Chip,
     Button,
     Grid,
-    Fade,
     Tooltip,
     IconButton,
     TextField,
@@ -352,6 +351,7 @@ export const AdminDashboard: React.FC = () => {
                                                 <Tooltip
                                                     key={date}
                                                     enterTouchDelay={0}
+                                                    disableInteractive
                                                     title={
                                                         <Box sx={{ p: 0.5 }}>
                                                             <Typography variant="caption" fontWeight={700} display="block">
@@ -681,50 +681,54 @@ export const AdminDashboard: React.FC = () => {
                                 </Box>
                             ) : (
                                 tasks.map((task) => (
-                                    <Fade in key={task.id}>
-                                        <ListItem
-                                            sx={{
-                                                px: 1.5,
-                                                py: 0.5,
-                                                mb: 1,
-                                                borderRadius: 2,
-                                                bgcolor: task.completed ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,1)',
-                                                border: '1px solid',
-                                                borderColor: 'divider',
-                                                transition: 'all 0.2s',
-                                                '&:hover': {
-                                                    bgcolor: 'rgba(0,0,0,0.04)',
-                                                    transform: 'translateX(3px)'
-                                                }
-                                            }}
-                                            secondaryAction={
-                                                <IconButton edge="end" aria-label="delete" onClick={() => deleteTask(task.id)} size="small" color="error">
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                    <ListItem
+                                        key={task.id}
+                                        sx={{
+                                            px: 1.5,
+                                            py: 0.5,
+                                            mb: 1,
+                                            borderRadius: 2,
+                                            bgcolor: task.completed ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,1)',
+                                            border: '1px solid',
+                                            borderColor: 'divider',
+                                            transition: 'background-color 0.2s, transform 0.2s',
+                                            animation: 'fadeSlideIn 0.25s ease-out',
+                                            '@keyframes fadeSlideIn': {
+                                                from: { opacity: 0, transform: 'translateY(-6px)' },
+                                                to: { opacity: 1, transform: 'translateY(0)' },
+                                            },
+                                            '&:hover': {
+                                                bgcolor: 'rgba(0,0,0,0.04)',
+                                                transform: 'translateX(3px)'
                                             }
-                                        >
-                                            <ListItemIcon sx={{ minWidth: 30 }} onClick={() => toggleTask(task.id)}>
-                                                <IconButton size="small" color={task.completed ? "success" : "default"}>
-                                                    {task.completed ? <CheckCircleIcon fontSize="small" /> : <UncheckedIcon fontSize="small" />}
-                                                </IconButton>
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary={
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            textDecoration: task.completed ? 'line-through' : 'none',
-                                                            color: task.completed ? 'text.secondary' : 'text.primary',
-                                                            fontWeight: task.completed ? 400 : 500,
-                                                            fontSize: '0.85rem'
-                                                        }}
-                                                    >
-                                                        {task.text}
-                                                    </Typography>
-                                                }
-                                            />
-                                        </ListItem>
-                                    </Fade>
+                                        }}
+                                        secondaryAction={
+                                            <IconButton edge="end" aria-label="delete" onClick={() => deleteTask(task.id)} size="small" color="error">
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <ListItemIcon sx={{ minWidth: 30 }} onClick={() => toggleTask(task.id)}>
+                                            <IconButton size="small" color={task.completed ? "success" : "default"}>
+                                                {task.completed ? <CheckCircleIcon fontSize="small" /> : <UncheckedIcon fontSize="small" />}
+                                            </IconButton>
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        textDecoration: task.completed ? 'line-through' : 'none',
+                                                        color: task.completed ? 'text.secondary' : 'text.primary',
+                                                        fontWeight: task.completed ? 400 : 500,
+                                                        fontSize: '0.85rem'
+                                                    }}
+                                                >
+                                                    {task.text}
+                                                </Typography>
+                                            }
+                                        />
+                                    </ListItem>
                                 ))
                             )}
                         </List>
