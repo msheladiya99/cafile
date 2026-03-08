@@ -141,8 +141,8 @@ export const AdminDashboard: React.FC = () => {
                 <Chip
                     label="FY 2025-26"
                     color="primary"
-                    variant="outlined"
-                    sx={{ fontWeight: 'bold' }}
+                    variant="filled"
+                    sx={{ fontWeight: 'bold', color: '#ffffff' }}
                 />
             </Box>
 
@@ -151,8 +151,8 @@ export const AdminDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
-                            <Typography variant="body2" color="text.secondary" fontWeight={600}>Total Clients</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#2c3e50' }}>{clients.length}</Typography>
+                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
+                            <Typography variant="h3" fontWeight={800} sx={{ color: '#1a2e44' }}>{clients.length}</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: 56, height: 56 }}>
                             <PeopleIcon />
@@ -162,8 +162,8 @@ export const AdminDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
-                            <Typography variant="body2" color="text.secondary" fontWeight={600}>Pending Tasks</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#e67e22' }}>{reminders.length}</Typography>
+                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
+                            <Typography variant="h3" fontWeight={800} sx={{ color: '#b45309' }}>{reminders.length}</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: 56, height: 56 }}>
                             <AssignmentIcon />
@@ -173,8 +173,8 @@ export const AdminDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
-                            <Typography variant="body2" color="text.secondary" fontWeight={600}>Filings Done</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#27ae60' }}>85%</Typography>
+                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
+                            <Typography variant="h3" fontWeight={800} sx={{ color: '#166534' }}>85%</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: 56, height: 56 }}>
                             <PieChartIcon />
@@ -201,7 +201,7 @@ export const AdminDashboard: React.FC = () => {
                         }}
                     >
                         <Box mb={2.5} display="flex" alignItems="center" justifyContent="space-between">
-                            <IconButton onClick={handlePrevMonth} size="small">
+                            <IconButton onClick={handlePrevMonth} size="small" aria-label="Previous month">
                                 <ChevronLeftIcon />
                             </IconButton>
                             <Box textAlign="center" onClick={handleToday} sx={{ cursor: 'pointer' }}>
@@ -227,7 +227,7 @@ export const AdminDashboard: React.FC = () => {
                                     GST Filing Deadlines
                                 </Typography>
                             </Box>
-                            <IconButton onClick={handleNextMonth} size="small">
+                            <IconButton onClick={handleNextMonth} size="small" aria-label="Next month">
                                 <ChevronRightIcon />
                             </IconButton>
                         </Box>
@@ -246,9 +246,9 @@ export const AdminDashboard: React.FC = () => {
                                         sx={{
                                             textAlign: 'center',
                                             py: 0.75,
-                                            fontWeight: 600,
+                                            fontWeight: 700,
                                             fontSize: '0.6rem',
-                                            color: 'text.disabled',
+                                            color: '#555555',
                                             letterSpacing: '0.3px'
                                         }}
                                     >
@@ -662,6 +662,7 @@ export const AdminDashboard: React.FC = () => {
                                 <Button
                                     variant="contained"
                                     type="submit"
+                                    aria-label="Add task"
                                     sx={{
                                         borderRadius: 2,
                                         minWidth: 'auto',
@@ -703,13 +704,13 @@ export const AdminDashboard: React.FC = () => {
                                             }
                                         }}
                                         secondaryAction={
-                                            <IconButton edge="end" aria-label="delete" onClick={() => deleteTask(task.id)} size="small" color="error">
+                                            <IconButton edge="end" aria-label={`Delete task: ${task.text}`} onClick={() => deleteTask(task.id)} size="small" color="error">
                                                 <DeleteIcon fontSize="small" />
                                             </IconButton>
                                         }
                                     >
                                         <ListItemIcon sx={{ minWidth: 30 }} onClick={() => toggleTask(task.id)}>
-                                            <IconButton size="small" color={task.completed ? "success" : "default"}>
+                                            <IconButton size="small" color={task.completed ? "success" : "default"} aria-label={task.completed ? `Mark "${task.text}" as incomplete` : `Mark "${task.text}" as complete`}>
                                                 {task.completed ? <CheckCircleIcon fontSize="small" /> : <UncheckedIcon fontSize="small" />}
                                             </IconButton>
                                         </ListItemIcon>
