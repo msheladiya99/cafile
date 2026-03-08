@@ -5,9 +5,11 @@ import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Login } from './pages/Login';
-import { AdminLayout } from './layouts/AdminLayout';
-import { ClientLayout } from './layouts/ClientLayout';
+
+// Lazy load layouts and auth pages
+const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
+const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
+const ClientLayout = lazy(() => import('./layouts/ClientLayout').then(module => ({ default: module.ClientLayout })));
 
 // Lazy load route pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
@@ -37,6 +39,7 @@ const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(modul
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
+
 
 const LoadingScreen = () => (
   <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
