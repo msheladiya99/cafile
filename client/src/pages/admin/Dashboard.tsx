@@ -140,9 +140,12 @@ export const AdminDashboard: React.FC = () => {
                 </Box>
                 <Chip
                     label="FY 2025-26"
-                    color="primary"
-                    variant="filled"
-                    sx={{ fontWeight: 'bold', color: '#ffffff' }}
+                    sx={{
+                        fontWeight: 'bold',
+                        bgcolor: '#1e3a5f',
+                        color: '#ffffff',
+                        '& .MuiChip-label': { color: '#ffffff' }
+                    }}
                 />
             </Box>
 
@@ -457,7 +460,7 @@ export const AdminDashboard: React.FC = () => {
                             justifyContent: 'center'
                         }}
                     >
-                        <Typography variant="h6" fontWeight="700" gutterBottom>
+                        <Typography variant="h6" component="h5" fontWeight="700" gutterBottom>
                             Quick Actions
                         </Typography>
                         <Typography variant="body2" color="text.secondary" mb={3}>
@@ -638,7 +641,7 @@ export const AdminDashboard: React.FC = () => {
                         }}
                     >
                         <Box mb={2}>
-                            <Typography variant="h6" fontWeight="700" gutterBottom>
+                            <Typography variant="h6" component="h5" fontWeight="700" gutterBottom>
                                 Smart To-Do
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
