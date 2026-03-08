@@ -36,7 +36,6 @@ import {
     Settings as SettingsIcon,
     Inventory as InventoryIcon,
     Assignment as AssignmentIcon,
-    History as HistoryIcon,
     ExpandLess,
     ExpandMore,
     Business as BusinessIcon,
@@ -93,6 +92,7 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Client Master', path: '/admin/client/master' },
                 { text: 'Client List', path: '/admin/client/list' },
                 { text: 'Client Contact Detail', path: '/admin/client/contact-detail' },
+                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger' }] : []),
             ]
         },
         {
@@ -114,16 +114,12 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Employee Login Detail', path: '/admin/employee/login-detail' },
             ]
         },
-        ...(isAdmin ? [{ text: 'Staff', icon: <GroupIcon />, path: '/admin/staff' }] : []),
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/admin/tasks' },
-        ...(isAdmin ? [{ text: 'Staff Task Ledger', icon: <HistoryIcon />, path: '/admin/staff-task-history' }] : []),
         { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
-        ...(isAdmin ? [{ text: 'Client Ledger', icon: <AccountBalance />, path: '/admin/client-ledger' }] : []),
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
-        ...(isAdmin ? [{ text: 'Company Settings', icon: <SettingsIcon />, path: '/admin/settings' }] : []),
     ];
 
     const handleDrawerToggle = () => {

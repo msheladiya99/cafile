@@ -17,16 +17,13 @@ const AddGroupList = lazy(() => import('./pages/admin/client_process/AddGroupLis
 const ClientMaster = lazy(() => import('./pages/admin/client_process/ClientMaster').then(module => ({ default: module.ClientMaster })));
 const ClientList = lazy(() => import('./pages/admin/client_process/ClientList').then(module => ({ default: module.ClientList })));
 const ClientContactDetail = lazy(() => import('./pages/admin/client_process/ClientContactDetail').then(module => ({ default: module.ClientContactDetail })));
-const Staff = lazy(() => import('./pages/admin/Staff').then(module => ({ default: module.Staff })));
 const Tasks = lazy(() => import('./pages/admin/Tasks').then(module => ({ default: module.Tasks })));
-const StaffTaskHistory = lazy(() => import('./pages/admin/StaffTaskHistory').then(module => ({ default: module.StaffTaskHistory })));
 const UploadFile = lazy(() => import('./pages/admin/UploadFile').then(module => ({ default: module.UploadFile })));
 const ManageFiles = lazy(() => import('./pages/admin/ManageFiles').then(module => ({ default: module.ManageFiles })));
 const Reminders = lazy(() => import('./pages/admin/Reminders').then(module => ({ default: module.Reminders })));
 const Billing = lazy(() => import('./pages/admin/Billing').then(module => ({ default: module.Billing })));
 const ClientLedger = lazy(() => import('./pages/admin/ClientLedger').then(module => ({ default: module.ClientLedger })));
 const FileRegister = lazy(() => import('./pages/admin/FileRegister').then(module => ({ default: module.FileRegister })));
-const CompanySettingsPage = lazy(() => import('./pages/admin/CompanySettings').then(module => ({ default: module.CompanySettingsPage })));
 const FirmMasterPage = lazy(() => import('./pages/admin/FirmMaster').then(module => ({ default: module.FirmMasterPage })));
 const EmployeeMaster = lazy(() => import('./pages/admin/employee/EmployeeMaster').then(module => ({ default: module.EmployeeMaster })));
 const EmployeeList = lazy(() => import('./pages/admin/employee/EmployeeList').then(module => ({ default: module.EmployeeList })));
@@ -136,23 +133,7 @@ const AppRoutes: React.FC = () => {
             <Route path="list" element={<ClientList />} />
             <Route path="contact-detail" element={<ClientContactDetail />} />
           </Route>
-          <Route
-            path="staff"
-            element={
-              <ProtectedRoute requireAdmin>
-                <Staff />
-              </ProtectedRoute>
-            }
-          />
           <Route path="tasks" element={<Tasks />} />
-          <Route
-            path="staff-task-history"
-            element={
-              <ProtectedRoute requireAdmin>
-                <StaffTaskHistory />
-              </ProtectedRoute>
-            }
-          />
           <Route path="upload" element={<UploadFile />} />
           <Route path="files" element={<ManageFiles />} />
           <Route path="reminders" element={<Reminders />} />
@@ -193,14 +174,6 @@ const AppRoutes: React.FC = () => {
             <Route path="free-list" element={<FreeEmployeeList />} />
           </Route>
 
-          <Route
-            path="settings"
-            element={
-              <ProtectedRoute requireAdmin>
-                <CompanySettingsPage />
-              </ProtectedRoute>
-            }
-          />
           <Route path="profile" element={<ProfileSettings />} />
         </Route>
 
@@ -237,7 +210,7 @@ const AppRoutes: React.FC = () => {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
+    </Suspense >
   );
 };
 
