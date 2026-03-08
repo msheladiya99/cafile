@@ -155,7 +155,7 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#1a2e44' }}>{clients.length}</Typography>
+                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44' }}>{clients.length}</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: 56, height: 56 }}>
                             <PeopleIcon />
@@ -166,7 +166,7 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#b45309' }}>{reminders.length}</Typography>
+                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#b45309' }}>{reminders.length}</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: 56, height: 56 }}>
                             <AssignmentIcon />
@@ -177,7 +177,7 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
-                            <Typography variant="h3" fontWeight={800} sx={{ color: '#166534' }}>85%</Typography>
+                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#166534' }}>85%</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: 56, height: 56 }}>
                             <PieChartIcon />
