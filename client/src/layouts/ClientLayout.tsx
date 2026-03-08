@@ -128,7 +128,7 @@ export const ClientLayout: React.FC = () => {
     return (
         <Box sx={{ display: 'flex' }}>
             <Helmet>
-                <title>{companyName ? `${companyName} | Client Portal` : 'Client Portal'}</title>
+                <title>{companyName ? `${companyName} | Secure Client Portal` : 'CA Client Portal | Secure Document Access'}</title>
                 <meta name="description" content="View your important invoices, files, and documents securely through the Client Portal." />
             </Helmet>
             <CssBaseline />

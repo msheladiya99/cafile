@@ -124,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
     return (
         <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
             <Helmet>
-                <title>Dashboard | CA Office Portal</title>
+                <title>Admin Dashboard | CA Office Portal</title>
                 <meta name="description" content="View statistics, tasks, filing deadlines, and quick actions for your CA Office." />
             </Helmet>
 
