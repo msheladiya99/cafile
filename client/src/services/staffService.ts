@@ -29,12 +29,17 @@ export const staffService = {
         return response.data;
     },
 
-    createStaff: async (data: CreateStaffData): Promise<CreateStaffResponse> => {
+    getStaffById: async (id: string): Promise<User> => {
+        const response = await api.get(`/staff/${id}`);
+        return response.data;
+    },
+
+    createStaff: async (data: Record<string, unknown>): Promise<CreateStaffResponse> => {
         const response = await api.post('/staff', data);
         return response.data;
     },
 
-    updateStaff: async (staffId: string, data: UpdateStaffData): Promise<{ user: User; message: string }> => {
+    updateStaff: async (staffId: string, data: Record<string, unknown>): Promise<{ user: User; message: string }> => {
         const response = await api.patch(`/staff/${staffId}`, data);
         return response.data;
     },

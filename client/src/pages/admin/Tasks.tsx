@@ -37,7 +37,9 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { taskService } from '../../services/taskService';
 import { staffService } from '../../services/staffService';
 import { adminService } from '../../services/adminService';
-import type { Task, TaskStatus, TaskPriority, User, Client, CreateTaskData } from '../../types';
+import { clientGroupService } from '../../services/clientGroupService';
+import type { Task, TaskStatus, TaskPriority, TaskCategory, User, Client, CreateTaskData } from '../../types';
+import firmService from '../../services/firmService';
 import { AxiosError } from 'axios';
 
 export const Tasks: React.FC = () => {
@@ -72,6 +74,17 @@ export const Tasks: React.FC = () => {
         queryFn: adminService.getClients
     });
 
+    const { data: clientGroups = [] } = useQuery({
+        queryKey: ['clientGroups'],
+        queryFn: clientGroupService.getGroups
+    });
+
+    // Fetch multi firms
+    const { data: multiFirms = [] } = useQuery({
+        queryKey: ['multiFirms'],
+        queryFn: firmService.getMultiFirms
+    });
+
     const [formData, setFormData] = useState<CreateTaskData>({
         title: '',
         description: '',
@@ -81,7 +94,12 @@ export const Tasks: React.FC = () => {
         targetDate: '',
         estimatedHours: 1,
         tags: [],
-        checklist: []
+        checklist: [],
+        billingType: 'SINGLE_CLIENT',
+        clientId: '',
+        clientGroupId: '',
+        firmId: '',
+        billingAmount: 0
     });
 
     // Create task mutation
@@ -136,7 +154,12 @@ export const Tasks: React.FC = () => {
             targetDate: '',
             estimatedHours: 1,
             tags: [],
-            checklist: []
+            checklist: [],
+            billingType: 'SINGLE_CLIENT',
+            clientId: '',
+            clientGroupId: '',
+            firmId: '',
+            billingAmount: 0
         });
     };
 
@@ -174,24 +197,25 @@ export const Tasks: React.FC = () => {
     };
 
     // Group tasks by status for Kanban view
-    const tasksByStatus = {
-        PENDING: tasks.filter(t => t.status === 'PENDING'),
-        STARTED: tasks.filter(t => t.status === 'STARTED'),
-        UNDER_REVIEW: tasks.filter(t => t.status === 'UNDER_REVIEW'),
-        DONE: tasks.filter(t => t.status === 'DONE')
+    const tasksByStatus: Record<string, Task[]> = {
+        PENDING: tasks.filter((t: Task) => t.status === 'PENDING'),
+        STARTED: tasks.filter((t: Task) => t.status === 'STARTED'),
+        UNDER_REVIEW: tasks.filter((t: Task) => t.status === 'UNDER_REVIEW'),
+        DONE: tasks.filter((t: Task) => t.status === 'DONE')
     };
 
     const renderTaskCard = (task: Task) => {
         // Safe access (robustness against missing data)
         const assignedUsers = Array.isArray(task.assignedTo) ? (task.assignedTo as User[]) : [];
         const client = task.clientId as Client | undefined;
+        const clientGroup = task.clientGroupId as { _id: string; groupName: string } | undefined;
         const isTimerRunning = !!task.currentTimerStart;
         const tags = Array.isArray(task.tags) ? task.tags : [];
         const comments = Array.isArray(task.comments) ? task.comments : [];
         const checklist = Array.isArray(task.checklist) ? task.checklist : [];
 
         // Helper to safe-guard user data access
-        const getUserName = (u: any) => u?.name || u?.username || '?';
+        const getUserName = (u: User | Record<string, unknown>) => (u as { name?: string; username?: string })?.name || (u as { name?: string; username?: string })?.username || '?';
 
         return (
             <Card
@@ -216,9 +240,32 @@ export const Tasks: React.FC = () => {
                         <Typography variant="h6" fontSize="0.95rem" fontWeight="700" gutterBottom sx={{ lineHeight: 1.3 }}>
                             {task.title || 'Untitled Task'}
                         </Typography>
-                        {client && (
-                            <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                🏢 {client.name}
+                        {client && task.billingType !== 'CLIENT_GROUP' && (
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    🏢 {client.name}
+                                </Box>
+                                {(task.billingAmount || task.firmId) && (
+                                    <Box display="flex" alignItems="center" gap={0.5}>
+                                        <AssignmentIcon sx={{ fontSize: 14 }} />
+                                        {task.firmId ? (task.firmId as { firmName?: string }).firmName || 'Primary Firm' : 'Primary Firm'}
+                                        {task.billingAmount ? ` | ₹${task.billingAmount}` : ''}
+                                    </Box>
+                                )}
+                            </Typography>
+                        )}
+                        {task.billingType === 'CLIENT_GROUP' && clientGroup && (
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    🏢 {clientGroup.groupName} (Group)
+                                </Box>
+                                {(task.billingAmount || task.firmId) && (
+                                    <Box display="flex" alignItems="center" gap={0.5}>
+                                        <AssignmentIcon sx={{ fontSize: 14 }} />
+                                        {task.firmId ? (task.firmId as { firmName?: string }).firmName || 'Primary Firm' : 'Primary Firm'}
+                                        {task.billingAmount ? ` | ₹${task.billingAmount}` : ''}
+                                    </Box>
+                                )}
                             </Typography>
                         )}
                     </Box>
@@ -382,7 +429,7 @@ export const Tasks: React.FC = () => {
                     '&::-webkit-scrollbar-thumb:hover': { background: '#bdc3c7' }
                 }}
             >
-                {tasksByStatus[status].map(task => renderTaskCard(task))}
+                {tasksByStatus[status].map((task: Task) => renderTaskCard(task))}
                 {tasksByStatus[status].length === 0 && (
                     <Box py={6} display="flex" flexDirection="column" alignItems="center" justifyContent="center" sx={{ opacity: 0.5 }}>
                         <AssignmentIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
@@ -522,7 +569,7 @@ export const Tasks: React.FC = () => {
                                     select
                                     label="Category"
                                     value={formData.category}
-                                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value as TaskCategory })}
                                 >
                                     <MenuItem value="CLIENT_WORK">Client Work</MenuItem>
                                     <MenuItem value="INTERNAL">Internal</MenuItem>
@@ -535,7 +582,7 @@ export const Tasks: React.FC = () => {
                                     select
                                     label="Priority"
                                     value={formData.priority}
-                                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
                                 >
                                     <MenuItem value="LOW">Low</MenuItem>
                                     <MenuItem value="MEDIUM">Medium</MenuItem>
@@ -568,25 +615,77 @@ export const Tasks: React.FC = () => {
                                 value={formData.assignedTo}
                                 onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value as unknown as string[] })}
                             >
-                                {staff.map((member) => (
+                                {staff.map((member: User) => (
                                     <MenuItem key={member._id} value={member._id}>
                                         {member.name || member.username} ({member.role})
                                     </MenuItem>
                                 ))}
                             </TextField>
-                            <TextField
-                                select
-                                label="Link to Client (Optional)"
-                                value={formData.clientId || ''}
-                                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                            >
-                                <MenuItem value="">None</MenuItem>
-                                {clients.map((client) => (
-                                    <MenuItem key={client._id} value={client._id}>
-                                        {client.name}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                                <TextField
+                                    select
+                                    label="Task Type"
+                                    value={formData.billingType || 'SINGLE_CLIENT'}
+                                    onChange={(e) => setFormData({ ...formData, billingType: e.target.value as 'SINGLE_CLIENT' | 'CLIENT_GROUP', clientId: '', clientGroupId: '' })}
+                                >
+                                    <MenuItem value="SINGLE_CLIENT">Single Client</MenuItem>
+                                    <MenuItem value="CLIENT_GROUP">Client Group</MenuItem>
+                                </TextField>
+
+                                {formData.billingType === 'SINGLE_CLIENT' ? (
+                                    <TextField
+                                        select
+                                        label="Link to Client (Optional)"
+                                        value={formData.clientId || ''}
+                                        onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                                    >
+                                        <MenuItem value="">None</MenuItem>
+                                        {clients.map((client: Client) => (
+                                            <MenuItem key={client._id} value={client._id}>
+                                                {client.name}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                ) : (
+                                    <TextField
+                                        select
+                                        label="Link to Group (Optional)"
+                                        value={formData.clientGroupId || ''}
+                                        onChange={(e) => setFormData({ ...formData, clientGroupId: e.target.value })}
+                                    >
+                                        <MenuItem value="">None</MenuItem>
+                                        {clientGroups.map((group: { _id: string; groupName: string }) => (
+                                            <MenuItem key={group._id} value={group._id}>
+                                                {group.groupName}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                )}
+                            </Box>
+
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                                <TextField
+                                    select
+                                    label="Select Firm (Optional)"
+                                    value={formData.firmId || ''}
+                                    onChange={(e) => setFormData({ ...formData, firmId: e.target.value })}
+                                >
+                                    <MenuItem value="">Primary Firm</MenuItem>
+                                    {multiFirms.map((firm: { _id?: string; firmName: string }) => (
+                                        <MenuItem key={firm._id} value={firm._id}>
+                                            {firm.firmName}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                                <TextField
+                                    type="number"
+                                    label="Billing Amount (₹)"
+                                    value={formData.billingAmount || ''}
+                                    onChange={(e) => setFormData({ ...formData, billingAmount: Number(e.target.value) })}
+                                    inputProps={{ min: 0 }}
+                                />
+                            </Box>
                         </Stack>
                     </DialogContent>
                     <DialogActions sx={{ px: 3, pb: 3 }}>

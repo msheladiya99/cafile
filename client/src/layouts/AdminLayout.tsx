@@ -102,7 +102,14 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Employee Master', path: '/admin/employee/master' },
                 { text: 'Employee List', path: '/admin/employee/list' },
                 { text: 'Emp Task Schedule', path: '/admin/employee/tasks' },
-                { text: 'Time Sheet', path: '/admin/employee/timesheet' },
+                {
+                    text: 'Time Sheet',
+                    children: [
+                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry' },
+                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask' },
+                        { text: 'Task Wise', path: '/admin/employee/timesheet/task' },
+                    ]
+                },
                 { text: 'Free Employee List', path: '/admin/employee/free-list' },
                 { text: 'Employee Login Detail', path: '/admin/employee/login-detail' },
             ]
@@ -166,26 +173,65 @@ export const AdminLayout: React.FC = () => {
                                     </ListItem>
                                     <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
                                         <List component="div" disablePadding>
-                                            {item.children.map((child) => (
-                                                <ListItem key={child.text} disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
-                                                    <ListItemButton
-                                                        selected={location.pathname === child.path}
-                                                        onClick={() => handleMenuItemClick(child.path)}
-                                                        sx={{
-                                                            py: 0.6,
-                                                            borderRadius: 1.5,
-                                                            '&.Mui-selected': {
-                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                color: 'white',
-                                                                '&:hover': {
-                                                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                                                                },
-                                                            },
-                                                        }}
-                                                    >
-                                                        <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
-                                                    </ListItemButton>
-                                                </ListItem>
+                                            {item.children.map((child: { text: string; path?: string; children?: { text: string; path: string }[] }) => (
+                                                <React.Fragment key={child.text}>
+                                                    {child.children ? (
+                                                        <>
+                                                            <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
+                                                                <ListItemButton
+                                                                    onClick={() => handleMenuToggle(child.text)}
+                                                                    sx={{ py: 0.6, borderRadius: 1.5 }}
+                                                                >
+                                                                    <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                                    {openMenus[child.text] ? <ExpandLess sx={{ fontSize: 16 }} /> : <ExpandMore sx={{ fontSize: 16 }} />}
+                                                                </ListItemButton>
+                                                            </ListItem>
+                                                            <Collapse in={openMenus[child.text]} timeout="auto" unmountOnExit>
+                                                                <List component="div" disablePadding>
+                                                                    {child.children.map((subChild: { text: string; path: string }) => (
+                                                                        <ListItem key={subChild.text} disablePadding sx={{ mb: 0.5, pl: 5, pr: 1 }}>
+                                                                            <ListItemButton
+                                                                                selected={location.pathname === subChild.path}
+                                                                                onClick={() => handleMenuItemClick(subChild.path)}
+                                                                                sx={{
+                                                                                    py: 0.6,
+                                                                                    borderRadius: 1.5,
+                                                                                    '&.Mui-selected': {
+                                                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                                                        color: 'white',
+                                                                                        '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)' },
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <ListItemText primary={subChild.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                                            </ListItemButton>
+                                                                        </ListItem>
+                                                                    ))}
+                                                                </List>
+                                                            </Collapse>
+                                                        </>
+                                                    ) : (
+                                                        <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
+                                                            <ListItemButton
+                                                                selected={location.pathname === child.path}
+                                                                onClick={() => handleMenuItemClick(child.path!)}
+                                                                sx={{
+                                                                    py: 0.6,
+                                                                    borderRadius: 1.5,
+                                                                    '&.Mui-selected': {
+                                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                                        color: 'white',
+                                                                        '&:hover': {
+                                                                            background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                                                                        },
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                            </ListItemButton>
+                                                        </ListItem>
+                                                    )}
+                                                </React.Fragment>
                                             ))}
                                         </List>
                                     </Collapse>

@@ -154,6 +154,37 @@ export interface User {
     clientId?: string;
     permissions?: string[];
     createdAt?: string;
+
+    status?: boolean;
+    firstName?: string;
+    lastName?: string;
+    employeeCode?: string;
+    address?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    postalCode?: string;
+    mobileNumber?: string;
+    birthDate?: string;
+    designation?: string;
+    joiningDate?: string;
+    monthlySalary?: string;
+    ratePerHours?: string;
+    leavingDate?: string;
+    reference?: string;
+    description?: string;
+    emergencyFirstName?: string;
+    emergencyLastName?: string;
+    emergencyRelationship?: string;
+    emergencyPhone?: string;
+    field1?: string;
+    field2?: string;
+    field3?: string;
+    field4?: string;
+    field5?: string;
+    field6?: string;
+    field7?: string;
+    documents?: Record<string, unknown>[];
 }
 
 export interface LoginData {
@@ -219,6 +250,10 @@ export interface Task {
     createdBy: string | User;
     assignedTo: (string | User)[];
     clientId?: string | Client;
+    clientGroupId?: string | { _id: string; groupName: string };
+    billingType?: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
+    firmId?: string | { _id: string; firmName: string };
+    billingAmount?: number;
 
     // Status & Priority
     status: TaskStatus;
@@ -259,7 +294,11 @@ export interface CreateTaskData {
     description?: string;
     category?: TaskCategory;
     assignedTo?: string[];
+    billingType?: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
     clientId?: string;
+    clientGroupId?: string;
+    firmId?: string;
+    billingAmount?: number;
     priority?: TaskPriority;
     targetDate: string;
     estimatedHours: number;

@@ -3,6 +3,7 @@ import { Task, TaskStatus } from '../models/Task';
 import { User } from '../models/User';
 import { AuthRequest, authenticate, requireRoles } from '../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
+import Invoice from '../models/Invoice';
 
 const router = Router();
 
@@ -22,11 +23,15 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             category,
             assignedTo,
             clientId,
+            clientGroupId,
+            billingType,
             priority,
             targetDate,
             estimatedHours,
             tags,
-            checklist
+            checklist,
+            firmId,
+            billingAmount
         } = req.body;
 
         if (!title || !targetDate || !estimatedHours) {
@@ -50,10 +55,14 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             createdBy: req.user!.userId,
             assignedTo: assignedTo || [],
             clientId,
+            clientGroupId,
+            billingType: billingType || 'SINGLE_CLIENT',
             priority: priority || 'MEDIUM',
             targetDate: new Date(targetDate),
             estimatedHours,
             tags: tags || [],
+            firmId: firmId || undefined,
+            billingAmount: billingAmount || 0,
             checklist: checklist ? checklist.map((item: string) => ({
                 id: uuidv4(),
                 text: item,
@@ -66,7 +75,9 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
         const populatedTask = await Task.findById(task._id)
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
-            .populate('clientId', 'name email phone');
+            .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName');
 
         res.status(201).json({
             task: populatedTask,
@@ -81,7 +92,7 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const { status, priority, assignedTo, clientId, overdue, myTasks } = req.query;
+        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks } = req.query;
 
         const filter: any = {};
 
@@ -107,6 +118,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         if (clientId) {
             filter.clientId = clientId;
         }
+        if (clientGroupId) {
+            filter.clientGroupId = clientGroupId;
+        }
         if (overdue === 'true') {
             filter.isOverdue = true;
             filter.status = { $nin: ['DONE', 'CANCELLED'] };
@@ -116,6 +130,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName')
             .sort({ priority: -1, targetDate: 1 })
             .lean();
 
@@ -173,6 +189,8 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
         const allTasks = await Task.find(allTasksFilter)
             .populate('createdBy', 'username name')
             .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -264,6 +282,10 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                         priority: task.priority,
                         createdBy: task.createdBy,
                         client: task.clientId,
+                        clientGroup: task.clientGroupId,
+                        billingType: task.billingType,
+                        firmId: task.firmId,
+                        billingAmount: task.billingAmount || 0,
                         targetDate: task.targetDate,
                         startDate: task.startDate,
                         completedAt: task.completedAt,
@@ -320,6 +342,8 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName')
             .populate('comments.userId', 'username name');
 
         if (!task) {
@@ -394,6 +418,48 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                 task.actualTimeSpent += duration;
                 task.currentTimerStart = undefined;
             }
+
+            // Auto Generate Bill if it doesn't already exist for this task?
+            if (task.clientId || task.clientGroupId) {
+                try {
+                    // Just to ensure not creating multiple invoices if revision count happens
+                    // But maybe we only create if there isn't an invoice with this title/task
+                    const existingInvoice = await Invoice.findOne({ notes: `Auto-generated for Task: ${task._id.toString()}` });
+                    if (!existingInvoice) {
+                        const invCount = await Invoice.countDocuments();
+                        const invoiceNumber = `INV-${Date.now().toString().slice(-6)}-${invCount + 1}`;
+
+                        const billingAmt = task.billingAmount && task.billingAmount > 0 ? task.billingAmount : 0;
+
+                        const newInvoice = new Invoice({
+                            invoiceNumber,
+                            billingType: task.billingType || 'SINGLE_CLIENT',
+                            clientId: task.clientId,
+                            clientGroupId: task.clientGroupId,
+                            firmId: task.firmId,
+                            items: [{
+                                name: `Task Completion: ${task.title}`,
+                                description: task.description || '',
+                                quantity: 1,
+                                unitPrice: billingAmt,
+                                amount: billingAmt
+                            }],
+                            subtotal: billingAmt,
+                            tax: 0,
+                            totalAmount: billingAmt,
+                            paidAmount: 0,
+                            balanceAmount: billingAmt,
+                            status: billingAmt > 0 ? 'PENDING' : 'PAID', // mark as paid if 0
+                            dueDate: new Date(Date.now() + 7 * 86400000), // 7 days from now
+                            notes: `Auto-generated for Task: ${task._id.toString()}`,
+                            createdBy: req.user!.userId
+                        });
+                        await newInvoice.save();
+                    }
+                } catch (invoiceErr) {
+                    console.error('Failed to auto-generate invoice:', invoiceErr);
+                }
+            }
         }
 
         await task.save();
@@ -401,7 +467,9 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
         const updatedTask = await Task.findById(task._id)
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
-            .populate('clientId', 'name email phone');
+            .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName');
 
         res.json({
             task: updatedTask,
@@ -629,7 +697,8 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
         // Update allowed fields
         const allowedUpdates = [
             'title', 'description', 'category', 'assignedTo', 'clientId',
-            'priority', 'targetDate', 'estimatedHours', 'tags'
+            'clientGroupId', 'billingType',
+            'priority', 'targetDate', 'estimatedHours', 'tags', 'firmId', 'billingAmount'
         ];
 
         allowedUpdates.forEach(field => {
@@ -643,7 +712,9 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
         const updatedTask = await Task.findById(task._id)
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
-            .populate('clientId', 'name email phone');
+            .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('firmId', 'firmName');
 
         res.json({
             task: updatedTask,

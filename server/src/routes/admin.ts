@@ -6,6 +6,7 @@ import { File } from '../models/File';
 import { ClientGroup } from '../models/ClientGroup';
 import { ITStatus } from '../models/ITStatus';
 import { SubMaster } from '../models/SubMaster';
+import { ActivityLog } from '../models/ActivityLog';
 import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import { sendFileUploadEmail, sendWelcomeEmail } from '../services/emailService';
@@ -622,6 +623,77 @@ router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
         res.json(users);
     } catch (error) {
         console.error('Get users error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get employee login logs
+router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId, startDate, endDate } = req.query;
+
+        // Find staff members (non-clients)
+        const query: any = { role: { $ne: 'CLIENT' } };
+        if (userId) {
+            query._id = userId;
+        }
+
+        const staffUsers = await User.find(query).select('_id name username role').lean();
+        const staffIds = staffUsers.map(u => u._id);
+
+        const filter: any = {
+            action: 'LOGIN',
+            userId: { $in: staffIds }
+        };
+
+        if (startDate || endDate) {
+            filter.timestamp = {};
+            if (startDate) {
+                const sDate = new Date(startDate as string);
+                sDate.setHours(0, 0, 0, 0);
+                filter.timestamp.$gte = sDate;
+            }
+            if (endDate) {
+                const eDate = new Date(endDate as string);
+                eDate.setHours(23, 59, 59, 999);
+                filter.timestamp.$lte = eDate;
+            }
+        }
+        const logs = await ActivityLog.find(filter)
+            .populate('userId', 'name username role')
+            .sort({ timestamp: -1 })
+            .lean();
+
+        res.json(logs);
+    } catch (error) {
+        console.error('Fetch login logs error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get free employee list
+router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        // Find tasks that are not DONE or CANCELLED
+        const { Task } = await import('../models/Task');
+        const activeTasks = await Task.find({ status: { $in: ['PENDING', 'STARTED', 'UNDER_REVIEW'] } });
+
+        let busyUserIds: any[] = [];
+        activeTasks.forEach(task => {
+            if (task.assignedTo && Array.isArray(task.assignedTo)) {
+                busyUserIds.push(...task.assignedTo);
+            }
+        });
+
+        // Find users that are not busy
+        const freeEmployees = await User.find({
+            _id: { $nin: busyUserIds },
+            role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
+        }).select('_id name username role email phone').lean();
+
+        res.json(freeEmployees);
+    } catch (error) {
+        console.error('Fetch free employee list error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

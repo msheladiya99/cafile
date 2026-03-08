@@ -30,6 +30,12 @@ const CompanySettingsPage = lazy(() => import('./pages/admin/CompanySettings').t
 const FirmMasterPage = lazy(() => import('./pages/admin/FirmMaster').then(module => ({ default: module.FirmMasterPage })));
 const EmployeeMaster = lazy(() => import('./pages/admin/employee/EmployeeMaster').then(module => ({ default: module.EmployeeMaster })));
 const EmployeeList = lazy(() => import('./pages/admin/employee/EmployeeList').then(module => ({ default: module.EmployeeList })));
+const EmpTaskSchedule = lazy(() => import('./pages/admin/employee/EmpTaskSchedule').then(module => ({ default: module.EmpTaskSchedule })));
+const EmployeeLoginDetail = lazy(() => import('./pages/admin/employee/EmployeeLoginDetail').then(module => ({ default: module.EmployeeLoginDetail })));
+const FreeEmployeeList = lazy(() => import('./pages/admin/employee/FreeEmployeeList').then(module => ({ default: module.FreeEmployeeList })));
+const EntryWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/EntryWiseTimesheet').then(module => ({ default: module.EntryWiseTimesheet })));
+const SubtaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/SubtaskWiseTimesheet').then(module => ({ default: module.SubtaskWiseTimesheet })));
+const TaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/TaskWiseTimesheet').then(module => ({ default: module.TaskWiseTimesheet })));
 const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.ClientDashboard })));
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
@@ -175,6 +181,16 @@ const AppRoutes: React.FC = () => {
             <Route path="master" element={<EmployeeMaster />} />
             <Route path="master/:id" element={<EmployeeMaster />} />
             <Route path="list" element={<EmployeeList />} />
+            <Route path="tasks" element={<EmpTaskSchedule />} />
+
+            <Route path="timesheet">
+              <Route path="entry" element={<EntryWiseTimesheet />} />
+              <Route path="subtask" element={<SubtaskWiseTimesheet />} />
+              <Route path="task" element={<TaskWiseTimesheet />} />
+            </Route>
+
+            <Route path="login-detail" element={<EmployeeLoginDetail />} />
+            <Route path="free-list" element={<FreeEmployeeList />} />
           </Route>
 
           <Route

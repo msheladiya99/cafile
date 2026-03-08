@@ -142,4 +142,18 @@ export const adminService = {
         const response = await api.get('/admin/users');
         return response.data;
     },
+
+    getLoginLogs: async (userId?: string, startDate?: string, endDate?: string): Promise<{ _id: string, userId: { _id: string, name: string, username: string, role: string }, ipAddress: string, timestamp: string }[]> => {
+        const params = new URLSearchParams();
+        if (userId) params.append('userId', userId);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await api.get(`/admin/employee/login-logs?${params.toString()}`);
+        return response.data;
+    },
+
+    getFreeEmployees: async (): Promise<{ _id: string, name: string, username: string, email: string, phone: string, role: string }[]> => {
+        const response = await api.get('/admin/employee/free-list');
+        return response.data;
+    },
 };

@@ -21,6 +21,9 @@ import {
     FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { staffService } from '../../../services/staffService';
+import { CircularProgress, Snackbar, Alert } from '@mui/material';
 
 interface FilterRowProps {
     label: string;
@@ -43,10 +46,44 @@ export const EmployeeList: React.FC = () => {
     const [filterDesignation, setFilterDesignation] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    // Mock data for demonstration - in a real app, this would come from an API
-    const employees = [
-        { id: 1, name: 'Meet Sheladiya', designation: 'Staff', status: 'Active' },
-    ];
+    const queryClient = useQueryClient();
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
+    const { data: staffData = [], isLoading } = useQuery({
+        queryKey: ['staff'],
+        queryFn: staffService.getStaff
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: staffService.deleteStaff,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            setSnackbar({ open: true, message: 'Employee deleted successfully', severity: 'success' });
+        },
+        onError: () => {
+            setSnackbar({ open: true, message: 'Error deleting employee', severity: 'error' });
+        }
+    });
+
+    const employees = staffData.map(emp => ({
+        id: emp._id,
+        name: emp.name,
+        designation: emp.designation || emp.role,
+        status: emp.status !== false ? 'Active' : 'Inactive'
+    })).filter(emp => {
+        if (filterDesignation && emp.designation !== filterDesignation) return false;
+        if (filterStatus !== 'all') {
+            const isActive = filterStatus === 'active';
+            if ((emp.status === 'Active') !== isActive) return false;
+        }
+        return true;
+    });
+
+    const handleDelete = (id: string) => {
+        if (window.confirm('Are you sure you want to delete this employee?')) {
+            deleteMutation.mutate(id);
+        }
+    };
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
@@ -130,39 +167,64 @@ export const EmployeeList: React.FC = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {employees.map((emp) => (
-                                <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
-                                    <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
-                                    <TableCell>{emp.designation}</TableCell>
-                                    <TableCell>
-                                        <Box sx={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: 2,
-                                            fontSize: '0.75rem',
-                                            fontWeight: 600,
-                                            bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee',
-                                            color: emp.status === 'Active' ? 'success.main' : 'error.main'
-                                        }}>
-                                            {emp.status}
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}>
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                        <CircularProgress size={24} />
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : employees.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                        No employees found.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                employees.map((emp) => (
+                                    <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                                        <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
+                                        <TableCell>{emp.designation}</TableCell>
+                                        <TableCell>
+                                            <Box sx={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: 2,
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee',
+                                                color: emp.status === 'Active' ? 'success.main' : 'error.main'
+                                            }}>
+                                                {emp.status}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
+                                                <EditIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Paper>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

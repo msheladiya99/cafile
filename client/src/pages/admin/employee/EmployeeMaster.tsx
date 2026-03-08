@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { staffService } from '../../../services/staffService';
 import {
     Box,
     Paper,
@@ -210,30 +212,41 @@ export const EmployeeMaster: React.FC = () => {
         field7: '',
     });
 
+    const queryClient = useQueryClient();
+
+    const { data: staffData } = useQuery({
+        queryKey: ['staff', id],
+        queryFn: () => staffService.getStaffById(id!),
+        enabled: isEditMode
+    });
+
     useEffect(() => {
-        const initializeForm = () => {
-            if (id === '1') {
-                setFormData(prev => ({
-                    ...prev,
-                    firstName: 'Meet',
-                    lastName: 'Sheladiya',
-                    status: true,
-                    designation: 'Staff',
-                    email: 'meet@example.com',
-                    mobileNumber: '1234567890',
-                    address: 'Surat',
-                    country: 'India',
-                    state: 'Gujarat',
-                    city: 'Surat',
-                    username: 'meets',
-                    password: 'password123'
-                }));
+        if (staffData && isEditMode) {
+            setFormData(prev => ({
+                ...prev,
+                ...staffData,
+                firstName: staffData.firstName || staffData.name?.split(' ')[0] || '',
+                lastName: staffData.lastName || staffData.name?.split(' ').slice(1).join(' ') || '',
+                password: '',
+                confirmPassword: ''
+            }));
+            if (staffData.documents) {
+                setDocuments(staffData.documents);
             }
-        };
-        if (id) {
-            initializeForm();
         }
-    }, [id]);
+    }, [staffData, isEditMode]);
+
+    const saveMutation = useMutation({
+        mutationFn: (data: any) => isEditMode ? staffService.updateStaff(id!, data) : staffService.createStaff(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+            showSnackbar(`Employee data ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
+            navigate('/admin/employee/list');
+        },
+        onError: (error: any) => {
+            showSnackbar(error?.response?.data?.message || 'Error saving employee', 'error');
+        }
+    });
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
@@ -342,7 +355,7 @@ export const EmployeeMaster: React.FC = () => {
 
     const handleSaveEmployee = () => {
         // Basic validation for the first tab
-        const requiredFields = ['firstName', 'lastName', 'address', 'country', 'state', 'city', 'mobileNumber', 'email', 'username', 'password'];
+        const requiredFields = ['firstName', 'lastName', 'address', 'country', 'state', 'city', 'email'];
         const missingFields = requiredFields.filter(f => !formData[f as keyof typeof formData]);
 
         if (missingFields.length > 0) {
@@ -350,16 +363,17 @@ export const EmployeeMaster: React.FC = () => {
             return;
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        if (formData.password && formData.password !== formData.confirmPassword) {
             showSnackbar('Passwords do not match!', 'error');
             return;
         }
 
-        console.log('Saving Employee Data:', formData);
-        showSnackbar(`Employee data ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
-        if (!isEditMode) {
-            navigate('/admin/employee/list');
-        }
+        const payload = {
+            ...formData,
+            documents
+        };
+
+        saveMutation.mutate(payload);
     };
 
     return (

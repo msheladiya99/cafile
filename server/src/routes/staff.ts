@@ -28,15 +28,24 @@ const generateUsername = (name: string): string => {
 // Create staff member
 router.post('/', async (req: AuthRequest, res: Response) => {
     try {
-        const { firstName, lastName, email, phone, role, permissions } = req.body;
+        const {
+            firstName, lastName, email, phone, role, permissions,
+            employeeCode, address, country, state, city, postalCode,
+            mobileNumber, birthDate, designation, joiningDate, monthlySalary,
+            ratePerHours, leavingDate, reference, description, status,
+            emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
+            field1, field2, field3, field4, field5, field6, field7,
+            documents, username: reqUsername, password: reqPassword
+        } = req.body;
 
-        if (!firstName || !lastName || !email || !phone || !role) {
-            res.status(400).json({ message: 'All fields are required' });
+        if (!firstName || !lastName || !email) {
+            res.status(400).json({ message: 'First Name, Last Name, and Email are required' });
             return;
         }
 
         const validStaffRoles = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'];
-        if (!validStaffRoles.includes(role)) {
+        const actualRole = role || 'STAFF';
+        if (!validStaffRoles.includes(actualRole)) {
             res.status(400).json({ message: 'Invalid staff role' });
             return;
         }
@@ -48,21 +57,27 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Generate credentials
+        // Generate credentials if not provided
         const name = `${firstName} ${lastName}`.trim();
-        const username = generateUsername(firstName); // using firstName for username base
-        const password = generatePassword();
-        const passwordHash = await bcrypt.hash(password, 10);
+        const finalUsername = reqUsername || generateUsername(firstName);
+        const finalPassword = reqPassword || generatePassword();
+        const passwordHash = await bcrypt.hash(finalPassword, 10);
 
         // Create user account
         const user = new User({
-            username,
+            username: finalUsername,
             name,
             email,
-            phone,
+            phone: phone || mobileNumber,
             passwordHash,
-            role: role,
-            permissions: permissions || []
+            role: actualRole,
+            permissions: permissions || [],
+            status: status !== undefined ? status : true,
+            firstName, lastName, employeeCode, address, country, state, city, postalCode,
+            mobileNumber, birthDate, designation, joiningDate, monthlySalary,
+            ratePerHours, leavingDate, reference, description,
+            emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
+            field1, field2, field3, field4, field5, field6, field7, documents
         });
         await user.save();
 
@@ -74,8 +89,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
                 createdAt: user.createdAt
             },
             credentials: {
-                username,
-                password
+                username: finalUsername,
+                password: finalPassword
             }
         });
     } catch (error) {
@@ -94,6 +109,21 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         res.json(staff);
     } catch (error) {
         console.error('Get staff error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get staff member by id
+router.get('/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const staff = await User.findById(req.params.id).select('-passwordHash').lean();
+        if (!staff) {
+            res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+        res.json(staff);
+    } catch (error) {
+        console.error('Get staff by id error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -138,7 +168,15 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
 // Update staff member
 router.patch('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const { role, permissions } = req.body;
+        const {
+            firstName, lastName, email, phone, role, permissions,
+            employeeCode, address, country, state, city, postalCode,
+            mobileNumber, birthDate, designation, joiningDate, monthlySalary,
+            ratePerHours, leavingDate, reference, description, status,
+            emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
+            field1, field2, field3, field4, field5, field6, field7,
+            documents, username: reqUsername, password: reqPassword
+        } = req.body;
 
         const user = await User.findById(req.params.id);
         if (!user) {
@@ -168,6 +206,42 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 
         if (permissions && Array.isArray(permissions)) {
             user.permissions = permissions;
+        }
+
+        if (firstName || lastName) {
+            user.firstName = firstName !== undefined ? firstName : user.firstName;
+            user.lastName = lastName !== undefined ? lastName : user.lastName;
+            user.name = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        }
+
+        if (email) {
+            const existingEmail = await User.findOne({ email, _id: { $ne: req.params.id as any } });
+            if (existingEmail) {
+                res.status(400).json({ message: 'Email already exists' });
+                return;
+            }
+            user.email = email;
+        }
+
+        const updatableFields = [
+            'employeeCode', 'address', 'country', 'state', 'city', 'postalCode',
+            'phone', 'mobileNumber', 'birthDate', 'designation', 'joiningDate', 'monthlySalary',
+            'ratePerHours', 'leavingDate', 'reference', 'description', 'status',
+            'emergencyFirstName', 'emergencyLastName', 'emergencyRelationship', 'emergencyPhone',
+            'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'documents'
+        ];
+
+        for (const field of updatableFields) {
+            if (req.body[field] !== undefined) {
+                (user as any)[field] = req.body[field];
+            }
+        }
+
+        if (reqUsername) user.username = reqUsername;
+        // Only update password if provided manually through UI
+        if (reqPassword) {
+            const bcrypt = require('bcryptjs');
+            user.passwordHash = await bcrypt.hash(reqPassword, 10);
         }
 
         await user.save();
