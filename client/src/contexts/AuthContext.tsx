@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { authService } from '../services/authService';
 import type { User } from '../types';
 
@@ -19,19 +19,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-
-    useEffect(() => {
-        // Load user from localStorage on mount
-        const storedUser = authService.getStoredUser();
-        const storedToken = authService.getStoredToken();
-
-        if (storedUser && storedToken) {
-            setUser(storedUser);
-            setToken(storedToken);
-        }
-    }, []);
+    const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
+    const [token, setToken] = useState<string | null>(() => authService.getStoredToken());
 
     const login = (newToken: string, newUser: User) => {
         authService.storeAuth(newToken, newUser);
