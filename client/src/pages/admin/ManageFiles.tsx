@@ -49,6 +49,7 @@ import {
     NavigateNext as NavigateNextIcon,
 } from '@mui/icons-material';
 import { adminService } from '../../services/adminService';
+import { Helmet } from 'react-helmet-async';
 import type { Client, FileData } from '../../types';
 import { PageHeader, PageContainer, ContentContainer, Section } from '../../components/common/UIComponents';
 
@@ -280,6 +281,10 @@ export const ManageFiles: React.FC = () => {
 
     return (
         <PageContainer>
+            <Helmet>
+                <title>Manage Files | CA Office Portal</title>
+                <meta name="description" content="Securely view and manage client documents, ITR returns, GST filings, and more." />
+            </Helmet>
             {/* Header Section */}
             <PageHeader
                 title="Manage Files"

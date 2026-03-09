@@ -75,7 +75,7 @@ export const PageHeader = ({ title, description, actions }: PageHeaderProps) => 
     <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
         <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box>
-                <Typography variant="h5" fontWeight="600">{title}</Typography>
+                <Typography variant="h5" component="h1" fontWeight="600">{title}</Typography>
                 {description && (
                     <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
                         {description}

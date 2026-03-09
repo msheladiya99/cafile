@@ -6,15 +6,21 @@ import {
     TextField,
     Typography,
     Paper,
-    Container,
     Alert,
     CircularProgress,
     InputAdornment,
-    IconButton
+    IconButton,
+    Stack
 } from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import {
+    Visibility,
+    VisibilityOff,
+    ShieldOutlined,
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
+import { Helmet } from 'react-helmet-async';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -33,157 +39,213 @@ export const Login: React.FC = () => {
             return;
         }
 
+        setLoading(true);
+        setError('');
+
         try {
-            setError('');
-            setLoading(true);
-
-            const response = await authService.login({ username, password });
-
-            // Store auth state
-            login(response.token, response.user);
-
-            // Redirect based on role
-            if (['ADMIN', 'MANAGER', 'STAFF'].includes(response.user.role)) {
-                navigate('/admin/dashboard', { replace: true });
-            } else {
-                navigate('/client/dashboard', { replace: true });
-            }
-
-        } catch (err: any) {
-            console.error('Login error:', err);
-            setError(
-                err.response?.data?.message ||
-                'Failed to log in. Please check your credentials.'
-            );
+            const data = await authService.login({ username, password });
+            login(data.token, data.user);
+            const isStaff = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role);
+            navigate(isStaff ? '/admin/dashboard' : '/client/dashboard');
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Invalid credentials';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                p: 2
-            }}
-        >
-            <Container maxWidth="xs">
-                <Paper
-                    elevation={6}
+        <Box sx={{ height: '100vh', display: 'flex', bgcolor: '#f8faff', overflow: 'hidden' }}>
+            <Helmet>
+                <title>Secure Login | CA Office Portal</title>
+                <meta name="description" content="Access your CA Office Portal. Professional practice management for Chartered Accountants." />
+            </Helmet>
+
+            {/* Left Panel - Illustration (Hidden on Mobile) */}
+            <Box
+                component={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1 }}
+                sx={{
+                    flex: 1.2,
+                    display: { xs: 'none', md: 'flex' },
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 4,
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}
+            >
+                <Box
+                    component="img"
+                    src="/login-illustration.png"
+                    alt="Accountant Illustration"
                     sx={{
-                        p: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        borderRadius: 4,
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(10px)'
+                        maxWidth: '90%',
+                        maxHeight: '80vh',
+                        objectFit: 'contain',
+                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.08))',
+                        zIndex: 2
                     }}
+                />
+                {/* Decorative Elements */}
+                <Box sx={{
+                    position: 'absolute',
+                    width: '600px',
+                    height: '600px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
+                    zIndex: 1
+                }} />
+            </Box>
+
+            {/* Right Panel - Login Card */}
+            <Box
+                sx={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: { xs: 2, sm: 4 },
+                    zIndex: 3,
+                    height: '100%'
+                }}
+            >
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    style={{ width: '100%', maxWidth: 500 }}
                 >
-                    <Box
+                    <Paper
+                        elevation={0}
                         sx={{
-                            p: 2,
-                            mb: 2,
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)'
+                            p: { xs: 4, sm: 6 },
+                            width: '100%',
+                            borderRadius: 10,
+                            bgcolor: 'white',
+                            boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
+                            textAlign: 'center',
+                            maxHeight: '95vh',
+                            overflowY: 'auto',
+                            '&::-webkit-scrollbar': { display: 'none' },
+                            msOverflowStyle: 'none',
+                            scrollbarWidth: 'none'
                         }}
                     >
-                        <LoginIcon fontSize="large" />
-                    </Box>
+                        <Box mb={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
+                                <Box sx={{ bgcolor: '#667eea', p: 0.8, borderRadius: 1.5, display: 'flex' }}>
+                                    <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
+                                </Box>
+                                <Typography variant="h6" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
+                                    my ca portal
+                                </Typography>
+                            </Box>
 
-                    <Typography component="h1" variant="h5" fontWeight="700" gutterBottom>
-                        Welcome Back
-                    </Typography>
+                            <Typography variant="h2" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: '3rem', letterSpacing: -1.5 }}>
+                                Welcome Back
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
+                                Sign in to your firm workspace
+                            </Typography>
+                        </Box>
 
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Sign in to access your portal
-                    </Typography>
+                        {error && (
+                            <Alert severity="error" sx={{ mb: 3, borderRadius: 4, bgcolor: '#fef2f2' }}>
+                                {error}
+                            </Alert>
+                        )}
 
-                    {error && (
-                        <Alert severity="error" sx={{ width: '100%', mb: 2, borderRadius: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
+                        <Box component="form" onSubmit={handleSubmit}>
+                            <Stack spacing={2.5}>
+                                <TextField
+                                    fullWidth
+                                    placeholder="Email address"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    disabled={loading}
+                                    InputProps={{
+                                        sx: {
+                                            borderRadius: 4,
+                                            height: 56,
+                                            bgcolor: '#f9fafb',
+                                            '& fieldset': { borderColor: '#e5e7eb' },
+                                            '&:hover fieldset': { borderColor: '#667eea' },
+                                            '&.Mui-focused fieldset': { borderColor: '#667eea' },
+                                            transition: 'all 0.2s'
+                                        }
+                                    }}
+                                />
 
-                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="username"
-                            label="Username / Email"
-                            name="username"
-                            autoComplete="username"
-                            autoFocus
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            disabled={loading}
-                            InputProps={{
-                                sx: { borderRadius: 2 }
-                            }}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type={showPassword ? 'text' : 'password'}
-                            id="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={loading}
-                            InputProps={{
-                                sx: { borderRadius: 2 },
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            edge="end"
-                                        >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
+                                <TextField
+                                    fullWidth
+                                    placeholder="Password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    disabled={loading}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                        sx: {
+                                            borderRadius: 4,
+                                            height: 56,
+                                            bgcolor: '#f9fafb',
+                                            '& fieldset': { borderColor: '#e5e7eb' },
+                                            '&:hover fieldset': { borderColor: '#667eea' },
+                                            '&.Mui-focused fieldset': { borderColor: '#667eea' },
+                                            transition: 'all 0.2s'
+                                        }
+                                    }}
+                                />
 
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            disabled={loading}
-                            sx={{
-                                mt: 3,
-                                mb: 2,
-                                py: 1.5,
-                                borderRadius: 2,
-                                fontSize: '1rem',
-                                fontWeight: 600,
-                                textTransform: 'none',
-                                boxShadow: '0 4px 14px 0 rgba(102, 126, 234, 0.39)',
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                                }
-                            }}
-                        >
-                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
-                        </Button>
-                    </Box>
-                </Paper>
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    variant="contained"
+                                    disabled={loading}
+                                    disableElevation
+                                    sx={{
+                                        py: 2,
+                                        mt: 2,
+                                        borderRadius: 4,
+                                        fontSize: '1rem',
+                                        fontWeight: 800,
+                                        textTransform: 'none',
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                            transform: 'scale(1.02)'
+                                        },
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                                </Button>
 
-                <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-                    © {new Date().getFullYear()} CA Office Portal. All rights reserved.
-                </Typography>
-            </Container>
+                                <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.75rem', mt: 2, px: 2, display: 'block' }}>
+                                    By signing in, you agree to our <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Privacy Policy</span>.
+                                </Typography>
+
+                                <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #f3f4f6' }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Forgot your details? <span style={{ color: '#667eea', fontWeight: 800, cursor: 'pointer' }}>Contact Admin</span>
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Paper>
+                </motion.div>
+            </Box>
         </Box>
     );
 };

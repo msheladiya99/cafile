@@ -15,6 +15,7 @@ import {
 import { clientService } from '../../services/clientService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import {
     Box,
     Grid,
@@ -155,10 +156,15 @@ export const ClientDashboard: React.FC = () => {
 
     return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Helmet>
+                <title>Client Dashboard | CA Office Portal</title>
+                <meta name="description" content="View your financial calendar, pending tasks, and recent filing updates." />
+            </Helmet>
+
             {/* Header Section */}
             <Box mb={5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
                 <Box>
-                    <Typography variant="h4" fontWeight="800" sx={{
+                    <Typography variant="h4" component="h1" fontWeight="800" sx={{
                         background: 'linear-gradient(45deg, #1a237e 30%, #534bae 90%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
