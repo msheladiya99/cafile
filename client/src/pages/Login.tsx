@@ -80,7 +80,7 @@ export const Login: React.FC = () => {
             >
                 <Box
                     component="img"
-                    src="/login-illustration.png"
+                    src="/login-illustration.webp"
                     alt="Accountant Illustration"
                     sx={{
                         maxWidth: '90%',
