@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
     Box,
-    Paper,
-    Typography,
     Button,
     Select,
     MenuItem,
@@ -17,29 +15,14 @@ import {
 import {
     FormatListBulleted as FormatListBulletedIcon,
     Edit as EditIcon,
-    Delete as DeleteIcon,
-    FileDownload as FileDownloadIcon
+    Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { staffService } from '../../../services/staffService';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../../components/common/UIComponents';
 
-interface FilterRowProps {
-    label: string;
-    children: React.ReactNode;
-}
-
-const FilterRow = ({ label, children }: FilterRowProps) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', fontWeight: 500 }}>
-            {label}
-        </Typography>
-        <Box sx={{ flex: 1, width: '100%' }}>
-            {children}
-        </Box>
-    </Box>
-);
 
 export const EmployeeList: React.FC = () => {
     const navigate = useNavigate();
@@ -86,134 +69,125 @@ export const EmployeeList: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <PageContainer>
             {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h5" fontWeight="600">Employee List</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => navigate('/admin/employee/master')}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
-                        >
-                            Add New
-                        </Button>
-                    </Box>
-                </Box>
-            </Paper>
+            <PageHeader
+                title="Employee List"
+                actions={
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => navigate('/admin/employee/master')}
+                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                    >
+                        Add New
+                    </Button>
+                }
+            />
 
-            {/* Filters Section */}
-            <Paper sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', p: 3 }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
-                    {/* Left Column */}
-                    <Box sx={{ flex: 1 }}>
-                        <FilterRow label="Designation">
-                            <Select
-                                fullWidth
-                                size="small"
-                                displayEmpty
-                                value={filterDesignation}
-                                onChange={(e) => setFilterDesignation(e.target.value)}
-                                sx={{ borderRadius: 1.5, color: filterDesignation ? 'inherit' : 'text.secondary' }}
-                            >
-                                <MenuItem value="">Choose a Designation...</MenuItem>
-                                <MenuItem value="Staff">Staff</MenuItem>
-                                <MenuItem value="Manager">Manager</MenuItem>
-                                <MenuItem value="Admin">Admin</MenuItem>
-                            </Select>
-                        </FilterRow>
-                    </Box>
+            <ContentContainer>
+                {/* Filters Section */}
+                <Section title="Filter Options" icon={<FormatListBulletedIcon />}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
+                        {/* Left Column */}
+                        <Box sx={{ flex: 1 }}>
+                            <FilterRow label="Designation">
+                                <Select
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterDesignation}
+                                    onChange={(e) => setFilterDesignation(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterDesignation ? 'inherit' : 'text.secondary' }}
+                                >
+                                    <MenuItem value="">Choose a Designation...</MenuItem>
+                                    <MenuItem value="Staff">Staff</MenuItem>
+                                    <MenuItem value="Manager">Manager</MenuItem>
+                                    <MenuItem value="Admin">Admin</MenuItem>
+                                </Select>
+                            </FilterRow>
+                        </Box>
 
-                    {/* Right Column */}
-                    <Box sx={{ flex: 1 }}>
-                        <FilterRow label="Status">
-                            <Select
-                                fullWidth
-                                size="small"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                sx={{ borderRadius: 1.5 }}
-                            >
-                                <MenuItem value="all">All Employee</MenuItem>
-                                <MenuItem value="active">Active</MenuItem>
-                                <MenuItem value="inactive">Inactive</MenuItem>
-                            </Select>
-                        </FilterRow>
+                        {/* Right Column */}
+                        <Box sx={{ flex: 1 }}>
+                            <FilterRow label="Status">
+                                <Select
+                                    fullWidth
+                                    size="small"
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                    sx={{ borderRadius: 1.5 }}
+                                >
+                                    <MenuItem value="all">All Employee</MenuItem>
+                                    <MenuItem value="active">Active</MenuItem>
+                                    <MenuItem value="inactive">Inactive</MenuItem>
+                                </Select>
+                            </FilterRow>
+                        </Box>
                     </Box>
-                </Box>
-            </Paper>
+                </Section>
 
-            {/* List Section */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <FormatListBulletedIcon fontSize="small" />
-                        <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.25rem' }}>List</Typography>
-                    </Box>
-                    <IconButton size="small" sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
-                        <FileDownloadIcon fontSize="small" />
-                    </IconButton>
-                </Box>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Designation</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                                        <CircularProgress size={24} />
-                                    </TableCell>
+                {/* List Section */}
+                <Section title="Employee List" icon={<FormatListBulletedIcon />}>
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Designation</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
                                 </TableRow>
-                            ) : employees.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                                        No employees found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                employees.map((emp) => (
-                                    <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
-                                        <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
-                                        <TableCell>{emp.designation}</TableCell>
-                                        <TableCell>
-                                            <Box sx={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                px: 1.5,
-                                                py: 0.5,
-                                                borderRadius: 2,
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee',
-                                                color: emp.status === 'Active' ? 'success.main' : 'error.main'
-                                            }}>
-                                                {emp.status}
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
+                            </TableHead>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                            <CircularProgress size={24} />
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
+                                ) : employees.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                            No employees found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    employees.map((emp) => (
+                                        <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                                            <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
+                                            <TableCell>{emp.designation}</TableCell>
+                                            <TableCell>
+                                                <Box sx={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderRadius: 2,
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee',
+                                                    color: emp.status === 'Active' ? 'success.main' : 'error.main'
+                                                }}>
+                                                    {emp.status}
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Section>
+            </ContentContainer>
 
             <Snackbar
                 open={snackbar.open}
@@ -225,6 +199,6 @@ export const EmployeeList: React.FC = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-        </Box>
+        </PageContainer>
     );
 };

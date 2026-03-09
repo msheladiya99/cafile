@@ -45,14 +45,28 @@ const SectionHead: React.FC<{ icon?: React.ReactNode; title: string }> = ({ icon
 const sx = { size: 'small' as const, sx: { '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } } };
 const selSx = { size: 'small' as const, sx: { borderRadius: 1, fontSize: '0.82rem' } };
 
-interface ImgBoxProps { label: string; url?: string; onUpload: (f: File) => void; loading?: boolean }
-const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, loading }) => (
+interface ImgBoxProps { label: string; url?: string; onUpload: (f: File) => void; onRemove?: () => void; loading?: boolean }
+const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading }) => (
     <Box sx={{ mb: 1.5 }}>
         <SectionHead title={label} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 120, height: 100, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden' }}>
+            <Box sx={{ width: 120, height: 100, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
                 {loading ? <CircularProgress size={20} /> : url
-                    ? <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ? (
+                        <>
+                            <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            {onRemove && (
+                                <IconButton
+                                    size="small"
+                                    onClick={onRemove}
+                                    title="Remove Image"
+                                    sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.7)', padding: 0.5, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                                >
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#d32f2f', lineHeight: 1 }}>✕</span>
+                                </IconButton>
+                            )}
+                        </>
+                    )
                     : <Camera size={30} color="#ccc" />}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
@@ -593,7 +607,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                                     label={<Typography fontSize="0.75rem" fontWeight={600} color={mf.showLogo !== false ? 'primary' : 'text.secondary'}>{mf.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
                                 />
                             </Box>
-                            <ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} loading={logoLoading} />
+                            <ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} onRemove={() => setMf(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
                         </Paper>
                         <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
                             <SectionHead title="Other Detail" />
@@ -618,7 +632,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                                 <Row key={n} label={`Field ${n}`}><TextField value={(mf as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={mff(`extraField${n}` as keyof IMultiFirmData)} fullWidth {...sx} /></Row>
                             ))}
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}><ImgBox label="Firm Sign" url={mf.signImageUrl} onUpload={handleSign} loading={signLoading} /></Paper>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}><ImgBox label="Firm Sign" url={mf.signImageUrl} onUpload={handleSign} onRemove={() => setMf(p => ({ ...p, signImageUrl: '' }))} loading={signLoading} /></Paper>
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
@@ -960,7 +974,7 @@ export const FirmMasterPage: React.FC = () => {
                                     label={<Typography fontSize="0.75rem" fontWeight={600} color={form.showLogo !== false ? 'primary' : 'text.secondary'}>{form.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
                                 />
                             </Box>
-                            <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} loading={logoLoading} />
+                            <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} onRemove={() => setForm(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
                         </Paper>
 
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
@@ -996,7 +1010,7 @@ export const FirmMasterPage: React.FC = () => {
                         </Paper>
 
                         <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <ImgBox label="Firm Signature" url={form.signatureImageUrl} onUpload={handleSig} loading={sigLoading} />
+                            <ImgBox label="Firm Signature" url={form.signatureImageUrl} onUpload={handleSig} onRemove={() => setForm(p => ({ ...p, signatureImageUrl: '' }))} loading={sigLoading} />
                         </Paper>
                     </Box>
                 </Box>

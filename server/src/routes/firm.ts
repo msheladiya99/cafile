@@ -35,8 +35,18 @@ router.put('/', requireAdmin, async (req: AuthRequest, res: Response) => {
         delete updates._id;
         delete updates.__v;
         delete updates.createdAt;
-        delete updates.logoUrl;           // use dedicated endpoints
-        delete updates.signatureImageUrl; // use dedicated endpoints
+        // Allow clearing the logo/signature via main update if passed as empty string
+        if (updates.logoUrl === '') {
+            updates.logoUrl = '';
+        } else {
+            delete updates.logoUrl;           // use dedicated endpoints for upload
+        }
+
+        if (updates.signatureImageUrl === '') {
+            updates.signatureImageUrl = '';
+        } else {
+            delete updates.signatureImageUrl; // use dedicated endpoints for upload
+        }
 
         // Sanitize empty strings for Date fields to prevent Mongoose CastError
         if (updates.membershipDate === '') updates.membershipDate = null;
@@ -223,6 +233,22 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
 // DELETE a firm document
 router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const doc = await FirmDocument.findById(req.params.id);
+        if (!doc) {
+            res.status(404).json({ message: 'Document not found' });
+            return;
+        }
+
+        if (doc.fileId) {
+            const driveService = getDriveService();
+            try {
+                await driveService.deleteFile(doc.fileId);
+            } catch (driveError) {
+                console.error('Failed to delete firm document from Google Drive:', driveError);
+                // Continue with DB deletion even if drive deletion fails (might already be deleted)
+            }
+        }
+
         await FirmDocument.findByIdAndDelete(req.params.id);
         res.json({ message: 'Document deleted' });
     } catch (error) {
@@ -284,7 +310,8 @@ router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: 
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getDriveService();
         const buf = fs.readFileSync(req.file.path);
-        const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, 'firm-assets');
+        const folderId = await driveService.ensureFolder('firm assets');
+        const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
         await MultiFirm.findByIdAndUpdate(req.params.id, { logoUrl: url });
@@ -302,7 +329,8 @@ router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: 
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getDriveService();
         const buf = fs.readFileSync(req.file.path);
-        const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, 'firm-assets');
+        const folderId = await driveService.ensureFolder('firm assets');
+        const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
         await MultiFirm.findByIdAndUpdate(req.params.id, { signImageUrl: url });
