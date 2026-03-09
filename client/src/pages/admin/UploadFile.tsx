@@ -504,6 +504,7 @@ export const UploadFile: React.FC = () => {
                                                             '&:hover': { color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) },
                                                             flexShrink: 0
                                                         }}
+                                                        aria-label="Remove staged file"
                                                     >
                                                         <DeleteIcon />
                                                     </IconButton>

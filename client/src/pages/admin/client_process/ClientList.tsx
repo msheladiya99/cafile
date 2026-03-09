@@ -126,35 +126,76 @@ export const ClientList: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="Group Name">
-                                <Select fullWidth size="small" displayEmpty value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Group Name" inputId="filter-group">
+                                <Select
+                                    id="filter-group"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterGroup}
+                                    onChange={(e) => setFilterGroup(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Group Name' }}
+                                >
                                     <MenuItem value="">Choose a Group...</MenuItem>
                                     {groups.map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Client Name">
-                                <Select fullWidth size="small" displayEmpty value={filterClient} onChange={(e) => setFilterClient(e.target.value)} sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Client Name" inputId="filter-client">
+                                <Select
+                                    id="filter-client"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterClient}
+                                    onChange={(e) => setFilterClient(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Client Name' }}
+                                >
                                     <MenuItem value="">Choose a Client...</MenuItem>
                                     {clients.map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Search">
+                            <FilterRow label="Search" inputId="filter-search-text">
                                 <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Select size="small" value={filterSearchType} onChange={(e) => setFilterSearchType(e.target.value)} sx={{ width: '150px', borderRadius: 1.5 }}>
+                                    <Select
+                                        size="small"
+                                        value={filterSearchType}
+                                        onChange={(e) => setFilterSearchType(e.target.value)}
+                                        sx={{ width: '150px', borderRadius: 1.5 }}
+                                        inputProps={{ 'aria-label': 'Search Category' }}
+                                    >
                                         <MenuItem value="name">By Name</MenuItem>
                                         <MenuItem value="clientCode">By Client Code</MenuItem>
                                         <MenuItem value="email">By Email</MenuItem>
                                         <MenuItem value="phone">By Phone</MenuItem>
                                     </Select>
-                                    <TextField fullWidth size="small" value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField
+                                        id="filter-search-text"
+                                        fullWidth
+                                        size="small"
+                                        value={filterSearchText}
+                                        onChange={(e) => setFilterSearchText(e.target.value)}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        inputProps={{ 'aria-label': 'Search Text' }}
+                                    />
                                 </Box>
                             </FilterRow>
-                            <FilterRow label="Master Type">
-                                <Select fullWidth size="small" displayEmpty value={filterMasterType} onChange={(e) => setFilterMasterType(e.target.value)} sx={{ borderRadius: 1.5, color: filterMasterType ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Master Type" inputId="filter-master-type">
+                                <Select
+                                    id="filter-master-type"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterMasterType}
+                                    onChange={(e) => setFilterMasterType(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterMasterType ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Master Type' }}
+                                >
                                     <MenuItem value="">Choose a Master type...</MenuItem>
                                     {['Client', 'Department', 'Follow Up', 'Other'].map(type => (
                                         <MenuItem key={type} value={type}>{type}</MenuItem>
@@ -165,31 +206,66 @@ export const ClientList: React.FC = () => {
 
                         {/* Right Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="IT Status">
-                                <Select fullWidth size="small" displayEmpty value={filterItStatus} onChange={(e) => setFilterItStatus(e.target.value)} sx={{ borderRadius: 1.5, color: filterItStatus ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="IT Status" inputId="filter-it-status">
+                                <Select
+                                    id="filter-it-status"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterItStatus}
+                                    onChange={(e) => setFilterItStatus(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterItStatus ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'IT Status' }}
+                                >
                                     <MenuItem value="">Choose a IT Status...</MenuItem>
                                     {itStatuses.map(status => (
                                         <MenuItem key={status._id} value={status._id}>{status.name}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Sub Master">
-                                <Select fullWidth size="small" displayEmpty value={filterSubMaster} onChange={(e) => setFilterSubMaster(e.target.value)} sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Sub Master" inputId="filter-sub-master">
+                                <Select
+                                    id="filter-sub-master"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterSubMaster}
+                                    onChange={(e) => setFilterSubMaster(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Sub Master' }}
+                                >
                                     <MenuItem value="">Choose a Sub Master...</MenuItem>
                                     {subMasterOptions.map(option => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Status">
-                                <Select fullWidth size="small" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} sx={{ borderRadius: 1.5 }}>
+                            <FilterRow label="Status" inputId="filter-status">
+                                <Select
+                                    id="filter-status"
+                                    fullWidth
+                                    size="small"
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                    sx={{ borderRadius: 1.5 }}
+                                    inputProps={{ 'aria-label': 'Client Status' }}
+                                >
                                     <MenuItem value="all">All Client</MenuItem>
                                     <MenuItem value="active">Active</MenuItem>
                                     <MenuItem value="inactive">Inactive</MenuItem>
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="F Year">
-                                <Select fullWidth size="small" displayEmpty value={filterFYear} onChange={(e) => setFilterFYear(e.target.value)} sx={{ borderRadius: 1.5, color: filterFYear ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="F Year" inputId="filter-financial-year">
+                                <Select
+                                    id="filter-financial-year"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterFYear}
+                                    onChange={(e) => setFilterFYear(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterFYear ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Financial Year' }}
+                                >
                                     <MenuItem value="">Choose a Period...</MenuItem>
                                     <MenuItem value="april-march">April - March</MenuItem>
                                     <MenuItem value="jan-dec">January - December</MenuItem>
@@ -248,13 +324,27 @@ export const ClientList: React.FC = () => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell align="right">
-                                                <IconButton size="small" sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }} onClick={() => navigate(`/admin/client/${client._id}`)}>
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }}
+                                                    onClick={() => navigate(`/admin/client/${client._id}`)}
+                                                    aria-label="View client details"
+                                                >
                                                     <VisibilityIcon fontSize="small" />
                                                 </IconButton>
-                                                <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/client/master/${client._id}`)}>
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}
+                                                    onClick={() => navigate(`/admin/client/master/${client._id}`)}
+                                                    aria-label="Edit client"
+                                                >
                                                     <EditIcon fontSize="small" />
                                                 </IconButton>
-                                                <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}>
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
+                                                    aria-label="Delete client"
+                                                >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
                                             </TableCell>

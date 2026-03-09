@@ -85,16 +85,34 @@ export const ClientContactDetail: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="Group Name">
-                                <Select fullWidth size="small" displayEmpty value={filterGroup} onChange={(e) => setFilterGroup(e.target.value)} sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Group Name" inputId="filter-group">
+                                <Select
+                                    id="filter-group"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterGroup}
+                                    onChange={(e) => setFilterGroup(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Group Name' }}
+                                >
                                     <MenuItem value="">Choose a Group...</MenuItem>
                                     {groups.map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Client Name">
-                                <Select fullWidth size="small" displayEmpty value={filterClient} onChange={(e) => setFilterClient(e.target.value)} sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Client Name" inputId="filter-client">
+                                <Select
+                                    id="filter-client"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterClient}
+                                    onChange={(e) => setFilterClient(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Client Name' }}
+                                >
                                     <MenuItem value="">Choose a Client...</MenuItem>
                                     {clients.map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
@@ -105,20 +123,43 @@ export const ClientContactDetail: React.FC = () => {
 
                         {/* Right Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="Sub Master">
-                                <Select fullWidth size="small" displayEmpty value={filterSubMaster} onChange={(e) => setFilterSubMaster(e.target.value)} sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Sub Master" inputId="filter-sub-master">
+                                <Select
+                                    id="filter-sub-master"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterSubMaster}
+                                    onChange={(e) => setFilterSubMaster(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Sub Master' }}
+                                >
                                     <MenuItem value="">Choose a Sub Master...</MenuItem>
                                     {subMasterOptions.map(option => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Search">
+                            <FilterRow label="Search" inputId="filter-search-text">
                                 <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Select size="small" value={filterSearchType} onChange={(e) => setFilterSearchType(e.target.value)} sx={{ width: '150px', borderRadius: 1.5 }}>
+                                    <Select
+                                        size="small"
+                                        value={filterSearchType}
+                                        onChange={(e) => setFilterSearchType(e.target.value)}
+                                        sx={{ width: '150px', borderRadius: 1.5 }}
+                                        inputProps={{ 'aria-label': 'Search Category' }}
+                                    >
                                         <MenuItem value="name">By Contact Name</MenuItem>
                                     </Select>
-                                    <TextField fullWidth size="small" value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField
+                                        id="filter-search-text"
+                                        fullWidth
+                                        size="small"
+                                        value={filterSearchText}
+                                        onChange={(e) => setFilterSearchText(e.target.value)}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        inputProps={{ 'aria-label': 'Search Text' }}
+                                    />
                                 </Box>
                             </FilterRow>
                         </Box>

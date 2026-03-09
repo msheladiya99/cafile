@@ -190,6 +190,7 @@ export const Clients: React.FC = () => {
                         placeholder="Search by name, email or phone..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        inputProps={{ 'aria-label': 'Search clients by name, email or phone' }}
                         InputProps={{
                             startAdornment: (
                                 <SearchIcon sx={{ color: 'text.secondary', mr: 1.5 }} />
@@ -298,6 +299,7 @@ export const Clients: React.FC = () => {
                                                             size="small"
                                                             onClick={() => handleViewCredentials(client._id)}
                                                             sx={{ color: '#1a73e8', bgcolor: '#e8f0fe', mr: 1 }}
+                                                            aria-label={`View credentials for ${client.name}`}
                                                         >
                                                             <KeyIcon fontSize="small" />
                                                         </IconButton>
@@ -307,6 +309,7 @@ export const Clients: React.FC = () => {
                                                             size="small"
                                                             onClick={() => handleResetPassword(client._id)}
                                                             sx={{ color: '#f57c00', bgcolor: '#fff3e0', mr: 1 }}
+                                                            aria-label={`Reset password for ${client.name}`}
                                                         >
                                                             <ResetIcon fontSize="small" />
                                                         </IconButton>
@@ -316,6 +319,7 @@ export const Clients: React.FC = () => {
                                                             size="small"
                                                             onClick={() => handleDeleteClient(client._id, client.name)}
                                                             sx={{ color: '#d32f2f', bgcolor: '#ffebee' }}
+                                                            aria-label={`Delete client ${client.name}`}
                                                         >
                                                             <DeleteIcon fontSize="small" />
                                                         </IconButton>

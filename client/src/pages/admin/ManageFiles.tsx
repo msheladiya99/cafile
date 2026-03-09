@@ -50,6 +50,7 @@ import {
 } from '@mui/icons-material';
 import { adminService } from '../../services/adminService';
 import type { Client, FileData } from '../../types';
+import { PageHeader, PageContainer, ContentContainer, Section } from '../../components/common/UIComponents';
 
 export const ManageFiles: React.FC = () => {
     const [clients, setClients] = useState<Client[]>([]);
@@ -278,415 +279,411 @@ export const ManageFiles: React.FC = () => {
 
 
     return (
-        <Box>
-            <Typography variant={isMobile ? 'h5' : 'h4'} fontWeight="700" gutterBottom>
-                Manage Files
-            </Typography>
-            <Typography variant="body1" color="text.secondary" mb={isMobile ? 2 : 4}>
-                View and manage client files
-            </Typography>
+        <PageContainer>
+            {/* Header Section */}
+            <PageHeader
+                title="Manage Files"
+                subtitle="View and manage client files"
+            />
 
-            <Paper
-                sx={{
-                    p: 3,
-                    mb: 3,
-                    borderRadius: 3,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                }}
-            >
-                <Stack direction={isMobile ? 'column' : 'row'} spacing={2} width="100%">
-                    <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100%' : 250 }}>
-                        <InputLabel>Select Client</InputLabel>
-                        <Select
-                            value={selectedClient}
-                            onChange={(e) => {
-                                setSelectedClient(e.target.value);
-                                setSelectedYear('');
-                                setSelectedCategory('');
-                                setSearchQuery('');
-                            }}
-                            label="Select Client"
-                        >
-                            <MenuItem value="">All Clients</MenuItem>
-                            {clients.map((client) => (
-                                <MenuItem key={client._id} value={client._id}>
-                                    {client.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+            <ContentContainer>
+                <Section title="Filter Options" icon={<SearchIcon />}>
+                    <Stack direction={isMobile ? 'column' : 'row'} spacing={2} width="100%">
+                        <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100% ' : 250 }}>
+                            <InputLabel id="select-client-label">Select Client</InputLabel>
+                            <Select
+                                labelId="select-client-label"
+                                value={selectedClient}
+                                onChange={(e) => {
+                                    setSelectedClient(e.target.value);
+                                    setSelectedYear('');
+                                    setSelectedCategory('');
+                                    setSearchQuery('');
+                                }}
+                                label="Select Client"
+                            >
+                                <MenuItem value="">All Clients</MenuItem>
+                                {clients.map((client) => (
+                                    <MenuItem key={client._id} value={client._id}>
+                                        {client.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
-                    <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100%' : 200 }}>
-                        <InputLabel>Year</InputLabel>
-                        <Select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            label="Year"
+                        <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100%' : 200 }}>
+                            <InputLabel id="select-year-label">Year</InputLabel>
+                            <Select
+                                labelId="select-year-label"
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                label="Year"
+                                disabled={!selectedClient}
+                            >
+                                <MenuItem value="">All Years</MenuItem>
+                                {years.map((year) => (
+                                    <MenuItem key={year} value={year}>
+                                        FY {year}-{(parseInt(year) + 1).toString().slice(-2)}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100%' : 200 }}>
+                            <InputLabel id="select-category-label">Category</InputLabel>
+                            <Select
+                                labelId="select-category-label"
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                label="Category"
+                                disabled={!selectedClient}
+                            >
+                                <MenuItem value="">All Categories</MenuItem>
+                                <MenuItem value="ITR">ITR Returns</MenuItem>
+                                <MenuItem value="GST">GST Returns</MenuItem>
+                                <MenuItem value="ACCOUNTING">Accounting</MenuItem>
+                                <MenuItem value="USER_DOCS">User Documents</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        <TextField
+                            fullWidth={isMobile}
+                            placeholder="Search files..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             disabled={!selectedClient}
-                        >
-                            <MenuItem value="">All Years</MenuItem>
-                            {years.map((year) => (
-                                <MenuItem key={year} value={year}>
-                                    FY {year}-{(parseInt(year) + 1).toString().slice(-2)}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    <FormControl fullWidth={isMobile} sx={{ minWidth: isMobile ? '100%' : 200 }}>
-                        <InputLabel>Category</InputLabel>
-                        <Select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            label="Category"
-                            disabled={!selectedClient}
-                        >
-                            <MenuItem value="">All Categories</MenuItem>
-                            <MenuItem value="ITR">ITR Returns</MenuItem>
-                            <MenuItem value="GST">GST Returns</MenuItem>
-                            <MenuItem value="ACCOUNTING">Accounting</MenuItem>
-                            <MenuItem value="USER_DOCS">User Documents</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    <TextField
-                        fullWidth={isMobile}
-                        placeholder="Search files..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        disabled={!selectedClient}
-                        sx={{ minWidth: isMobile ? '100%' : 250, flex: 1 }}
-                        InputProps={{
-                            startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                        }}
-                    />
-                </Stack>
-                {selectedFileIds.length > 0 && (
-                    <Box mt={2} display="flex" justifyContent="flex-end">
-                        <Button
-                            variant="contained"
-                            color="error"
-                            startIcon={<DeleteIcon />}
-                            onClick={handleBulkDelete}
-                            sx={{ borderRadius: 2 }}
-                        >
-                            Delete Selected ({selectedFileIds.length})
-                        </Button>
-                    </Box>
-                )}
-            </Paper>
-
-            {loading ? (
-                <Box display="flex" justifyContent="center" py={8}>
-                    <CircularProgress />
-                </Box>
-            ) : (
-                isMobile ? (
-                    <Box>
-                        {/* Breadcrumbs for Context */}
-                        {selectedClient && (
-                            <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, bgcolor: 'background.paper' }} elevation={0} variant="outlined">
-                                <Breadcrumbs separator={<NavigateNextIcon fontSize="small" color="action" />} aria-label="breadcrumb">
-                                    <Stack direction="row" alignItems="center" gap={0.5} color="text.secondary">
-                                        <HomeIcon fontSize="small" />
-                                    </Stack>
-                                    <Typography color="text.primary" fontWeight="500">
-                                        {clients.find(c => c._id === selectedClient)?.name || 'Client'}
-                                    </Typography>
-                                    {(selectedYear || selectedCategory) && (
-                                        <Typography color="text.secondary" variant="body2">
-                                            {[
-                                                selectedYear ? `FY ${selectedYear}` : '',
-                                                selectedCategory
-                                            ].filter(Boolean).join(' / ')}
-                                        </Typography>
-                                    )}
-                                </Breadcrumbs>
-                            </Paper>
-                        )}
-
-                        {!selectedClient ? (
-                            <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
-                                <Typography color="text.secondary">Please select a client to view files</Typography>
-                            </Paper>
-                        ) : filteredFiles.length === 0 ? (
-                            <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
-                                <Typography color="text.secondary">
-                                    {searchQuery ? 'No files match your search' : 'No files found'}
-                                </Typography>
-                            </Paper>
-                        ) : (
-                            // Grouped Files List
-                            Object.entries(groupFiles(filteredFiles)).map(([group, groupFiles]) => (
-                                groupFiles.length > 0 && (
-                                    <Box key={group} mb={3}>
-                                        <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ px: 1, letterSpacing: 1 }}>
-                                            {group}
-                                        </Typography>
-                                        <Paper sx={{ borderRadius: 3, overflow: 'hidden', mt: 1 }} elevation={0} variant="outlined">
-                                            <List disablePadding>
-                                                {groupFiles.map((file, index) => (
-                                                    <React.Fragment key={file._id}>
-                                                        {index > 0 && <Divider component="li" sx={{ ml: 9 }} />}
-                                                        <ListItem
-                                                            secondaryAction={
-                                                                <Stack direction="row" alignItems="center" gap={1}>
-                                                                    <Typography variant="caption" color="text.secondary" fontWeight="500">
-                                                                        {(file.fileSize / 1024 / 1024).toFixed(2)} MB
-                                                                    </Typography>
-                                                                    <IconButton
-                                                                        edge="end"
-                                                                        size="small"
-                                                                        onClick={(e) => handleMenuOpen(e, file)}
-                                                                        sx={{ color: 'text.secondary' }}
-                                                                    >
-                                                                        <MoreVertIcon fontSize="small" />
-                                                                    </IconButton>
-                                                                </Stack>
-                                                            }
-                                                            disablePadding
-                                                            sx={{
-                                                                '&:active': { bgcolor: 'action.hover' }
-                                                            }}
-                                                        >
-                                                            <ListItemButton
-                                                                onClick={() => adminService.downloadFile(file._id, file.fileName)}
-                                                                sx={{ py: 1.5 }}
-                                                            >
-                                                                <ListItemIcon sx={{ minWidth: 50 }}>
-                                                                    <Avatar
-                                                                        variant="rounded"
-                                                                        sx={{
-                                                                            bgcolor: 'transparent',
-                                                                            color: 'primary.main',
-                                                                            border: '1px solid',
-                                                                            borderColor: 'divider'
-                                                                        }}
-                                                                    >
-                                                                        {getFileIcon(file.fileName)}
-                                                                    </Avatar>
-                                                                </ListItemIcon>
-                                                                <ListItemText
-                                                                    primary={
-                                                                        <Typography variant="body2" fontWeight="600" noWrap sx={{ pr: 4 }}>
-                                                                            {file.fileName}
-                                                                        </Typography>
-                                                                    }
-                                                                    secondary={
-                                                                        <Stack direction="row" alignItems="center" gap={1} mt={0.5}>
-                                                                            <Chip
-                                                                                label={file.category}
-                                                                                size="small"
-                                                                                color={getCategoryColor(file.category)}
-                                                                                variant="outlined"
-                                                                                sx={{ height: 20, fontSize: '0.65rem', borderRadius: 1 }}
-                                                                            />
-                                                                            <Typography variant="caption" color="text.secondary">
-                                                                                • {new Date(file.uploadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                            </Typography>
-                                                                        </Stack>
-                                                                    }
-                                                                    secondaryTypographyProps={{ component: 'div' }}
-                                                                />
-                                                            </ListItemButton>
-                                                        </ListItem>
-                                                    </React.Fragment>
-                                                ))}
-                                            </List>
-                                        </Paper>
-                                    </Box>
-                                )
-                            ))
-                        )}
-
-                        {/* Action Menu */}
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleMenuClose}
-                            PaperProps={{
-                                sx: { width: 180, borderRadius: 2 }
+                            sx={{ minWidth: isMobile ? '100%' : 250, flex: 1 }}
+                            inputProps={{ 'aria-label': 'Search files by name' }}
+                            InputProps={{
+                                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                                sx: { borderRadius: 1.5 }
                             }}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                        >
-                            <MenuItem onClick={() => handleMenuAction('download')}>
-                                <ListItemIcon><InsertDriveFileIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Download</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={() => handleMenuAction('edit')}>
-                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Rename</ListItemText>
-                            </MenuItem>
-                            <Divider />
-                            <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
-                                <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-                                <ListItemText>Delete</ListItemText>
-                            </MenuItem>
-                        </Menu>
+                        />
+                    </Stack>
+                    {selectedFileIds.length > 0 && (
+                        <Box mt={2} display="flex" justifyContent="flex-end">
+                            <Button
+                                variant="contained"
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={handleBulkDelete}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                Delete Selected ({selectedFileIds.length})
+                            </Button>
+                        </Box>
+                    )}
+                </Section>
+
+                {loading ? (
+                    <Box display="flex" justifyContent="center" py={8}>
+                        <CircularProgress />
                     </Box>
                 ) : (
-                    <TableContainer
-                        component={Paper}
-                        sx={{
-                            borderRadius: 3,
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                        }}
-                    >
-                        <Table>
-                            <TableHead>
-                                <TableRow sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
-                                    <TableCell padding="checkbox">
-                                        <Checkbox
-                                            color="primary"
-                                            indeterminate={selectedFileIds.length > 0 && selectedFileIds.length < filteredFiles.length}
-                                            checked={filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length}
-                                            onChange={handleSelectAll}
-                                            disabled={filteredFiles.length === 0}
-                                        />
-                                    </TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>File Name</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>Size</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>Uploaded</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {!selectedClient ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                            <Typography color="text.secondary">
-                                                Please select a client to view files
+                    isMobile ? (
+                        <Box>
+                            {/* Breadcrumbs for Context */}
+                            {selectedClient && (
+                                <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, bgcolor: 'background.paper' }} elevation={0} variant="outlined">
+                                    <Breadcrumbs separator={<NavigateNextIcon fontSize="small" color="action" />} aria-label="breadcrumb">
+                                        <Stack direction="row" alignItems="center" gap={0.5} color="text.secondary">
+                                            <HomeIcon fontSize="small" />
+                                        </Stack>
+                                        <Typography color="text.primary" fontWeight="500">
+                                            {clients.find(c => c._id === selectedClient)?.name || 'Client'}
+                                        </Typography>
+                                        {(selectedYear || selectedCategory) && (
+                                            <Typography color="text.secondary" variant="body2">
+                                                {[
+                                                    selectedYear ? `FY ${selectedYear}` : '',
+                                                    selectedCategory
+                                                ].filter(Boolean).join(' / ')}
                                             </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filteredFiles.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                            <Typography color="text.secondary">
-                                                {searchQuery ? 'No files match your search' : 'No files found'}
+                                        )}
+                                    </Breadcrumbs>
+                                </Paper>
+                            )}
+
+                            {!selectedClient ? (
+                                <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
+                                    <Typography color="text.secondary">Please select a client to view files</Typography>
+                                </Paper>
+                            ) : filteredFiles.length === 0 ? (
+                                <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }} variant="outlined">
+                                    <Typography color="text.secondary">
+                                        {searchQuery ? 'No files match your search' : 'No files found'}
+                                    </Typography>
+                                </Paper>
+                            ) : (
+                                // Grouped Files List
+                                Object.entries(groupFiles(filteredFiles)).map(([group, groupFiles]) => (
+                                    groupFiles.length > 0 && (
+                                        <Box key={group} mb={3}>
+                                            <Typography variant="overline" color="text.secondary" fontWeight="700" sx={{ px: 1, letterSpacing: 1 }}>
+                                                {group}
                                             </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredFiles.map((file) => (
-                                        <TableRow key={file._id} hover selected={selectedFileIds.includes(file._id)}>
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    color="primary"
-                                                    checked={selectedFileIds.includes(file._id)}
-                                                    onChange={(event) => handleSelectOne(event, file._id)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box>
-                                                    <Box display="flex" alignItems="center" gap={1}>
-                                                        <FileIcon color="action" />
-                                                        <Typography
-                                                            fontWeight="600"
-                                                            sx={{
-                                                                cursor: 'pointer',
-                                                                color: '#667eea',
-                                                                '&:hover': {
-                                                                    textDecoration: 'underline',
+                                            <Paper sx={{ borderRadius: 3, overflow: 'hidden', mt: 1 }} elevation={0} variant="outlined">
+                                                <List disablePadding>
+                                                    {groupFiles.map((file, index) => (
+                                                        <React.Fragment key={file._id}>
+                                                            {index > 0 && <Divider component="li" sx={{ ml: 9 }} />}
+                                                            <ListItem
+                                                                secondaryAction={
+                                                                    <Stack direction="row" alignItems="center" gap={1}>
+                                                                        <Typography variant="caption" color="text.secondary" fontWeight="500">
+                                                                            {(file.fileSize / 1024 / 1024).toFixed(2)} MB
+                                                                        </Typography>
+                                                                        <IconButton
+                                                                            edge="end"
+                                                                            size="small"
+                                                                            onClick={(e) => handleMenuOpen(e, file)}
+                                                                            sx={{ color: 'text.secondary' }}
+                                                                        >
+                                                                            <MoreVertIcon fontSize="small" />
+                                                                        </IconButton>
+                                                                    </Stack>
                                                                 }
-                                                            }}
-                                                            onClick={() => adminService.downloadFile(file._id, file.fileName)}
-                                                        >
-                                                            {file.fileName}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={file.category}
-                                                    color={getCategoryColor(file.category)}
-                                                    size="small"
-                                                    sx={{ borderRadius: 1.5, fontWeight: 600 }}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                {file.year ? (
-                                                    <Chip
-                                                        label={`FY ${file.year}-${(parseInt(file.year) + 1).toString().slice(-2)}`}
-                                                        size="small"
-                                                        variant="outlined"
-                                                        sx={{ borderRadius: 1.5 }}
-                                                    />
-                                                ) : (
-                                                    <Typography variant="body2" color="text.secondary">-</Typography>
-                                                )}
-                                            </TableCell>
-                                            <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                                                {(file.fileSize / 1024 / 1024).toFixed(2)} MB
-                                            </TableCell>
-                                            <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                                                {new Date(file.uploadedAt).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', gap: 0.5, whiteSpace: 'nowrap' }}>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="primary"
-                                                        onClick={() => handleEdit(file)}
-                                                        title="Edit Name"
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDelete(file._id)}
-                                                        title="Delete File"
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </Box>
+                                                                disablePadding
+                                                                sx={{
+                                                                    '&:active': { bgcolor: 'action.hover' }
+                                                                }}
+                                                            >
+                                                                <ListItemButton
+                                                                    onClick={() => adminService.downloadFile(file._id, file.fileName)}
+                                                                    sx={{ py: 1.5 }}
+                                                                >
+                                                                    <ListItemIcon sx={{ minWidth: 50 }}>
+                                                                        <Avatar
+                                                                            variant="rounded"
+                                                                            sx={{
+                                                                                bgcolor: 'transparent',
+                                                                                color: 'primary.main',
+                                                                                border: '1px solid',
+                                                                                borderColor: 'divider'
+                                                                            }}
+                                                                        >
+                                                                            {getFileIcon(file.fileName)}
+                                                                        </Avatar>
+                                                                    </ListItemIcon>
+                                                                    <ListItemText
+                                                                        primary={
+                                                                            <Typography variant="body2" fontWeight="600" noWrap sx={{ pr: 4 }}>
+                                                                                {file.fileName}
+                                                                            </Typography>
+                                                                        }
+                                                                        secondary={
+                                                                            <Stack direction="row" alignItems="center" gap={1} mt={0.5}>
+                                                                                <Chip
+                                                                                    label={file.category}
+                                                                                    size="small"
+                                                                                    color={getCategoryColor(file.category)}
+                                                                                    variant="outlined"
+                                                                                    sx={{ height: 20, fontSize: '0.65rem', borderRadius: 1 }}
+                                                                                />
+                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                    • {new Date(file.uploadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                </Typography>
+                                                                            </Stack>
+                                                                        }
+                                                                        secondaryTypographyProps={{ component: 'div' }}
+                                                                    />
+                                                                </ListItemButton>
+                                                            </ListItem>
+                                                        </React.Fragment>
+                                                    ))}
+                                                </List>
+                                            </Paper>
+                                        </Box>
+                                    )
+                                ))
+                            )}
+
+                            {/* Action Menu */}
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={handleMenuClose}
+                                PaperProps={{
+                                    sx: { width: 180, borderRadius: 2 }
+                                }}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                            >
+                                <MenuItem onClick={() => handleMenuAction('download')}>
+                                    <ListItemIcon><InsertDriveFileIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Download</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={() => handleMenuAction('edit')}>
+                                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Rename</ListItemText>
+                                </MenuItem>
+                                <Divider />
+                                <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
+                                    <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+                                    <ListItemText>Delete</ListItemText>
+                                </MenuItem>
+                            </Menu>
+                        </Box>
+                    ) : (
+                        <TableContainer
+                            component={Paper}
+                            sx={{
+                                borderRadius: 3,
+                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                            }}
+                        >
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                color="primary"
+                                                indeterminate={selectedFileIds.length > 0 && selectedFileIds.length < filteredFiles.length}
+                                                checked={filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length}
+                                                onChange={handleSelectAll}
+                                                disabled={filteredFiles.length === 0}
+                                            />
+                                        </TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>File Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Year</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Size</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Uploaded</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {!selectedClient ? (
+                                        <TableRow>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                                <Typography color="text.secondary">
+                                                    Please select a client to view files
+                                                </Typography>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : filteredFiles.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                                <Typography color="text.secondary">
+                                                    {searchQuery ? 'No files match your search' : 'No files found'}
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        filteredFiles.map((file) => (
+                                            <TableRow key={file._id} hover selected={selectedFileIds.includes(file._id)}>
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        color="primary"
+                                                        checked={selectedFileIds.includes(file._id)}
+                                                        onChange={(event) => handleSelectOne(event, file._id)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            <FileIcon color="action" />
+                                                            <Typography
+                                                                fontWeight="600"
+                                                                sx={{
+                                                                    cursor: 'pointer',
+                                                                    color: '#667eea',
+                                                                    '&:hover': {
+                                                                        textDecoration: 'underline',
+                                                                    }
+                                                                }}
+                                                                onClick={() => adminService.downloadFile(file._id, file.fileName)}
+                                                            >
+                                                                {file.fileName}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={file.category}
+                                                        color={getCategoryColor(file.category)}
+                                                        size="small"
+                                                        sx={{ borderRadius: 1.5, fontWeight: 600 }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {file.year ? (
+                                                        <Chip
+                                                            label={`FY ${file.year}-${(parseInt(file.year) + 1).toString().slice(-2)}`}
+                                                            size="small"
+                                                            variant="outlined"
+                                                            sx={{ borderRadius: 1.5 }}
+                                                        />
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary">-</Typography>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                                    {(file.fileSize / 1024 / 1024).toFixed(2)} MB
+                                                </TableCell>
+                                                <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                                                    {new Date(file.uploadedAt).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: 'flex', gap: 0.5, whiteSpace: 'nowrap' }}>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="primary"
+                                                            onClick={() => handleEdit(file)}
+                                                            title="Edit Name"
+                                                            aria-label={`Edit file name for ${file.fileName}`}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDelete(file._id)}
+                                                            title="Delete File"
+                                                            aria-label={`Delete file ${file.fileName}`}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
 
-                )
-            )}
+                    )
+                )}
 
-            {/* Edit Dialog */}
-            <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Edit File Name</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="File Name"
-                        value={newFileName}
-                        onChange={(e) => setNewFileName(e.target.value)}
-                        margin="normal"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialog(false)}>Cancel</Button>
-                    <Button
-                        onClick={handleSaveEdit}
-                        variant="contained"
-                        sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            textTransform: 'none',
-                        }}
-                    >
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-
-
-
-
-        </Box>
+                {/* Edit Dialog */}
+                <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>Edit File Name</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            fullWidth
+                            label="File Name"
+                            value={newFileName}
+                            onChange={(e) => setNewFileName(e.target.value)}
+                            margin="normal"
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setEditDialog(false)}>Cancel</Button>
+                        <Button
+                            onClick={handleSaveEdit}
+                            variant="contained"
+                            sx={{
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                textTransform: 'none',
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </ContentContainer>
+        </PageContainer>
     );
 };

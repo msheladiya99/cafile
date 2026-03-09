@@ -42,6 +42,7 @@ import { useQuery } from '@tanstack/react-query';
 import { billingService } from '../../services/billingService';
 import type { Client, User } from '../../types';
 import { adminService } from '../../services/adminService';
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../components/common/UIComponents';
 
 interface ClientLedgerRecord {
     client: Client;
@@ -69,42 +70,7 @@ interface ClientLedgerRecord {
     }[];
 }
 
-// Reusable UI components
-interface SectionProps {
-    title: string;
-    icon: React.ReactElement<{ sx?: Record<string, unknown> }>;
-    children?: React.ReactNode;
-}
 
-const Section = ({ title, icon, children }: SectionProps) => (
-    <Paper elevation={0} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-            {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
-            <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
-        </Box>
-        <Box sx={{ p: 2, bgcolor: '#ffffff' }}>
-            {children}
-        </Box>
-    </Paper>
-);
-
-interface FilterRowProps {
-    label: string;
-    children: React.ReactNode;
-}
-
-const FilterRow = ({ label, children }: FilterRowProps) => (
-    <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-            <Typography sx={{ width: { xs: '100%', sm: '160px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>
-                {label}
-            </Typography>
-            <Box sx={{ flex: 1, width: '100%' }}>
-                {children}
-            </Box>
-        </Box>
-    </Box>
-);
 
 const statusColors: Record<string, 'default' | 'success' | 'warning' | 'error'> = {
     PAID: 'success',
@@ -177,43 +143,59 @@ export const ClientLedger: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <PageContainer>
             {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h5" fontWeight="600">Client Ledger</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<DownloadIcon />}
-                            onClick={handleExport}
-                            disabled={!ledgerData?.clientLedgers?.length}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
-                        >
-                            Export CSV
-                        </Button>
-                    </Box>
-                </Box>
-            </Paper>
+            <PageHeader
+                title="Client Ledger"
+                actions={
+                    <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<DownloadIcon />}
+                        onClick={handleExport}
+                        disabled={!ledgerData?.clientLedgers?.length}
+                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                    >
+                        Export CSV
+                    </Button>
+                }
+            />
 
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', bgcolor: '#f8fafc', p: 3 }}>
+            <ContentContainer>
 
                 {/* Filters Section */}
                 <Section title="Filter Options" icon={<FilterListIcon />}>
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="Staff Member">
-                                <Select fullWidth size="small" displayEmpty value={selectedStaff} onChange={(e) => setSelectedStaff(e.target.value)} sx={{ borderRadius: 1.5, color: selectedStaff ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Staff Member" inputId="staff-select">
+                                <Select
+                                    id="staff-select"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={selectedStaff}
+                                    onChange={(e) => setSelectedStaff(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: selectedStaff ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Staff Member' }}
+                                >
                                     <MenuItem value="">Choose a Staff...</MenuItem>
                                     {staffMembers.map(staff => (
                                         <MenuItem key={staff._id} value={staff._id}>{staff.name || staff.username}</MenuItem>
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Client Name">
-                                <Select fullWidth size="small" displayEmpty value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} sx={{ borderRadius: 1.5, color: selectedClient ? 'inherit' : 'text.secondary' }}>
+                            <FilterRow label="Client Name" inputId="client-select">
+                                <Select
+                                    id="client-select"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={selectedClient}
+                                    onChange={(e) => setSelectedClient(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: selectedClient ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Client Name' }}
+                                >
                                     <MenuItem value="">Choose a Client...</MenuItem>
                                     {clients.map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
@@ -226,8 +208,26 @@ export const ClientLedger: React.FC = () => {
                         <Box sx={{ flex: 1 }}>
                             <FilterRow label="Period">
                                 <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <TextField fullWidth type="date" size="small" value={startDate} onChange={(e) => setStartDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
-                                    <TextField fullWidth type="date" size="small" value={endDate} onChange={(e) => setEndDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        size="small"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        InputLabelProps={{ shrink: true }}
+                                        inputProps={{ 'aria-label': 'Start Date' }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        size="small"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        InputLabelProps={{ shrink: true }}
+                                        inputProps={{ 'aria-label': 'End Date' }}
+                                    />
                                 </Box>
                             </FilterRow>
 
@@ -242,6 +242,7 @@ export const ClientLedger: React.FC = () => {
                                     }}
                                     startIcon={<ClearIcon />}
                                     sx={{ color: 'error.main', textTransform: 'none', fontWeight: 600 }}
+                                    aria-label="Clear all filters"
                                 >
                                     Clear Filters
                                 </Button>
@@ -546,7 +547,7 @@ export const ClientLedger: React.FC = () => {
                         </>
                     )}
                 </Section>
-            </Paper>
-        </Box>
+            </ContentContainer>
+        </PageContainer>
     );
 };

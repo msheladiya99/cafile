@@ -24,14 +24,29 @@ export interface FilterRowProps {
     required?: boolean;
     helperText?: string;
     children: React.ReactNode;
+    inputId?: string;
+    labelId?: string;
 }
 
-export const FilterRow = ({ label, required, helperText, children }: FilterRowProps) => {
+export const FilterRow = ({ label, required, helperText, children, inputId, labelId }: FilterRowProps) => {
     const childIsElement = React.isValidElement(children);
     return (
         <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-                <Typography sx={{ width: { xs: '100%', sm: '160px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, pt: { xs: 0, sm: childIsElement && (children as React.ReactElement<{ multiline?: boolean }>).props.multiline ? 1 : 0 }, flexShrink: 0 }}>
+                <Typography
+                    component="label"
+                    htmlFor={inputId}
+                    id={labelId}
+                    sx={{
+                        width: { xs: '100%', sm: '160px' },
+                        color: 'text.secondary',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        pt: { xs: 0, sm: childIsElement && (children as React.ReactElement<{ multiline?: boolean }>).props.multiline ? 1 : 0 },
+                        flexShrink: 0,
+                        cursor: inputId ? 'pointer' : 'default'
+                    }}
+                >
                     {label} {required && <span style={{ color: 'red' }}>*</span>}
                 </Typography>
                 <Box sx={{ flex: 1, width: '100%' }}>
