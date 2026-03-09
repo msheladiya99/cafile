@@ -140,12 +140,12 @@ export const Login: React.FC = () => {
                                 <Box sx={{ bgcolor: '#667eea', p: 0.8, borderRadius: 1.5, display: 'flex' }}>
                                     <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
                                 </Box>
-                                <Typography variant="h6" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
+                                <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
                                     my ca portal
                                 </Typography>
                             </Box>
 
-                            <Typography variant="h2" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: '3rem', letterSpacing: -1.5 }}>
+                            <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: '3rem', letterSpacing: -1.5 }}>
                                 Welcome Back
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
@@ -236,10 +236,21 @@ export const Login: React.FC = () => {
                                     By signing in, you agree to our <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Privacy Policy</span>.
                                 </Typography>
 
-                                <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #f3f4f6' }}>
+                                <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                     <Typography variant="body2" color="text.secondary">
                                         Forgot your details? <span style={{ color: '#667eea', fontWeight: 800, cursor: 'pointer' }}>Contact Admin</span>
                                     </Typography>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 1 }}>
+                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                            About Portal
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                            Security
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                            Help Center
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             </Stack>
                         </Box>
