@@ -37,10 +37,16 @@ import { Helmet } from 'react-helmet-async';
 
 const drawerWidth = 260;
 
+const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export const ClientLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout } = useAuth();
+    const { user, logout, remainingTime } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [companyName, setCompanyName] = useState<string>('CA Office Portal');
@@ -191,10 +197,11 @@ export const ClientLayout: React.FC = () => {
                             elevation: 0,
                             sx: {
                                 overflow: 'visible',
-                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                                filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.1))',
                                 mt: 1.5,
-                                width: 220,
-                                borderRadius: 2,
+                                width: 240,
+                                borderRadius: 3,
+                                border: '1px solid rgba(0,0,0,0.08)',
                                 '&:before': {
                                     content: '""',
                                     display: 'block',
@@ -206,32 +213,56 @@ export const ClientLayout: React.FC = () => {
                                     bgcolor: 'background.paper',
                                     transform: 'translateY(-50%) rotate(45deg)',
                                     zIndex: 0,
+                                    borderLeft: '1px solid rgba(0,0,0,0.08)',
+                                    borderTop: '1px solid rgba(0,0,0,0.08)',
                                 },
                             },
                         }}
                         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     >
-                        <Box sx={{ px: 2, py: 1.5 }}>
-                            <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600 }}>
-                                {user?.name || user?.username}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                {user?.role}
-                            </Typography>
+                        {/* Simplified Clean Header */}
+                        <Box sx={{ px: 2.5, py: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: 'text.primary' }}>
+                                        {user?.name || user?.username}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                        {user?.role}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{
+                                    ml: 1,
+                                    px: 1,
+                                    py: 0.4,
+                                    borderRadius: 1.5,
+                                    bgcolor: remainingTime < 300 ? 'rgba(211, 47, 47, 0.08)' : 'rgba(102, 126, 234, 0.08)',
+                                    color: remainingTime < 300 ? 'error.main' : 'primary.main',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                                        {formatTime(remainingTime)}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Box>
-                        <Divider />
-                        <MenuItem onClick={() => navigate('/client/profile')} sx={{ py: 1.5 }}>
+
+                        <Divider sx={{ opacity: 0.6 }} />
+
+                        <MenuItem onClick={() => navigate('/client/profile')} sx={{ py: 1.2, my: 0.5, mx: 1, borderRadius: 2 }}>
                             <ListItemIcon>
                                 <SettingsIcon fontSize="small" />
                             </ListItemIcon>
-                            Settings
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>Settings</Typography>
                         </MenuItem>
-                        <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+
+                        <MenuItem onClick={handleLogout} sx={{ py: 1.2, mb: 0.5, mx: 1, borderRadius: 2, color: 'error.main' }}>
                             <ListItemIcon sx={{ color: 'error.main' }}>
                                 <LogoutIcon fontSize="small" />
                             </ListItemIcon>
-                            Logout
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>Logout</Typography>
                         </MenuItem>
                     </Menu>
                 </Toolbar>

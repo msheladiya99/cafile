@@ -31,6 +31,8 @@ import {
 import { AxiosError } from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
@@ -377,6 +379,8 @@ export const ClientMaster: React.FC = () => {
         file: null
     });
 
+    const [pendingLegalFiles, setPendingLegalFiles] = useState<{ fileName: string; file: File }[]>([]);
+
     const handleLegalFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setLegalForm(prev => ({ ...prev, [name]: value }));
@@ -395,6 +399,7 @@ export const ClientMaster: React.FC = () => {
                 fileName: legalForm.file!.name
             }]
         }));
+        setPendingLegalFiles(prev => [...prev, { fileName: legalForm.file!.name, file: legalForm.file! }]);
         setLegalForm({
             documentName: '',
             description: '',
@@ -409,6 +414,71 @@ export const ClientMaster: React.FC = () => {
             description: '',
             file: null
         });
+    };
+
+    const handleRemoveLegalForm = async (index: number) => {
+        const docToRemove = formData.legalDocuments?.[index];
+        if (!docToRemove) return;
+
+        const isPending = pendingLegalFiles.some(p => p.fileName === docToRemove.fileName);
+
+        // If it's not pending and the client has an ID, attempt to delete it from the server/Drive
+        if (!isPending && id) {
+            try {
+                const clientFiles = await adminService.getClientFiles(id, undefined, 'USER_DOCS');
+                const serverFile = clientFiles.find(f => f.fileName === docToRemove.fileName || f.originalFileName === docToRemove.fileName);
+                if (serverFile) {
+                    await adminService.deleteFile(serverFile._id);
+                    showSnackbar('Record and file deleted from Google Drive automatically.', 'success');
+                }
+            } catch (err) {
+                console.error('Failed to delete file from server:', err);
+            }
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            legalDocuments: prev.legalDocuments?.filter((_, i) => i !== index)
+        }));
+
+        // Remove from pending list as well
+        if (isPending) {
+            setPendingLegalFiles(prev => prev.filter(p => p.fileName !== docToRemove.fileName));
+        }
+    };
+
+    const handleDownloadLegalDoc = async (fileName: string) => {
+        // Find if it's a pending file (local)
+        const pendingFile = pendingLegalFiles.find(p => p.fileName === fileName);
+
+        if (pendingFile) {
+            // Download local file
+            const url = URL.createObjectURL(pendingFile.file);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } else if (id) {
+            // Fetch from server
+            try {
+                showSnackbar('Connecting to Google Drive to download file...', 'info');
+                const clientFiles = await adminService.getClientFiles(id, undefined, 'USER_DOCS');
+                const serverFile = clientFiles.find(f => f.fileName === fileName || f.originalFileName === fileName);
+
+                if (serverFile) {
+                    await adminService.downloadFile(serverFile._id, fileName);
+                    showSnackbar('File downloaded successfully', 'success');
+                } else {
+                    showSnackbar(`File "${fileName}" not found in Google Drive.`, 'error');
+                }
+            } catch (err) {
+                console.error('Failed to download from drive:', err);
+                showSnackbar('Failed to download file from Google Drive.', 'error');
+            }
+        }
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
@@ -470,10 +540,26 @@ export const ClientMaster: React.FC = () => {
                 if (profileImage && data?.client?._id) {
                     await adminService.uploadProfileImage(data.client._id, profileImage);
                 }
+
+                if (data?.client?._id && pendingLegalFiles.length > 0) {
+                    for (const pendingFile of pendingLegalFiles) {
+                        const uploadData = new FormData();
+                        uploadData.append('file', pendingFile.file);
+                        uploadData.append('clientId', data.client._id);
+                        uploadData.append('category', 'USER_DOCS');
+                        uploadData.append('fileName', pendingFile.fileName);
+                        try {
+                            await adminService.uploadFile(uploadData);
+                        } catch (e) {
+                            console.error('Failed to upload legal file:', e);
+                        }
+                    }
+                }
+
                 showSnackbar('Client saved successfully', 'success');
                 navigate('/admin/client/list');
             } catch {
-                showSnackbar('Client saved, but failed to upload profile image', 'error');
+                showSnackbar('Client saved, but failed to upload profile image or legal documents', 'error');
                 navigate('/admin/client/list');
             }
         },
@@ -489,10 +575,26 @@ export const ClientMaster: React.FC = () => {
                 if (profileImage && id) {
                     await adminService.uploadProfileImage(id, profileImage);
                 }
+
+                if (id && pendingLegalFiles.length > 0) {
+                    for (const pendingFile of pendingLegalFiles) {
+                        const uploadData = new FormData();
+                        uploadData.append('file', pendingFile.file);
+                        uploadData.append('clientId', id);
+                        uploadData.append('category', 'USER_DOCS');
+                        uploadData.append('fileName', pendingFile.fileName);
+                        try {
+                            await adminService.uploadFile(uploadData);
+                        } catch (e) {
+                            console.error('Failed to upload legal file:', e);
+                        }
+                    }
+                }
+
                 showSnackbar('Client updated successfully', 'success');
                 navigate('/admin/client/list');
             } catch {
-                showSnackbar('Client updated, but failed to upload profile image', 'error');
+                showSnackbar('Client updated, but failed to upload profile image or legal documents', 'error');
                 navigate('/admin/client/list');
             }
         },
@@ -868,15 +970,6 @@ export const ClientMaster: React.FC = () => {
 
                     </Box>
 
-                    <Divider />
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, p: 3, bgcolor: '#f8fafc' }}>
-                        <Button variant="contained" onClick={handleSaveClient} disabled={createClientMutation.isPending} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 4, py: 1, textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
-                            {createClientMutation.isPending ? 'Saving...' : 'Save'}
-                        </Button>
-                        <Button variant="outlined" onClick={() => navigate('/admin/client/list')} disabled={createClientMutation.isPending} sx={{ px: 4, py: 1, textTransform: 'none', borderRadius: 2, color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' }, fontWeight: 600 }}>
-                            Cancel
-                        </Button>
-                    </Box>
                 </CustomTabPanel>
 
                 {/* Placeholders for other tabs */}
@@ -939,7 +1032,7 @@ export const ClientMaster: React.FC = () => {
 
                         {/* Contacts List Section */}
                         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                            <Box sx={{ bgcolor: '#00bfa5', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
                                 <Typography variant="subtitle1" fontWeight="600">Multiple Contact List</Typography>
                             </Box>
@@ -1036,7 +1129,7 @@ export const ClientMaster: React.FC = () => {
 
                         {/* Legal Document List Section */}
                         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                            <Box sx={{ bgcolor: '#00bfa5', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
                                 <Typography variant="subtitle1" fontWeight="600">Legal Document List</Typography>
                             </Box>
@@ -1052,6 +1145,24 @@ export const ClientMaster: React.FC = () => {
                                                     <Typography variant="body2" color="text.secondary">File: {doc.fileName}</Typography>
                                                     {doc.description && <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>{doc.description}</Typography>}
                                                 </Box>
+                                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="primary"
+                                                        onClick={() => handleDownloadLegalDoc(doc.fileName)}
+                                                        title="Download"
+                                                    >
+                                                        <DownloadIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleRemoveLegalForm(index)}
+                                                        title="Delete"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
                                             </Box>
                                         ))}
                                     </Box>
@@ -1065,6 +1176,26 @@ export const ClientMaster: React.FC = () => {
                         <Typography variant="h6" color="text.secondary">Work Assignment Console (Coming Soon)</Typography>
                     </Box>
                 </CustomTabPanel>
+
+                <Divider sx={{ mt: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, p: 3, bgcolor: '#f8fafc', borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleSaveClient}
+                        disabled={createClientMutation.isPending || updateClientMutation.isPending}
+                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 4, py: 1, textTransform: 'none', borderRadius: 2, fontWeight: 600, fontSize: '1.05rem' }}
+                    >
+                        {createClientMutation.isPending || updateClientMutation.isPending ? 'Saving...' : 'Save Client'}
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={() => navigate('/admin/client/list')}
+                        disabled={createClientMutation.isPending || updateClientMutation.isPending}
+                        sx={{ px: 4, py: 1, textTransform: 'none', borderRadius: 2, color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' }, fontWeight: 600, fontSize: '1.05rem' }}
+                    >
+                        Cancel
+                    </Button>
+                </Box>
             </Paper>
 
             {/* Modals */}
