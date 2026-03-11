@@ -312,6 +312,25 @@ export class GoogleDriveService {
             throw error;
         }
     }
+
+    /**
+     * Create employee folder structure
+     * Returns the employee's folder ID
+     */
+    async createEmployeeFolderStructure(employeeName: string): Promise<string> {
+        try {
+            // Create or get 'Employees' root folder
+            const employeesRootId = await this.ensureFolder('Employee');
+
+            // Create or get subfolder for the employee
+            const employeeFolderId = await this.ensureFolder(employeeName, employeesRootId);
+
+            return employeeFolderId;
+        } catch (error) {
+            console.error('Error creating employee folder structure:', error);
+            throw error;
+        }
+    }
 }
 
 // Singleton instance

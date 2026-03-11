@@ -1,0 +1,406 @@
+import React, { useState } from 'react';
+import {
+    Box,
+    Paper,
+    Typography,
+    Grid,
+    Select,
+    MenuItem,
+    Button,
+    TextField,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Checkbox,
+} from '@mui/material';
+import { FormatListBulleted as ListIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { staffService } from '../../../../services/staffService';
+import { attendanceService } from '../../../../services/attendanceService';
+import type { AttendanceData } from '../../../../services/attendanceService';
+import { format, isValid, parseISO } from 'date-fns';
+
+interface AttendanceRecord {
+    _id: string;
+    employee: { _id: string; firstName: string; lastName: string; };
+    date: string;
+    inTime?: string;
+    outTime?: string;
+    description?: string;
+}
+
+const safeFormatDate = (dateStr: string) => {
+    try {
+        const d = parseISO(dateStr);
+        return isValid(d) ? format(d, 'dd-MMM-yyyy') : dateStr;
+    } catch {
+        return dateStr;
+    }
+};
+
+export const AttendanceList: React.FC = () => {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    // Filter state
+    const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Edit dialog state
+    const [editOpen, setEditOpen] = useState(false);
+    const [editRecord, setEditRecord] = useState<AttendanceRecord | null>(null);
+    const [editForm, setEditForm] = useState({
+        employee: '',
+        date: '',
+        inTimeChecked: false,
+        inTime: '09:00',
+        outTimeChecked: false,
+        outTime: '18:00',
+        description: '',
+    });
+
+    const { data: staffList } = useQuery({
+        queryKey: ['staff'],
+        queryFn: () => staffService.getStaff()
+    });
+
+    const { data: attendanceList, isLoading } = useQuery({
+        queryKey: ['attendance', selectedEmployee, fromDate, toDate],
+        queryFn: () => attendanceService.getAttendance({
+            employee: selectedEmployee || undefined,
+            startDate: fromDate || undefined,
+            endDate: toDate || undefined
+        })
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: attendanceService.deleteAttendance,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+        }
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Omit<AttendanceData, '_id'> }) =>
+            attendanceService.updateAttendance(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            setEditOpen(false);
+        },
+        onError: () => {
+            alert('Failed to update attendance record.');
+        }
+    });
+
+    const handleClearFilters = () => {
+        setSelectedEmployee('');
+        setFromDate('');
+        setToDate(new Date().toISOString().split('T')[0]);
+    };
+
+    const handleDelete = (id: string) => {
+        if (window.confirm('Are you sure you want to delete this attendance record?')) {
+            deleteMutation.mutate(id);
+        }
+    };
+
+    const handleEditOpen = (record: AttendanceRecord) => {
+        setEditRecord(record);
+        setEditForm({
+            employee: record.employee?._id || '',
+            date: record.date ? record.date.split('T')[0] : '',
+            inTimeChecked: !!record.inTime,
+            inTime: record.inTime || '09:00',
+            outTimeChecked: !!record.outTime,
+            outTime: record.outTime || '18:00',
+            description: record.description || '',
+        });
+        setEditOpen(true);
+    };
+
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, checked, type } = e.target;
+        setEditForm(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleEditSave = () => {
+        if (!editRecord) return;
+        updateMutation.mutate({
+            id: editRecord._id,
+            data: {
+                employee: editForm.employee,
+                date: editForm.date,
+                inTime: editForm.inTimeChecked ? editForm.inTime : undefined,
+                outTime: editForm.outTimeChecked ? editForm.outTime : undefined,
+                description: editForm.description,
+            }
+        });
+    };
+
+    const calculateHours = (inTime?: string, outTime?: string) => {
+        if (!inTime || !outTime) return '-';
+        const [inH, inM] = inTime.split(':').map(Number);
+        const [outH, outM] = outTime.split(':').map(Number);
+        let diff = (outH * 60 + outM) - (inH * 60 + inM);
+        if (diff < 0) diff += 24 * 60;
+        return `${Math.floor(diff / 60)}h ${diff % 60}m`;
+    };
+
+    return (
+        <Box sx={{ p: { xs: 2, md: 3 } }}>
+            {/* Header */}
+            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h5" fontWeight="600">Employee Attendance List</Typography>
+                    <Button size="small" variant="contained" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }} onClick={() => navigate('/admin/employee/attendance/add')}>
+                        Add New
+                    </Button>
+                </Box>
+
+                {/* Filters */}
+                <Box sx={{ p: 3, bgcolor: '#fff' }}>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '80px', flexShrink: 0 }}>Employee</Typography>
+                            <Select
+                                fullWidth size="small" displayEmpty
+                                value={selectedEmployee}
+                                onChange={(e) => setSelectedEmployee(e.target.value as string)}
+                                sx={{ borderRadius: 1.5 }}
+                            >
+                                <MenuItem value="">All Employees</MenuItem>
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {staffList?.map((s: any) => (
+                                    <MenuItem key={s._id} value={s._id}>{s.firstName} {s.lastName}</MenuItem>
+                                ))}
+                            </Select>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>From</Typography>
+                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>To</Typography>
+                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button variant="contained" onClick={handleClearFilters} sx={{ bgcolor: '#ff6c60', color: 'white', minWidth: '40px', p: 1, boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                                <CloseIcon fontSize="small" />
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Paper>
+
+            {/* Table */}
+            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ListIcon fontSize="small" />
+                    <Typography variant="subtitle2" fontWeight="700">Attendance Records</Typography>
+                    {attendanceList && !isLoading && (
+                        <Typography variant="caption" sx={{ ml: 'auto', opacity: 0.85 }}>
+                            {attendanceList.length} record{attendanceList.length !== 1 ? 's' : ''}
+                        </Typography>
+                    )}
+                </Box>
+                <TableContainer>
+                    <Table size="small">
+                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>#</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Employee Name</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Date</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>In Time</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Out Time</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Hours Worked</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Action</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
+                                </TableRow>
+                            ) : (!attendanceList || attendanceList.length === 0) ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
+                                </TableRow>
+                            ) : (
+                                (attendanceList as AttendanceRecord[]).map((record, idx) => (
+                                    <TableRow key={record._id} hover sx={{ '&:hover': { bgcolor: '#f0f4ff' } }}>
+                                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{idx + 1}</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>{record.employee?.firstName} {record.employee?.lastName}</TableCell>
+                                        <TableCell>{record.date ? safeFormatDate(record.date) : '-'}</TableCell>
+                                        <TableCell>
+                                            {record.inTime ? (
+                                                <Box component="span" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                    {record.inTime}
+                                                </Box>
+                                            ) : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {record.outTime ? (
+                                                <Box component="span" sx={{ bgcolor: '#fff3e0', color: '#e65100', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                    {record.outTime}
+                                                </Box>
+                                            ) : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                {calculateHours(record.inTime, record.outTime)}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                <IconButton size="small" onClick={() => handleEditOpen(record)} sx={{ color: '#667eea', '&:hover': { bgcolor: '#e8eafc' } }}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton size="small" color="error" onClick={() => handleDelete(record._id)} sx={{ '&:hover': { bgcolor: '#fde8e8' } }}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+
+            {/* ─── Edit Dialog ─── */}
+            <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+                    <Typography fontWeight="600">Edit Attendance</Typography>
+                    <IconButton size="small" onClick={() => setEditOpen(false)} sx={{ color: 'white' }}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
+                        {/* Employee */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>
+                                Employee <span style={{ color: 'red' }}>*</span>
+                            </Typography>
+                            <Select
+                                fullWidth size="small" displayEmpty
+                                name="employee"
+                                value={editForm.employee}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, employee: e.target.value as string }))}
+                                sx={{ borderRadius: 1.5 }}
+                            >
+                                <MenuItem value="" disabled>Choose Employee...</MenuItem>
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {staffList?.map((s: any) => (
+                                    <MenuItem key={s._id} value={s._id}>{s.firstName} {s.lastName}</MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
+
+                        {/* Date */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>
+                                Date <span style={{ color: 'red' }}>*</span>
+                            </Typography>
+                            <TextField
+                                fullWidth size="small" type="date"
+                                name="date"
+                                value={editForm.date}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                            />
+                        </Box>
+
+                        {/* In Time */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>In Time</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
+                                <Checkbox
+                                    name="inTimeChecked"
+                                    checked={editForm.inTimeChecked}
+                                    onChange={handleEditChange}
+                                    sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: 0.5 }}
+                                />
+                                <TextField
+                                    size="small" type="time"
+                                    name="inTime"
+                                    value={editForm.inTime}
+                                    onChange={handleEditChange}
+                                    disabled={!editForm.inTimeChecked}
+                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                />
+                            </Box>
+                        </Box>
+
+                        {/* Out Time */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>Out Time</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
+                                <Checkbox
+                                    name="outTimeChecked"
+                                    checked={editForm.outTimeChecked}
+                                    onChange={handleEditChange}
+                                    sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: 0.5 }}
+                                />
+                                <TextField
+                                    size="small" type="time"
+                                    name="outTime"
+                                    value={editForm.outTime}
+                                    onChange={handleEditChange}
+                                    disabled={!editForm.outTimeChecked}
+                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                />
+                            </Box>
+                        </Box>
+
+                        {/* Description */}
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0, pt: 1 }}>Description</Typography>
+                            <TextField
+                                fullWidth size="small" multiline rows={3}
+                                name="description"
+                                value={editForm.description}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                            />
+                        </Box>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleEditSave}
+                        disabled={updateMutation.isPending}
+                        sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                    >
+                        {updateMutation.isPending ? 'Saving...' : 'Update'}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => setEditOpen(false)}
+                        sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
+                    >
+                        Cancel
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
+};

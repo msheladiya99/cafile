@@ -35,6 +35,9 @@ const FreeEmployeeList = lazy(() => import('./pages/admin/employee/FreeEmployeeL
 const EntryWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/EntryWiseTimesheet').then(module => ({ default: module.EntryWiseTimesheet })));
 const SubtaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/SubtaskWiseTimesheet').then(module => ({ default: module.SubtaskWiseTimesheet })));
 const TaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/TaskWiseTimesheet').then(module => ({ default: module.TaskWiseTimesheet })));
+const AddAttendance = lazy(() => import('./pages/admin/employee/attendance/AddAttendance').then(module => ({ default: module.AddAttendance })));
+const AttendanceList = lazy(() => import('./pages/admin/employee/attendance/AttendanceList').then(module => ({ default: module.AttendanceList })));
+const Form108 = lazy(() => import('./pages/admin/employee/Form108').then(module => ({ default: module.Form108 })));
 const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.ClientDashboard })));
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
@@ -173,8 +176,14 @@ const AppRoutes: React.FC = () => {
               <Route path="task" element={<TaskWiseTimesheet />} />
             </Route>
 
+            <Route path="attendance">
+              <Route path="add" element={<AddAttendance />} />
+              <Route path="list" element={<AttendanceList />} />
+            </Route>
+
             <Route path="login-detail" element={<EmployeeLoginDetail />} />
             <Route path="free-list" element={<FreeEmployeeList />} />
+            <Route path="form108" element={<Form108 />} />
           </Route>
 
           <Route path="profile" element={<ProfileSettings />} />

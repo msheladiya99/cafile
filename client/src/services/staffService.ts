@@ -52,4 +52,21 @@ export const staffService = {
     deleteStaff: async (staffId: string): Promise<void> => {
         await api.delete(`/staff/${staffId}`);
     },
+
+    uploadDocument: async (file: File, employeeName: string): Promise<{
+        fileName: string;
+        driveFileId: string;
+        driveWebViewLink: string;
+    }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('employeeName', employeeName);
+
+        const response = await api.post('/staff/upload-document', formData);
+        return response.data;
+    },
+
+    deleteDocument: async (fileId: string): Promise<void> => {
+        await api.delete(`/staff/delete-document/${fileId}`);
+    },
 };

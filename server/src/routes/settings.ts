@@ -26,7 +26,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 // UPDATE Settings (Admin Only)
 router.put('/', authenticate, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { companyName, address, email, phone, logoUrl } = req.body;
+        const { companyName, address, email, phone, logoUrl, employeeExtraFields } = req.body;
         let settings = await Settings.findOne();
         if (!settings) {
             settings = await Settings.create({});
@@ -37,6 +37,10 @@ router.put('/', authenticate, requireAdmin, async (req: Request, res: Response) 
         if (email) settings.email = email;
         if (phone) settings.phone = phone;
         if (logoUrl !== undefined) settings.logoUrl = logoUrl;
+        if (employeeExtraFields) settings.employeeExtraFields = {
+            ...settings.employeeExtraFields,
+            ...employeeExtraFields
+        };
 
         settings.updatedAt = new Date();
         await settings.save();

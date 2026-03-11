@@ -6,15 +6,33 @@ export interface ISettings extends Document {
     email: string;
     phone: string;
     logoUrl?: string; // Optional for future
+    employeeExtraFields?: {
+        field1: string;
+        field2: string;
+        field3: string;
+        field4: string;
+        field5: string;
+        field6: string;
+        field7: string;
+    };
     updatedAt: Date;
 }
 
 const SettingsSchema = new Schema({
-    companyName: { type: String, default: 'My Company' },
+    companyName: { type: String, default: 'CA OFFICE PORTAL' },
     address: { type: String, default: '' },
     email: { type: String, default: '' },
     phone: { type: String, default: '' },
     logoUrl: { type: String },
+    employeeExtraFields: {
+        field1: { type: String, default: 'Field 1' },
+        field2: { type: String, default: 'Field 2' },
+        field3: { type: String, default: 'Field 3' },
+        field4: { type: String, default: 'Field 4' },
+        field5: { type: String, default: 'Field 5' },
+        field6: { type: String, default: 'Field 6' },
+        field7: { type: String, default: 'Field 7' }
+    },
     updatedAt: { type: Date, default: Date.now }
 });
 

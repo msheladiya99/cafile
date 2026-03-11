@@ -117,6 +117,14 @@ export const AdminLayout: React.FC = () => {
                 },
                 { text: 'Free Employee List', path: '/admin/employee/free-list' },
                 { text: 'Employee Login Detail', path: '/admin/employee/login-detail' },
+                {
+                    text: 'Emp Attendance',
+                    children: [
+                        { text: 'Add Attendance', path: '/admin/employee/attendance/add' },
+                        { text: 'Attendance List', path: '/admin/employee/attendance/list' },
+                    ]
+                },
+                { text: 'Form 108', path: '/admin/employee/form108' },
             ]
         },
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/admin/tasks' },

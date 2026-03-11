@@ -1,12 +1,88 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
 import { User } from '../models/User';
 import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
+import { getDriveService } from '../services/googleDrive';
 
 const router = Router();
 
+// Configure multer for memory storage
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+});
+
 // All staff management routes require authentication and admin role
 router.use(authenticate, requireAdmin);
+
+// Upload staff document to Google Drive
+router.post('/upload-document', upload.single('file'), async (req: AuthRequest, res: Response) => {
+    try {
+        const { employeeName } = req.body;
+        const uploadedFile = req.file;
+
+        console.log('--- Staff Document Upload Start ---');
+        console.log('Employee Name:', employeeName);
+        console.log('File:', uploadedFile ? {
+            name: uploadedFile.originalname,
+            type: uploadedFile.mimetype,
+            size: uploadedFile.size
+        } : 'No File');
+
+        if (!uploadedFile) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const driveService = getDriveService();
+
+        // Create employee folder structure
+        console.log('Ensuring folder structure for:', employeeName);
+        const folderId = await driveService.createEmployeeFolderStructure(employeeName || 'Unknown Employee');
+        console.log('Folder ID:', folderId);
+
+        // Upload file
+        console.log('Uploading to Drive...');
+        const driveFile = await driveService.uploadFile(
+            uploadedFile.buffer,
+            uploadedFile.originalname,
+            uploadedFile.mimetype,
+            folderId
+        );
+        console.log('Upload success:', driveFile.fileId);
+
+        res.json({
+            message: 'File uploaded to Google Drive successfully',
+            fileName: uploadedFile.originalname,
+            driveFileId: driveFile.fileId,
+            driveWebViewLink: driveFile.webViewLink,
+        });
+    } catch (error: any) {
+        console.error('Staff document upload error:', error);
+        res.status(500).json({
+            message: 'Error uploading document to Google Drive',
+            error: error.message
+        });
+    }
+});
+
+// Delete staff document from Google Drive
+router.delete('/delete-document/:fileId', async (req: AuthRequest, res: Response) => {
+    try {
+        const { fileId } = req.params;
+        const driveService = getDriveService();
+        await driveService.deleteFile(fileId as string);
+        res.json({ message: 'Document deleted from Google Drive successfully' });
+    } catch (error: any) {
+        console.error('Staff document delete error:', error);
+        res.status(500).json({
+            message: 'Error deleting document from Google Drive',
+            error: error.message
+        });
+    }
+});
 
 // Generate random password
 const generatePassword = (): string => {
@@ -35,7 +111,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             ratePerHours, leavingDate, reference, description, status,
             emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
             field1, field2, field3, field4, field5, field6, field7,
-            documents, username: reqUsername, password: reqPassword
+            documents, username: reqUsername, password: reqPassword,
+            pfNumber, esiNumber, aadharNumber, drivingLicenceNo,
+            passport, passportNo, passportAuthority, passportDateFrom, passportDateTo,
+            visa, visaNo, visaAuthority, visaDateFrom, visaDateTo,
+            eid, eidNo, eidAuthority, eidDateFrom, eidDateTo,
+            bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
         if (!firstName || !lastName || !email) {
@@ -73,11 +154,13 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             role: actualRole,
             permissions: permissions || [],
             status: status !== undefined ? status : true,
-            firstName, lastName, employeeCode, address, country, state, city, postalCode,
-            mobileNumber, birthDate, designation, joiningDate, monthlySalary,
-            ratePerHours, leavingDate, reference, description,
             emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
-            field1, field2, field3, field4, field5, field6, field7, documents
+            field1, field2, field3, field4, field5, field6, field7, documents,
+            pfNumber, esiNumber, aadharNumber, drivingLicenceNo,
+            passport, passportNo, passportAuthority, passportDateFrom, passportDateTo,
+            visa, visaNo, visaAuthority, visaDateFrom, visaDateTo,
+            eid, eidNo, eidAuthority, eidDateFrom, eidDateTo,
+            bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         });
         await user.save();
 
@@ -175,7 +258,12 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             ratePerHours, leavingDate, reference, description, status,
             emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
             field1, field2, field3, field4, field5, field6, field7,
-            documents, username: reqUsername, password: reqPassword
+            documents, username: reqUsername, password: reqPassword,
+            pfNumber, esiNumber, aadharNumber, drivingLicenceNo,
+            passport, passportNo, passportAuthority, passportDateFrom, passportDateTo,
+            visa, visaNo, visaAuthority, visaDateFrom, visaDateTo,
+            eid, eidNo, eidAuthority, eidDateFrom, eidDateTo,
+            bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
         const user = await User.findById(req.params.id);
@@ -228,7 +316,12 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             'phone', 'mobileNumber', 'birthDate', 'designation', 'joiningDate', 'monthlySalary',
             'ratePerHours', 'leavingDate', 'reference', 'description', 'status',
             'emergencyFirstName', 'emergencyLastName', 'emergencyRelationship', 'emergencyPhone',
-            'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'documents'
+            'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'documents',
+            'pfNumber', 'esiNumber', 'aadharNumber', 'drivingLicenceNo',
+            'passport', 'passportNo', 'passportAuthority', 'passportDateFrom', 'passportDateTo',
+            'visa', 'visaNo', 'visaAuthority', 'visaDateFrom', 'visaDateTo',
+            'eid', 'eidNo', 'eidAuthority', 'eidDateFrom', 'eidDateTo',
+            'bankName', 'bankBranch', 'accountNo', 'accountHolderName', 'ifscCode', 'bankAddress'
         ];
 
         for (const field of updatableFields) {

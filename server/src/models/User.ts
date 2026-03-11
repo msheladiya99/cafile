@@ -42,6 +42,38 @@ export interface IUser extends Document {
     field5?: string;
     field6?: string;
     field7?: string;
+
+    // Other Details
+    pfNumber?: string;
+    esiNumber?: string;
+    aadharNumber?: string;
+    drivingLicenceNo?: string;
+
+    passport?: boolean;
+    passportNo?: string;
+    passportAuthority?: string;
+    passportDateFrom?: string;
+    passportDateTo?: string;
+
+    visa?: boolean;
+    visaNo?: string;
+    visaAuthority?: string;
+    visaDateFrom?: string;
+    visaDateTo?: string;
+
+    eid?: boolean;
+    eidNo?: string;
+    eidAuthority?: string;
+    eidDateFrom?: string;
+    eidDateTo?: string;
+
+    bankName?: string;
+    bankBranch?: string;
+    accountNo?: string;
+    accountHolderName?: string;
+    ifscCode?: string;
+    bankAddress?: string;
+
     documents?: Array<{
         documentType: string;
         date: string;
@@ -50,6 +82,9 @@ export interface IUser extends Document {
         fileLabel: string;
         description: string;
         returnable: boolean;
+        fileName?: string;
+        driveFileId?: string;
+        driveWebViewLink?: string;
     }>;
 }
 
@@ -129,6 +164,38 @@ const userSchema = new Schema<IUser>({
     field5: { type: String, trim: true },
     field6: { type: String, trim: true },
     field7: { type: String, trim: true },
+
+    // Other Details
+    pfNumber: { type: String, trim: true },
+    esiNumber: { type: String, trim: true },
+    aadharNumber: { type: String, trim: true },
+    drivingLicenceNo: { type: String, trim: true },
+
+    passport: { type: Boolean, default: false },
+    passportNo: { type: String, trim: true },
+    passportAuthority: { type: String, trim: true },
+    passportDateFrom: { type: String, trim: true },
+    passportDateTo: { type: String, trim: true },
+
+    visa: { type: Boolean, default: false },
+    visaNo: { type: String, trim: true },
+    visaAuthority: { type: String, trim: true },
+    visaDateFrom: { type: String, trim: true },
+    visaDateTo: { type: String, trim: true },
+
+    eid: { type: Boolean, default: false },
+    eidNo: { type: String, trim: true },
+    eidAuthority: { type: String, trim: true },
+    eidDateFrom: { type: String, trim: true },
+    eidDateTo: { type: String, trim: true },
+
+    bankName: { type: String, trim: true },
+    bankBranch: { type: String, trim: true },
+    accountNo: { type: String, trim: true },
+    accountHolderName: { type: String, trim: true },
+    ifscCode: { type: String, trim: true },
+    bankAddress: { type: String, trim: true },
+
     documents: [{
         documentType: { type: String, trim: true },
         date: { type: String, trim: true },
@@ -136,7 +203,10 @@ const userSchema = new Schema<IUser>({
         fileLocation: { type: String, trim: true },
         fileLabel: { type: String, trim: true },
         description: { type: String, trim: true },
-        returnable: { type: Boolean, default: true }
+        returnable: { type: Boolean, default: true },
+        fileName: { type: String, trim: true },
+        driveFileId: { type: String, trim: true },
+        driveWebViewLink: { type: String, trim: true }
     }]
 });
 
