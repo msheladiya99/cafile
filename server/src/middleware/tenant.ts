@@ -31,8 +31,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     if (headerTenant && typeof headerTenant === 'string') {
         subdomain = headerTenant.toLowerCase();
     } else if (parts.length >= 3) {
-        // Handle Vercel deployments (e.g., project.vercel.app)
-        if (host.includes('vercel.app')) {
+        // Handle Vercel and Render deployments
+        if (host.includes('vercel.app') || host.includes('onrender.com')) {
             subdomain = parts.length > 3 ? parts[0].toLowerCase() : '';
         } else {
             // If it's a domain like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
