@@ -32,14 +32,15 @@ router.post('/login', async (req, res: Response) => {
             query.firmId = req.firmId;
             user = await User.findOne(query);
         } else {
-            // On main domain, allow finding global users (firmId: null) 
-            // This allows the seeded 'admin' (role: ADMIN, firmId: null) to log in.
-            // We also keep compatibility for SUPER_ADMINs who might not have a firmId.
-            user = await User.findOne(query);
+            // On main domain, we primarily look for global users (firmId: null)
+            // This includes the seeded 'admin' and 'SUPER_ADMIN' users.
+            user = await User.findOne({ ...query, firmId: null });
 
-            // If on main domain and we found a user with a firmId, 
-            // we should probably deny it and tell them to use their subdomain,
-            // but for now, let's just make sure we find the right global accounts first.
+            // Fallback: If no global user found, but it might be a firm admin 
+            // trying to login from the main domain (which we allowed in previous steps)
+            if (!user) {
+                user = await User.findOne(query);
+            }
         }
 
         if (!user) {
@@ -61,6 +62,7 @@ router.post('/login', async (req, res: Response) => {
         // Log login activity
         await ActivityLog.create({
             userId: user._id,
+            firmId: user.firmId,
             action: 'LOGIN',
             ipAddress: req.ip,
             userAgent: req.get('user-agent'),

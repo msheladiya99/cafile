@@ -37,7 +37,7 @@ const FirmDetails: React.FC = () => {
 
     const handleEditToggle = () => {
         if (!editMode) {
-            setFormData({ plan: firm.plan, status: firm.status });
+            setFormData({ plan: firm.plan.toLowerCase(), status: firm.status.toLowerCase() });
             setEditMode(true);
         } else {
             setEditMode(false);
@@ -95,7 +95,14 @@ const FirmDetails: React.FC = () => {
                                 ) : (
                                     <Box>
                                         <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>Plan</Typography>
-                                        <Chip label={firm.plan} sx={{ bgcolor: firm.plan === 'Enterprise' ? '#6200ea20' : '#e3f2fd', color: firm.plan === 'Enterprise' ? '#6200ea' : '#1976d2', fontWeight: 800 }} />
+                                        <Chip
+                                            label={firm.plan.charAt(0).toUpperCase() + firm.plan.slice(1)}
+                                            sx={{
+                                                bgcolor: firm.plan?.toLowerCase() === 'enterprise' ? '#6200ea20' : '#e3f2fd',
+                                                color: firm.plan?.toLowerCase() === 'enterprise' ? '#6200ea' : '#1976d2',
+                                                fontWeight: 800
+                                            }}
+                                        />
                                     </Box>
                                 )}
                             </Grid>

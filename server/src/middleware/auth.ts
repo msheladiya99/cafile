@@ -15,7 +15,7 @@ export interface AuthRequest extends Request {
     firmId?: string; // from tenantMiddleware
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         let token = req.headers.authorization?.split(' ')[1];
 
@@ -41,6 +41,16 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
         if (req.firmId && decoded.firmId && req.firmId !== decoded.firmId && decoded.role !== 'SUPER_ADMIN') {
             res.status(403).json({ message: 'Access denied. You do not belong to this firm.' });
             return;
+        }
+
+        // Check if firm is active (if it's a firm user)
+        if (decoded.firmId && decoded.role !== 'SUPER_ADMIN') {
+            const { Firm } = require('../models/Firm');
+            const firm = await Firm.findById(decoded.firmId);
+            if (!firm || firm.status !== 'active') {
+                res.status(403).json({ message: 'Access denied. This workspace is suspended or inactive.' });
+                return;
+            }
         }
 
         req.user = {

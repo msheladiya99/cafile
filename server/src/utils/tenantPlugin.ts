@@ -2,6 +2,11 @@ import { Schema, Types, Query, Aggregate } from 'mongoose';
 import { getFirmId } from './context';
 
 export const tenantPlugin = (schema: Schema) => {
+    // Only apply to schemas that have a firmId field
+    if (!schema.path('firmId')) {
+        return;
+    }
+
     // Middleware to automatically filter by firmId
     schema.pre(/^find/, function (this: Query<any, any>, next: any) {
         const firmId = getFirmId();

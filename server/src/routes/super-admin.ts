@@ -148,10 +148,12 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
         let googleDriveRootFolderId = '';
         try {
             const driveService = getDriveService();
-            googleDriveRootFolderId = await driveService.createFolder(firmName);
+            if (driveService) {
+                googleDriveRootFolderId = await driveService.createFolder(firmName);
+            }
         } catch (driveError) {
-            console.error('Failed to create Google Drive folder for firm:', driveError);
-            return res.status(500).json({ message: 'Failed to create Google Drive storage for firm' });
+            console.warn('Skipping Google Drive folder creation:', (driveError as Error).message);
+            // We don't block firm creation if Drive is not configured
         }
 
         const firm = await Firm.create({
