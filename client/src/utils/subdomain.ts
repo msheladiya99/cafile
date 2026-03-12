@@ -10,7 +10,12 @@ export const getSubdomain = () => {
 
     const parts = hostname.split('.');
 
-    // Assuming domain is cacloud.in (parts: ['abc', 'cacloud', 'in'])
+    // Handle Vercel deployments (e.g., project.vercel.app)
+    if (hostname.endsWith('.vercel.app')) {
+        return parts.length > 3 ? parts[0] : '';
+    }
+
+    // Assuming domain is something like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
     if (parts.length >= 3) {
         return parts[0];
     }
@@ -20,5 +25,12 @@ export const getSubdomain = () => {
 
 export const isSuperAdminDomain = () => {
     const hostname = window.location.hostname;
-    return hostname === 'cacloud.in' || hostname === 'www.cacloud.in' || (hostname === 'localhost' && !getSubdomain());
+    const subdomain = getSubdomain();
+
+    return (
+        hostname === 'cacloud.in' ||
+        hostname === 'www.cacloud.in' ||
+        (hostname === 'localhost' && !subdomain) ||
+        (hostname.endsWith('.vercel.app') && !subdomain)
+    );
 };

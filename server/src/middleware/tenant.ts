@@ -31,8 +31,13 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     if (headerTenant && typeof headerTenant === 'string') {
         subdomain = headerTenant.toLowerCase();
     } else if (parts.length >= 3) {
-        // If it's a domain like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
-        subdomain = parts[0].toLowerCase();
+        // Handle Vercel deployments (e.g., project.vercel.app)
+        if (host.includes('vercel.app')) {
+            subdomain = parts.length > 3 ? parts[0].toLowerCase() : '';
+        } else {
+            // If it's a domain like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
+            subdomain = parts[0].toLowerCase();
+        }
     }
 
     // Skip middleware for:

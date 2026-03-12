@@ -36,7 +36,8 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     process.env.CLIENT_URL,
-    /\.cacloud\.in$/ // Regex for subdomains
+    /\.cacloud\.in$/,
+    /\.vercel\.app$/ // Allow Vercel subdomains for dev/preview
 ].filter(Boolean) as (string | RegExp)[];
 
 app.use(cors({
