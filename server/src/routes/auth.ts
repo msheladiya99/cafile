@@ -18,8 +18,30 @@ router.post('/login', async (req, res: Response) => {
             return;
         }
 
-        // Find user
-        const user = await User.findOne({ username });
+        // Find user by username OR email
+        const query: any = {
+            $or: [
+                { username: username },
+                { email: username.toLowerCase() }
+            ]
+        };
+
+        let user;
+        if (req.firmId) {
+            // If on a subdomain, user must belong to that firm
+            query.firmId = req.firmId;
+            user = await User.findOne(query);
+        } else {
+            // On main domain, allow finding global users (firmId: null) 
+            // This allows the seeded 'admin' (role: ADMIN, firmId: null) to log in.
+            // We also keep compatibility for SUPER_ADMINs who might not have a firmId.
+            user = await User.findOne(query);
+
+            // If on main domain and we found a user with a firmId, 
+            // we should probably deny it and tell them to use their subdomain,
+            // but for now, let's just make sure we find the right global accounts first.
+        }
+
         if (!user) {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
@@ -50,6 +72,7 @@ router.post('/login', async (req, res: Response) => {
             {
                 userId: user._id.toString(),
                 role: user.role,
+                firmId: user.firmId?.toString(),
                 clientId: user.clientId?.toString(),
                 permissions: user.permissions
             },

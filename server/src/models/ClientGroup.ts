@@ -10,15 +10,21 @@ export interface IClientGroup extends Document {
     gstin?: string;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const clientGroupSchema = new Schema<IClientGroup>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         groupName: {
             type: String,
             required: [true, 'Group Name is required'],
             trim: true,
-            unique: true,
         },
         address: {
             type: String,
@@ -53,5 +59,7 @@ const clientGroupSchema = new Schema<IClientGroup>(
         timestamps: true,
     }
 );
+
+clientGroupSchema.index({ firmId: 1, groupName: 1 }, { unique: true });
 
 export const ClientGroup = mongoose.model<IClientGroup>('ClientGroup', clientGroupSchema);

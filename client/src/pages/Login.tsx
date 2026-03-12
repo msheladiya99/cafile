@@ -21,10 +21,12 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { Helmet } from 'react-helmet-async';
+import { getSubdomain } from '../utils/subdomain';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const subdomain = getSubdomain();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -45,8 +47,14 @@ export const Login: React.FC = () => {
         try {
             const data = await authService.login({ username, password });
             login(data.token, data.user);
-            const isStaff = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role);
-            navigate(isStaff ? '/admin/dashboard' : '/client/dashboard');
+
+            if (data.user.role === 'SUPER_ADMIN') {
+                navigate('/super-admin/dashboard');
+            } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/client/dashboard');
+            }
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Invalid credentials';
             setError(errorMessage);
@@ -137,19 +145,19 @@ export const Login: React.FC = () => {
                     >
                         <Box mb={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
-                                <Box sx={{ bgcolor: '#667eea', p: 0.8, borderRadius: 1.5, display: 'flex' }}>
+                                <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.8, borderRadius: 1.5, display: 'flex' }}>
                                     <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
                                 </Box>
                                 <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
-                                    my ca portal
+                                    {subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'cacloud portal'}
                                 </Typography>
                             </Box>
 
                             <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: '3rem', letterSpacing: -1.5 }}>
-                                Welcome Back
+                                {subdomain ? 'Firm Login' : 'Admin Login'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                                Sign in to your firm workspace
+                                {subdomain ? `Sign in to ${subdomain} workspace` : 'Sign in to management panel'}
                             </Typography>
                         </Box>
 

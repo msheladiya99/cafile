@@ -45,6 +45,14 @@ export class GoogleDriveService {
     }
 
     /**
+     * Set a temporary root folder for tenant isolation
+     */
+    setRootFolder(folderId: string) {
+        this.rootFolderId = folderId;
+        return this;
+    }
+
+    /**
      * Create a folder in Google Drive
      */
     async createFolder(folderName: string, parentFolderId?: string): Promise<string> {
@@ -372,4 +380,27 @@ export const getDriveService = (): GoogleDriveService => {
         return initializeDriveService();
     }
     return driveServiceInstance;
+};
+
+export const getTenantDriveService = (rootFolderId?: string): GoogleDriveService => {
+    const service = getDriveService();
+    if (rootFolderId) {
+        // Return a proxy or a cloned instance to avoid shared state issues if concurrent
+        // For simplicity here, since it's a small app, we can just return a "firm-aware" object
+        // but better to just return the same service and have methods accept parentId.
+        // Actually, the methods already accept parentFolderId.
+        // The only issue is many methods use `this.rootFolderId` as default.
+
+        // Let's just create a new wrapper instance for the firm
+        const config = {
+            clientEmail: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+            privateKey: process.env.GOOGLE_DRIVE_PRIVATE_KEY,
+            clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+            refreshToken: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
+            rootFolderId: rootFolderId
+        };
+        return new GoogleDriveService(config);
+    }
+    return service;
 };

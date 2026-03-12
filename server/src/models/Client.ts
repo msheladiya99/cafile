@@ -77,9 +77,16 @@ export interface IClient extends Document {
         description: string;
         fileName: string;
     }[];
+    firmId: mongoose.Types.ObjectId;
 }
 
 const clientSchema = new Schema<IClient>({
+    firmId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Firm',
+        required: true,
+        index: true
+    },
     name: {
         type: String,
         required: true,
@@ -88,7 +95,6 @@ const clientSchema = new Schema<IClient>({
     email: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         lowercase: true
     },
@@ -195,8 +201,8 @@ const clientSchema = new Schema<IClient>({
     }]
 });
 
-// Add indexes for faster searching
-clientSchema.index({ name: 1 });
-clientSchema.index({ phone: 1 });
+// Index for faster queries
+clientSchema.index({ firmId: 1, email: 1 }, { unique: true });
+clientSchema.index({ firmId: 1, name: 1 });
 
 export const Client = mongoose.model<IClient>('Client', clientSchema);

@@ -142,7 +142,7 @@ export interface FileData {
     lastModified?: string;
 }
 
-export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'INTERN' | 'CLIENT';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF' | 'INTERN' | 'CLIENT' | 'SUPER_ADMIN';
 
 export interface User {
     _id: string;

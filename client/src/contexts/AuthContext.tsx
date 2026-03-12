@@ -9,6 +9,7 @@ interface AuthContextType {
     logout: () => void;
     isAuthenticated: boolean;
     isAdmin: boolean;
+    isSuperAdmin: boolean;
     isManager: boolean;
     isStaffMember: boolean;
     isIntern: boolean;
@@ -86,10 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         isAuthenticated: !!token && !!user,
         isAdmin: user?.role === 'ADMIN',
+        isSuperAdmin: user?.role === 'SUPER_ADMIN',
         isManager: user?.role === 'MANAGER',
         isStaffMember: user?.role === 'STAFF',
         isIntern: user?.role === 'INTERN',
-        isStaff: !!user && ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(user.role),
+        isStaff: !!user && ['ADMIN', 'MANAGER', 'STAFF', 'INTERN', 'SUPER_ADMIN'].includes(user.role),
         isClient: user?.role === 'CLIENT',
         remainingTime,
     };
@@ -97,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {

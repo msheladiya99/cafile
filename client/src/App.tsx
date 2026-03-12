@@ -10,6 +10,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
 const ClientLayout = lazy(() => import('./layouts/ClientLayout').then(module => ({ default: module.ClientLayout })));
+const SuperAdminLayout = lazy(() => import('./layouts/SuperAdminLayout').then(module => ({ default: module.SuperAdminLayout })));
 
 // Lazy load route pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
@@ -43,6 +44,17 @@ const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module 
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
 
+// Super Admin Pages
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
+const FirmManagement = lazy(() => import('./pages/super-admin/FirmManagement'));
+const CreateFirm = lazy(() => import('./pages/super-admin/CreateFirm'));
+const FirmDetails = lazy(() => import('./pages/super-admin/FirmDetails'));
+const Subscriptions = lazy(() => import('./pages/super-admin/Subscriptions'));
+const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
+const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
+const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
+const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+
 
 const LoadingScreen = () => (
   <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -56,7 +68,7 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 1,
       staleTime: 30000, // 30 seconds
-      gcTime: 1000 * 60 * 5, // 5 minutes (renamed from cacheTime in v5)
+      gcTime: 1000 * 60 * 5, // 5 minutes
     },
   },
 });
@@ -102,7 +114,13 @@ const theme = createTheme({
 });
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isStaff } = useAuth();
+  const { isAuthenticated, isStaff, isSuperAdmin } = useAuth();
+
+  const getHomePath = () => {
+    if (isSuperAdmin) return '/super-admin/dashboard';
+    if (isStaff) return '/admin/dashboard';
+    return '/client/dashboard';
+  };
 
   return (
     <Suspense fallback={<LoadingScreen />}>
@@ -111,12 +129,35 @@ const AppRoutes: React.FC = () => {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
+              <Navigate to={getHomePath()} replace />
             ) : (
               <Login />
             )
           }
         />
+
+        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+
+        {/* Super Admin Routes */}
+        <Route
+          path="/super-admin"
+          element={
+            <ProtectedRoute>
+              {isSuperAdmin ? <SuperAdminLayout /> : <Navigate to={getHomePath()} replace />}
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
+          <Route path="dashboard" element={<SuperAdminDashboard />} />
+          <Route path="firms" element={<FirmManagement />} />
+          <Route path="create-firm" element={<CreateFirm />} />
+          <Route path="firms/:id" element={<FirmDetails />} />
+          <Route path="subscriptions" element={<Subscriptions />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="system-health" element={<SystemHealth />} />
+          <Route path="security" element={<SecurityLogs />} />
+          <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
+        </Route>
 
         {/* Admin/Staff Routes */}
         <Route
@@ -129,7 +170,6 @@ const AppRoutes: React.FC = () => {
         >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-          {/* Analytics route removed */}
           <Route path="reports" element={<MonthlyReports />} />
           <Route path="clients" element={<Clients />} />
           <Route path="client">
@@ -212,7 +252,7 @@ const AppRoutes: React.FC = () => {
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to={isStaff ? '/admin/dashboard' : '/client/dashboard'} replace />
+              <Navigate to={getHomePath()} replace />
             ) : (
               <Navigate to="/login" replace />
             )

@@ -288,7 +288,6 @@ export const ManageFiles: React.FC = () => {
             {/* Header Section */}
             <PageHeader
                 title="Manage Files"
-                subtitle="View and manage client files"
             />
 
             <ContentContainer>

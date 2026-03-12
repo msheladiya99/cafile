@@ -113,7 +113,7 @@ const TaskSchema = new Schema<ITask>({
     clientId: { type: Schema.Types.ObjectId, ref: 'Client' },
     clientGroupId: { type: Schema.Types.ObjectId, ref: 'ClientGroup' },
     billingType: { type: String, enum: ['SINGLE_CLIENT', 'CLIENT_GROUP'], default: 'SINGLE_CLIENT' },
-    firmId: { type: Schema.Types.ObjectId, ref: 'MultiFirm' },
+    firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
     billingAmount: { type: Number, default: 0 },
 
     // Status & Priority

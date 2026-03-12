@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import { File } from '../models/File';
 import { Client } from '../models/Client';
 import { authenticate, requireAdmin, requireRoles, AuthRequest } from '../middleware/auth';
-import { getDriveService } from '../services/googleDrive';
+import { getTenantDriveService } from '../services/googleDrive';
 import archiver from 'archiver';
 import Invoice from '../models/Invoice';
 
@@ -112,7 +112,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
         // Force Google Drive Upload
         try {
-            const driveService = getDriveService();
+            const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
 
             // Create client folder structure if not exists
             if (!client.driveFolderId) {
@@ -361,7 +361,7 @@ router.get('/:id/download', authenticate, checkFileAccess, async (req: AuthReque
         if (file.storedIn === 'drive' && file.driveFileId) {
             // Download from Google Drive
             try {
-                const driveService = getDriveService();
+                const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
                 const fileBuffer = await driveService.downloadFile(file.driveFileId);
 
                 res.setHeader('Content-Type', 'application/octet-stream');
@@ -410,7 +410,7 @@ router.get('/:id/preview', authenticate, checkFileAccess, async (req: AuthReques
             }
 
             try {
-                const driveService = getDriveService();
+                const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
 
                 // Fetch metadata to get correct MIME type
                 const metadata = await driveService.getFileMetadata(file.driveFileId);
@@ -493,7 +493,7 @@ router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequ
         for (const file of files) {
             if (file.storedIn === 'drive' && file.driveFileId) {
                 try {
-                    const driveService = getDriveService();
+                    const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
                     const fileBuffer = await driveService.downloadFile(file.driveFileId);
                     archive.append(fileBuffer, { name: file.fileName });
                 } catch (err) {
@@ -536,7 +536,7 @@ router.delete('/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']),
         if (file.storedIn === 'drive' && file.driveFileId) {
             // Delete from Google Drive
             try {
-                const driveService = getDriveService();
+                const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
                 await driveService.deleteFile(file.driveFileId);
             } catch (error) {
                 console.error('Google Drive delete error:', error);
@@ -586,7 +586,7 @@ router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STA
                 if (file.storedIn === 'drive' && file.driveFileId) {
                     // Delete from Google Drive
                     try {
-                        const driveService = getDriveService();
+                        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
                         await driveService.deleteFile(file.driveFileId);
                     } catch (error) {
                         console.error(`Google Drive delete error for ${file.fileName}:`, error);
@@ -675,7 +675,7 @@ router.post('/:id/share', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF
             return res.status(400).json({ message: 'File is not stored in Google Drive' });
         }
 
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const shareableLink = await driveService.createShareableLink(file.driveFileId);
 
         // Update file record with shareable link

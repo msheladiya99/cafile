@@ -8,10 +8,17 @@ export interface IService extends Document {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const ServiceSchema: Schema = new Schema(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         name: {
             type: String,
             required: true,

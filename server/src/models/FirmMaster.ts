@@ -85,6 +85,7 @@ export interface IFirmMaster extends Document {
     extraFieldLabels?: string[]; // Array of strings for labels of extra fields 1-7
     showLogo?: boolean;
     updatedAt?: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const PartnerSchema = new Schema<IPartner>({
@@ -98,6 +99,12 @@ const PartnerSchema = new Schema<IPartner>({
 
 const FirmMasterSchema = new Schema<IFirmMaster>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         firmName: { type: String, required: true },
         shortName: String,
         address: String,

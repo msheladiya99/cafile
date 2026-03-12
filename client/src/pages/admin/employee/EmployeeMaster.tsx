@@ -288,6 +288,7 @@ export const EmployeeMaster: React.FC = () => {
 
     useEffect(() => {
         if (staffData && isEditMode) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData(prev => ({
                 ...prev,
                 ...staffData,
@@ -296,26 +297,30 @@ export const EmployeeMaster: React.FC = () => {
                 password: '',
                 confirmPassword: ''
             }));
-            if (staffData.documents) {
-                setDocuments(staffData.documents);
+
+            // Only set documents if they actually exist and changed
+            if (staffData.documents && staffData.documents.length > 0) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setDocuments(staffData.documents as any);
             }
         } else if (!isEditMode) {
-            // Reset form for "Add New"
             setFormData(initialFormData);
             setDocuments([]);
             setTabValue(0);
         }
-    }, [staffData, isEditMode, id]);
+    }, [staffData, isEditMode]);
 
     const saveMutation = useMutation({
-        mutationFn: (data: any) => isEditMode ? staffService.updateStaff(id!, data) : staffService.createStaff(data),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mutationFn: async (data: any): Promise<any> => isEditMode ? staffService.updateStaff(id!, data) : staffService.createStaff(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
             showSnackbar(`Employee data ${isEditMode ? 'updated' : 'saved'} successfully!`, 'success');
             navigate('/admin/employee/list');
         },
-        onError: (error: any) => {
-            showSnackbar(error?.response?.data?.message || 'Error saving employee', 'error');
+        onError: (error: Error | unknown) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            showSnackbar((error as any)?.response?.data?.message || 'Error saving employee', 'error');
         }
     });
 
@@ -353,8 +358,9 @@ export const EmployeeMaster: React.FC = () => {
                     documentFormat: 'Soft Copy'
                 };
                 setSelectedFile(null);
-            } catch (error: any) {
-                showSnackbar(error?.response?.data?.message || 'Error uploading file to Drive', 'error');
+            } catch (error: Error | unknown) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                showSnackbar((error as any)?.response?.data?.message || 'Error uploading file to Drive', 'error');
                 setIsUploading(false);
                 return;
             }

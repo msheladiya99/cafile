@@ -13,10 +13,17 @@ export interface IReminder extends Document {
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const ReminderSchema: Schema = new Schema(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         clientId: {
             type: Schema.Types.ObjectId,
             ref: 'Client',

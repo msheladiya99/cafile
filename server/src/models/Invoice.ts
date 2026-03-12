@@ -65,7 +65,6 @@ const InvoiceSchema: Schema = new Schema(
         invoiceNumber: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
         },
         billingType: {
@@ -85,7 +84,9 @@ const InvoiceSchema: Schema = new Schema(
         },
         firmId: {
             type: Schema.Types.ObjectId,
-            ref: 'MultiFirm',
+            ref: 'Firm',
+            required: true,
+            index: true
         },
         items: [InvoiceItemSchema],
         subtotal: {
@@ -156,5 +157,7 @@ InvoiceSchema.pre('save', function () {
         invoice.status = 'PARTIAL';
     }
 });
+
+InvoiceSchema.index({ firmId: 1, invoiceNumber: 1 }, { unique: true });
 
 export default mongoose.model<IInvoice>('Invoice', InvoiceSchema);

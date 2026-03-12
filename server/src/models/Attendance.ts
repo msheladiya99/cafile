@@ -9,10 +9,17 @@ export interface IAttendance extends Document {
     status?: string;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const AttendanceSchema = new Schema(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         employee: {
             type: Schema.Types.ObjectId,
             ref: 'User',

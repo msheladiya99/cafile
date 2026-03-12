@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { getSubdomain } from '../utils/subdomain';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -7,13 +8,19 @@ const api = axios.create({
     headers: {},
 });
 
-// Add token to requests
+// Add token and tenant info to requests
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        const subdomain = getSubdomain();
+        if (subdomain) {
+            config.headers['X-Tenant-Id'] = subdomain;
+        }
+
         return config;
     },
     (error) => {

@@ -22,9 +22,16 @@ export interface IFile extends Document {
     isArchived: boolean;
     notes?: string;
     lastModified: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const fileSchema = new Schema<IFile>({
+    firmId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Firm',
+        required: true,
+        index: true
+    },
     clientId: {
         type: Schema.Types.ObjectId,
         ref: 'Client',

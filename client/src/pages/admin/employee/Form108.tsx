@@ -30,7 +30,6 @@ export const Form108: React.FC = () => {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(String(currentYear));
     const [selectedEmployee, setSelectedEmployee] = useState('');
-    const [shouldCalculate, setShouldCalculate] = useState(false);
 
     const years: number[] = [];
     for (let y = currentYear; y >= 2010; y--) {

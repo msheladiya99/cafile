@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
 import { connectDB } from './config/database';
+import { tenantMiddleware } from './middleware/tenant';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import clientRoutes from './routes/client';
@@ -18,6 +19,7 @@ import settingsRoutes from './routes/settings';
 import taskRoutes from './routes/tasks';
 import firmRoutes from './routes/firm';
 import attendanceRoutes from './routes/attendance';
+import superAdminRoutes from './routes/super-admin';
 
 // Load environment variables
 dotenv.config();
@@ -28,12 +30,46 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+
+// Update CORS to allow any subdomain of the main site
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+    /\.cacloud\.in$/ // Regex for subdomains
+].filter(Boolean) as (string | RegExp)[];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        const isAllowed = allowedOrigins.some(pattern => {
+            if (pattern instanceof RegExp) {
+                return pattern.test(origin);
+            }
+            return pattern === origin;
+        });
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply Tenant Middleware to all /api routes except health and super-admin
+app.use('/api', (req, res, next) => {
+    if (req.path === '/health' || req.path.startsWith('/super-admin')) {
+        return next();
+    }
+    tenantMiddleware(req, res, next);
+});
 
 // Routes
 app.get('/', (req, res) => {
@@ -53,6 +89,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/firm', firmRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

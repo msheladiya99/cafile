@@ -16,9 +16,17 @@ export interface ISettings extends Document {
         field7: string;
     };
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const SettingsSchema = new Schema({
+    firmId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Firm',
+        required: true,
+        index: true,
+        unique: true
+    },
     companyName: { type: String, default: 'CA OFFICE PORTAL' },
     address: { type: String, default: '' },
     email: { type: String, default: '' },

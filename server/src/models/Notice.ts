@@ -9,9 +9,16 @@ export interface INotice extends Document {
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const noticeSchema = new Schema<INotice>({
+    firmId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Firm',
+        required: true,
+        index: true
+    },
     title: {
         type: String,
         required: true,

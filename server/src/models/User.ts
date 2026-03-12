@@ -3,7 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IUser extends Document {
     username: string;
     passwordHash: string;
-    role: 'ADMIN' | 'MANAGER' | 'STAFF' | 'INTERN' | 'CLIENT';
+    role: 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'STAFF' | 'INTERN' | 'CLIENT';
+    firmId?: mongoose.Types.ObjectId;
     clientId?: mongoose.Types.ObjectId;
     lastLogin?: Date;
     createdAt: Date;
@@ -92,7 +93,6 @@ const userSchema = new Schema<IUser>({
     username: {
         type: String,
         required: true,
-        unique: true,
         trim: true
     },
     passwordHash: {
@@ -101,8 +101,13 @@ const userSchema = new Schema<IUser>({
     },
     role: {
         type: String,
-        enum: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN', 'CLIENT'],
+        enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF', 'INTERN', 'CLIENT'],
         required: true
+    },
+    firmId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Firm',
+        default: null
     },
     clientId: {
         type: Schema.Types.ObjectId,
@@ -209,5 +214,8 @@ const userSchema = new Schema<IUser>({
         driveWebViewLink: { type: String, trim: true }
     }]
 });
+
+// Add compound index for multi-tenancy
+userSchema.index({ username: 1, firmId: 1 }, { unique: true });
 
 export const User = mongoose.model<IUser>('User', userSchema);
