@@ -26,8 +26,8 @@ export const tenantPlugin = (schema: Schema) => {
         next();
     });
 
-    // Handle save middleware to ensure firmId is set
-    schema.pre('save', function (this: any, next: any) {
+    // Handle validation middleware to ensure firmId is set before validation
+    schema.pre('validate', function (this: any, next: any) {
         const firmId = getFirmId();
         if (firmId && !this.firmId) {
             this.firmId = new Types.ObjectId(firmId);

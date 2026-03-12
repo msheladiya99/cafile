@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
+import { AuthRequest, authenticate, requireAdmin, requireStaff } from '../middleware/auth';
 import { FirmMaster } from '../models/FirmMaster';
 import { FirmDocument } from '../models/FirmDocument';
 import { MultiFirm } from '../models/MultiFirm';
@@ -9,6 +9,7 @@ import { getDriveService } from '../services/googleDrive';
 import { upload, uploadAny } from '../middleware/upload';
 import mongoose from 'mongoose';
 import fs from 'fs';
+import { getFirmId } from '../utils/context';
 
 const router = Router();
 router.use(authenticate);
@@ -28,9 +29,10 @@ router.get('/', async (_req: AuthRequest, res: Response) => {
     }
 });
 
-// PUT /api/firm — update firm details (admin only)
-router.put('/', requireAdmin, async (req: AuthRequest, res: Response) => {
+// PUT /api/firm — update firm details (admin or super-admin only)
+router.put('/', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
+        console.log('UPDATE_FIRM_START', 'REQ_FID:', req.firmId, 'CTX_FID:', getFirmId(), 'USER_FID:', req.user?.firmId);
         const updates = req.body;
         delete updates._id;
         delete updates.__v;
@@ -67,9 +69,13 @@ router.put('/', requireAdmin, async (req: AuthRequest, res: Response) => {
             await firm.save();
         }
         res.json(firm);
-    } catch (error) {
-        console.error('Update firm error:', error);
-        res.status(500).json({ message: 'Server error' });
+    } catch (error: any) {
+        const errMsg = 'Update firm error details: ' + (error as Error).stack;
+        console.error(errMsg);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: 'Validation Error: ' + Object.values(error.errors).map((e: any) => e.message).join(', ') });
+        }
+        res.status(500).json({ message: 'Server error: ' + error.message });
     }
 });
 

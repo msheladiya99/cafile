@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { requestContext } from '../utils/context';
 
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'STAFF' | 'INTERN' | 'CLIENT';
 
@@ -62,7 +63,6 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         // but the user belongs to a firm, set it now to ensure isolation.
         if (!req.firmId && decoded.firmId) {
             req.firmId = decoded.firmId;
-            const { requestContext } = require('../utils/context');
             requestContext.run({ firmId: req.firmId }, () => {
                 next();
             });
