@@ -64,24 +64,41 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
         const totalInvoices = await Invoice.countDocuments();
         const totalFiles = await File.countDocuments();
 
-        const totalRevenue = totalFirms * 2000; // Mock MRR
+        // Calculate actual revenue based on plans
+        const firms = await Firm.find();
+        const planPricing: Record<string, number> = {
+            trial: 0,
+            basic: 2000,
+            professional: 5000,
+            enterprise: 10000
+        };
+        const totalRevenue = firms.reduce((acc, f) => acc + (planPricing[f.plan] || 0), 0);
 
-        // Firm Registrations Last 6 Months
+        // Firm Registrations Last 6 Months (Properly Grouped)
         const last6Months = Array.from({ length: 6 }).map((_, i) => {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
-            return { month: d.toLocaleString('default', { month: 'short' }), year: d.getFullYear(), count: 0 };
+            return {
+                month: d.toLocaleString('default', { month: 'short' }),
+                year: d.getFullYear(),
+                count: 0,
+                revenue: 0,
+                fullMonth: d.getMonth(),
+                fullYear: d.getFullYear()
+            };
         }).reverse();
 
-        const firmsForChart = await Firm.find({
-            createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 6)) }
-        });
-
-        firmsForChart.forEach(firm => {
+        firms.forEach(firm => {
             if (!firm.createdAt) return;
-            const firmMonth = firm.createdAt.toLocaleString('default', { month: 'short' });
-            const item = last6Months.find(m => m.month === firmMonth);
-            if (item) item.count++;
+            const firmDate = new Date(firm.createdAt);
+            const item = last6Months.find(m =>
+                m.fullMonth === firmDate.getMonth() &&
+                m.fullYear === firmDate.getFullYear()
+            );
+            if (item) {
+                item.count++;
+                item.revenue += planPricing[firm.plan] || 0;
+            }
         });
 
         res.json({
@@ -213,15 +230,61 @@ router.get('/analytics', authenticate, requireSuperAdmin, async (req, res: Respo
         const totalClients = await Client.countDocuments();
         const totalTasks = await Task.countDocuments();
         const completedTasks = await Task.countDocuments({ status: 'DONE' });
-        const totalRevenue = (await Firm.countDocuments()) * 2000;
         const totalFiles = await File.countDocuments();
+
+        const firms = await Firm.find();
+        const planPricing: Record<string, number> = { trial: 0, basic: 2000, professional: 5000, enterprise: 10000 };
+        const totalRevenue = firms.reduce((acc, f) => acc + (planPricing[f.plan] || 0), 0);
+
+        // Historical Data (Last 6 Months)
+        const history = Array.from({ length: 6 }).map((_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            return {
+                month: d.toLocaleString('default', { month: 'short' }),
+                fullMonth: d.getMonth(),
+                fullYear: d.getFullYear(),
+                clients: 0,
+                revenue: 0,
+                files: 0
+            };
+        }).reverse();
+
+        // Clients per month
+        const clients = await Client.find();
+        clients.forEach(c => {
+            if (!c.createdAt) return;
+            const cDate = new Date(c.createdAt);
+            const h = history.find(m => m.fullMonth === cDate.getMonth() && m.fullYear === cDate.getFullYear());
+            if (h) h.clients++;
+        });
+
+        // Revenue per month
+        firms.forEach(f => {
+            if (!f.createdAt) return;
+            const fDate = new Date(f.createdAt);
+            const h = history.find(m => m.fullMonth === fDate.getMonth() && m.fullYear === fDate.getFullYear());
+            if (h) h.revenue += (planPricing[f.plan] || 0);
+        });
+
+        // Files per month
+        const files = await File.find();
+        files.forEach((f: any) => {
+            const date = f.createdAt || f.uploadedAt;
+            if (!date) return;
+            const fDate = new Date(date);
+            const h = history.find(m => m.fullMonth === fDate.getMonth() && m.fullYear === fDate.getFullYear());
+            if (h) h.files++;
+        });
+
         res.json({
             metrics: {
-                totalClients,
+                totalClients: clients.length,
                 taskCompletionRate: totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) + '%' : '0%',
                 totalRevenue,
-                totalFiles
-            }
+                totalFiles: files.length
+            },
+            history
         });
     } catch (error) {
         console.error('Get global analytics error:', error);

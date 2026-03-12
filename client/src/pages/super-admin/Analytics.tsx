@@ -16,22 +16,7 @@ const Analytics: React.FC = () => {
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
 
     const metrics = analytics?.metrics || {};
-
-    const mockGrowthData = [
-        { month: 'Jan', clients: 50, revenue: 10000 },
-        { month: 'Feb', clients: 80, revenue: 15000 },
-        { month: 'Mar', clients: 120, revenue: 20000 },
-        { month: 'Apr', clients: 190, revenue: 32000 },
-        { month: 'May', clients: 250, revenue: 45000 },
-        { month: 'Jun', clients: Math.max(0, metrics.totalClients) || 300, revenue: Math.max(0, metrics.totalRevenue) || 60000 },
-    ];
-
-    const mockUploads = [
-        { name: 'Week 1', files: 120 },
-        { name: 'Week 2', files: 210 },
-        { name: 'Week 3', files: 180 },
-        { name: 'Week 4', files: metrics.totalFiles || 320 }
-    ];
+    const history = analytics?.history || [];
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4 }}>
@@ -69,7 +54,7 @@ const Analytics: React.FC = () => {
                     <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 400 }}>
                         <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Platform Client & Revenue Trends</Typography>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={mockGrowthData}>
+                            <LineChart data={history}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="month" />
                                 <YAxis yAxisId="left" />
@@ -86,9 +71,9 @@ const Analytics: React.FC = () => {
                     <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 400 }}>
                         <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>File Uploads This Month</Typography>
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={mockUploads}>
+                            <BarChart data={history}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" />
+                                <XAxis dataKey="month" />
                                 <YAxis />
                                 <Tooltip />
                                 <Bar dataKey="files" fill="#ffc658" name="Files Stored" radius={[4, 4, 0, 0]} />

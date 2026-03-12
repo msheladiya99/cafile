@@ -175,17 +175,17 @@ const SuperAdminDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Paper sx={{ p: 3, borderRadius: 3, minHeight: 400 }}>
                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                            Monthly Revenue (Mock)
+                            Monthly Revenue
                         </Typography>
                         <Box sx={{ width: '100%', height: 320 }}>
                             <ResponsiveContainer>
                                 <LineChart data={charts.firmRegistrations} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="month" />
-                                    <YAxis />
-                                    <Tooltip />
+                                    <YAxis tickFormatter={(value) => `₹${value}`} />
+                                    <Tooltip formatter={(value) => `₹${value}`} />
                                     <Legend />
-                                    <Line type="monotone" dataKey="count" stroke="#82ca9d" name="Revenue (x2000)" strokeWidth={3} />
+                                    <Line type="monotone" dataKey="revenue" stroke="#82ca9d" name="Revenue (₹)" strokeWidth={3} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </Box>
