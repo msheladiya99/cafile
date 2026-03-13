@@ -20,12 +20,18 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
+import { adminService } from '../services/adminService';
+import { reminderService } from '../services/reminderService';
+import { clientService } from '../services/clientService';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import { getSubdomain } from '../utils/subdomain';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const queryClient = useQueryClient();
     const subdomain = getSubdomain();
 
     const [username, setUsername] = useState('');
@@ -47,6 +53,44 @@ export const Login: React.FC = () => {
         try {
             const data = await authService.login({ username, password });
             login(data.token, data.user);
+
+            // Clear cache and prefetch data for a smooth transition
+            queryClient.clear();
+
+            const prefetchPromises: Promise<unknown>[] = [];
+
+            if (data.user.role === 'SUPER_ADMIN') {
+                prefetchPromises.push(queryClient.prefetchQuery({
+                    queryKey: ['super-admin-dashboard'],
+                    queryFn: async () => {
+                        const res = await api.get('/super-admin/dashboard');
+                        return res.data;
+                    }
+                }));
+            } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['clients'], queryFn: adminService.getClients }));
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['upcoming-reminders'], queryFn: reminderService.getUpcomingReminders }));
+            } else if (data.user.role === 'CLIENT') {
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-stats'], queryFn: clientService.getStats }));
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-reminders'], queryFn: clientService.getReminders }));
+            }
+
+            // Artificial delay for loading experience (600ms for snappier feel)
+            const delayPromise = new Promise(resolve => setTimeout(resolve, 600));
+
+            // Pre-load the component code to speed up rendering
+            const preloadComponent = () => {
+                if (data.user.role === 'SUPER_ADMIN') {
+                    import('../pages/super-admin/Dashboard');
+                } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
+                    import('../pages/admin/Dashboard');
+                } else {
+                    import('../pages/client/Dashboard');
+                }
+            };
+            preloadComponent();
+
+            await Promise.all([...prefetchPromises, delayPromise]);
 
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/super-admin/dashboard');

@@ -61,7 +61,8 @@ const SuperAdminDashboard: React.FC = () => {
         queryFn: async () => {
             const res = await api.get('/super-admin/dashboard');
             return res.data;
-        }
+        },
+        staleTime: 60000, // 1 minute
     });
 
     if (isLoading) {

@@ -64,13 +64,16 @@ export const AdminDashboard: React.FC = () => {
 
     const { data: clients = [] } = useQuery({
         queryKey: ['clients'],
-        queryFn: adminService.getClients
+        queryFn: adminService.getClients,
+        staleTime: 60000, // 1 minute
     });
 
     const { data: reminders = [] } = useQuery({
         queryKey: ['upcoming-reminders'],
-        queryFn: reminderService.getUpcomingReminders
+        queryFn: reminderService.getUpcomingReminders,
+        staleTime: 60000, // 1 minute
     });
+
 
 
     // Save tasks to LocalStorage whenever they change

@@ -43,12 +43,14 @@ export const ClientDashboard: React.FC = () => {
 
     const { data: statsData = [], isLoading: isLoadingStats } = useQuery({
         queryKey: ['client-stats'],
-        queryFn: clientService.getStats
+        queryFn: clientService.getStats,
+        staleTime: 60000, // 1 minute
     });
 
     const { data: remindersData = [], isLoading: isLoadingReminders } = useQuery({
         queryKey: ['client-reminders'],
-        queryFn: clientService.getReminders
+        queryFn: clientService.getReminders,
+        staleTime: 60000, // 1 minute
     });
 
     const reminders = remindersData.filter(r => r.status !== 'COMPLETED');
