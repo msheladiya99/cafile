@@ -21,6 +21,18 @@ const ClientMaster = lazy(() => import('./pages/admin/client_process/ClientMaste
 const ClientList = lazy(() => import('./pages/admin/client_process/ClientList').then(module => ({ default: module.ClientList })));
 const ClientContactDetail = lazy(() => import('./pages/admin/client_process/ClientContactDetail').then(module => ({ default: module.ClientContactDetail })));
 const Tasks = lazy(() => import('./pages/admin/Tasks').then(module => ({ default: module.Tasks })));
+const TaskMasterPage = lazy(() => import('./pages/admin/task/TaskMaster').then(module => ({ default: module.TaskMaster })));
+const TaskApplicability = lazy(() => import('./pages/admin/task/TaskApplicability').then(module => ({ default: module.TaskApplicability })));
+const TaskApproval = lazy(() => import('./pages/admin/task/TaskApproval').then(module => ({ default: module.TaskApproval })));
+const ApprovedTaskList = lazy(() => import('./pages/admin/task/ApprovedTaskList').then(module => ({ default: module.ApprovedTaskList })));
+const UpdateApprovedTask = lazy(() => import('./pages/admin/task/UpdateApprovedTask').then(module => ({ default: module.UpdateApprovedTask })));
+const TransferTask = lazy(() => import('./pages/admin/task/TransferTask').then(module => ({ default: module.TransferTask })));
+const TransferAllTask = lazy(() => import('./pages/admin/task/TransferAllTask').then(module => ({ default: module.TransferAllTask })));
+const TaskCycleDetail = lazy(() => import('./pages/admin/task/TaskCycleDetail').then(module => ({ default: module.TaskCycleDetail })));
+const TaskInformation = lazy(() => import('./pages/admin/task/TaskInformation').then(module => ({ default: module.TaskInformation })));
+const AllTaskUpdate = lazy(() => import('./pages/admin/task/AllTaskUpdate').then(module => ({ default: module.AllTaskUpdate })));
+const OngoingTask = lazy(() => import('./pages/admin/task/OngoingTask').then(module => ({ default: module.OngoingTask })));
+const UDINList = lazy(() => import('./pages/admin/task/UDINList').then(module => ({ default: module.UDINList })));
 const UploadFile = lazy(() => import('./pages/admin/UploadFile').then(module => ({ default: module.UploadFile })));
 const ManageFiles = lazy(() => import('./pages/admin/ManageFiles').then(module => ({ default: module.ManageFiles })));
 const Reminders = lazy(() => import('./pages/admin/Reminders').then(module => ({ default: module.Reminders })));
@@ -179,7 +191,25 @@ const AppRoutes: React.FC = () => {
             <Route path="list" element={<ClientList />} />
             <Route path="contact-detail" element={<ClientContactDetail />} />
           </Route>
-          <Route path="tasks" element={<Tasks />} />
+          <Route path="tasks">
+            <Route index element={<Tasks />} />
+            <Route path="approval" element={<TaskApproval />} />
+            <Route path="approved-list" element={<ApprovedTaskList />} />
+            <Route path="update-approved" element={<UpdateApprovedTask />} />
+            <Route path="transfer-single" element={<TransferTask />} />
+            <Route path="transfer-all" element={<TransferAllTask />} />
+            <Route path="cycle-detail" element={<TaskCycleDetail />} />
+            <Route path="information" element={<TaskInformation />} />
+            <Route path="all-update" element={<AllTaskUpdate />} />
+            <Route path="ongoing" element={<OngoingTask />} />
+            <Route path="udin-list" element={<UDINList />} />
+          </Route>
+          <Route path="task-master">
+              <Route path="add" element={<TaskMasterPage />} />
+              <Route path="list" element={<TaskMasterPage />} />
+              <Route index element={<Navigate to="list" replace />} />
+          </Route>
+          <Route path="task-applicability" element={<TaskApplicability />} />
           <Route path="upload" element={<UploadFile />} />
           <Route path="files" element={<ManageFiles />} />
           <Route path="reminders" element={<Reminders />} />

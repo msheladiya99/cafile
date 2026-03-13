@@ -127,7 +127,47 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Form 108', path: '/admin/employee/form108' },
             ]
         },
-        { text: 'Tasks', icon: <AssignmentIcon />, path: '/admin/tasks' },
+        {
+            text: 'Task',
+            icon: <AssignmentIcon />,
+            children: [
+                {
+                    text: 'Task Master',
+                    children: [
+                        { text: 'Add Task', path: '/admin/task-master/add' },
+                        { text: 'Task List', path: '/admin/task-master/list' },
+                    ]
+                },
+                {
+                    text: 'Task Applicability',
+                    children: [
+                        { text: 'Set Recurrence Task', path: '/admin/task-applicability' },
+                        { text: 'Start Single Task', path: '/admin/task-applicability?single=true' },
+                    ]
+                },
+                {
+                    text: 'Task Approval',
+                    children: [
+                        { text: 'Task Approval', path: '/admin/tasks/approval' },
+                        { text: 'Approved Task List', path: '/admin/tasks/approved-list' },
+                        { text: 'Update Approved Task', path: '/admin/tasks/update-approved' },
+                    ]
+                },
+                {
+                    text: 'Transfer Task',
+                    children: [
+                        { text: 'Transfer Single Task', path: '/admin/tasks/transfer-single' },
+                        { text: 'Transfer All Task', path: '/admin/tasks/transfer-all' },
+                    ]
+                },
+                { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail' },
+                { text: 'Task Information', path: '/admin/tasks/information' },
+                { text: 'All Task Update', path: '/admin/tasks/all-update' },
+                { text: 'Ongoing Task', path: '/admin/tasks/ongoing' },
+                { text: 'UDIN List', path: '/admin/tasks/udin-list' },
+                { text: 'Task Board', path: '/admin/tasks' }
+            ]
+        },
         { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },

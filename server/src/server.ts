@@ -20,6 +20,7 @@ import taskRoutes from './routes/tasks';
 import firmRoutes from './routes/firm';
 import attendanceRoutes from './routes/attendance';
 import superAdminRoutes from './routes/super-admin';
+import taskMasterRoutes from './routes/taskMaster';
 
 // Load environment variables
 dotenv.config();
@@ -91,6 +92,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/firm', firmRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/task-master', taskMasterRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

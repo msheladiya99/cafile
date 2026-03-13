@@ -110,4 +110,15 @@ export const taskService = {
         const response = await api.get(`/tasks/staff-history?${params.toString()}`);
         return response.data;
     },
+
+    // Recurrence Tasks
+    getRecurrenceTasks: async (): Promise<any[]> => {
+        const response = await api.get('/tasks/recurrence');
+        return response.data;
+    },
+
+    createRecurrenceTask: async (data: any): Promise<any> => {
+        const response = await api.post('/tasks/recurrence', data);
+        return response.data;
+    },
 };

@@ -322,3 +322,24 @@ export interface TaskAnalytics {
     totalTasks: number;
 }
 
+export interface Subtask {
+    _id?: string;
+    name: string;
+    description?: string;
+}
+
+export interface TaskMasterData {
+    _id?: string;
+    taskName: string;
+    mode: string;
+    department?: string;
+    reportingManager?: string | User;
+    description?: string;
+    status: 'Active' | 'Inactive';
+    hsnSac?: string;
+    udin: boolean;
+    subtasks: Subtask[];
+    createdAt?: string;
+    updatedAt?: string;
+}
+
