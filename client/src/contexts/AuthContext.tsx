@@ -79,7 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             clearInterval(timer);
         };
     }, [token, user]);
-
     const value: AuthContextType = {
         user,
         token,
