@@ -326,6 +326,9 @@ export interface Subtask {
     _id?: string;
     name: string;
     description?: string;
+    designation?: string;
+    predefinedEmployee?: string | User;
+    activityOrder?: number;
 }
 
 export interface TaskMasterData {
@@ -339,6 +342,7 @@ export interface TaskMasterData {
     hsnSac?: string;
     udin: boolean;
     billingAmount?: number;
+    frequency?: string;
     subtasks: Subtask[];
     createdAt?: string;
     updatedAt?: string;

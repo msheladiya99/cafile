@@ -3,6 +3,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ISubtask {
     name: string;
     description?: string;
+    designation?: string;
+    predefinedEmployee?: mongoose.Types.ObjectId;
+    activityOrder: number;
 }
 
 export interface ITaskMaster extends Document {
@@ -15,6 +18,7 @@ export interface ITaskMaster extends Document {
     hsnSac?: string;
     udin: boolean;
     billingAmount?: number;
+    frequency?: string;
     subtasks: ISubtask[];
     firmId: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
@@ -24,7 +28,10 @@ export interface ITaskMaster extends Document {
 
 const SubtaskSchema = new Schema({
     name: { type: String, required: true },
-    description: { type: String }
+    description: { type: String },
+    designation: { type: String },
+    predefinedEmployee: { type: Schema.Types.ObjectId, ref: 'User' },
+    activityOrder: { type: Number, default: 0 }
 });
 
 const TaskMasterSchema = new Schema<ITaskMaster>({
@@ -37,6 +44,7 @@ const TaskMasterSchema = new Schema<ITaskMaster>({
     hsnSac: { type: String },
     udin: { type: Boolean, default: false },
     billingAmount: { type: Number, default: 0 },
+    frequency: { type: String },
     subtasks: [SubtaskSchema],
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }

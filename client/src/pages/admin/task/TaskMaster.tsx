@@ -15,20 +15,21 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
     Chip,
     Grid,
     Select,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, ExpandMore as ExpandMoreIcon, FormatListBulleted as ListIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, FormatListBulleted as ListIcon, Close as CloseIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { staffService } from '../../../services/staffService';
 import { billingService } from '../../../services/billingService';
 import type { ServiceItem } from '../../../services/billingService';
-import type { TaskMasterData, User } from '../../../types';
+import type { TaskMasterData, User, Subtask } from '../../../types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 
@@ -48,6 +49,8 @@ export const TaskMaster: React.FC = () => {
         taskName: '',
         mode: 'One Time',
         department: '',
+        frequency: '',
+        billingAmount: 0,
         reportingManager: '',
         description: '',
         status: 'Active',
@@ -65,7 +68,24 @@ export const TaskMaster: React.FC = () => {
         status: ''
     });
 
-    const [subtaskInput, setSubtaskInput] = useState({ name: '', description: '' });
+    const [subtaskInput, setSubtaskInput] = useState<Partial<Subtask>>({
+        name: '',
+        description: '',
+        designation: '',
+        predefinedEmployee: '',
+        activityOrder: 1
+    });
+    const [isSubtaskModalOpen, setIsSubtaskModalOpen] = useState(false);
+
+    const designations = [
+        'Junior Accountant',
+        'Senior Accountant',
+        'Audit Manager',
+        'Tax Consultant',
+        'Compliance Officer',
+        'Partner',
+        'Intern'
+    ];
 
     // Fetch Task Masters
     const { data: taskMasters = [] } = useQuery({
@@ -98,6 +118,20 @@ export const TaskMaster: React.FC = () => {
         }
     });
 
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Partial<TaskMasterData> }) =>
+            taskMasterService.updateTaskMaster(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['taskMasters'] });
+            setSuccess('Task Master updated successfully');
+            resetForm();
+            setView('list');
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            setError(err.response?.data?.message || 'Failed to update Task Master');
+        }
+    });
+
     const deleteMutation = useMutation({
         mutationFn: (id: string) => taskMasterService.deleteTaskMaster(id),
         onSuccess: () => {
@@ -116,9 +150,17 @@ export const TaskMaster: React.FC = () => {
             status: 'Active',
             hsnSac: '',
             udin: false,
+            billingAmount: 0,
+            frequency: '',
             subtasks: []
         });
-        setSubtaskInput({ name: '', description: '' });
+        setSubtaskInput({
+            name: '',
+            description: '',
+            designation: '',
+            predefinedEmployee: '',
+            activityOrder: 1
+        });
         setError('');
         setSuccess('');
     };
@@ -127,9 +169,16 @@ export const TaskMaster: React.FC = () => {
         if (!subtaskInput.name) return;
         setFormData({
             ...formData,
-            subtasks: [...(formData.subtasks || []), { ...subtaskInput }]
+            subtasks: [...(formData.subtasks || []), subtaskInput as Subtask]
         });
-        setSubtaskInput({ name: '', description: '' });
+        setSubtaskInput({
+            name: '',
+            description: '',
+            designation: '',
+            predefinedEmployee: '',
+            activityOrder: (formData.subtasks?.length || 0) + 2
+        });
+        setIsSubtaskModalOpen(false);
     };
 
     const handleRemoveSubtask = (index: number) => {
@@ -142,7 +191,18 @@ export const TaskMaster: React.FC = () => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        createMutation.mutate(formData);
+
+        // Ensure billingAmount is a number
+        const submissionData = {
+            ...formData,
+            billingAmount: parseFloat(String(formData.billingAmount)) || 0
+        };
+
+        if (formData._id) {
+            updateMutation.mutate({ id: formData._id, data: submissionData });
+        } else {
+            createMutation.mutate(submissionData);
+        }
     };
 
     if (view === 'list') {
@@ -152,7 +212,7 @@ export const TaskMaster: React.FC = () => {
                     <Typography variant="h5" color="white" fontWeight="600">Task List</Typography>
                 </Box>
                 <Box sx={{ bgcolor: 'rgba(102, 126, 234, 0.8)', p: 1, display: 'flex', justifyContent: 'flex-end', borderRadius: '0 0 4px 4px', mb: 2 }}>
-                    <Button size="small" variant="contained" onClick={() => setView('form')} sx={{ bgcolor: '#8b8b8b', color: 'white', textTransform: 'none', px: 3, '&:hover': { bgcolor: '#707070' } }}>Add New</Button>
+                    <Button size="small" variant="contained" onClick={() => { resetForm(); setView('form'); }} sx={{ bgcolor: '#8b8b8b', color: 'white', textTransform: 'none', px: 3, '&:hover': { bgcolor: '#707070' } }}>Add New</Button>
                 </Box>
 
                 <Paper elevation={0} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0', mx: 2 }}>
@@ -239,7 +299,7 @@ export const TaskMaster: React.FC = () => {
                                 >
                                     <MenuItem value="">Choose Mode</MenuItem>
                                     <MenuItem value="One Time">One Time</MenuItem>
-                                    <MenuItem value="Recurring">Recurring</MenuItem>
+                                    <MenuItem value="Recurrence">Recurrence</MenuItem>
                                     <MenuItem value="Adhoc">Adhoc</MenuItem>
                                 </Select>
                             </Box>
@@ -280,6 +340,7 @@ export const TaskMaster: React.FC = () => {
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 700 }}>Task Name</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Mode</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>Frequency</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Billing</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -292,6 +353,7 @@ export const TaskMaster: React.FC = () => {
                                     <TableRow key={tm._id} hover>
                                         <TableCell>{tm.taskName}</TableCell>
                                         <TableCell>{tm.mode}</TableCell>
+                                        <TableCell>{tm.frequency || '-'}</TableCell>
                                         <TableCell>{tm.department}</TableCell>
                                         <TableCell>₹{tm.billingAmount || 0}</TableCell>
                                         <TableCell>
@@ -305,7 +367,9 @@ export const TaskMaster: React.FC = () => {
                                             <IconButton size="small" onClick={() => {
                                                 const rm = tm.reportingManager;
                                                 const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
-                                                setFormData({ ...tm, reportingManager: rmId });
+                                                // Normalize mode: convert 'Recurring' to 'Recurrence'
+                                                const mode = tm.mode === 'Recurring' ? 'Recurrence' : tm.mode;
+                                                setFormData({ ...tm, reportingManager: rmId, mode });
                                                 setView('form');
                                             }} color="primary">
                                                 <EditIcon fontSize="small" />
@@ -390,6 +454,7 @@ export const TaskMaster: React.FC = () => {
             <form onSubmit={handleSubmit}>
                 <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                     <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }} gap={3} mb={3}>
+                        {/* Row 1 */}
                         <TextField
                             label="Task Name *"
                             variant="outlined"
@@ -402,16 +467,17 @@ export const TaskMaster: React.FC = () => {
                             select
                             label="Mode *"
                             variant="outlined"
-                            value={formData.mode}
+                            value={formData.mode === 'Recurring' ? 'Recurrence' : formData.mode}
                             onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
                             required
                             size="small"
                         >
                             <MenuItem value="One Time">One Time</MenuItem>
-                            <MenuItem value="Recurring">Recurring</MenuItem>
+                            <MenuItem value="Recurrence">Recurrence</MenuItem>
                             <MenuItem value="Adhoc">Adhoc</MenuItem>
                         </TextField>
 
+                        {/* Row 2 */}
                         <TextField
                             select
                             label="Department *"
@@ -432,6 +498,26 @@ export const TaskMaster: React.FC = () => {
 
                         <TextField
                             select
+                            label="Frequency"
+                            variant="outlined"
+                            value={formData.frequency}
+                            onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                            size="small"
+                            disabled={formData.mode !== 'Recurrence' && formData.mode !== 'Recurring'}
+                        >
+                            <MenuItem value=""><em>-- Select Frequency --</em></MenuItem>
+                            <MenuItem value="Daily">Daily</MenuItem>
+                            <MenuItem value="Weekly">Weekly</MenuItem>
+                            <MenuItem value="Fortnightly">Fortnightly</MenuItem>
+                            <MenuItem value="Monthly">Monthly</MenuItem>
+                            <MenuItem value="Quarterly">Quarterly</MenuItem>
+                            <MenuItem value="Half Yearly">Half Yearly</MenuItem>
+                            <MenuItem value="Yearly">Yearly</MenuItem>
+                        </TextField>
+
+                        {/* Row 3 */}
+                        <TextField
+                            select
                             label="Reporting Manager *"
                             variant="outlined"
                             value={formData.reportingManager}
@@ -446,6 +532,17 @@ export const TaskMaster: React.FC = () => {
                             ))}
                         </TextField>
 
+                        <Box display="flex" alignItems="center" px={1}>
+                            <Typography variant="subtitle2" sx={{ width: 100, color: 'text.secondary' }}>Status</Typography>
+                            <Chip
+                                label={formData.status}
+                                color={formData.status === 'Active' ? 'primary' : 'default'}
+                                onClick={() => setFormData({ ...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active' })}
+                                sx={{ minWidth: 80, fontWeight: 700 }}
+                            />
+                        </Box>
+
+                        {/* Row 4 */}
                         <TextField
                             label="Description"
                             variant="outlined"
@@ -453,6 +550,24 @@ export const TaskMaster: React.FC = () => {
                             rows={2}
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            size="small"
+                        />
+
+                        <Box display="flex" alignItems="center" px={1}>
+                            <Typography variant="subtitle2" sx={{ width: 100, color: 'text.secondary' }}>UDIN</Typography>
+                            <Switch
+                                checked={formData.udin}
+                                onChange={(e) => setFormData({ ...formData, udin: e.target.checked })}
+                                color="primary"
+                            />
+                        </Box>
+
+                        {/* Row 5 */}
+                        <TextField
+                            label="HSN/SAC"
+                            variant="outlined"
+                            value={formData.hsnSac}
+                            onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
                             size="small"
                         />
 
@@ -482,6 +597,7 @@ export const TaskMaster: React.FC = () => {
                             ))}
                         </TextField>
 
+                        {/* Row 6 */}
                         <TextField
                             label="Auto Billing Amount (₹)"
                             type="number"
@@ -491,34 +607,8 @@ export const TaskMaster: React.FC = () => {
                             placeholder="Amount to be billed on completion"
                             size="small"
                         />
-
-                        <Box display="flex" alignItems="center" px={1}>
-                            <Typography variant="subtitle2" sx={{ width: 100, color: 'text.secondary' }}>Status</Typography>
-                            <Chip
-                                label={formData.status}
-                                color={formData.status === 'Active' ? 'primary' : 'default'}
-                                onClick={() => setFormData({ ...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active' })}
-                                sx={{ minWidth: 80, fontWeight: 700 }}
-                            />
-                        </Box>
-
-                        <TextField
-                            label="HSN/SAC"
-                            variant="outlined"
-                            value={formData.hsnSac}
-                            onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-                            size="small"
-                        />
-
-                        <Box display="flex" alignItems="center" px={1}>
-                            <Typography variant="subtitle2" sx={{ width: 100, color: 'text.secondary' }}>UDIN</Typography>
-                            <Switch
-                                checked={formData.udin}
-                                onChange={(e) => setFormData({ ...formData, udin: e.target.checked })}
-                                color="primary"
-                            />
-                        </Box>
                     </Box>
+
 
                     <Box display="flex" gap={2} justifyContent="center" mb={2}>
                         <Button
@@ -547,53 +637,43 @@ export const TaskMaster: React.FC = () => {
                     </Box>
                 </Paper>
 
-                <Accordion defaultExpanded elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, overflow: 'hidden' }}>
+                    <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
                         <Typography fontWeight="600">Subtask List</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ bgcolor: '#fafafa', p: 3 }}>
-                        <Box display="flex" gap={2} mb={3}>
-                            <TextField
-                                label="Subtask Name"
-                                size="small"
-                                value={subtaskInput.name}
-                                onChange={(e) => setSubtaskInput({ ...subtaskInput, name: e.target.value })}
-                                sx={{ flexGrow: 1 }}
-                            />
-                            <TextField
-                                label="Description (Optional)"
-                                size="small"
-                                value={subtaskInput.description}
-                                onChange={(e) => setSubtaskInput({ ...subtaskInput, description: e.target.value })}
-                                sx={{ flexGrow: 2 }}
-                            />
-                            <Button
-                                variant="outlined"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddSubtask}
-                                disabled={!subtaskInput.name}
-                            >
-                                Add
-                            </Button>
-                        </Box>
-
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={() => setIsSubtaskModalOpen(true)}
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+                        >
+                            Add Subtask
+                        </Button>
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: '#fafafa' }}>
                         {formData.subtasks && formData.subtasks.length > 0 ? (
-                            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eee' }}>
+                            <TableContainer>
                                 <Table size="small">
                                     <TableHead sx={{ bgcolor: '#f5f5f5' }}>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 600 }}>#</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Order</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Sub Task Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Designation</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
                                             <TableCell align="right" sx={{ fontWeight: 600 }}>Action</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {formData.subtasks.map((st, i) => (
                                             <TableRow key={i}>
-                                                <TableCell>{i + 1}</TableCell>
+                                                <TableCell>{st.activityOrder || i + 1}</TableCell>
                                                 <TableCell>{st.name}</TableCell>
-                                                <TableCell>{st.description}</TableCell>
+                                                <TableCell>{st.designation || '-'}</TableCell>
+                                                <TableCell>
+                                                    {typeof st.predefinedEmployee === 'object'
+                                                        ? (st.predefinedEmployee as User).name
+                                                        : staff.find(s => s._id === st.predefinedEmployee)?.name || '-'}
+                                                </TableCell>
                                                 <TableCell align="right">
                                                     <IconButton size="small" color="error" onClick={() => handleRemoveSubtask(i)}>
                                                         <DeleteIcon fontSize="small" />
@@ -605,10 +685,141 @@ export const TaskMaster: React.FC = () => {
                                 </Table>
                             </TableContainer>
                         ) : (
-                            <Typography variant="body2" color="text.secondary" textAlign="center">No subtasks added yet.</Typography>
+                            <Typography variant="body2" color="text.secondary" textAlign="center" py={2}>No subtasks added yet.</Typography>
                         )}
-                    </AccordionDetails>
-                </Accordion>
+                    </Box>
+                </Box>
+
+                {/* Subtask Modal */}
+                <Dialog
+                    open={isSubtaskModalOpen}
+                    onClose={() => setIsSubtaskModalOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
+                >
+                    <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.5 }}>
+                        <Typography variant="h6" fontWeight="600">Add Subtask Information</Typography>
+                        <IconButton size="small" onClick={() => setIsSubtaskModalOpen(false)} sx={{ color: 'white' }}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </DialogTitle>
+                    <DialogContent sx={{ p: 3, pt: 4 }}>
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12 }}>
+                                <Box display="flex" alignItems="center">
+                                    <Typography sx={{ width: 140, fontWeight: 500, color: 'text.secondary' }}>Sub Task Name *</Typography>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        value={subtaskInput.name}
+                                        onChange={(e) => setSubtaskInput({ ...subtaskInput, name: e.target.value })}
+                                        placeholder="Enter sub task name"
+                                    />
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Box display="flex" alignItems="center">
+                                    <Typography sx={{ width: 140, fontWeight: 500, color: 'text.secondary' }}>Designation</Typography>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        value={subtaskInput.designation}
+                                        onChange={(e) => setSubtaskInput({ ...subtaskInput, designation: e.target.value as string })}
+                                    >
+                                        <MenuItem value="">Choose a Designation...</MenuItem>
+                                        {designations.map(d => (
+                                            <MenuItem key={d} value={d}>{d}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Box display="flex" alignItems="center">
+                                    <Typography sx={{ width: 140, fontWeight: 500, color: 'text.secondary' }}>Predefine Employee *</Typography>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        value={subtaskInput.predefinedEmployee}
+                                        onChange={(e) => setSubtaskInput({ ...subtaskInput, predefinedEmployee: e.target.value as string })}
+                                    >
+                                        <MenuItem value="">Choose a Employee...</MenuItem>
+                                        {staff.map((s: User) => (
+                                            <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Box display="flex" alignItems="center">
+                                    <Typography sx={{ width: 140, fontWeight: 500, color: 'text.secondary' }}>Activity Order *</Typography>
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setSubtaskInput({ ...subtaskInput, activityOrder: Math.max(1, (subtaskInput.activityOrder || 1) - 1) })}
+                                            sx={{ border: '1px solid #e0e0e0' }}
+                                        >
+                                            <RemoveIcon fontSize="small" />
+                                        </IconButton>
+                                        <TextField
+                                            size="small"
+                                            value={subtaskInput.activityOrder}
+                                            sx={{ width: 60, '& input': { textAlign: 'center' } }}
+                                            InputProps={{ readOnly: true }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setSubtaskInput({ ...subtaskInput, activityOrder: (subtaskInput.activityOrder || 1) + 1 })}
+                                            sx={{ border: '1px solid #e0e0e0' }}
+                                        >
+                                            <AddIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <Box display="flex">
+                                    <Typography sx={{ width: 140, fontWeight: 500, color: 'text.secondary', pt: 1 }}>Description</Typography>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        size="small"
+                                        value={subtaskInput.description}
+                                        onChange={(e) => setSubtaskInput({ ...subtaskInput, description: e.target.value })}
+                                        placeholder="Enter description"
+                                    />
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2.5, px: 3, gap: 1.5, justifyContent: 'center' }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleAddSubtask}
+                            disabled={!subtaskInput.name || !subtaskInput.predefinedEmployee}
+                            sx={{ minWidth: 100, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none' }}
+                        >
+                            Save
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => setIsSubtaskModalOpen(false)}
+                            sx={{ minWidth: 100, textTransform: 'none' }}
+                        >
+                            Cancel
+                        </Button>
+                    </DialogActions>
+                    <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', py: 1, px: 3, color: 'white' }}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <ListIcon fontSize="small" />
+                            <Typography fontWeight="600" variant="body2">Subtask List</Typography>
+                        </Box>
+                    </Box>
+                </Dialog>
             </form>
         </Box>
     );
