@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '../../../../services/adminService';
+import type { User } from '../../../../types';
 import { clientGroupService } from '../../../../services/clientGroupService';
 import { staffService } from '../../../../services/staffService';
 import { taskService } from '../../../../services/taskService';
@@ -139,7 +140,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                                 <Select displayEmpty value={filterData.reportingManager} onChange={handleChange('reportingManager')}>
                                     <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                     {loadingStaff ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
-                                        staff.map((s: { _id: string; name?: string; role?: string }) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
+                                        staff.filter((s: User) => ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(s.role)).map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>

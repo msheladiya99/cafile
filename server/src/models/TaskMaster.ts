@@ -14,6 +14,7 @@ export interface ITaskMaster extends Document {
     status: 'Active' | 'Inactive';
     hsnSac?: string;
     udin: boolean;
+    billingAmount?: number;
     subtasks: ISubtask[];
     firmId: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
@@ -35,6 +36,7 @@ const TaskMasterSchema = new Schema<ITaskMaster>({
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
     hsnSac: { type: String },
     udin: { type: Boolean, default: false },
+    billingAmount: { type: Number, default: 0 },
     subtasks: [SubtaskSchema],
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }

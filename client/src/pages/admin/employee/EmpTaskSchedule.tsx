@@ -47,7 +47,7 @@ export const EmpTaskSchedule: React.FC = () => {
     const frequencies = ['One Time', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
     const years = ['2023-2024', '2024-2025', '2025-2026', '2026-2027'];
     const statuses = ['PENDING', 'STARTED', 'UNDER_REVIEW', 'DONE', 'CANCELLED'];
-    const departments = ['IT', 'HR', 'Admin', 'Finance', 'Sales', 'Marketing'];
+    const departments = ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance', 'ROC / Company Law', 'Other'];
 
     const handleChange = (field: string) => (e: { target: { value: unknown } }) => {
         setFilterData({ ...filterData, [field]: e.target.value as string });

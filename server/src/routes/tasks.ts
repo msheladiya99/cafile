@@ -61,7 +61,7 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             targetDate: new Date(targetDate),
             estimatedHours,
             tags: tags || [],
-            firmId: firmId || undefined,
+            firmId: firmId || req.firmId || req.user?.firmId,
             billingAmount: billingAmount || 0,
             checklist: checklist ? checklist.map((item: string) => ({
                 id: uuidv4(),
@@ -96,24 +96,25 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
         const filter: any = {};
 
-        // Role-based filtering
+        // Role-based filtering (STRICT ISOLATION)
         if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {
-            // Staff/Interns only see tasks assigned to them
+            // Staff/Interns ONLY see tasks assigned to them - NO EXCEPTIONS
             filter.assignedTo = req.user!.userId;
-        } else if (myTasks === 'true') {
-            // Admin/Manager can choose to see only their tasks
-            filter.assignedTo = req.user!.userId;
+        } else {
+            // Admin/Manager can override with specific filters
+            if (myTasks === 'true') {
+                filter.assignedTo = req.user!.userId;
+            } else if (assignedTo) {
+                filter.assignedTo = assignedTo;
+            }
         }
 
-        // Apply filters
+        // Apply shared filters
         if (status) {
             filter.status = status;
         }
         if (priority) {
             filter.priority = priority;
-        }
-        if (assignedTo) {
-            filter.assignedTo = assignedTo;
         }
         if (clientId) {
             filter.clientId = clientId;
@@ -122,7 +123,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             filter.clientGroupId = clientGroupId;
         }
         if (overdue === 'true') {
-            filter.isOverdue = true;
+            filter.targetDate = { $lt: new Date() };
             filter.status = { $nin: ['DONE', 'CANCELLED'] };
         }
 
@@ -135,7 +136,14 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             .sort({ priority: -1, targetDate: 1 })
             .lean();
 
-        res.json(tasks);
+        // Dynamically calculate overdue status for each task
+        const now = new Date();
+        const tasksWithOverdue = tasks.map(task => ({
+            ...task,
+            isOverdue: task.status !== 'DONE' && task.status !== 'CANCELLED' && task.targetDate && new Date(task.targetDate) < now
+        }));
+
+        res.json(tasksWithOverdue);
     } catch (error) {
         console.error('Get tasks error:', error);
         res.status(500).json({ message: 'Server error' });

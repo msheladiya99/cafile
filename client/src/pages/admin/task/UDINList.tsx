@@ -49,9 +49,9 @@ export const UDINList: React.FC = () => {
     return (
         <Box sx={{ p: 0 }}>
             {/* Header */}
-            <Paper elevation={0} sx={{ 
-                p: 2, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            <Paper elevation={0} sx={{
+                p: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
@@ -69,10 +69,10 @@ export const UDINList: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>UDIN</Typography>
-                            <TextField 
-                                size="small" 
-                                fullWidth 
-                                value={udin} 
+                            <TextField
+                                size="small"
+                                fullWidth
+                                value={udin}
                                 onChange={(e) => setUdin(e.target.value)}
                                 placeholder="Enter UDIN..."
                             />
@@ -118,9 +118,9 @@ export const UDINList: React.FC = () => {
 
             {/* List Section */}
             <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                <Box sx={{ 
-                    p: 1.5, 
-                    background: '#20a090', 
+                <Box sx={{
+                    p: 1.5,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',

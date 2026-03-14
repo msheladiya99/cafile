@@ -38,6 +38,8 @@ import { taskService } from '../../services/taskService';
 import { staffService } from '../../services/staffService';
 import { adminService } from '../../services/adminService';
 import { clientGroupService } from '../../services/clientGroupService';
+import { billingService } from '../../services/billingService';
+import type { ServiceItem } from '../../services/billingService';
 import type { Task, TaskStatus, TaskPriority, TaskCategory, User, Client, CreateTaskData } from '../../types';
 import firmService from '../../services/firmService';
 import { AxiosError } from 'axios';
@@ -50,17 +52,34 @@ export const Tasks: React.FC = () => {
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+
+    // Filters
     const [filterStatus, setFilterStatus] = useState<TaskStatus | 'ALL'>('ALL');
-    void selectedTask;
-    void setFilterStatus;
+    const [filterPriority, setFilterPriority] = useState<TaskPriority | 'ALL'>('ALL');
+    const [filterStaff, setFilterStaff] = useState<string>('ALL');
+    const [filterClient, setFilterClient] = useState<string>('ALL');
+    const [filterOverdue, setFilterOverdue] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Fetch tasks
-    const { data: tasks = [] } = useQuery<Task[]>({
-        queryKey: ['tasks', filterStatus],
-        queryFn: () => taskService.getTasks(filterStatus === 'ALL' ? {} : { status: filterStatus })
+    // Fetch tasks with ALL filters
+    const { data: tasks = [], isLoading } = useQuery<Task[]>({
+        queryKey: ['tasks', filterStatus, filterPriority, filterStaff, filterClient, filterOverdue],
+        queryFn: () => taskService.getTasks({
+            status: filterStatus === 'ALL' ? undefined : filterStatus,
+            priority: filterPriority === 'ALL' ? undefined : filterPriority,
+            assignedTo: filterStaff === 'ALL' ? undefined : filterStaff,
+            clientId: filterClient === 'ALL' ? undefined : filterClient,
+            overdue: filterOverdue || undefined
+        })
     });
+
+    const filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     // Fetch staff for assignment
     const { data: staff = [] } = useQuery<User[]>({
@@ -83,6 +102,12 @@ export const Tasks: React.FC = () => {
     const { data: multiFirms = [] } = useQuery({
         queryKey: ['multiFirms'],
         queryFn: firmService.getMultiFirms
+    });
+
+    // Fetch Services for Billing Link
+    const { data: services = [] } = useQuery<ServiceItem[]>({
+        queryKey: ['billingServices'],
+        queryFn: billingService.getServices
     });
 
     const [formData, setFormData] = useState<CreateTaskData>({
@@ -198,10 +223,10 @@ export const Tasks: React.FC = () => {
 
     // Group tasks by status for Kanban view
     const tasksByStatus: Record<string, Task[]> = {
-        PENDING: tasks.filter((t: Task) => t.status === 'PENDING'),
-        STARTED: tasks.filter((t: Task) => t.status === 'STARTED'),
-        UNDER_REVIEW: tasks.filter((t: Task) => t.status === 'UNDER_REVIEW'),
-        DONE: tasks.filter((t: Task) => t.status === 'DONE')
+        PENDING: filteredTasks.filter((t: Task) => t.status === 'PENDING'),
+        STARTED: filteredTasks.filter((t: Task) => t.status === 'STARTED'),
+        UNDER_REVIEW: filteredTasks.filter((t: Task) => t.status === 'UNDER_REVIEW'),
+        DONE: filteredTasks.filter((t: Task) => t.status === 'DONE')
     };
 
     const renderTaskCard = (task: Task) => {
@@ -336,6 +361,23 @@ export const Tasks: React.FC = () => {
                                     </Box>
                                 </Tooltip>
                             )}
+                            {(task.billingAmount ?? 0) > 0 && (
+                                <Tooltip title="Auto Billing Amount">
+                                    <Chip
+                                        label={`₹${task.billingAmount}`}
+                                        size="small"
+                                        color="info"
+                                        variant="outlined"
+                                        sx={{
+                                            height: 20,
+                                            fontSize: '0.65rem',
+                                            fontWeight: 700,
+                                            borderColor: 'primary.light',
+                                            color: 'primary.dark'
+                                        }}
+                                    />
+                                </Tooltip>
+                            )}
                         </Box>
 
                         <Box display="flex" alignItems="center" gap={1}>
@@ -449,7 +491,7 @@ export const Tasks: React.FC = () => {
                         Task Board
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Manage your team's workflow
+                        Manage your team's workflow and performance
                     </Typography>
                 </Box>
                 <Button
@@ -473,6 +515,83 @@ export const Tasks: React.FC = () => {
                     New Task
                 </Button>
             </Box>
+
+            {/* Filter Bar */}
+            <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+                    <TextField
+                        placeholder="Search tasks..."
+                        size="small"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ minWidth: 250 }}
+                    />
+                    <TextField
+                        select
+                        size="small"
+                        label="Status"
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value as TaskStatus | 'ALL')}
+                        sx={{ minWidth: 120 }}
+                    >
+                        <MenuItem value="ALL">All Status</MenuItem>
+                        <MenuItem value="PENDING">To Do</MenuItem>
+                        <MenuItem value="STARTED">In Progress</MenuItem>
+                        <MenuItem value="UNDER_REVIEW">Review</MenuItem>
+                        <MenuItem value="DONE">Completed</MenuItem>
+                    </TextField>
+                    <TextField
+                        select
+                        size="small"
+                        label="Priority"
+                        value={filterPriority}
+                        onChange={(e) => setFilterPriority(e.target.value as TaskPriority | 'ALL')}
+                        sx={{ minWidth: 120 }}
+                    >
+                        <MenuItem value="ALL">All Priority</MenuItem>
+                        <MenuItem value="LOW">Low</MenuItem>
+                        <MenuItem value="MEDIUM">Medium</MenuItem>
+                        <MenuItem value="HIGH">High</MenuItem>
+                        <MenuItem value="URGENT">Urgent</MenuItem>
+                    </TextField>
+                    <TextField
+                        select
+                        size="small"
+                        label="Assignee"
+                        value={filterStaff}
+                        onChange={(e) => setFilterStaff(e.target.value)}
+                        sx={{ minWidth: 150 }}
+                    >
+                        <MenuItem value="ALL">All Staff</MenuItem>
+                        {staff.map(s => (
+                            <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
+                        ))}
+                    </TextField>
+                    <TextField
+                        select
+                        size="small"
+                        label="Client"
+                        value={filterClient}
+                        onChange={(e) => setFilterClient(e.target.value)}
+                        sx={{ minWidth: 150 }}
+                    >
+                        <MenuItem value="ALL">All Clients</MenuItem>
+                        {clients.map(c => (
+                            <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+                        ))}
+                    </TextField>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <Typography variant="body2">Overdue</Typography>
+                        <Chip
+                            label={filterOverdue ? "ON" : "OFF"}
+                            onClick={() => setFilterOverdue(!filterOverdue)}
+                            color={filterOverdue ? "error" : "default"}
+                            size="small"
+                            sx={{ fontWeight: 700 }}
+                        />
+                    </Box>
+                </Stack>
+            </Paper>
 
             {/* Alerts */}
             {error && (
@@ -536,6 +655,24 @@ export const Tasks: React.FC = () => {
                     {renderKanbanColumn('STARTED', 'In Progress', '#3b82f6')}
                     {renderKanbanColumn('UNDER_REVIEW', 'Review', '#f59e0b')}
                     {renderKanbanColumn('DONE', 'Completed', '#10b981')}
+                </Box>
+            )}
+
+            {/* List View */}
+            {viewMode === 'list' && (
+                <Box sx={{ px: 1 }}>
+                    {isLoading ? (
+                        <Box display="flex" justifyContent="center" p={10}><LinearProgress sx={{ width: '100%', maxWidth: 400, borderRadius: 2 }} /></Box>
+                    ) : filteredTasks.length > 0 ? (
+                        <Stack spacing={2}>
+                            {filteredTasks.map(task => renderTaskCard(task))}
+                        </Stack>
+                    ) : (
+                        <Paper sx={{ p: 10, textAlign: 'center', borderRadius: 3, opacity: 0.6 }}>
+                            <AssignmentIcon sx={{ fontSize: 60, mb: 2, color: 'text.disabled' }} />
+                            <Typography variant="h6">No tasks found matching your filters</Typography>
+                        </Paper>
+                    )}
                 </Box>
             )}
 
@@ -664,6 +801,30 @@ export const Tasks: React.FC = () => {
                                 )}
                             </Box>
 
+                            <TextField
+                                select
+                                label="Link to Billing Service Library"
+                                value=""
+                                onChange={(e) => {
+                                    const service = services.find(s => s._id === e.target.value);
+                                    if (service) {
+                                        setFormData({
+                                            ...formData,
+                                            billingAmount: service.basePrice,
+                                            title: formData.title || service.name,
+                                            description: formData.description || service.description
+                                        });
+                                    }
+                                }}
+                            >
+                                <MenuItem value=""><em>-- Choose from Service Library --</em></MenuItem>
+                                {services.map((s: ServiceItem) => (
+                                    <MenuItem key={s._id} value={s._id}>
+                                        {s.name} (₹{s.basePrice})
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+
                             <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
                                 <TextField
                                     select
@@ -686,6 +847,28 @@ export const Tasks: React.FC = () => {
                                     inputProps={{ min: 0 }}
                                 />
                             </Box>
+
+                            <TextField
+                                label="Tags (comma separated)"
+                                placeholder="e.g. ITR, Urgent, Audit"
+                                value={formData.tags?.join(', ') || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== '')
+                                })}
+                            />
+
+                            <TextField
+                                label="Checklist Items (Each item on new line)"
+                                multiline
+                                rows={3}
+                                placeholder="Task sub-item 1&#10;Task sub-item 2"
+                                value={formData.checklist?.join('\n') || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    checklist: e.target.value.split('\n').map(t => t.trim()).filter(t => t !== '')
+                                })}
+                            />
                         </Stack>
                     </DialogContent>
                     <DialogActions sx={{ px: 3, pb: 3 }}>
@@ -703,6 +886,91 @@ export const Tasks: React.FC = () => {
                         </Button>
                     </DialogActions>
                 </form>
+            </Dialog>
+
+            {/* Task Detail Dialog */}
+            <Dialog open={!!selectedTask} onClose={() => setSelectedTask(null)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ borderBottom: '1px solid #f0f0f0', pb: 2 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6" fontWeight="800">{selectedTask?.title}</Typography>
+                        {selectedTask?.priority && (
+                            <Chip
+                                label={selectedTask.priority}
+                                size="small"
+                                sx={{ bgcolor: getPriorityColor(selectedTask.priority), color: 'white', fontWeight: 700 }}
+                            />
+                        )}
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ py: 3 }}>
+                    {selectedTask && (
+                        <Stack spacing={3}>
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Description</Typography>
+                                <Typography variant="body1">{selectedTask.description || 'No description provided.'}</Typography>
+                            </Box>
+
+                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={4}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Status</Typography>
+                                    <Chip label={selectedTask.status} size="small" sx={{ bgcolor: getStatusColor(selectedTask.status), color: 'white' }} />
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Deadline</Typography>
+                                    <Typography variant="body2" fontWeight="600">{new Date(selectedTask.targetDate).toLocaleDateString()}</Typography>
+                                </Box>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Assignees</Typography>
+                                <Box display="flex" gap={1} flexWrap="wrap">
+                                    {(selectedTask.assignedTo as User[]).map((u: User) => (
+                                        <Chip key={u._id} label={u.name || u.username} avatar={<Avatar>{(u.name || u.username).charAt(0)}</Avatar>} />
+                                    ))}
+                                </Box>
+                            </Box>
+
+                            {selectedTask.tags.length > 0 && (
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Tags</Typography>
+                                    <Box display="flex" gap={1} flexWrap="wrap">
+                                        {selectedTask.tags.map(tag => <Chip key={tag} label={tag} size="small" variant="outlined" />)}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {selectedTask.checklist.length > 0 && (
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Checklist</Typography>
+                                    <Stack spacing={1}>
+                                        {selectedTask.checklist.map(item => (
+                                            <Box key={item.id} display="flex" alignItems="center" gap={1}>
+                                                {item.completed ? <CheckIcon color="success" sx={{ fontSize: 20 }} /> : <Box sx={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #ccc' }} />}
+                                                <Typography variant="body2" sx={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'text.disabled' : 'text.primary' }}>
+                                                    {item.text}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            )}
+
+                            <Divider />
+
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Estimated: {selectedTask.estimatedHours}h</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>Actual: {Math.floor(selectedTask.actualTimeSpent / 60)}h {selectedTask.actualTimeSpent % 60}m</Typography>
+                                </Box>
+                                <Typography variant="caption" color="text.secondary">Created on {new Date(selectedTask.createdAt).toLocaleDateString()}</Typography>
+                            </Box>
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid #f0f0f0' }}>
+                    <Button onClick={() => setSelectedTask(null)} color="inherit">Close</Button>
+                    <Button variant="contained" color="primary" onClick={() => setSelectedTask(null)}>Edit Task</Button>
+                </DialogActions>
             </Dialog>
         </Box>
     );

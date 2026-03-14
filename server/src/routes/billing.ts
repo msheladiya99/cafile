@@ -58,7 +58,18 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
     try {
         let query: any = {};
         if (req.user.role === 'CLIENT') {
-            query = { clientId: req.user.clientId };
+            const Client = mongoose.model('Client');
+            const client = await Client.findById(req.user.clientId);
+            if (client && client.groupName) {
+                query = {
+                    $or: [
+                        { clientId: req.user.clientId },
+                        { clientGroupId: client.groupName }
+                    ]
+                };
+            } else {
+                query = { clientId: req.user.clientId };
+            }
         } else {
             // Admin can filter by client or group
             if (req.query.clientId) {

@@ -57,9 +57,9 @@ export const TransferTask: React.FC = () => {
     return (
         <Box sx={{ p: 0 }}>
             {/* Header */}
-            <Paper elevation={0} sx={{ 
-                p: 2, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            <Paper elevation={0} sx={{
+                p: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
@@ -156,12 +156,12 @@ export const TransferTask: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem', mt: 1 }}>Description</Typography>
-                            <TextField 
-                                multiline 
-                                rows={2} 
-                                size="small" 
-                                fullWidth 
-                                value={description} 
+                            <TextField
+                                multiline
+                                rows={2}
+                                size="small"
+                                fullWidth
+                                value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
                         </Box>
@@ -169,13 +169,13 @@ export const TransferTask: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center" height="100%">
                             <Box sx={{ width: 140 }} />
-                            <FormControlLabel 
+                            <FormControlLabel
                                 control={
-                                    <Checkbox 
+                                    <Checkbox
                                         size="small"
                                         checked={removeFromCurrent}
                                         onChange={(e) => setRemoveFromCurrent(e.target.checked)}
-                                        sx={{ color: '#20a090', '&.Mui-checked': { color: '#20a090' } }}
+                                        sx={{ color: '#764ba2', '&.Mui-checked': { color: '#764ba2' } }}
                                     />
                                 }
                                 label={<Typography variant="body2" sx={{ color: 'text.secondary' }}>Remove From Current Employee</Typography>}
@@ -187,9 +187,9 @@ export const TransferTask: React.FC = () => {
 
             {/* Job List Section */}
             <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                <Box sx={{ 
-                    p: 1.5, 
-                    background: '#20a090', 
+                <Box sx={{
+                    p: 1.5,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',

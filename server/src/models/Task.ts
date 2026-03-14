@@ -97,7 +97,7 @@ const CommentSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const TaskSchema = new Schema<ITask>({
+const taskSchema = new Schema<ITask>({
     // Basic Info
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
@@ -158,12 +158,21 @@ const TaskSchema = new Schema<ITask>({
 });
 
 // Indexes for performance
-TaskSchema.index({ assignedTo: 1, status: 1 });
-TaskSchema.index({ assignedTo: 1, createdAt: -1 }); // Speeds up staff history aggregation
-TaskSchema.index({ createdBy: 1 });
-TaskSchema.index({ clientId: 1 });
-TaskSchema.index({ targetDate: 1 });
-TaskSchema.index({ status: 1, priority: 1 });
-TaskSchema.index({ createdAt: -1 });
+taskSchema.index({ assignedTo: 1, status: 1 });
+taskSchema.index({ assignedTo: 1, createdAt: -1 }); // Speeds up staff history aggregation
+taskSchema.index({ createdBy: 1 });
+taskSchema.index({ clientId: 1 });
+taskSchema.index({ targetDate: 1 });
+taskSchema.index({ status: 1, priority: 1 });
+taskSchema.index({ createdAt: -1 });
 
-export const Task = mongoose.model<ITask>('Task', TaskSchema);
+// Middlewares
+taskSchema.pre('save', async function (this: ITask) {
+    if (this.targetDate && this.status !== 'DONE' && this.status !== 'CANCELLED') {
+        this.isOverdue = new Date() > this.targetDate;
+    } else {
+        this.isOverdue = false;
+    }
+});
+
+export const Task = mongoose.model<ITask>('Task', taskSchema);

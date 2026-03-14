@@ -21,6 +21,7 @@ const ClientMaster = lazy(() => import('./pages/admin/client_process/ClientMaste
 const ClientList = lazy(() => import('./pages/admin/client_process/ClientList').then(module => ({ default: module.ClientList })));
 const ClientContactDetail = lazy(() => import('./pages/admin/client_process/ClientContactDetail').then(module => ({ default: module.ClientContactDetail })));
 const Tasks = lazy(() => import('./pages/admin/Tasks').then(module => ({ default: module.Tasks })));
+const TaskDashboard = lazy(() => import('./pages/admin/task/TaskDashboard').then(module => ({ default: module.TaskDashboard })));
 const TaskMasterPage = lazy(() => import('./pages/admin/task/TaskMaster').then(module => ({ default: module.TaskMaster })));
 const TaskApplicability = lazy(() => import('./pages/admin/task/TaskApplicability').then(module => ({ default: module.TaskApplicability })));
 const TaskApproval = lazy(() => import('./pages/admin/task/TaskApproval').then(module => ({ default: module.TaskApproval })));
@@ -192,7 +193,8 @@ const AppRoutes: React.FC = () => {
             <Route path="contact-detail" element={<ClientContactDetail />} />
           </Route>
           <Route path="tasks">
-            <Route index element={<Tasks />} />
+            <Route index element={<TaskDashboard />} />
+            <Route path="board" element={<Tasks />} />
             <Route path="approval" element={<TaskApproval />} />
             <Route path="approved-list" element={<ApprovedTaskList />} />
             <Route path="update-approved" element={<UpdateApprovedTask />} />
@@ -205,9 +207,9 @@ const AppRoutes: React.FC = () => {
             <Route path="udin-list" element={<UDINList />} />
           </Route>
           <Route path="task-master">
-              <Route path="add" element={<TaskMasterPage />} />
-              <Route path="list" element={<TaskMasterPage />} />
-              <Route index element={<Navigate to="list" replace />} />
+            <Route path="add" element={<TaskMasterPage />} />
+            <Route path="list" element={<TaskMasterPage />} />
+            <Route index element={<Navigate to="list" replace />} />
           </Route>
           <Route path="task-applicability" element={<TaskApplicability />} />
           <Route path="upload" element={<UploadFile />} />

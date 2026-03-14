@@ -70,14 +70,14 @@ export const TaskApproval: React.FC = () => {
     });
 
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
-    const departments = ['Accounting', 'Audit', 'Taxation', 'Corporate', 'Consultancy', 'Other'];
+    const departments = ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance', 'ROC / Company Law', 'Other'];
 
     return (
         <Box sx={{ p: 0 }}>
             {/* Header */}
-            <Paper elevation={0} sx={{ 
-                p: 2, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+            <Paper elevation={0} sx={{
+                p: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
@@ -235,9 +235,9 @@ export const TaskApproval: React.FC = () => {
 
             {/* Results Table Section */}
             <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                <Box sx={{ 
-                    p: 1.5, 
-                    background: '#20a090', 
+                <Box sx={{
+                    p: 1.5,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',

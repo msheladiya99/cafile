@@ -338,6 +338,7 @@ export interface TaskMasterData {
     status: 'Active' | 'Inactive';
     hsnSac?: string;
     udin: boolean;
+    billingAmount?: number;
     subtasks: Subtask[];
     createdAt?: string;
     updatedAt?: string;
