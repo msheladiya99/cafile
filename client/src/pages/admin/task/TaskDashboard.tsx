@@ -7,7 +7,6 @@ import {
     Card,
     CardContent,
     Avatar,
-    Chip,
     IconButton,
     Tooltip,
     Button,
@@ -43,7 +42,15 @@ import { taskService } from '../../../services/taskService';
 import { useNavigate } from 'react-router-dom';
 import type { Task } from '../../../types';
 
-const StatusCard = ({ title, count, icon, color, gradient }: any) => (
+interface StatusCardProps {
+    title: string;
+    count: number;
+    icon: React.ReactNode;
+    color?: string;
+    gradient?: string;
+}
+
+const StatusCard = ({ title, count, icon, color, gradient }: StatusCardProps) => (
     <Card sx={{
         height: '100%',
         borderRadius: 4,
@@ -84,18 +91,18 @@ export const TaskDashboard: React.FC = () => {
     const stats = useMemo(() => {
         const total = tasks.length;
         const pending = tasks.filter(t => t.status === 'PENDING').length;
-        const started = tasks.filter(t => t.status === 'STARTED').length;
-        const underReview = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
+        const inProcess = tasks.filter(t => t.status === 'IN_PROCESS').length;
+        const pendingApproval = tasks.filter(t => t.status === 'PENDING_FOR_APPROVAL').length;
         const done = tasks.filter(t => t.status === 'DONE').length;
         const overdue = tasks.filter(t => t.isOverdue).length;
 
-        return { total, pending, started, underReview, done, overdue };
+        return { total, pending, inProcess, pendingApproval, done, overdue };
     }, [tasks]);
 
     const chartData = useMemo(() => [
         { name: 'To Do', value: stats.pending, color: '#64748b' },
-        { name: 'In Progress', value: stats.started, color: '#3b82f6' },
-        { name: 'In Review', value: stats.underReview, color: '#f59e0b' },
+        { name: 'In Progress', value: stats.inProcess, color: '#3b82f6' },
+        { name: 'Pending Approval', value: stats.pendingApproval, color: '#f59e0b' },
         { name: 'Completed', value: stats.done, color: '#10b981' },
     ], [stats]);
 
@@ -163,7 +170,7 @@ export const TaskDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
                     <StatusCard
                         title="In Progress"
-                        count={stats.started}
+                        count={stats.inProcess}
                         icon={<ProgressIcon />}
                         color="#3b82f6"
                     />
@@ -265,9 +272,8 @@ export const TaskDashboard: React.FC = () => {
                                         primary={<Typography fontWeight="700">{task.title}</Typography>}
                                         secondary={
                                             <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                                                <Chip label={task.status} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {(task.clientId as any)?.name || 'Internal'}
+                                                    {(task.clientId as Client)?.name || 'Internal'}
                                                 </Typography>
                                             </Box>
                                         }

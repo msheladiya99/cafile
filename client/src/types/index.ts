@@ -212,7 +212,7 @@ export interface Reminder {
 }
 
 // Task Management Types
-export type TaskStatus = 'PENDING' | 'STARTED' | 'UNDER_REVIEW' | 'DONE' | 'CANCELLED';
+export type TaskStatus = 'PENDING' | 'IN_PROCESS' | 'PENDING_FOR_APPROVAL' | 'APPROVED' | 'DONE' | 'CANCELLED' | 'ON_HOLD' | 'PENDING_FROM_CLIENT' | 'PENDING_FROM_DEPARTMENT' | 'REJECTED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type TaskCategory = 'CLIENT_WORK' | 'INTERNAL' | 'REVIEW' | 'FOLLOW_UP' | 'FILING' | 'OTHER';
 
@@ -344,6 +344,20 @@ export interface TaskMasterData {
     billingAmount?: number;
     frequency?: string;
     subtasks: Subtask[];
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface TaskApplicability {
+    _id?: string;
+    taskMasterId: string | TaskMasterData;
+    clientId?: string | Client;
+    clientGroupId?: string | { _id: string; groupName: string };
+    startDate: string;
+    infinite: boolean;
+    frequency: string;
+    status: 'Active' | 'Inactive';
+    department?: string;
     createdAt?: string;
     updatedAt?: string;
 }

@@ -207,10 +207,12 @@ export const Tasks: React.FC = () => {
     const getStatusColor = (status: TaskStatus) => {
         switch (status) {
             case 'PENDING': return '#6b7280';
-            case 'STARTED': return '#3b82f6';
-            case 'UNDER_REVIEW': return '#f59e0b';
+            case 'IN_PROCESS': return '#3b82f6';
+            case 'PENDING_FOR_APPROVAL': return '#f59e0b';
+            case 'APPROVED': return '#2dd4bf';
             case 'DONE': return '#10b981';
             case 'CANCELLED': return '#ef4444';
+            case 'REJECTED': return '#f43f5e';
             default: return '#6b7280';
         }
     };
@@ -224,8 +226,8 @@ export const Tasks: React.FC = () => {
     // Group tasks by status for Kanban view
     const tasksByStatus: Record<string, Task[]> = {
         PENDING: filteredTasks.filter((t: Task) => t.status === 'PENDING'),
-        STARTED: filteredTasks.filter((t: Task) => t.status === 'STARTED'),
-        UNDER_REVIEW: filteredTasks.filter((t: Task) => t.status === 'UNDER_REVIEW'),
+        IN_PROCESS: filteredTasks.filter((t: Task) => t.status === 'IN_PROCESS'),
+        PENDING_FOR_APPROVAL: filteredTasks.filter((t: Task) => t.status === 'PENDING_FOR_APPROVAL'),
         DONE: filteredTasks.filter((t: Task) => t.status === 'DONE')
     };
 
@@ -536,8 +538,9 @@ export const Tasks: React.FC = () => {
                     >
                         <MenuItem value="ALL">All Status</MenuItem>
                         <MenuItem value="PENDING">To Do</MenuItem>
-                        <MenuItem value="STARTED">In Progress</MenuItem>
-                        <MenuItem value="UNDER_REVIEW">Review</MenuItem>
+                        <MenuItem value="IN_PROCESS">In Progress</MenuItem>
+                        <MenuItem value="PENDING_FOR_APPROVAL">Review</MenuItem>
+                        <MenuItem value="APPROVED">Approved</MenuItem>
                         <MenuItem value="DONE">Completed</MenuItem>
                     </TextField>
                     <TextField
@@ -652,8 +655,8 @@ export const Tasks: React.FC = () => {
                     }}
                 >
                     {renderKanbanColumn('PENDING', 'To Do', '#64748b')}
-                    {renderKanbanColumn('STARTED', 'In Progress', '#3b82f6')}
-                    {renderKanbanColumn('UNDER_REVIEW', 'Review', '#f59e0b')}
+                    {renderKanbanColumn('IN_PROCESS', 'In Progress', '#3b82f6')}
+                    {renderKanbanColumn('PENDING_FOR_APPROVAL', 'Review', '#f59e0b')}
                     {renderKanbanColumn('DONE', 'Completed', '#10b981')}
                 </Box>
             )}

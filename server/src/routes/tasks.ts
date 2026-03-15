@@ -223,8 +223,8 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                 const totalTasks = tasks.length;
                 const completedTasks = tasks.filter(t => t.status === 'DONE').length;
                 const pendingTasks = tasks.filter(t => t.status === 'PENDING').length;
-                const inProgressTasks = tasks.filter(t => t.status === 'STARTED').length;
-                const underReviewTasks = tasks.filter(t => t.status === 'UNDER_REVIEW').length;
+                const inProgressTasks = tasks.filter(t => t.status === 'IN_PROCESS').length;
+                const underReviewTasks = tasks.filter(t => t.status === 'PENDING_FOR_APPROVAL').length;
                 const overdueTasks = tasks.filter(t => t.isOverdue && t.status !== 'DONE').length;
 
                 // Time tracking metrics
@@ -391,7 +391,7 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const validStatuses: TaskStatus[] = ['PENDING', 'STARTED', 'UNDER_REVIEW', 'DONE', 'CANCELLED'];
+        const validStatuses: TaskStatus[] = ['PENDING', 'IN_PROCESS', 'PENDING_FOR_APPROVAL', 'APPROVED', 'DONE', 'CANCELLED', 'ON_HOLD', 'PENDING_FROM_CLIENT', 'PENDING_FROM_DEPARTMENT', 'REJECTED'];
         if (!validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
             return;
@@ -401,12 +401,12 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
         task.status = status;
 
         // Track revision count (quality metric)
-        if (previousStatus === 'UNDER_REVIEW' && status === 'STARTED') {
+        if (previousStatus === 'PENDING_FOR_APPROVAL' && status === 'IN_PROCESS') {
             task.revisionCount += 1;
         }
 
         // Set start date when task is started
-        if (status === 'STARTED' && !task.startDate) {
+        if (status === 'IN_PROCESS' && !task.startDate) {
             task.startDate = new Date();
         }
 
@@ -514,9 +514,9 @@ router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
             }
             task.currentTimerStart = new Date();
 
-            // Auto-update status to STARTED if it's PENDING
+            // Auto-update status to IN_PROCESS if it's PENDING
             if (task.status === 'PENDING') {
-                task.status = 'STARTED';
+                task.status = 'IN_PROCESS';
                 if (!task.startDate) {
                     task.startDate = new Date();
                 }
@@ -577,9 +577,9 @@ router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
 
         // Auto-update status based on progress
         if (progressPercentage === 100 && task.status !== 'DONE') {
-            task.status = 'UNDER_REVIEW';
+            task.status = 'PENDING_FOR_APPROVAL';
         } else if (progressPercentage > 0 && task.status === 'PENDING') {
-            task.status = 'STARTED';
+            task.status = 'IN_PROCESS';
             if (!task.startDate) {
                 task.startDate = new Date();
             }

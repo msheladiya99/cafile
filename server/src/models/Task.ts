@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type TaskStatus = 'PENDING' | 'STARTED' | 'UNDER_REVIEW' | 'DONE' | 'CANCELLED';
+export type TaskStatus = 'PENDING' | 'IN_PROCESS' | 'PENDING_FOR_APPROVAL' | 'APPROVED' | 'DONE' | 'CANCELLED' | 'ON_HOLD' | 'PENDING_FROM_CLIENT' | 'PENDING_FROM_DEPARTMENT' | 'REJECTED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type TaskCategory = 'CLIENT_WORK' | 'INTERNAL' | 'REVIEW' | 'FOLLOW_UP' | 'FILING' | 'OTHER';
 
@@ -119,7 +119,7 @@ const taskSchema = new Schema<ITask>({
     // Status & Priority
     status: {
         type: String,
-        enum: ['PENDING', 'STARTED', 'UNDER_REVIEW', 'DONE', 'CANCELLED'],
+        enum: ['PENDING', 'IN_PROCESS', 'PENDING_FOR_APPROVAL', 'APPROVED', 'DONE', 'CANCELLED', 'ON_HOLD', 'PENDING_FROM_CLIENT', 'PENDING_FROM_DEPARTMENT', 'REJECTED'],
         default: 'PENDING'
     },
     priority: {

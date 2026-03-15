@@ -27,11 +27,15 @@ import {
     KeyboardArrowUp as UpIcon,
     Info as InfoIcon,
 } from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
-import type { TaskMasterData, Client } from '../../../types';
+import { taskApplicabilityService } from '../../../services/taskApplicabilityService';
+import type { TaskMasterData, Client, TaskApplicability as TaskApplicabilityType } from '../../../types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import type { AxiosError } from 'axios';
+
 
 export const TaskApplicability: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -54,6 +58,9 @@ export const TaskApplicability: React.FC = () => {
     const [singleFrequency, setSingleFrequency] = useState('');
     const [singleYear, setSingleYear] = useState(new Date().getFullYear().toString());
     const [singleDepartment, setSingleDepartment] = useState('');
+
+    const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+    const queryClient = useQueryClient();
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -86,8 +93,62 @@ export const TaskApplicability: React.FC = () => {
         queryFn: adminService.getClients
     });
 
+    const { data: appliedTasks = [], refetch: refetchApplied } = useQuery({
+        queryKey: ['taskApplicability', selectedTask],
+        queryFn: () => taskApplicabilityService.getApplicabilities({ taskMasterId: selectedTask }),
+        enabled: !!selectedTask
+    });
+
+    const applyMutation = useMutation({
+        mutationFn: taskApplicabilityService.applyTask,
+        onSuccess: () => {
+            toast.success('Task applied successfully');
+            setSelectedClientIds([]);
+            refetchApplied();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            toast.error(err.response?.data?.message || 'Failed to apply task');
+        }
+
+    });
+
+    const handleApply = () => {
+        if (!selectedTask) {
+            toast.error('Please select a task');
+            return;
+        }
+        if (selectedClientIds.length === 0) {
+            toast.error('Please select at least one client');
+            return;
+        }
+
+        applyMutation.mutate({
+            taskMasterId: selectedTask,
+            clientIds: selectedClientIds,
+            startDate,
+            infinite: infiniteApplicability,
+            department: department
+        });
+    };
+
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
     const departments = ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance'];
+
+    const filteredClients = useMemo(() => {
+        return clients.filter(client => {
+            if (groupName && client.groupName !== groupName && (client.groupName as { _id: string })?._id !== groupName) return false;
+            if (itStatus && client.itStatus !== itStatus && (client.itStatus as { _id: string })?._id !== itStatus) return false;
+            if (subMaster && client.subMaster !== subMaster && (client.subMaster as { _id: string })?._id !== subMaster) return false;
+
+
+            // Don't show already applied clients for this task
+            const isAlreadyApplied = appliedTasks.some(at =>
+                (typeof at.clientId === 'string' ? at.clientId : at.clientId?._id) === client._id
+            );
+            return !isAlreadyApplied;
+        });
+    }, [clients, groupName, itStatus, subMaster, appliedTasks]);
 
     return (
         <Box sx={{ p: 0 }}>
@@ -464,18 +525,68 @@ export const TaskApplicability: React.FC = () => {
                                 <ListIcon fontSize="small" />
                                 <Typography fontWeight="500">New Task</Typography>
                             </Box>
-                            <TableContainer sx={{ minHeight: 200, bgcolor: '#f8f9fa' }}>
-                                <Table size="small">
+                            <TableContainer sx={{ minHeight: 300, bgcolor: '#f8f9fa' }}>
+                                <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ color: 'text.secondary', py: 1.5 }}>Client Not Found</TableCell>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    size="small"
+                                                    indeterminate={selectedClientIds.length > 0 && selectedClientIds.length < filteredClients.length}
+                                                    checked={filteredClients.length > 0 && selectedClientIds.length === filteredClients.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedClientIds(filteredClients.map(c => c._id));
+                                                        } else {
+                                                            setSelectedClientIds([]);
+                                                        }
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Group</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {/* Table rows will go here */}
+                                        {filteredClients.map((client) => (
+                                            <TableRow key={client._id} hover>
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={selectedClientIds.includes(client._id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedClientIds([...selectedClientIds, client._id]);
+                                                            } else {
+                                                                setSelectedClientIds(selectedClientIds.filter(id => id !== client._id));
+                                                            }
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{client.name}</TableCell>
+                                                <TableCell>{typeof client.groupName === 'object' ? client.groupName?.groupName : client.groupName}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {filteredClients.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                                    No eligible clients found
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
+                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleApply}
+                                    disabled={applyMutation.isPending || selectedClientIds.length === 0}
+                                    sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}
+                                >
+                                    Apply to Selected
+                                </Button>
+                            </Box>
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
@@ -496,15 +607,30 @@ export const TaskApplicability: React.FC = () => {
                                     <UpIcon />
                                 </IconButton>
                             </Box>
-                            <TableContainer sx={{ minHeight: 200, bgcolor: '#f8f9fa' }}>
-                                <Table size="small">
+                            <TableContainer sx={{ minHeight: 400, bgcolor: '#f8f9fa' }}>
+                                <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ color: 'text.secondary', py: 1.5 }}>Client Not Found</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Frequency</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {/* Table rows will go here */}
+                                        {appliedTasks.map((at: TaskApplicabilityType) => (
+                                            <TableRow key={at._id} hover>
+                                                <TableCell>{(at.clientId as Client)?.name || 'Unknown'}</TableCell>
+                                                <TableCell>{at.frequency}</TableCell>
+                                                <TableCell>{new Date(at.startDate).toLocaleDateString()}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {appliedTasks.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                                    No applied tasks found for this master
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                             </TableContainer>

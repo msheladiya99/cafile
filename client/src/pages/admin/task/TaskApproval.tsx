@@ -16,6 +16,7 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
+    TableHead,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -29,7 +30,10 @@ import { useQuery } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
-import type { TaskMasterData, Client } from '../../../types';
+import { taskService } from '../../../services/taskService';
+import type { TaskMasterData, Client, Task, TaskStatus, User } from '../../../types';
+import toast from 'react-hot-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const TaskApproval: React.FC = () => {
     const [groupName, setGroupName] = useState('');
@@ -68,6 +72,40 @@ export const TaskApproval: React.FC = () => {
         queryKey: ['subMasters'],
         queryFn: adminService.getSubMasters
     });
+
+    const queryClient = useQueryClient();
+
+    // Fetch tasks for approval
+    const { data: tasks = [], isLoading: tasksLoading } = useQuery<Task[]>({
+        queryKey: ['tasksApproval', groupName, clientName, selectedTask, frequency, department],
+        queryFn: () => taskService.getTasks({
+            status: 'PENDING_FOR_APPROVAL',
+            clientId: clientName || undefined,
+            clientGroupId: groupName || undefined,
+            // Add other filters as they become available in the API
+        })
+    });
+
+    const updateStatusMutation = useMutation({
+        mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) =>
+            taskService.updateStatus(taskId, status),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['tasksApproval'] });
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            toast.success(data.message);
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to update status');
+        }
+    });
+
+    const handleApprove = (taskId: string) => {
+        updateStatusMutation.mutate({ taskId, status: 'APPROVED' });
+    };
+
+    const handleReject = (taskId: string) => {
+        updateStatusMutation.mutate({ taskId, status: 'REJECTED' });
+    };
 
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
     const departments = ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance', 'ROC / Company Law', 'Other'];
@@ -270,12 +308,66 @@ export const TaskApproval: React.FC = () => {
                 </Box>
                 <TableContainer sx={{ minHeight: 150, bgcolor: '#f8f9fa' }}>
                     <Table size="small">
-                        <TableBody>
-                            <TableRow>
-                                <TableCell align="center" colSpan={10} sx={{ color: 'text.secondary', py: 6 }}>
-                                    No Record Found
-                                </TableCell>
+                        <TableHead>
+                            <TableRow sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
+                                <TableCell sx={{ fontWeight: 'bold' }}>S.N.</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Client</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Task</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Target Date</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Assigned To</TableCell>
+                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>
                             </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {tasksLoading ? (
+                                <TableRow>
+                                    <TableCell align="center" colSpan={6} sx={{ py: 6 }}>
+                                        Loading tasks...
+                                    </TableCell>
+                                </TableRow>
+                            ) : tasks.length > 0 ? (
+                                tasks.map((task, index) => (
+                                    <TableRow key={task._id} hover>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{(task.clientId as Client)?.name || 'N/A'}</TableCell>
+                                        <TableCell>{task.title}</TableCell>
+                                        <TableCell>{task.targetDate ? new Date(task.targetDate).toLocaleDateString() : '-'}</TableCell>
+                                        <TableCell>
+                                            {(task.assignedTo as User[])?.map(u => u.name || u.username).join(', ') || '-'}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Box display="flex" justifyContent="center" gap={1}>
+                                                <Button
+                                                    size="small"
+                                                    variant="contained"
+                                                    color="success"
+                                                    onClick={() => handleApprove(task._id)}
+                                                    disabled={updateStatusMutation.isPending}
+                                                    sx={{ fontSize: '0.7rem', py: 0 }}
+                                                >
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    size="small"
+                                                    variant="contained"
+                                                    color="error"
+                                                    onClick={() => handleReject(task._id)}
+                                                    disabled={updateStatusMutation.isPending}
+                                                    sx={{ fontSize: '0.7rem', py: 0 }}
+                                                >
+                                                    Reject
+                                                </Button>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell align="center" colSpan={6} sx={{ color: 'text.secondary', py: 6 }}>
+                                        No Tasks Pending for Approval
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>

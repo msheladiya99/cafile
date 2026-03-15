@@ -4,6 +4,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Toaster } from 'react-hot-toast';
+
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Lazy load layouts and auth pages
@@ -306,8 +308,10 @@ function App() {
           <CssBaseline />
           <BrowserRouter>
             <AuthProvider>
+              <Toaster position="top-right" />
               <AppRoutes />
             </AuthProvider>
+
           </BrowserRouter>
         </HelmetProvider>
       </ThemeProvider>

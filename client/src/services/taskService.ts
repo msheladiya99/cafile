@@ -8,6 +8,7 @@ export const taskService = {
         priority?: string;
         assignedTo?: string;
         clientId?: string;
+        clientGroupId?: string;
         overdue?: boolean;
         myTasks?: boolean;
     }): Promise<Task[]> => {
@@ -100,7 +101,7 @@ export const taskService = {
         startDate?: string;
         endDate?: string;
         status?: TaskStatus;
-    }): Promise<any> => {
+    }): Promise<unknown> => {
         const params = new URLSearchParams();
         if (filters) {
             Object.entries(filters).forEach(([key, value]) => {
@@ -112,12 +113,12 @@ export const taskService = {
     },
 
     // Recurrence Tasks
-    getRecurrenceTasks: async (): Promise<any[]> => {
+    getRecurrenceTasks: async (): Promise<Task[]> => {
         const response = await api.get('/tasks/recurrence');
         return response.data;
     },
 
-    createRecurrenceTask: async (data: any): Promise<any> => {
+    createRecurrenceTask: async (data: Partial<Task>): Promise<{ task: Task; message: string }> => {
         const response = await api.post('/tasks/recurrence', data);
         return response.data;
     },
