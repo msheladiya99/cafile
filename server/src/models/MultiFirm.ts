@@ -49,10 +49,17 @@ export interface IMultiFirm extends Document {
     logoUrl?: string;
     signImageUrl?: string;
     showLogo?: boolean;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const MultiFirmSchema = new Schema<IMultiFirm>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         firmName: { type: String, required: true },
         shortName: String,
         address: String,
@@ -93,5 +100,8 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
     },
     { timestamps: true }
 );
+
+// Add unique index for firmId and firmName
+MultiFirmSchema.index({ firmId: 1, firmName: 1 }, { unique: true });
 
 export const MultiFirm = mongoose.model<IMultiFirm>('MultiFirm', MultiFirmSchema);

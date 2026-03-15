@@ -11,7 +11,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
         const { status, clientId, reminderType } = req.query;
 
         const user = (req as any).user;
-        const filter: any = {};
+        const filter: any = { firmId: (req as any).firmId };
 
         if (user.role === 'CLIENT') {
             filter.clientId = user.clientId;

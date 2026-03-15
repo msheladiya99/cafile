@@ -9,10 +9,17 @@ export interface IFirmDocument extends Document {
     fileName?: string;
     fileSize?: number;
     uploadedAt?: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const FirmDocumentSchema = new Schema<IFirmDocument>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         documentName: { type: String, required: true },
         documentNumber: String,
         description: String,

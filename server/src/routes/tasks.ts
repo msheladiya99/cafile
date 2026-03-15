@@ -94,7 +94,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     try {
         const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks } = req.query;
 
-        const filter: any = {};
+        const filter: any = { firmId: req.firmId };
 
         // Role-based filtering (STRICT ISOLATION)
         if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {

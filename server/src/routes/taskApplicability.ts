@@ -13,7 +13,7 @@ router.use(authenticate);
 router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
         const { taskMasterId, clientId } = req.query;
-        const filter: any = { firmId: req.firmId || req.user?.firmId };
+        const filter: any = { firmId: req.firmId };
 
         if (taskMasterId) filter.taskMasterId = taskMasterId;
         if (clientId) filter.clientId = clientId;
@@ -46,7 +46,7 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
             return;
         }
 
-        const firmId = req.firmId || req.user?.firmId;
+        const firmId = req.firmId;
         const createdBy = req.user!.userId;
 
         const results = [];

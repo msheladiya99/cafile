@@ -168,7 +168,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
-        const clients = await Client.find()
+        const clients = await Client.find({ firmId: req.firmId })
             .populate('groupName', 'groupName')
             .populate('itStatus', 'name')
             .sort({ createdAt: -1 })
@@ -643,7 +643,8 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
 
         const filter: any = {
             action: 'LOGIN',
-            userId: { $in: staffIds }
+            userId: { $in: staffIds },
+            firmId: req.firmId
         };
 
         if (startDate || endDate) {
@@ -676,7 +677,7 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
     try {
         // Find tasks that are not DONE or CANCELLED
         const { Task } = await import('../models/Task');
-        const activeTasks = await Task.find({ status: { $in: ['PENDING', 'STARTED', 'UNDER_REVIEW'] } });
+        const activeTasks = await Task.find({ status: { $in: ['PENDING', 'STARTED', 'UNDER_REVIEW'] }, firmId: req.firmId });
 
         let busyUserIds: any[] = [];
         activeTasks.forEach(task => {
@@ -688,6 +689,7 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
         // Find users that are not busy
         const freeEmployees = await User.find({
             _id: { $nin: busyUserIds },
+            firmId: req.firmId,
             role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
         }).select('_id name username role email phone').lean();
 
@@ -710,7 +712,7 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
             return;
         }
 
-        const existingGroup = await ClientGroup.findOne({ groupName });
+        const existingGroup = await ClientGroup.findOne({ groupName, firmId: req.firmId });
         if (existingGroup) {
             res.status(400).json({ message: 'Group with this name already exists' });
             return;
@@ -723,7 +725,8 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
             status,
             email,
             mobileNumber,
-            gstin
+            gstin,
+            firmId: req.firmId
         });
         await newGroup.save();
 
@@ -737,7 +740,7 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
 // Get all Client Groups
 router.get('/client-groups', async (req: AuthRequest, res: Response) => {
     try {
-        const groups = await ClientGroup.find()
+        const groups = await ClientGroup.find({ firmId: req.firmId })
             .sort({ createdAt: -1 })
             .lean();
         res.json(groups);
@@ -756,7 +759,7 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
         const existing = await ITStatus.findOne({ name });
         if (existing) return res.status(400).json({ message: 'IT Status with this name already exists' });
 
-        const item = new ITStatus({ name, description, status });
+        const item = new ITStatus({ name, description, status, firmId: req.firmId });
         await item.save();
 
         res.status(201).json(item);
@@ -768,7 +771,7 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
 
 router.get('/it-status', async (req: AuthRequest, res: Response) => {
     try {
-        const items = await ITStatus.find().sort({ createdAt: -1 }).lean();
+        const items = await ITStatus.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(items);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -784,7 +787,7 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
         const existing = await SubMaster.findOne({ name });
         if (existing) return res.status(400).json({ message: 'Sub Master with this name already exists' });
 
-        const item = new SubMaster({ name, description, status });
+        const item = new SubMaster({ name, description, status, firmId: req.firmId });
         await item.save();
 
         res.status(201).json(item);
@@ -796,7 +799,7 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
 
 router.get('/sub-master', async (req: AuthRequest, res: Response) => {
     try {
-        const items = await SubMaster.find().sort({ createdAt: -1 }).lean();
+        const items = await SubMaster.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(items);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

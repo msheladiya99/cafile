@@ -465,7 +465,7 @@ router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequ
             return res.status(400).json({ message: 'No files selected' });
         }
 
-        const files = await File.find({ _id: { $in: fileIds } });
+        const files = await File.find({ _id: { $in: fileIds }, firmId: (req as any).firmId });
 
         if (files.length === 0) {
             return res.status(404).json({ message: 'No files found' });
@@ -637,7 +637,7 @@ router.get('/client/:clientId', authenticate, checkFileAccess, async (req: AuthR
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        const query: any = { clientId, isArchived: false }; // Default: don't show archived
+        const query: any = { clientId, firmId: req.firmId, isArchived: false }; // Default: don't show archived
 
         if (year) query.year = year;
         if (category) query.category = category;

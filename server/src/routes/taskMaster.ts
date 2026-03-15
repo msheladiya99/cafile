@@ -10,7 +10,7 @@ router.use(authenticate);
 // Get all task masters for a firm
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const query: any = { firmId: req.user?.firmId };
+        const query: any = { firmId: req.firmId };
         const taskMasters = await TaskMaster.find(query).populate('reportingManager', 'name email').sort({ createdAt: -1 });
         res.json(taskMasters);
     } catch (error) {
@@ -24,7 +24,7 @@ router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
         const taskMaster = new TaskMaster({
             ...req.body,
-            firmId: req.user?.firmId,
+            firmId: req.firmId,
             createdBy: req.user?._id
         });
         await taskMaster.save();
@@ -39,7 +39,7 @@ router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
 router.put('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
         const taskMaster = await TaskMaster.findOneAndUpdate(
-            { _id: req.params.id, firmId: req.user?.firmId },
+            { _id: req.params.id, firmId: req.firmId },
             { $set: req.body },
             { new: true }
         );
@@ -54,7 +54,7 @@ router.put('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
 // Delete task master
 router.delete('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
-        const taskMaster = await TaskMaster.findOneAndDelete({ _id: req.params.id, firmId: req.user?.firmId });
+        const taskMaster = await TaskMaster.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         if (!taskMaster) return res.status(404).json({ message: 'Task master not found' });
         res.json({ message: 'Task master deleted' });
     } catch (error) {

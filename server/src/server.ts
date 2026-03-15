@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
-import { connectDB } from './config/database';
+import { connectDB } from './config/database'; // database.ts applies the plugin immediately
 import { tenantMiddleware } from './middleware/tenant';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';

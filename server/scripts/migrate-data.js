@@ -20,7 +20,7 @@ async function migrate(subdomain) {
         const firmId = firm._id;
         console.log(`Migrating orphaned records to firm: ${firm.firmName} (${firmId})`);
 
-        const collections = ['users', 'clients', 'tasks', 'files', 'invoices', 'reminders', 'clientgroups', 'itstatuses', 'attendances', 'services', 'settings'];
+        const collections = ['users', 'clients', 'tasks', 'files', 'invoices', 'reminders', 'clientgroups', 'itstatuses', 'attendances', 'services', 'settings', 'multifirms', 'firmdocuments'];
         
         for (const colName of collections) {
             try {

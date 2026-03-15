@@ -186,6 +186,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
         const staff = await User.find({
+            firmId: req.firmId,
             role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
         }).select('-passwordHash').sort({ createdAt: -1 }).lean();
 

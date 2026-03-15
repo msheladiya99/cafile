@@ -12,15 +12,17 @@ const router = Router();
  */
 router.get('/dashboard', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const user = (req as any).user;
+        const filter: any = { firmId: (req as any).firmId };
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
 
         // Total counts
         const [totalClients, totalFiles, totalUsers] = await Promise.all([
-            Client.countDocuments(),
-            File.countDocuments({ isArchived: false }),
-            User.countDocuments({ role: 'CLIENT' })
+            Client.countDocuments({ firmId: req.firmId }),
+            File.countDocuments({ firmId: req.firmId, isArchived: false }),
+            User.countDocuments({ firmId: req.firmId, role: 'CLIENT' })
         ]);
 
         // Recent activity (last 30 days)
@@ -30,13 +32,13 @@ router.get('/dashboard', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'
 
         // Category distribution
         const categoryDistribution = await File.aggregate([
-            { $match: { isArchived: false } },
+            { $match: { firmId: req.firmId, isArchived: false } },
             { $group: { _id: '$category', count: { $sum: 1 } } }
         ]);
 
         // Storage usage per client
         const storageByClient = await File.aggregate([
-            { $match: { isArchived: false } },
+            { $match: { firmId: req.firmId, isArchived: false } },
             {
                 $group: {
                     _id: '$clientId',

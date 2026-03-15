@@ -207,9 +207,9 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: AuthRequ
 export default router;
 
 // GET all firm documents
-router.get('/documents', async (_req: AuthRequest, res: Response) => {
+router.get('/documents', async (req: AuthRequest, res: Response) => {
     try {
-        const docs = await FirmDocument.find().sort({ createdAt: -1 }).lean();
+        const docs = await FirmDocument.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(docs);
     } catch (error) {
         console.error('Get firm documents error:', error);
@@ -291,9 +291,9 @@ router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Resp
 // ─── Multi Firm Routes ────────────────────────────────────────────────────────
 
 // GET all multi-firms
-router.get('/multi', async (_req: AuthRequest, res: Response) => {
+router.get('/multi', async (req: AuthRequest, res: Response) => {
     try {
-        const firms = await MultiFirm.find().sort({ createdAt: -1 }).lean();
+        const firms = await MultiFirm.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(firms);
     } catch (error) {
         console.error('Get multi firms error:', error);
@@ -375,8 +375,8 @@ router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: 
 
 // ─── Tax Detail Routes ──────────────────────────────────────────────────────
 
-router.get('/tax', async (_req: AuthRequest, res: Response) => {
-    try { res.json(await TaxDetail.find().sort({ createdAt: -1 }).lean()); }
+router.get('/tax', async (req: AuthRequest, res: Response) => {
+    try { res.json(await TaxDetail.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean()); }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
@@ -405,8 +405,8 @@ router.delete('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) 
 
 // ─── Currency Routes ──────────────────────────────────────────────────────
 
-router.get('/currency', async (_req: AuthRequest, res: Response) => {
-    try { res.json(await Currency.find().sort({ isDefault: -1, currencyCode: 1 }).lean()); }
+router.get('/currency', async (req: AuthRequest, res: Response) => {
+    try { res.json(await Currency.find({ firmId: req.firmId }).sort({ isDefault: -1, currencyCode: 1 }).lean()); }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 

@@ -11,7 +11,7 @@ const router = Router();
 // Get all services
 router.get('/services', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const services = await Service.find().sort({ name: 1 });
+        const services = await Service.find({ firmId: (req as any).firmId }).sort({ name: 1 });
         res.json(services);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching services' });
@@ -72,11 +72,12 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
             }
         } else {
             // Admin can filter by client or group
+            query.firmId = (req as any).firmId;
             if (req.query.clientId) {
-                query = { clientId: req.query.clientId };
+                query.clientId = req.query.clientId;
             }
             if (req.query.clientGroupId) {
-                query = { clientGroupId: req.query.clientGroupId };
+                query.clientGroupId = req.query.clientGroupId;
             }
         }
 
@@ -308,7 +309,7 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
         }
 
         const Client = mongoose.model('Client');
-        const clients = await Client.find(clientFilter).select('name email phone address').lean();
+        const clients = await Client.find({ ...clientFilter, firmId: (req as any).firmId }).select('name email phone address').lean();
 
         // Get ledger for each client
         let clientLedgers = await Promise.all(
