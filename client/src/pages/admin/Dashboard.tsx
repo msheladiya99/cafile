@@ -123,8 +123,9 @@ export const AdminDashboard: React.FC = () => {
     return (
         <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
             <Helmet>
-                <title>Admin Dashboard | CA Office Portal</title>
-                <meta name="description" content="View statistics, tasks, filing deadlines, and quick actions for your CA Office." />
+                <title>Admin Dashboard | MyCAFile - CA Office Portal</title>
+                <link rel="canonical" href="https://www.mycafile.in/admin/dashboard" />
+                <meta name="description" content="View firm statistics, management tasks, and filing deadlines on your MyCAFile dashboard." />
             </Helmet>
 
             {/* Header Section */}

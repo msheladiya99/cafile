@@ -108,10 +108,18 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <Box sx={{ height: '100vh', display: 'flex', bgcolor: '#f8faff', overflow: 'hidden' }}>
+        <Box sx={{
+            height: '100vh',
+            width: '100vw',
+            display: 'flex',
+            bgcolor: '#f8faff',
+            overflow: 'hidden',
+            position: 'relative'
+        }}>
             <Helmet>
-                <title>Secure Login | CA Office Portal</title>
-                <meta name="description" content="Access your CA Office Portal. Professional practice management for Chartered Accountants." />
+                <title>Login | MyCAFile - CA Office Portal</title>
+                <link rel="canonical" href="https://www.mycafile.in/login" />
+                <meta name="description" content="Access your MyCAFile workspace. Secure practice management for Chartered Accountants and tax professionals." />
             </Helmet>
 
             {/* Left Panel - Illustration (Hidden on Mobile) */}
@@ -121,24 +129,26 @@ export const Login: React.FC = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1 }}
                 sx={{
-                    flex: 1.2,
+                    width: { md: '55%' },
                     display: { xs: 'none', md: 'flex' },
                     alignItems: 'center',
                     justifyContent: 'center',
                     p: 4,
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
                 }}
             >
                 <Box
                     component="img"
                     src="/login-illustration.webp"
-                    alt="Accountant Illustration"
+                    alt="My CA File - CA Office Management Software Illustration"
                     sx={{
                         maxWidth: '90%',
                         maxHeight: '80vh',
                         objectFit: 'contain',
                         filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.08))',
+                        borderRadius: 12,
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
                         zIndex: 2
                     }}
                 />
@@ -149,7 +159,10 @@ export const Login: React.FC = () => {
                     height: '600px',
                     borderRadius: '50%',
                     background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
-                    zIndex: 1
+                    zIndex: 1,
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)'
                 }} />
             </Box>
 
@@ -157,12 +170,12 @@ export const Login: React.FC = () => {
             <Box
                 sx={{
                     flex: 1,
+                    width: { xs: '100%', md: '45%' },
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    p: { xs: 2, sm: 4 },
-                    zIndex: 3,
-                    height: '100%'
+                    p: { xs: 2, sm: 3 },
+                    zIndex: 3
                 }}
             >
                 <motion.div
@@ -174,30 +187,28 @@ export const Login: React.FC = () => {
                     <Paper
                         elevation={0}
                         sx={{
-                            p: { xs: 4, sm: 6 },
+                            p: { xs: 3, sm: 4 },
                             width: '100%',
-                            borderRadius: 10,
+                            maxWidth: 480,
+                            borderRadius: 8,
                             bgcolor: 'white',
                             boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
                             textAlign: 'center',
-                            maxHeight: '95vh',
-                            overflowY: 'auto',
-                            '&::-webkit-scrollbar': { display: 'none' },
-                            msOverflowStyle: 'none',
-                            scrollbarWidth: 'none'
+                            display: 'flex',
+                            flexDirection: 'column'
                         }}
                     >
-                        <Box mb={4} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
-                                <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.8, borderRadius: 1.5, display: 'flex' }}>
-                                    <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
+                        <Box mb={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
+                                    <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
                                 </Box>
                                 <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
                                     {subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'CA Office Portal'}
                                 </Typography>
                             </Box>
 
-                            <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: '3rem', letterSpacing: -1.5 }}>
+                            <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: { xs: '2rem', sm: '2.5rem', md: '2.75rem' }, letterSpacing: -1, lineHeight: 1.1 }}>
                                 {subdomain ? 'Firm Login' : 'Admin Login'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
@@ -325,6 +336,6 @@ export const Login: React.FC = () => {
                     </Paper>
                 </motion.div>
             </Box>
-        </Box>
+        </Box >
     );
 };

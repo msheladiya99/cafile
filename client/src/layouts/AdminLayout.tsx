@@ -343,7 +343,7 @@ export const AdminLayout: React.FC = () => {
                                 width: 'auto',
                                 mr: 2,
                                 display: { xs: 'none', sm: 'block' },
-                                borderRadius: 1,
+                                borderRadius: 1.5,
                                 objectFit: 'contain',
                                 bgcolor: 'white',
                                 p: 0.5

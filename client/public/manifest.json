@@ -3,9 +3,14 @@
     "name": "CA Office Management Portal",
     "icons": [
         {
-            "src": "ca-portal.webp",
-            "sizes": "64x64 32x32 24x24 16x16",
-            "type": "image/webp"
+            "src": "favicon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "favicon.png",
+            "sizes": "512x512",
+            "type": "image/png"
         }
     ],
     "start_url": ".",
