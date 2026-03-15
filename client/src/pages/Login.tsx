@@ -39,6 +39,25 @@ export const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [firm, setFirm] = useState<{ firmName: string; logo?: string; status: string } | null>(null);
+    const [checkingFirm, setCheckingFirm] = useState(!!subdomain);
+
+    React.useEffect(() => {
+        if (subdomain) {
+            api.get('/firm/public')
+                .then(res => {
+                    setFirm(res.data);
+                    if (res.data.status !== 'active') {
+                        setError('This workspace is currently suspended.');
+                    }
+                })
+                .catch(err => {
+                    console.error('Firm check failed:', err);
+                    setError('This firm does not exist. Please check the URL.');
+                })
+                .finally(() => setCheckingFirm(false));
+        }
+    }, [subdomain]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -200,11 +219,15 @@ export const Login: React.FC = () => {
                     >
                         <Box mb={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
-                                    <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
-                                </Box>
+                                {firm?.logo ? (
+                                    <Box component="img" src={firm.logo} sx={{ height: 32, width: 'auto', mr: 1 }} />
+                                ) : (
+                                    <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
+                                        <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
+                                    </Box>
+                                )}
                                 <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
-                                    {subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'CA Office Portal'}
+                                    {firm?.firmName || (subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'MY CA FILE')}
                                 </Typography>
                             </Box>
 
@@ -212,7 +235,7 @@ export const Login: React.FC = () => {
                                 {subdomain ? 'Firm Login' : 'Admin Login'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                                {subdomain ? `Sign in to ${subdomain} workspace` : 'Sign in to management panel'}
+                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to management panel')}
                             </Typography>
                         </Box>
 
@@ -222,7 +245,8 @@ export const Login: React.FC = () => {
                             </Alert>
                         )}
 
-                        <Box component="form" onSubmit={handleSubmit}>
+                        <Box component="form" onSubmit={handleSubmit} sx={{ opacity: checkingFirm ? 0.5 : 1, pointerEvents: checkingFirm ? 'none' : 'auto' }}>
+                            {checkingFirm && <CircularProgress size={20} sx={{ mb: 2 }} />}
                             <Stack spacing={2.5}>
                                 <TextField
                                     fullWidth

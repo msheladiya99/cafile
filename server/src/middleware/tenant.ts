@@ -69,7 +69,7 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         req.firm = firm;
 
         // Wrap the rest of the request in the context
-        requestContext.run({ firmId: req.firmId }, () => {
+        requestContext.run({ firmId: req.firmId, rootFolderId: firm.googleDriveRootFolderId }, () => {
             next();
         });
     } catch (error) {

@@ -12,6 +12,23 @@ import fs from 'fs';
 import { getFirmId } from '../utils/context';
 
 const router = Router();
+
+// GET /api/firm/public — get basic firm info (branding, etc.) without auth
+// This is used by the login page to show firm name/logo
+router.get('/public', async (req, res: Response) => {
+    try {
+        // Subdomain is already resolved by tenantMiddleware (req.firmId)
+        if (!req.firm) {
+            return res.status(404).json({ message: 'Firm not found' });
+        }
+        const { firmName, logo, plan, status } = req.firm;
+        res.json({ firmName, logo, plan, status });
+    } catch (error) {
+        console.error('Public firm info error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 router.use(authenticate);
 
 // GET /api/firm — get firm details (single record, upserted)

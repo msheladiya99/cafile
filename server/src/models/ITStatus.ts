@@ -6,15 +6,21 @@ export interface IITStatus extends Document {
     status: boolean;
     createdAt: Date;
     updatedAt: Date;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const itStatusSchema = new Schema<IITStatus>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         name: {
             type: String,
             required: [true, 'Name is required'],
             trim: true,
-            unique: true,
         },
         description: {
             type: String,

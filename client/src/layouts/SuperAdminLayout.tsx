@@ -131,7 +131,7 @@ export const SuperAdminLayout: React.FC = () => {
                         </IconButton>
                     )}
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 800 }}>
-                        CA CLOUD | SUPER ADMIN
+                        MY CA FILE | SUPER ADMIN
                     </Typography>
 
                     <Box sx={{

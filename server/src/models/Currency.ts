@@ -6,11 +6,18 @@ export interface ICurrency extends Document {
     rate: number;
     isDefault: boolean;
     status: boolean;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const CurrencySchema = new Schema<ICurrency>(
     {
-        currencyCode: { type: String, required: true, unique: true, uppercase: true },
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
+        currencyCode: { type: String, required: true, uppercase: true },
         currencyName: { type: String, required: true },
         rate: { type: Number, required: true, default: 1 },
         isDefault: { type: Boolean, default: false },

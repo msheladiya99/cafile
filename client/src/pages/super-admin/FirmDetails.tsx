@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Grid, Button, CircularProgress, Chip, TextField, MenuItem, Divider } from '@mui/material';
+import { Box, Typography, Paper, Grid, Button, CircularProgress, Chip, TextField, MenuItem, Divider, Alert } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -11,6 +11,8 @@ const FirmDetails: React.FC = () => {
 
     const [editMode, setEditMode] = useState(false);
     const [formData, setFormData] = useState({ plan: '', status: '' });
+    const [resetPassword, setResetPassword] = useState('');
+    const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
     const { data, isLoading } = useQuery({
         queryKey: ['firm', id],
@@ -29,6 +31,27 @@ const FirmDetails: React.FC = () => {
             setEditMode(false);
         }
     });
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: async (password: string) => {
+            return api.post(`/super-admin/firms/${id}/reset-password`, { newPassword: password });
+        },
+        onSuccess: () => {
+            setResetStatus({ type: 'success', msg: 'Password reset successfully!' });
+            setResetPassword('');
+            setTimeout(() => setResetStatus(null), 3000);
+        },
+        onError: (err: any) => {
+            setResetStatus({ type: 'error', msg: err.response?.data?.message || 'Reset failed' });
+        }
+    });
+
+    const handleResetPassword = () => {
+        if (!resetPassword) return alert('Enter a new password');
+        if (window.confirm(`Are you sure you want to reset the admin password for ${data?.firm?.firmName}?`)) {
+            resetPasswordMutation.mutate(resetPassword);
+        }
+    };
 
     if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
     if (!data) return <Box sx={{ p: 5 }}><Typography color="error">Firm not found.</Typography></Box>;
@@ -71,9 +94,8 @@ const FirmDetails: React.FC = () => {
                                 <Typography variant="h6" sx={{ fontWeight: 600 }}>{firm.firmName}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
-                                <Typography color="text.secondary" variant="body2">Subdomain URL</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1976d2', fontFamily: 'monospace' }}>
-                                    {firm.subdomain}.cacloud.in
+                                    {firm.subdomain}.mycafile.in
                                 </Typography>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
@@ -138,9 +160,31 @@ const FirmDetails: React.FC = () => {
                             <Typography variant="h4" sx={{ fontWeight: 700 }}>{stats?.tasksCount || 0}</Typography>
                         </Box>
                         <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #efefef' }}>
-                            <Button variant="outlined" color="warning" fullWidth sx={{ mb: 2, fontWeight: 700 }}>
-                                Reset Admin Password
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>Security Control</Typography>
+                            <TextField
+                                fullWidth
+                                label="New Admin Password"
+                                type="password"
+                                size="small"
+                                value={resetPassword}
+                                onChange={e => setResetPassword(e.target.value)}
+                                sx={{ mb: 2 }}
+                            />
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                fullWidth
+                                onClick={handleResetPassword}
+                                disabled={resetPasswordMutation.isPending}
+                                sx={{ fontWeight: 700 }}
+                            >
+                                {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
                             </Button>
+                            {resetStatus && (
+                                <Alert severity={resetStatus.type} sx={{ mt: 2, py: 0 }}>
+                                    {resetStatus.msg}
+                                </Alert>
+                            )}
                         </Box>
                     </Paper>
                 </Grid>

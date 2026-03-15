@@ -11,10 +11,8 @@ import {
 import {
     Business as BusinessIcon,
     People as PeopleIcon,
-    Receipt as ReceiptIcon,
     TrendingUp as TrendingUpIcon,
     Assignment as AssignmentIcon,
-    StopCircle as StopCircleIcon,
     AccountCircle as AccountCircleIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
@@ -29,6 +27,15 @@ interface StatCardProps {
     value: number | string;
     icon: React.ReactNode;
     color: string;
+}
+
+interface DashboardFirm {
+    _id: string;
+    firmName: string;
+    subdomain: string;
+    plan: string;
+    status: string;
+    createdAt: string;
 }
 
 const StatCard = ({ title, value, icon, color }: StatCardProps) => (
@@ -62,27 +69,30 @@ const SuperAdminDashboard: React.FC = () => {
             const res = await api.get('/super-admin/dashboard');
             return res.data;
         },
-        staleTime: 60000, // 1 minute
+        staleTime: 0, // Ensure we always get fresh data for Super Admin
     });
 
     if (isLoading) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
     }
 
-    const { widgets, charts } = data || { widgets: {}, charts: {} };
+    interface DashboardResponse {
+        widgets: Record<string, unknown>;
+        charts: Record<string, unknown>;
+        recentFirms: DashboardFirm[];
+    }
+    const { widgets = {}, charts = {}, recentFirms = [] } = (data as DashboardResponse) || {};
 
     // Formatting numbers for display
     const formatCount = (n: number) => n || 0;
 
     const stats = [
-        { title: 'Total Firms', value: formatCount(widgets.totalFirms), icon: <BusinessIcon />, color: '#FF4B2B' },
-        { title: 'Active Firms', value: formatCount(widgets.activeFirms), icon: <TrendingUpIcon />, color: '#4CAF50' },
-        { title: 'Suspended Firms', value: formatCount(widgets.suspendedFirms), icon: <StopCircleIcon />, color: '#F44336' },
-        { title: 'Total Users', value: formatCount(widgets.totalUsers), icon: <AccountCircleIcon />, color: '#9C27B0' },
-        { title: 'Total Clients', value: formatCount(widgets.totalClients), icon: <PeopleIcon />, color: '#2196F3' },
-        { title: 'Total Tasks', value: formatCount(widgets.totalTasks), icon: <AssignmentIcon />, color: '#FF9800' },
-        { title: 'Total Invoices', value: formatCount(widgets.totalInvoices), icon: <ReceiptIcon />, color: '#795548' },
-        { title: 'Total Revenue', value: `₹${formatCount(widgets.totalRevenue)}`, icon: <TrendingUpIcon />, color: '#3F51B5' },
+        { title: 'Total Firms', value: formatCount(widgets.totalFirms as number), icon: <BusinessIcon />, color: '#FF4B2B' },
+        { title: 'Total Clients', value: formatCount(widgets.totalClients as number), icon: <PeopleIcon />, color: '#2196F3' },
+        { title: 'Total Staff', value: formatCount(widgets.totalStaff as number), icon: <AccountCircleIcon />, color: '#9C27B0' },
+        { title: 'Total Documents', value: formatCount((widgets.totalInvoices as number || 0) + (widgets.totalFiles as number || 0)), icon: <AssignmentIcon />, color: '#00BCD4' },
+        { title: 'Storage Usage', value: (widgets.storageUsage as string) || '0 MB', icon: <TrendingUpIcon />, color: '#FF9800' },
+        { title: 'Total Revenue', value: `₹${formatCount(widgets.totalRevenue as number)}`, icon: <TrendingUpIcon />, color: '#3F51B5' },
     ];
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -193,6 +203,71 @@ const SuperAdminDashboard: React.FC = () => {
                     </Paper>
                 </Grid>
             </Grid>
+            {/* Recent Firms Section */}
+            <Typography variant="h5" sx={{ mt: 6, mb: 3, fontWeight: 700 }}>
+                Recent Firm Registrations
+            </Typography>
+            <Paper sx={{ borderRadius: 4, overflow: 'hidden', mb: 4, bgcolor: 'white' }}>
+                <Box sx={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Firm Name</th>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Subdomain</th>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Plan</th>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Created Date</th>
+                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recentFirms.map((firm: DashboardFirm) => (
+                                <tr key={firm._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <td style={{ padding: '16px 24px', fontWeight: 700, color: '#1e293b' }}>{firm.firmName}</td>
+                                    <td style={{ padding: '16px 24px', color: '#64748b', fontFamily: 'monospace' }}>{firm.subdomain}.mycafile.in</td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        <Box sx={{
+                                            display: 'inline-flex',
+                                            px: 1.5,
+                                            py: 0.5,
+                                            borderRadius: 2,
+                                            fontSize: '0.75rem',
+                                            fontWeight: 800,
+                                            bgcolor: firm.plan === 'enterprise' ? '#f5f3ff' : '#eff6ff',
+                                            color: firm.plan === 'enterprise' ? '#7c3aed' : '#2563eb',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {firm.plan}
+                                        </Box>
+                                    </td>
+                                    <td style={{ padding: '16px 24px', color: '#64748b' }}>
+                                        {new Date(firm.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        <Box sx={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                            color: firm.status === 'active' ? '#10b981' : '#f59e0b',
+                                            fontWeight: 700,
+                                            fontSize: '0.85rem'
+                                        }}>
+                                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'currentColor' }} />
+                                            {firm.status.charAt(0).toUpperCase() + firm.status.slice(1)}
+                                        </Box>
+                                    </td>
+                                </tr>
+                            ))}
+                            {(!recentFirms.length) && (
+                                <tr>
+                                    <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                                        No recent registrations found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </Box>
+            </Paper>
         </Box>
     );
 };

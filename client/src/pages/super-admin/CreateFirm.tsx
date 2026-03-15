@@ -14,10 +14,11 @@ const CreateFirm: React.FC = () => {
     const [formData, setFormData] = useState({
         firmName: '',
         subdomain: '',
-        email: '',
-        adminUsername: '',
+        adminEmail: '',
+        adminName: '',
         adminPassword: '',
-        plan: 'Trial'
+        mobileNumber: '',
+        planType: 'Trial'
     });
 
     const createMutation = useMutation({
@@ -29,15 +30,15 @@ const CreateFirm: React.FC = () => {
             navigate('/super-admin/firms');
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            setError(err.response?.data?.message || 'Failed to create firm and provision workspace.');
+            setError(err.response?.data?.message || 'Failed to create firm.');
         }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!formData.firmName || !formData.subdomain || !formData.email || !formData.adminUsername || !formData.adminPassword) {
-            setError('All fields are required.');
+        if (!formData.firmName || !formData.subdomain || !formData.adminEmail || !formData.adminPassword || !formData.mobileNumber) {
+            setError('Please fill in all required fields.');
             return;
         }
         createMutation.mutate(formData);
@@ -55,37 +56,47 @@ const CreateFirm: React.FC = () => {
                     <Grid container spacing={3}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField fullWidth label="Firm Name" variant="outlined"
-                                value={formData.firmName} onChange={e => setFormData({ ...formData, firmName: e.target.value })}
+                                value={formData.firmName}
+                                onChange={e => {
+                                    const name = e.target.value;
+                                    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+                                    setFormData({ ...formData, firmName: name, subdomain: slug });
+                                }}
                                 required />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField fullWidth label="Subdomain" variant="outlined"
                                 value={formData.subdomain} onChange={e => setFormData({ ...formData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                                helperText={`Portal URL: ${formData.subdomain || '...'}.cacloud.in`} required />
+                                helperText={`Portal URL: ${formData.subdomain || '...'}.mycafile.in`} required />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField fullWidth label="Firm Email" type="email" variant="outlined"
-                                value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            <TextField fullWidth label="Admin Name" variant="outlined"
+                                value={formData.adminName} onChange={e => setFormData({ ...formData, adminName: e.target.value })}
+                                placeholder="e.g. John Doe" required />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth label="Admin Email" type="email" variant="outlined"
+                                value={formData.adminEmail} onChange={e => setFormData({ ...formData, adminEmail: e.target.value })}
+                                required />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth label="Mobile Number" variant="outlined"
+                                value={formData.mobileNumber} onChange={e => setFormData({ ...formData, mobileNumber: e.target.value })}
                                 required />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField fullWidth select label="Subscription Plan"
-                                value={formData.plan} onChange={e => setFormData({ ...formData, plan: e.target.value })}>
+                                value={formData.planType} onChange={e => setFormData({ ...formData, planType: e.target.value })}>
                                 {['Trial', 'Basic', 'Professional', 'Enterprise'].map((option) => (
                                     <MenuItem key={option} value={option}>{option}</MenuItem>
                                 ))}
                             </TextField>
                         </Grid>
 
-                        <Grid size={{ xs: 12 }}><Typography variant="h6" sx={{ mt: 2, fontWeight: 700 }}>Admin Setup</Typography></Grid>
+                        <Grid size={{ xs: 12 }}><Typography variant="h6" sx={{ mt: 2, fontWeight: 700 }}>Security</Typography></Grid>
 
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField fullWidth label="Admin Username" variant="outlined"
-                                value={formData.adminUsername} onChange={e => setFormData({ ...formData, adminUsername: e.target.value })}
-                                required />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField fullWidth label="Admin Password" type="password" variant="outlined"
+                        <Grid size={{ xs: 12, md: 12 }}>
+                            <TextField fullWidth label="Set Admin Password" type="password" variant="outlined"
                                 value={formData.adminPassword} onChange={e => setFormData({ ...formData, adminPassword: e.target.value })}
                                 required />
                         </Grid>

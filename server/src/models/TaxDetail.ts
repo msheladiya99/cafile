@@ -6,10 +6,17 @@ export interface ITaxDetail extends Document {
     percentageValue: number;
     isDefault: boolean;
     status: boolean;
+    firmId: mongoose.Types.ObjectId;
 }
 
 const TaxDetailSchema = new Schema<ITaxDetail>(
     {
+        firmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Firm',
+            required: true,
+            index: true
+        },
         name: { type: String, required: true },
         percentageType: { type: String, enum: ['Percentage', 'Fixed'], default: 'Percentage' },
         percentageValue: { type: Number, default: 0 },

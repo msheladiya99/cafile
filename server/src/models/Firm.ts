@@ -6,6 +6,7 @@ export interface IFirm extends Document {
     email: string;
     plan: 'trial' | 'basic' | 'professional' | 'enterprise';
     status: 'active' | 'suspended';
+    mobile?: string;
     logo?: string;
     googleDriveRootFolderId?: string;
     createdAt: Date;
@@ -42,6 +43,7 @@ const firmSchema = new Schema<IFirm>(
             enum: ['active', 'suspended'],
             default: 'active'
         },
+        mobile: String,
         logo: String,
         googleDriveRootFolderId: String
     },

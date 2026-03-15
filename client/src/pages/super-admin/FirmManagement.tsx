@@ -21,6 +21,7 @@ interface IFirm {
     firmName: string;
     subdomain: string;
     email: string;
+    mobile?: string;
     plan: string;
     status: string;
     usersCount: number;
@@ -73,8 +74,14 @@ const FirmManagement: React.FC = () => {
     };
 
     const filteredFirms = firms?.filter(firm => {
-        const matchesSearch = firm.firmName.toLowerCase().includes(searchTerm.toLowerCase()) || firm.subdomain.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesPlan = planFilter === 'All Plans' || firm.plan.toLowerCase() === planFilter.toLowerCase();
+        const query = searchTerm.toLowerCase();
+        const matchesSearch =
+            firm.firmName?.toLowerCase().includes(query) ||
+            firm.subdomain?.toLowerCase().includes(query) ||
+            firm.email?.toLowerCase().includes(query) ||
+            firm.mobile?.includes(searchTerm);
+
+        const matchesPlan = planFilter === 'All Plans' || firm.plan?.toLowerCase() === planFilter.toLowerCase();
         const matchesStatus = statusFilter === 'All Status' || firm.status === statusFilter;
         return matchesSearch && matchesPlan && matchesStatus;
     });
@@ -116,6 +123,7 @@ const FirmManagement: React.FC = () => {
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 700 }}>Firm Name</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Subdomain</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Users</TableCell>
@@ -126,14 +134,15 @@ const FirmManagement: React.FC = () => {
                         </TableHead>
                         <TableBody>
                             {isLoading ? (
-                                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 3 }}>Loading...</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 3 }}>Loading...</TableCell></TableRow>
                             ) : filteredFirms?.length === 0 ? (
-                                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 3, color: 'text.secondary' }}>No firms found</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 3, color: 'text.secondary' }}>No firms found</TableCell></TableRow>
                             ) : (
                                 filteredFirms?.map((firm) => (
                                     <TableRow key={firm._id} hover>
                                         <TableCell sx={{ fontWeight: 700 }}>{firm.firmName}</TableCell>
-                                        <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#666' }}>{firm.subdomain}.cacloud.in</Typography></TableCell>
+                                        <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#666' }}>{firm.subdomain}.mycafile.in</Typography></TableCell>
+                                        <TableCell>{firm.mobile || '-'}</TableCell>
                                         <TableCell>
                                             <Chip label={firm.plan.charAt(0).toUpperCase() + firm.plan.slice(1)} size="small" sx={{
                                                 bgcolor: firm.plan?.toLowerCase() === 'enterprise' ? '#6200ea15' : '#e3f2fd',

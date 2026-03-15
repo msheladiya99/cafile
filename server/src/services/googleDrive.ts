@@ -375,7 +375,14 @@ export const initializeDriveService = (): GoogleDriveService => {
     return driveServiceInstance;
 };
 
+import { getRootFolderId } from '../utils/context';
+
 export const getDriveService = (): GoogleDriveService => {
+    const rootFolderId = getRootFolderId();
+    if (rootFolderId) {
+        return getTenantDriveService(rootFolderId);
+    }
+
     if (!driveServiceInstance) {
         return initializeDriveService();
     }

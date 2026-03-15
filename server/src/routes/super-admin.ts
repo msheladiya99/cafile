@@ -63,6 +63,10 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
         const completedTasks = await Task.countDocuments({ status: 'DONE' });
         const totalInvoices = await Invoice.countDocuments();
         const totalFiles = await File.countDocuments();
+        const totalStaff = await User.countDocuments({ role: { $ne: 'CLIENT' } });
+        const storageUsage = `${(totalFiles * 0.5).toFixed(1)} MB`;
+
+        console.log('SUPER_ADMIN_DASHBOARD', { totalFirms, totalUsers, totalClients });
 
         // Calculate actual revenue based on plans
         const firms = await Firm.find();
@@ -101,10 +105,13 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
             }
         });
 
+        const recentFirms = await Firm.find().sort({ createdAt: -1 }).limit(5).lean();
+
         res.json({
             widgets: {
-                totalFirms, activeFirms, suspendedFirms, totalUsers, totalClients, totalTasks, totalInvoices, totalRevenue
+                totalFirms, activeFirms, suspendedFirms, totalUsers, totalStaff, totalClients, totalTasks, totalInvoices, totalRevenue, storageUsage
             },
+            recentFirms,
             charts: {
                 firmRegistrations: last6Months,
                 platformUsage: {
@@ -115,6 +122,12 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
                 taskActivity: [
                     { name: 'Pending', value: totalTasks - completedTasks },
                     { name: 'Completed', value: completedTasks }
+                ],
+                plansDistribution: [
+                    { name: 'Trial', value: await Firm.countDocuments({ plan: 'trial' }) },
+                    { name: 'Basic', value: await Firm.countDocuments({ plan: 'basic' }) },
+                    { name: 'Professional', value: await Firm.countDocuments({ plan: 'professional' }) },
+                    { name: 'Enterprise', value: await Firm.countDocuments({ plan: 'enterprise' }) }
                 ]
             }
         });
@@ -127,7 +140,9 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
 // Get all firms
 router.get('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
+        console.log('GET_ALL_FIRMS_REQUEST');
         const firms = await Firm.find().sort({ createdAt: -1 }).lean();
+        console.log(`Found ${firms.length} firms`);
         const enrichedFirms = await Promise.all(firms.map(async (f) => {
             const usersCount = await User.countDocuments({ firmId: f._id });
             const clientsCount = await Client.countDocuments({ firmId: f._id });
@@ -155,46 +170,86 @@ router.get('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Respo
     }
 });
 
-// Create new firm
 router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const { firmName, subdomain, email, plan, adminUsername, adminPassword } = req.body;
-        const existingFirm = await Firm.findOne({ subdomain });
-        if (existingFirm) return res.status(400).json({ message: 'Subdomain already exists' });
+        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType } = req.body;
+        let { subdomain } = req.body;
+
+        // Auto-generate subdomain if not provided
+        if (!subdomain) {
+            const { slugify } = await import('../utils/slugify');
+            subdomain = slugify(firmName);
+        }
+
+        // Ensure unique subdomain
+        let finalSubdomain = subdomain;
+        let counter = 1;
+        while (await Firm.findOne({ subdomain: finalSubdomain })) {
+            finalSubdomain = `${subdomain}${counter}`;
+            counter++;
+        }
 
         let googleDriveRootFolderId = '';
         try {
             const driveService = getDriveService();
             if (driveService) {
-                googleDriveRootFolderId = await driveService.createFolder(firmName);
+                // Requirement 6: Root folder CAFILES, firm inside it
+                const caFilesRootId = await driveService.ensureFolder('CAFILES');
+                googleDriveRootFolderId = await driveService.createFolder(firmName, caFilesRootId);
             }
         } catch (driveError) {
             console.warn('Skipping Google Drive folder creation:', (driveError as Error).message);
-            // We don't block firm creation if Drive is not configured
         }
 
         const firm = await Firm.create({
             firmName,
-            subdomain,
-            email,
-            plan: plan.toLowerCase(),
+            subdomain: finalSubdomain,
+            email: adminEmail,
+            plan: planType?.toLowerCase() || 'trial',
             status: 'active',
+            mobile: mobileNumber,
             googleDriveRootFolderId
         });
 
+        const bcrypt = await import('bcryptjs');
         const passwordHash = await bcrypt.hash(adminPassword, 10);
         const user = await User.create({
-            username: adminUsername,
+            username: adminEmail,
             passwordHash,
             role: 'ADMIN',
             firmId: firm._id,
-            email: email,
-            name: `${firmName} Admin`
+            email: adminEmail,
+            name: adminName || `${firmName} Admin`
         });
 
         res.status(201).json({ firm, user });
     } catch (error) {
         console.error('Create firm error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Reset Firm Admin Password
+router.post('/firms/:id/reset-password', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { newPassword } = req.body;
+        if (!newPassword) return res.status(400).json({ message: 'New password is required' });
+
+        const firm = await Firm.findById(req.params.id);
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update all ADMIN users for this firm
+        await User.updateMany(
+            { firmId: firm._id, role: 'ADMIN' },
+            { passwordHash: hashedPassword }
+        );
+
+        res.json({ message: 'Firm admin password reset successfully' });
+    } catch (error) {
+        console.error('Reset password error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

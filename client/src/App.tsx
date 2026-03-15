@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import { isSuperAdminDomain } from './utils/subdomain';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -71,6 +72,7 @@ const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
 const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
 
 
 const LoadingScreen = () => (
@@ -290,7 +292,7 @@ const AppRoutes: React.FC = () => {
             isAuthenticated ? (
               <Navigate to={getHomePath()} replace />
             ) : (
-              <Navigate to="/login" replace />
+              isSuperAdminDomain() ? <LandingPage /> : <Navigate to="/login" replace />
             )
           }
         />
