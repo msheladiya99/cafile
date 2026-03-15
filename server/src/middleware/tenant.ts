@@ -75,6 +75,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         subdomain === 'www' ||
         subdomain === 'api' ||
         subdomain === 'admin' ||
+        subdomain === 'superadmin' ||
+        subdomain === 'super-admin' ||
         subdomain === 'localhost' ||
         subdomain === 'cacloud' ||
         subdomain === 'mycafile'
