@@ -703,7 +703,7 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
 // -- Client Group Routes --
 
 // Create Client Group (Admin and Manager only)
-router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
 
@@ -712,7 +712,7 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
             return;
         }
 
-        const existingGroup = await ClientGroup.findOne({ groupName, firmId: req.firmId });
+        const existingGroup = await ClientGroup.findOne({ groupName });
         if (existingGroup) {
             res.status(400).json({ message: 'Group with this name already exists' });
             return;
@@ -726,7 +726,6 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
             email,
             mobileNumber,
             gstin,
-            firmId: req.firmId
         });
         await newGroup.save();
 
@@ -738,9 +737,9 @@ router.post('/client-groups', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async
 });
 
 // Get all Client Groups
-router.get('/client-groups', async (req: AuthRequest, res: Response) => {
+router.get('/client-groups', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const groups = await ClientGroup.find({ firmId: req.firmId })
+        const groups = await ClientGroup.find()
             .sort({ createdAt: -1 })
             .lean();
         res.json(groups);
@@ -751,15 +750,18 @@ router.get('/client-groups', async (req: AuthRequest, res: Response) => {
 });
 
 // -- IT Status Routes --
-router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.post('/it-status', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, status } = req.body;
         if (!name) return res.status(400).json({ message: 'Name is required' });
 
-        const existing = await ITStatus.findOne({ name });
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const existing = await ITStatus.findOne({ name, firmId });
         if (existing) return res.status(400).json({ message: 'IT Status with this name already exists' });
 
-        const item = new ITStatus({ name, description, status, firmId: req.firmId });
+        const item = new ITStatus({ name, description, status, firmId });
         await item.save();
 
         res.status(201).json(item);
@@ -769,9 +771,10 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
     }
 });
 
-router.get('/it-status', async (req: AuthRequest, res: Response) => {
+router.get('/it-status', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const items = await ITStatus.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
+        const firmId = req.firmId || req.user?.firmId;
+        const items = await ITStatus.find({ firmId }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -779,15 +782,18 @@ router.get('/it-status', async (req: AuthRequest, res: Response) => {
 });
 
 // -- Sub Master Routes --
-router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.post('/sub-master', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, status } = req.body;
         if (!name) return res.status(400).json({ message: 'Name is required' });
 
-        const existing = await SubMaster.findOne({ name });
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const existing = await SubMaster.findOne({ name, firmId });
         if (existing) return res.status(400).json({ message: 'Sub Master with this name already exists' });
 
-        const item = new SubMaster({ name, description, status, firmId: req.firmId });
+        const item = new SubMaster({ name, description, status, firmId });
         await item.save();
 
         res.status(201).json(item);
@@ -797,9 +803,10 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
     }
 });
 
-router.get('/sub-master', async (req: AuthRequest, res: Response) => {
+router.get('/sub-master', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const items = await SubMaster.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
+        const firmId = req.firmId || req.user?.firmId;
+        const items = await SubMaster.find({ firmId }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
