@@ -112,6 +112,12 @@ export const Login: React.FC = () => {
 
             await Promise.all([...prefetchPromises, delayPromise]);
 
+            if (!subdomain && data.user.role !== 'SUPER_ADMIN') {
+                setError('Main portal is for Super Admin only. Please login through your firm\'s subdomain.');
+                authService.logout(); // Ensure we don't keep the token
+                return;
+            }
+
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/super-admin/dashboard');
             } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
@@ -235,10 +241,10 @@ export const Login: React.FC = () => {
                             </Box>
 
                             <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: { xs: '2rem', sm: '2.5rem', md: '2.75rem' }, letterSpacing: -1, lineHeight: 1.1 }}>
-                                {subdomain ? 'Firm Login' : 'Admin Login'}
+                                {subdomain ? 'Firm Login' : 'Super Admin'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to management panel')}
+                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to master panel')}
                             </Typography>
                         </Box>
 
