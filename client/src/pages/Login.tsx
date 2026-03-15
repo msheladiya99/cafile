@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -120,7 +121,7 @@ export const Login: React.FC = () => {
             }
         } catch (err: unknown) {
             console.error('Login error:', err);
-            const axiosError = err as any; // Standard cast for axios errors in catch blocks
+            const axiosError = err as AxiosError<{ message: string }>; // Typed cast for axios errors
             const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Login failed. Please check your credentials.';
             setError(errorMessage);
         } finally {

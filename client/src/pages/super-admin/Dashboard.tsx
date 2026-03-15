@@ -77,8 +77,12 @@ const SuperAdminDashboard: React.FC = () => {
     }
 
     interface DashboardResponse {
-        widgets: Record<string, unknown>;
-        charts: Record<string, unknown>;
+        widgets: Record<string, number | string>;
+        charts: {
+            firmRegistrations?: { month: string; count: number; revenue?: number }[];
+            taskActivity?: { name: string; value: number }[];
+            platformUsage?: { clients?: number; files?: number; tasks?: number };
+        };
         recentFirms: DashboardFirm[];
     }
     const { widgets = {}, charts = {}, recentFirms = [] } = (data as DashboardResponse) || {};
@@ -147,7 +151,7 @@ const SuperAdminDashboard: React.FC = () => {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {charts.taskActivity?.map((_: unknown, index: number) => (
+                                        {Array.isArray(charts.taskActivity) && charts.taskActivity.map((_: unknown, index: number) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
