@@ -4,10 +4,8 @@ import {
     Button,
     Container,
     Typography,
-    Grid,
     Stack,
     Card,
-    CardContent,
     useTheme,
     useMediaQuery,
     AppBar,
@@ -15,345 +13,706 @@ import {
     IconButton,
     Paper,
     Divider,
-    TextField
+    TextField,
+    Avatar,
+    Rating,
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
     Menu as MenuIcon,
     ShieldOutlined,
     Speed as SpeedIcon,
-    Security as SecurityIcon,
     Groups as GroupsIcon,
-    Storage as StorageIcon,
     Language as LanguageIcon,
-    CloudDone as CloudIcon
+    CloudDone as CloudIcon,
+    CheckCircle as CheckCircleIcon,
+    ReceiptLong as ReceiptIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
+const MotionBox = motion(Box);
+
 export const LandingPage: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-    const features = [
+    const toggleMobileMenu = (open: boolean) => () => {
+        setMobileMenuOpen(open);
+    };
+
+    const navItems = ['Solutions', 'Features', 'Testimonials', 'Pricing'];
+
+    const solutions = [
         {
-            title: 'Multi-Tenant Architecture',
-            desc: 'Isolated environments for every CA firm with dedicated subdomains and secure data partitioning.',
-            icon: <CloudIcon sx={{ fontSize: 40, color: '#667eea' }} />
-        },
-        {
-            title: 'Practice Management',
-            desc: 'Complete suite for managing clients, staff, tasks, and attendance in one unified dashboard.',
-            icon: <GroupsIcon sx={{ fontSize: 40, color: '#764ba2' }} />
-        },
-        {
-            title: 'Secure Document Vault',
-            desc: 'Regulatory-grade document storage integrated with Google Drive for seamless file management.',
-            icon: <SecurityIcon sx={{ fontSize: 40, color: '#667eea' }} />
+            title: 'Manage Multiple Firms',
+            desc: 'Isolated data environments for every branch or sister concern under one master login.',
+            icon: <GroupsIcon sx={{ fontSize: 32, color: '#6366f1' }} />,
+            bgColor: '#f5f3ff'
         },
         {
             title: 'Automated Compliance',
-            desc: 'Track ITR, GST, and Audit deadlines with intelligent reminders and automated status tracking.',
-            icon: <SpeedIcon sx={{ fontSize: 40, color: '#764ba2' }} />
+            desc: 'Real-time tracking for ITR, GST, and Audit deadlines with intelligent reminders.',
+            icon: <SpeedIcon sx={{ fontSize: 32, color: '#ec4899' }} />,
+            bgColor: '#fdf2f8'
         },
         {
-            title: 'Subdomain System',
-            desc: 'Professional white-labeled experience with automatic subdomain generation for your firm.',
-            icon: <LanguageIcon sx={{ fontSize: 40, color: '#667eea' }} />
+            title: 'White-Labeled Experience',
+            desc: 'Custom subdomains and branding for your CA practice to impress your clients.',
+            icon: <LanguageIcon sx={{ fontSize: 32, color: '#0ea5e9' }} />,
+            bgColor: '#f0f9ff'
+        }
+    ];
+
+    const testimonials = [
+        {
+            name: 'CA Rajesh Mehra',
+            firm: 'Mehra & Associates, Varachha, Surat',
+            comment: "The multi-tenant isolation is revolutionary. Each of our branches operates seamlessly without data overlaps. A must-have for large firms in Surat.",
+            avatar: '/ca-review-1.png',
+            rating: 5
         },
         {
-            title: 'Billing & Invoicing',
-            desc: 'Create professional invoices, track payments, and manage client ledgers with ease.',
-            icon: <StorageIcon sx={{ fontSize: 40, color: '#764ba2' }} />
+            name: 'CA Sneha Patel',
+            firm: 'Patel & Co., Vesu, Surat',
+            comment: "Managing 1000+ ITR filings used to be a headache. With the automated tracking, our efficiency has spiked by over 60%. Highly recommend!",
+            avatar: '/ca-review-2.png',
+            rating: 5
+        },
+        {
+            name: 'CA Amit Shah',
+            firm: 'Shah & Partners, Adajan, Surat',
+            comment: "The document vault and billing system are game changers. We've moved 100% of our client documentation to My CA File safely.",
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit',
+            rating: 4.5
         }
     ];
 
     return (
-        <Box sx={{ bgcolor: 'white', minHeight: '100vh', overflowX: 'hidden' }}>
+        <Box sx={{ bgcolor: '#fff', minHeight: '100vh', overflowX: 'hidden' }}>
             <Helmet>
-                <title>My CA File - Premium CA Office Management SaaS</title>
-                <meta name="description" content="The ultimate practice management platform for Chartered Accountants. Manage firms, clients, tasks, and documents securely." />
+                <title>My CA File | Premium CA Practice Management Software in Surat</title>
+                <meta name="description" content="Ultimate office portal for Chartered Accountants. Manage ITR, GST, Audits, and Clients with a secure, multi-tenant SaaS platform built for professional CA firms in Surat and across India." />
+                <meta name="keywords" content="CA Office Software, Surat CA Firm Portal, ITR Management SaaS, GST Compliance Tool, My CA File, Practice Management India" />
+                <link rel="canonical" href="https://www.mycafile.in" />
             </Helmet>
 
-            {/* Navbar */}
-            <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #f0f0f0' }}>
+            {/* Premium Blurred Navbar */}
+            <AppBar position="fixed" elevation={0} sx={{
+                bgcolor: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(0,0,0,0.05)',
+                transition: 'all 0.3s ease'
+            }}>
                 <Container maxWidth="lg">
                     <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Box sx={{ bgcolor: '#667eea', p: 0.5, borderRadius: 1 }}>
-                                <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
+                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ cursor: 'pointer' }} onClick={() => window.scrollTo(0, 0)}>
+                            <Box sx={{
+                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                p: 0.8,
+                                borderRadius: '12px',
+                                display: 'flex'
+                            }}>
+                                <ShieldOutlined sx={{ color: 'white', fontSize: 26 }} />
                             </Box>
-                            <Typography variant="h5" fontWeight={900} color="#1e1b4b" sx={{ letterSpacing: -1 }}>
+                            <Typography variant="h5" fontWeight={1000} color="#1e1b4b" sx={{ letterSpacing: -1.5, display: { xs: 'none', sm: 'block' } }}>
                                 My CA File
                             </Typography>
                         </Stack>
 
                         {!isMobile && (
-                            <Stack direction="row" spacing={3} alignItems="center">
-                                {['Features', 'Solutions', 'Pricing', 'Contact'].map((item) => (
-                                    <Typography key={item} variant="body2" fontWeight={700} sx={{ cursor: 'pointer', color: '#6b7280', '&:hover': { color: '#667eea' } }}>
+                            <Stack direction="row" spacing={4} alignItems="center">
+                                {navItems.map((item) => (
+                                    <Typography key={item} variant="body2" fontWeight={700} sx={{
+                                        cursor: 'pointer',
+                                        color: '#4b5563',
+                                        '&:hover': { color: '#6366f1' },
+                                        transition: 'color 0.2s'
+                                    }}>
                                         {item}
                                     </Typography>
                                 ))}
-                                <Button variant="outlined" onClick={() => navigate('/login')} sx={{ borderRadius: 2, fontWeight: 800 }}>
-                                    Login
+                                <Button
+                                    variant="text"
+                                    onClick={() => navigate('/login')}
+                                    sx={{ color: '#1e1b4b', fontWeight: 800, textTransform: 'none' }}
+                                >
+                                    Log In
                                 </Button>
-                                <Button variant="contained" onClick={() => navigate('/login')} sx={{ borderRadius: 2, fontWeight: 800, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                                    Start Free Trial
+                                <Button
+                                    variant="contained"
+                                    onClick={() => navigate('/login')}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        px: 3,
+                                        fontWeight: 800,
+                                        textTransform: 'none',
+                                        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                        boxShadow: '0 8px 20px rgba(99, 102, 241, 0.2)'
+                                    }}
+                                >
+                                    Try it Free
                                 </Button>
                             </Stack>
                         )}
 
                         {isMobile && (
-                            <IconButton color="inherit" sx={{ color: '#1e1b4b' }}>
+                            <IconButton color="inherit" onClick={toggleMobileMenu(true)} sx={{ color: '#1e1b4b' }}>
                                 <MenuIcon />
                             </IconButton>
                         )}
                     </Toolbar>
                 </Container>
-            </AppBar>
 
-            {/* Hero Section */}
-            <Box sx={{
-                pt: { xs: 8, md: 12 },
-                pb: { xs: 10, md: 20 },
-                position: 'relative',
-                background: 'linear-gradient(180deg, #f8faff 0%, white 100%)'
-            }}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={6} alignItems="center">
-                        <Grid size={{ xs: 12, md: 7 }}>
-                            <motion.div
-                                initial={{ opacity: 0, x: -30 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.8 }}
-                            >
-                                <Typography variant="overline" sx={{ color: '#667eea', fontWeight: 900, letterSpacing: 2 }}>
-                                    POWERING MODERN PRACTICE
-                                </Typography>
-                                <Typography variant="h1" sx={{
-                                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
-                                    fontWeight: 900,
-                                    color: '#1e1b4b',
-                                    lineHeight: 1.1,
-                                    mb: 3,
-                                    letterSpacing: -2
-                                }}>
-                                    Manage Your CA Firm <br />
-                                    <span style={{ color: '#667eea' }}>With Precision.</span>
-                                </Typography>
-                                <Typography variant="h5" sx={{ color: '#6b7280', mb: 5, lineHeight: 1.6, fontWeight: 500 }}>
-                                    The all-in-one SaaS platform designed specifically for Chartered Accountants. Streamline operations, automate compliance, and scale your practice securely.
-                                </Typography>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                                    <Button size="large" variant="contained" onClick={() => navigate('/login')} sx={{
-                                        px: 4,
-                                        py: 2,
-                                        borderRadius: 3,
-                                        fontSize: '1.1rem',
-                                        fontWeight: 800,
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)'
-                                    }}>
-                                        Get Started Now
-                                    </Button>
-                                    <Button size="large" variant="outlined" sx={{
-                                        px: 4,
-                                        py: 2,
-                                        borderRadius: 3,
-                                        fontSize: '1.1rem',
-                                        fontWeight: 800,
-                                        borderColor: '#e5e7eb',
-                                        color: '#1e1b4b'
-                                    }}>
-                                        Watch Demo
-                                    </Button>
-                                </Stack>
-                            </motion.div>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 5 }}>
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 1, delay: 0.2 }}
-                            >
-                                <Box sx={{ position: 'relative' }}>
-                                    <Box
-                                        component="img"
-                                        src="/landing-hero.png"
-                                        sx={{
-                                            width: '100%',
-                                            borderRadius: 10,
-                                            boxShadow: '0 40px 80px rgba(0,0,0,0.1)',
-                                            zIndex: 2,
-                                            position: 'relative'
-                                        }}
-                                    />
-                                    {/* Abstract Circle decoration */}
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        width: '120%',
-                                        height: '120%',
-                                        top: '-10%',
-                                        left: '-10%',
-                                        background: 'radial-gradient(circle, rgba(102,126,234,0.05) 0%, transparent 70%)',
-                                        zIndex: 1
-                                    }} />
-                                </Box>
-                            </motion.div>
-                        </Grid>
-                    </Grid>
-                </Container>
-            </Box>
-
-            {/* Features Section */}
-            <Box sx={{ py: 15 }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center', mb: 10 }}>
-                        <Typography variant="overline" sx={{ color: '#667eea', fontWeight: 900, letterSpacing: 2 }}>
-                            CORE CAPABILITIES
-                        </Typography>
-                        <Typography variant="h2" sx={{ fontWeight: 900, color: '#1e1b4b', letterSpacing: -1 }}>
-                            Everything You Need to <br /> Scale Your practice.
+                {/* Mobile Drawer */}
+                <Drawer
+                    anchor="right"
+                    open={mobileMenuOpen}
+                    onClose={toggleMobileMenu(false)}
+                    PaperProps={{
+                        sx: { width: '280px', p: 2 }
+                    }}
+                >
+                    <Box sx={{ mb: 4, mt: 2, textAlign: 'center' }}>
+                        <Typography variant="h6" fontWeight={1000} color="#1e1b4b">
+                            My CA File
                         </Typography>
                     </Box>
-
-                    <Grid container spacing={4}>
-                        {features.map((feature, index) => (
-                            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                                <motion.div
-                                    whileHover={{ y: -10 }}
-                                    transition={{ type: 'spring', stiffness: 300 }}
-                                >
-                                    <Card sx={{
-                                        height: '100%',
-                                        borderRadius: 6,
-                                        p: 2,
-                                        bgcolor: 'white',
-                                        border: '1px solid #f0f0f0',
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
-                                        '&:hover': { boxShadow: '0 20px 50px rgba(0,0,0,0.06)' }
-                                    }}>
-                                        <CardContent>
-                                            <Box sx={{ mb: 3 }}>
-                                                {feature.icon}
-                                            </Box>
-                                            <Typography variant="h5" sx={{ fontWeight: 800, mb: 2, color: '#1e1b4b' }}>
-                                                {feature.title}
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ color: '#6b7280', lineHeight: 1.7 }}>
-                                                {feature.desc}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            </Grid>
+                    <List>
+                        {navItems.map((text) => (
+                            <ListItem key={text} disablePadding>
+                                <ListItemButton onClick={toggleMobileMenu(false)} sx={{ borderRadius: '12px', mb: 1 }}>
+                                    <ListItemText primary={text} primaryTypographyProps={{ fontWeight: 700, color: '#4b5563' }} />
+                                </ListItemButton>
+                            </ListItem>
                         ))}
-                    </Grid>
-                </Container>
-            </Box>
+                        <Divider sx={{ my: 2 }} />
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={() => navigate('/login')} sx={{ borderRadius: '12px', mb: 1, bgcolor: '#f3f4f6' }}>
+                                <ListItemText primary="Log In" primaryTypographyProps={{ fontWeight: 800, color: '#1e1b4b' }} />
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                onClick={() => navigate('/login')}
+                                sx={{
+                                    borderRadius: '12px',
+                                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                    color: 'white'
+                                }}
+                            >
+                                <ListItemText primary="Try it Free" primaryTypographyProps={{ fontWeight: 800 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    </List>
+                </Drawer>
+            </AppBar>
 
-            {/* Stats Section */}
-            <Box sx={{ py: 10, bgcolor: '#1e1b4b', color: 'white' }}>
+            {/* Background Blobs for Aesthetic */}
+            <Box sx={{ position: 'relative', pt: 15, overflow: 'hidden' }}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: -200,
+                    right: -200,
+                    width: 600,
+                    height: 600,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
+                    zIndex: -1
+                }} />
+                <Box sx={{
+                    position: 'absolute',
+                    top: 200,
+                    left: -300,
+                    width: 800,
+                    height: 800,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.05) 0%, transparent 70%)',
+                    zIndex: -1
+                }} />
+
                 <Container maxWidth="lg">
-                    <Grid container spacing={4} sx={{ textAlign: 'center' }}>
-                        {[
-                            { label: 'Active Firms', val: '500+' },
-                            { label: 'Files Managed', val: '1M+' },
-                            { label: 'Uptime', val: '99.9%' },
-                            { label: 'Support', val: '24/7' }
-                        ].map((stat, i) => (
-                            <Grid size={{ xs: 6, md: 3 }} key={i}>
-                                <Typography variant="h2" sx={{ fontWeight: 900, mb: 1, color: '#667eea' }}>{stat.val}</Typography>
-                                <Typography variant="h6" sx={{ opacity: 0.7, fontWeight: 700 }}>{stat.label}</Typography>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Container>
-            </Box>
+                    {/* Hero Section */}
+                    <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <Typography variant="overline" sx={{
+                                color: '#6366f1',
+                                fontWeight: 900,
+                                letterSpacing: 3,
+                                bgcolor: '#f5f3ff',
+                                px: 2,
+                                py: 0.5,
+                                borderRadius: 10,
+                                mb: 3,
+                                display: 'inline-block'
+                            }}>
+                                OVER 500+ FIRMS TRUSTED
+                            </Typography>
+                            <Typography variant="h1" sx={{
+                                fontSize: { xs: '2.2rem', md: '4.5rem' },
+                                fontWeight: 1000,
+                                color: '#0f172a',
+                                lineHeight: { xs: 1.2, md: 1.1 },
+                                mb: 3,
+                                letterSpacing: { xs: -1, md: -2.5 }
+                            }}>
+                                Unlock your practice <br />
+                                <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    potential
+                                </span> with My CA File
+                            </Typography>
+                            <Typography variant="h5" sx={{
+                                color: '#64748b',
+                                maxWidth: '700px',
+                                mx: 'auto',
+                                mb: 6,
+                                px: { xs: 2, sm: 0 },
+                                fontSize: { xs: '0.95rem', md: '1.5rem' },
+                                lineHeight: 1.6,
+                                fontWeight: 500
+                            }}>
+                                The world's simplest and fastest platform for CA firms. Manage ITR, GST, Billing, and Team Collaboration in one unified dashboard.
+                            </Typography>
 
-            {/* CTA Section */}
-            <Box sx={{ py: 15, textAlign: 'center' }}>
-                <Container maxWidth="sm">
-                    <Paper elevation={0} sx={{
-                        p: 6,
-                        borderRadius: 8,
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                        color: 'white'
-                    }}>
-                        <Typography variant="h3" sx={{ fontWeight: 900, mb: 3, letterSpacing: -1 }}>
-                            Ready to transform your practice?
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ mb: 10, px: { xs: 4, sm: 0 } }}>
+                                <Button
+                                    size={isMobile ? "medium" : "large"}
+                                    variant="contained"
+                                    onClick={() => navigate('/login')}
+                                    sx={{
+                                        px: { xs: 3, md: 5 },
+                                        py: { xs: 1.5, md: 2 },
+                                        borderRadius: '16px',
+                                        fontSize: { xs: '0.95rem', md: '1.1rem' },
+                                        fontWeight: 1000,
+                                        textTransform: 'none',
+                                        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                        boxShadow: '0 20px 40px rgba(99, 102, 241, 0.25)',
+                                        '&:hover': { transform: 'translateY(-2px)', transition: 'all 0.2s' }
+                                    }}
+                                >
+                                    Get Started Free
+                                </Button>
+                                <Button
+                                    size={isMobile ? "medium" : "large"}
+                                    variant="outlined"
+                                    sx={{
+                                        px: { xs: 3, md: 5 },
+                                        py: { xs: 1.5, md: 2 },
+                                        borderRadius: '16px',
+                                        fontSize: { xs: '0.95rem', md: '1.1rem' },
+                                        fontWeight: 1000,
+                                        textTransform: 'none',
+                                        borderColor: '#e2e8f0',
+                                        color: '#1e293b',
+                                        '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' }
+                                    }}
+                                >
+                                    Watch Video
+                                </Button>
+                            </Stack>
+                        </motion.div>
+
+                        {/* Large Hero Image Mockup */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                            style={{ position: 'relative' }}
+                        >
+                            <Box sx={{
+                                position: 'relative',
+                                mx: 'auto',
+                                maxWidth: '1000px',
+                                perspective: '1000px'
+                            }}>
+                                <Box
+                                    component="img"
+                                    src="/landing-hero-new.png"
+                                    sx={{
+                                        width: '100%',
+                                        height: 'auto',
+                                        borderRadius: '24px',
+                                        boxShadow: '0 50px 100px -20px rgba(15, 23, 42, 0.15)',
+                                        border: '1px solid rgba(255,255,255,0.8)',
+                                        zIndex: 2,
+                                        position: 'relative'
+                                    }}
+                                />
+                                {/* Decorative elements behind image */}
+                                <Box sx={{
+                                    position: 'absolute',
+                                    bottom: -30,
+                                    left: '10%',
+                                    width: '80%',
+                                    height: '40px',
+                                    bgcolor: 'rgba(99, 102, 241, 0.3)',
+                                    filter: 'blur(50px)',
+                                    zIndex: 1
+                                }} />
+                            </Box>
+                        </motion.div>
+                    </Box>
+
+                    {/* Solutions Grid */}
+                    <Box sx={{ py: { xs: 10, md: 15 } }}>
+                        <Box sx={{ textAlign: 'center', mb: 8 }}>
+                            <Typography variant="h3" sx={{
+                                fontWeight: 1000,
+                                color: '#0f172a',
+                                mb: 2,
+                                letterSpacing: -1,
+                                fontSize: { xs: '1.75rem', md: '3rem' }
+                            }}>
+                                Solution made for you
+                            </Typography>
+                            <Typography variant="body1" sx={{
+                                color: '#64748b',
+                                fontSize: { xs: '0.9rem', md: '1.1rem' },
+                                maxWidth: 600,
+                                mx: 'auto',
+                                px: { xs: 2, sm: 0 }
+                            }}>
+                                Our innovative solution is specifically designed to streamline your CA practice workflow, boost efficiency, and eliminate distractions.
+                            </Typography>
+                        </Box>
+
+                        <Grid container spacing={4}>
+                            {solutions.map((sol, index) => (
+                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                                    <MotionBox
+                                        whileHover={{ y: -10 }}
+                                        transition={{ type: 'spring', stiffness: 300 }}
+                                        sx={{
+                                            p: { xs: 3, md: 4 },
+                                            height: '100%',
+                                            borderRadius: '24px',
+                                            bgcolor: sol.bgColor,
+                                            border: '1px solid rgba(0,0,0,0.02)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 2
+                                        }}
+                                    >
+                                        <Box sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: 64,
+                                            height: 64,
+                                            borderRadius: '16px',
+                                            bgcolor: 'white',
+                                            boxShadow: '0 10px 20px rgba(0,0,0,0.03)'
+                                        }}>
+                                            {sol.icon}
+                                        </Box>
+                                        <Typography variant="h5" sx={{
+                                            fontWeight: 1000,
+                                            color: '#1e293b',
+                                            fontSize: { xs: '1.25rem', md: '1.5rem' }
+                                        }}>
+                                            {sol.title}
+                                        </Typography>
+                                        <Typography variant="body1" sx={{
+                                            color: '#475569',
+                                            lineHeight: 1.7,
+                                            fontSize: { xs: '0.875rem', md: '1rem' }
+                                        }}>
+                                            {sol.desc}
+                                        </Typography>
+                                    </MotionBox>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+
+                    {/* Detailed Feature 1 */}
+                    <Grid container spacing={{ xs: 6, md: 8 }} alignItems="center" sx={{ py: 10 }}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2 }}>
+                                DATA FOCUS
+                            </Typography>
+                            <Typography variant="h2" sx={{
+                                fontWeight: 1000,
+                                color: '#0f172a',
+                                mb: 3,
+                                mt: 1,
+                                letterSpacing: { xs: -1, md: -2 },
+                                lineHeight: { xs: 1.2, md: 1.1 },
+                                fontSize: { xs: '1.8rem', md: '3.75rem' }
+                            }}>
+                                Analyze your data <br /> with powerful tools
+                            </Typography>
+                            <Typography variant="body1" sx={{
+                                color: '#64748b',
+                                fontSize: { xs: '0.9rem', md: '1.2rem' },
+                                mb: 4,
+                                lineHeight: 1.7
+                            }}>
+                                Track client compliance health across all firms in real-time. Our advanced dashboard provides insights that help you stay ahead of regulatory deadlines.
+                            </Typography>
+                            <Stack spacing={2.5}>
+                                {
+                                    [
+                                        { text: 'Dynamic Compliance Tracker', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> },
+                                        { text: 'Automated Billing & Reporting', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> },
+                                        { text: 'Secure PDF Generation', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> }
+                                    ].map((item, i) => (
+                                        <Stack direction="row" spacing={1.5} alignItems="center" key={i}>
+                                            {item.icon}
+                                            <Typography variant="body1" sx={{
+                                                fontWeight: 700,
+                                                color: '#1e293b',
+                                                fontSize: { xs: '0.9rem', md: '1rem' }
+                                            }}>{item.text}</Typography>
+                                        </Stack>
+                                    ))
+                                }
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Box sx={{
+                                p: 2,
+                                bgcolor: '#f8fafc',
+                                borderRadius: '32px',
+                                position: 'relative',
+                                display: 'flex',
+                                justifyContent: 'center'
+                            }}>
+                                <Box
+                                    component="img"
+                                    src="/landing-analytics.png"
+                                    sx={{ width: '100%', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
+                                />
+                                <Box sx={{
+                                    position: 'absolute',
+                                    top: -40,
+                                    right: -20,
+                                    bgcolor: 'white',
+                                    p: 3,
+                                    borderRadius: '24px',
+                                    boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
+                                    display: { xs: 'none', lg: 'block' }
+                                }}>
+                                    <Stack spacing={1}>
+                                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>EFFICIENCY BOOST</Typography>
+                                        <Typography variant="h4" sx={{ color: '#22c55e', fontWeight: 1000 }}>+84%</Typography>
+                                    </Stack>
+                                </Box>
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    {/* Testimonials */}
+                    <Box sx={{ py: 15, textAlign: 'center' }}>
+                        <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2, fontSize: '0.75rem' }}>
+                            CLIENT STORIES
                         </Typography>
-                        <Typography variant="h6" sx={{ mb: 5, opacity: 0.8, fontWeight: 500 }}>
-                            Join hundreds of top CA firms using My CA File to manage their operations.
-                        </Typography>
-                        <Button size="large" variant="contained" onClick={() => navigate('/login')} sx={{
-                            px: 5,
-                            py: 2,
-                            borderRadius: 3,
-                            fontSize: '1.1rem',
-                            fontWeight: 800,
-                            bgcolor: 'white',
-                            color: '#1e1b4b',
-                            '&:hover': { bgcolor: '#f9fafb' }
+                        <Typography variant="h3" sx={{
+                            fontWeight: 1000,
+                            color: '#0f172a',
+                            mb: { xs: 4, md: 8 },
+                            letterSpacing: -1,
+                            fontSize: { xs: '1.75rem', md: '3rem' }
                         }}>
-                            Get Started Free
-                        </Button>
+                            Trusted by Surat's Leading CA Firms
+                        </Typography>
+
+                        <Grid container spacing={4}>
+                            {testimonials.map((test, index) => (
+                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                                    <Card sx={{
+                                        borderRadius: '24px',
+                                        p: { xs: 3, md: 4 },
+                                        height: '100%',
+                                        border: '1px solid rgba(0,0,0,0.05)',
+                                        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                                        '&:hover': { boxShadow: '0 20px 40px rgba(0,0,0,0.08)', transform: 'translateY(-5px)' },
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        textAlign: 'left'
+                                    }}>
+                                        <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
+                                            <Avatar src={test.avatar} sx={{ width: 56, height: 56, border: '2px solid #6366f1' }} />
+                                            <Box>
+                                                <Typography variant="subtitle1" sx={{
+                                                    fontWeight: 800,
+                                                    color: '#1e293b',
+                                                    fontSize: { xs: '0.9rem', md: '1rem' }
+                                                }}>{test.name}</Typography>
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>{test.firm}</Typography>
+                                            </Box>
+                                        </Stack>
+                                        <Rating value={test.rating} precision={0.5} readOnly sx={{ color: '#f59e0b', mb: 2 }} />
+                                        <Typography variant="body1" sx={{
+                                            color: '#475569',
+                                            fontStyle: 'italic',
+                                            lineHeight: 1.7,
+                                            fontSize: { xs: '0.85rem', md: '1rem' }
+                                        }}>
+                                            "{test.comment}"
+                                        </Typography>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+
+                    {/* Pricing Teaser / Stats */}
+                    <Paper elevation={0} sx={{
+                        py: 10,
+                        px: 4,
+                        borderRadius: '40px',
+                        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                        color: 'white',
+                        textAlign: 'center',
+                        mb: 15,
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.1, backgroundImage: 'radial-gradient(#fff 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+
+                        <Grid container spacing={4} sx={{ position: 'relative' }}>
+                            {[
+                                { label: 'Active Firms', val: '500+', icon: <GroupsIcon sx={{ fontSize: 40 }} /> },
+                                { label: 'Files Managed', val: '1M+', icon: <CloudIcon sx={{ fontSize: 40 }} /> },
+                                { label: 'Invoices Paid', val: '₹40Cr+', icon: <ReceiptIcon sx={{ fontSize: 40 }} /> },
+                                { label: 'Uptime', val: '99.9%', icon: <SpeedIcon sx={{ fontSize: 40 }} /> }
+                            ].map((stat, i) => (
+                                <Grid size={{ xs: 6, md: 3 }} key={i}>
+                                    <Box sx={{ mb: 2, color: '#6366f1' }}>{stat.icon}</Box>
+                                    <Typography variant="h3" sx={{
+                                        fontWeight: 1000,
+                                        mb: 1,
+                                        fontSize: { xs: '1.5rem', md: '3rem' }
+                                    }}>{stat.val}</Typography>
+                                    <Typography variant="subtitle1" sx={{
+                                        opacity: 0.6,
+                                        fontWeight: 700,
+                                        fontSize: { xs: '0.8rem', md: '1rem' }
+                                    }}>{stat.label}</Typography>
+                                </Grid>
+                            ))}
+                        </Grid>
                     </Paper>
+
+                    {/* Final CTA */}
+                    <Box sx={{ py: 10, textAlign: 'center', mb: 10 }}>
+                        <Typography variant="h2" sx={{
+                            fontWeight: 1000,
+                            color: '#0f172a',
+                            mb: 4,
+                            letterSpacing: -2,
+                            fontSize: { xs: '1.8rem', md: '3.75rem' }
+                        }}>
+                            Ready to scale your <br /> practice?
+                        </Typography>
+                        <Button
+                            size={isMobile ? "medium" : "large"}
+                            variant="contained"
+                            onClick={() => navigate('/login')}
+                            sx={{
+                                px: { xs: 5, md: 10 },
+                                py: { xs: 1.5, md: 2.5 },
+                                borderRadius: '20px',
+                                fontSize: { xs: '1rem', md: '1.2rem' },
+                                fontWeight: 1000,
+                                textTransform: 'none',
+                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                                boxShadow: '0 20px 50px rgba(99, 102, 241, 0.3)',
+                            }}
+                        >
+                            Get Started Now
+                        </Button>
+                        <Typography variant="body2" sx={{
+                            mt: 3,
+                            color: '#64748b',
+                            fontWeight: 600,
+                            fontSize: { xs: '0.75rem', md: '0.875rem' }
+                        }}>
+                            No credit card required • 14-day free trial • Cancel anytime
+                        </Typography>
+                    </Box>
                 </Container>
             </Box>
 
             {/* Footer */}
-            <Box sx={{ py: 10, bgcolor: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
+            <Box sx={{ py: 10, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                 <Container maxWidth="lg">
-                    <Grid container spacing={8}>
+                    <Grid container spacing={6}>
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
-                                <Box sx={{ bgcolor: '#667eea', p: 0.5, borderRadius: 1 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+                                <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px' }}>
                                     <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
                                 </Box>
-                                <Typography variant="h5" fontWeight={900} color="#1e1b4b">
+                                <Typography variant="h6" fontWeight={1000} color="#1e1b4b">
                                     My CA File
                                 </Typography>
                             </Stack>
-                            <Typography variant="body1" sx={{ color: '#6b7280', mb: 4 }}>
-                                The ultimate practice management software for Chartered Accountants in India. High security, multi-tenant.
+                            <Typography variant="body2" sx={{ color: '#64748b', maxWidth: 300, lineHeight: 1.8, mb: 4 }}>
+                                The ultimate practice management software for Chartered Accountants in India. High security, multi-tenant, and purpose-built.
                             </Typography>
+                            <Stack direction="row" spacing={2}>
+                                {['LinkedIn', 'Twitter', 'YouTube'].map(social => (
+                                    <Typography key={social} variant="caption" sx={{ fontWeight: 800, cursor: 'pointer', color: '#1e293b' }}>{social}</Typography>
+                                ))}
+                            </Stack>
                         </Grid>
+
                         <Grid size={{ xs: 6, md: 2 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Product</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Product</Typography>
                             <Stack spacing={2}>
                                 {['Features', 'Updates', 'Security', 'Enterprise'].map(item => (
-                                    <Typography key={item} variant="body2" sx={{ color: '#6b7280', cursor: 'pointer' }}>{item}</Typography>
+                                    <Typography key={item} variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>{item}</Typography>
                                 ))}
                             </Stack>
                         </Grid>
+
                         <Grid size={{ xs: 6, md: 2 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Company</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Company</Typography>
                             <Stack spacing={2}>
-                                {['About', 'Careers', 'Contact', 'Blog'].map(item => (
-                                    <Typography key={item} variant="body2" sx={{ color: '#6b7280', cursor: 'pointer' }}>{item}</Typography>
+                                {['About', 'Careers', 'Contact', 'Press'].map(item => (
+                                    <Typography key={item} variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>{item}</Typography>
                                 ))}
                             </Stack>
                         </Grid>
+
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Subscribe</Typography>
-                            <Typography variant="body2" sx={{ color: '#6b7280', mb: 3 }}>Get the latest updates in your inbox.</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Newsletter</Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>Get the latest updates on tax compliance and software features.</Typography>
                             <Stack direction="row" spacing={1}>
-                                <TextField placeholder="Email" size="small" fullWidth sx={{ bgcolor: 'white' }} />
-                                <Button variant="contained" sx={{ px: 3, fontWeight: 800 }}>Join</Button>
+                                <TextField
+                                    placeholder="Enter your email"
+                                    size="small"
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{ bgcolor: 'white', '& fieldset': { borderRadius: '12px' } }}
+                                />
+                                <Button variant="contained" sx={{ px: 3, borderRadius: '12px', bgcolor: '#1e293b', fontWeight: 800 }}>Join</Button>
                             </Stack>
                         </Grid>
                     </Grid>
-                    <Divider sx={{ my: 8 }} />
+                    <Divider sx={{ my: 8, borderColor: '#e2e8f0' }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                        <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            © 2026 My CA File. All rights reserved. Built for Chartered Accountants.
+                        <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                            © 2026 My CA File. All rights reserved. Created for Chartered Accountants in Surat, Gujarat.
                         </Typography>
-                        <Stack direction="row" spacing={3}>
-                            <Typography variant="body2" sx={{ color: '#6b7280', cursor: 'pointer' }}>Privacy Policy</Typography>
-                            <Typography variant="body2" sx={{ color: '#6b7280', cursor: 'pointer' }}>Terms of Service</Typography>
+                        <Stack direction="row" spacing={4}>
+                            <Typography variant="caption" sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Privacy Policy</Typography>
+                            <Typography variant="caption" sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Terms of Service</Typography>
                         </Stack>
                     </Box>
                 </Container>
@@ -361,5 +720,3 @@ export const LandingPage: React.FC = () => {
         </Box>
     );
 };
-
-
