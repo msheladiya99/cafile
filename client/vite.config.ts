@@ -13,23 +13,7 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Core React ecosystem — smaller chunks are better for Lighthouse
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-core';
-          }
-          // tanstack query
-          if (id.includes('node_modules/@tanstack/')) {
-            return 'vendor-tanstack';
-          }
-          // Large utility libraries
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/pdfjs-dist')) {
-            return 'vendor-utils-pdf';
-          }
-          if (id.includes('node_modules/recharts')) {
-            return 'vendor-charts';
-          }
-        },
+        // Remove manualChunks to prevent over-eager pre-fetching of lazy modules
       },
     },
     chunkSizeWarningLimit: 600,

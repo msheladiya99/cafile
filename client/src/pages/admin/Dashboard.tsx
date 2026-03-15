@@ -1,34 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Box,
-    Paper,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    Chip,
-    Button,
-    Grid,
-    Tooltip,
-    IconButton,
-    TextField,
-    Avatar
-} from '@mui/material';
-import {
-    People as PeopleIcon,
-    CloudUpload as UploadIcon,
-    TrendingUp,
-    Event as EventIcon,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    Add as AddIcon,
-    Delete as DeleteIcon,
-    CheckCircle as CheckCircleIcon,
-    RadioButtonUnchecked as UncheckedIcon,
-    Assignment as AssignmentIcon,
-    PieChart as PieChartIcon
-} from '@mui/icons-material';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import Avatar from '@mui/material/Avatar';
+import PeopleIcon from '@mui/icons-material/People';
+import UploadIcon from '@mui/icons-material/CloudUpload';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import EventIcon from '@mui/icons-material/Event';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import UncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PieChartIcon from '@mui/icons-material/PieChart';
 import { adminService } from '../../services/adminService';
 import { reminderService } from '../../services/reminderService';
 import { useNavigate } from 'react-router-dom';

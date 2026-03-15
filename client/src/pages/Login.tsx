@@ -193,7 +193,7 @@ export const Login: React.FC = () => {
                                     <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
                                 </Box>
                                 <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
-                                    {subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'cacloud portal'}
+                                    {subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'CA Office Portal'}
                                 </Typography>
                             </Box>
 

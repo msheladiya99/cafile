@@ -17,7 +17,9 @@ export const getSubdomain = () => {
 
     // Assuming domain is something like abc.mycafile.in or abc.cacloud.in
     if (parts.length >= 3) {
-        return parts[0];
+        const subdomain = parts[0];
+        if (subdomain.toLowerCase() === 'www') return '';
+        return subdomain;
     }
 
     return '';
