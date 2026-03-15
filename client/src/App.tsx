@@ -8,14 +8,16 @@ import { Toaster } from 'react-hot-toast';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-// Lazy load layouts and auth pages
+// Core layouts and pages - eager load for critical performance
+import { AdminLayout } from './layouts/AdminLayout';
+import { AdminDashboard } from './pages/admin/Dashboard';
+
+// Lazy load other layouts and secondary pages
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
-const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
 const ClientLayout = lazy(() => import('./layouts/ClientLayout').then(module => ({ default: module.ClientLayout })));
 const SuperAdminLayout = lazy(() => import('./layouts/SuperAdminLayout').then(module => ({ default: module.SuperAdminLayout })));
 
 // Lazy load route pages
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
 const MonthlyReports = lazy(() => import('./pages/admin/MonthlyReports').then(module => ({ default: module.MonthlyReports })));
 const Clients = lazy(() => import('./pages/admin/Clients').then(module => ({ default: module.Clients })));
 const AddGroupList = lazy(() => import('./pages/admin/client_process/AddGroupList').then(module => ({ default: module.AddGroupList })));
