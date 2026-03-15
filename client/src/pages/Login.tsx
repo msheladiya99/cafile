@@ -216,6 +216,8 @@ export const Login: React.FC = () => {
                                 <TextField
                                     fullWidth
                                     placeholder="Email address"
+                                    name="username"
+                                    autoComplete="username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     disabled={loading}
@@ -235,6 +237,8 @@ export const Login: React.FC = () => {
                                 <TextField
                                     fullWidth
                                     placeholder="Password"
+                                    name="password"
+                                    autoComplete="current-password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -303,6 +307,18 @@ export const Login: React.FC = () => {
                                             Help Center
                                         </Typography>
                                     </Box>
+                                </Box>
+
+                                {/* SEO Hidden Content - Helps Google understand site features */}
+                                <Box sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', pointerEvents: 'none' }}>
+                                    <h3>Features of CA Office Portal</h3>
+                                    <ul>
+                                        <li>Multi-firm management for Chartered Accountants</li>
+                                        <li>Secure document storage and ITR/GST filing tracking</li>
+                                        <li>Client ledger management and automated billing</li>
+                                        <li>Employee task scheduling and performance analytics</li>
+                                        <li>Real-time reminders and notifications</li>
+                                    </ul>
                                 </Box>
                             </Stack>
                         </Box>

@@ -1,0 +1,15 @@
+{
+    "short_name": "CA Portal",
+    "name": "CA Office Management Portal",
+    "icons": [
+        {
+            "src": "ca-portal.webp",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/webp"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#667eea",
+    "background_color": "#ffffff"
+}
