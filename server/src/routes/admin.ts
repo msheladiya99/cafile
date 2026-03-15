@@ -713,7 +713,10 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
             return;
         }
 
-        const existingGroup = await ClientGroup.findOne({ groupName });
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const existingGroup = await ClientGroup.findOne({ groupName, firmId });
         if (existingGroup) {
             res.status(400).json({ message: 'Group with this name already exists' });
             return;
@@ -727,26 +730,28 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
             email,
             mobileNumber,
             gstin,
+            firmId
         });
         await newGroup.save();
 
         res.status(201).json(newGroup);
     } catch (error) {
         console.error('Create client group error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error during client group creation', error: error instanceof Error ? error.message : String(error) });
     }
 });
 
 // Get all Client Groups
 router.get('/client-groups', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const groups = await ClientGroup.find()
+        const firmId = req.firmId || req.user?.firmId;
+        const groups = await ClientGroup.find({ firmId })
             .sort({ createdAt: -1 })
             .lean();
         res.json(groups);
     } catch (error) {
         console.error('Get client groups error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error fetching client groups' });
     }
 });
 
@@ -758,21 +763,30 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
-        const existing = await ITStatus.findOne({ name, firmId: new mongoose.Types.ObjectId(firmId) });
+        if (!mongoose.isValidObjectId(firmId)) {
+            return res.status(400).json({ message: 'Invalid firm context' });
+        }
+
+        const queryFirmId = new mongoose.Types.ObjectId(firmId);
+
+        const existing = await ITStatus.findOne({ name, firmId: queryFirmId });
         if (existing) return res.status(400).json({ message: 'IT Status with this name already exists' });
 
         const item = new ITStatus({
             name,
             description,
             status,
-            firmId: new mongoose.Types.ObjectId(firmId)
+            firmId: queryFirmId
         });
         await item.save();
 
         res.status(201).json(item);
     } catch (error) {
         console.error('Create IT Status error:', error);
-        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
+        res.status(500).json({
+            message: 'Server error during IT Status creation',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
@@ -781,11 +795,18 @@ router.get('/it-status', async (req: AuthRequest, res: Response) => {
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
+        if (!mongoose.isValidObjectId(firmId)) {
+            return res.status(400).json({ message: 'Invalid firm context' });
+        }
+
         const items = await ITStatus.find({ firmId: new mongoose.Types.ObjectId(firmId) }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
         console.error('Get IT Status error:', error);
-        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
+        res.status(500).json({
+            message: 'Server error fetching IT Status',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
@@ -798,21 +819,30 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
-        const existing = await SubMaster.findOne({ name, firmId: new mongoose.Types.ObjectId(firmId) });
+        if (!mongoose.isValidObjectId(firmId)) {
+            return res.status(400).json({ message: 'Invalid firm context' });
+        }
+
+        const queryFirmId = new mongoose.Types.ObjectId(firmId);
+
+        const existing = await SubMaster.findOne({ name, firmId: queryFirmId });
         if (existing) return res.status(400).json({ message: 'Sub Master with this name already exists' });
 
         const item = new SubMaster({
             name,
             description,
             status,
-            firmId: new mongoose.Types.ObjectId(firmId)
+            firmId: queryFirmId
         });
         await item.save();
 
         res.status(201).json(item);
     } catch (error) {
         console.error('Create Sub Master error:', error);
-        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
+        res.status(500).json({
+            message: 'Server error during Sub Master creation',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
@@ -821,11 +851,18 @@ router.get('/sub-master', async (req: AuthRequest, res: Response) => {
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
+        if (!mongoose.isValidObjectId(firmId)) {
+            return res.status(400).json({ message: 'Invalid firm context' });
+        }
+
         const items = await SubMaster.find({ firmId: new mongoose.Types.ObjectId(firmId) }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
         console.error('Get Sub Master error:', error);
-        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
+        res.status(500).json({
+            message: 'Server error fetching Sub Master',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
