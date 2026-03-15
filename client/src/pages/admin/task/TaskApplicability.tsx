@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
     Box,
     Paper,
@@ -40,6 +40,7 @@ import type { AxiosError } from 'axios';
 export const TaskApplicability: React.FC = () => {
     const [searchParams] = useSearchParams();
     const isSingleTask = searchParams.get('single') === 'true';
+    const navigate = useNavigate();
 
     // Recurrence Task State
     const [basedOn, setBasedOn] = useState<'Task' | 'Client'>('Task');
@@ -167,13 +168,30 @@ export const TaskApplicability: React.FC = () => {
                 </Typography>
                 {!isSingleTask && (
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => navigate('/admin/tasks/free-client-list')}
+                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
+                        >
                             Vacant Client
                         </Button>
-                        <Button variant="contained" size="small" startIcon={<AddIcon />} sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate('/admin/task-master/add')}
+                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
+                        >
                             Add New
                         </Button>
-                        <Button variant="contained" size="small" startIcon={<ListIcon />} sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<ListIcon />}
+                            onClick={() => navigate('/admin/task-master/list')}
+                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
+                        >
                             List
                         </Button>
                     </Box>

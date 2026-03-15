@@ -166,7 +166,6 @@ export const AdminLayout: React.FC = () => {
                 { text: 'All Task Update', path: '/admin/tasks/all-update' },
                 { text: 'Ongoing Task', path: '/admin/tasks/ongoing' },
                 { text: 'UDIN List', path: '/admin/tasks/udin-list' },
-                { text: 'Task Board', path: '/admin/tasks/board' }
             ]
         },
         { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },

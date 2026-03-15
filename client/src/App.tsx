@@ -22,7 +22,6 @@ const AddGroupList = lazy(() => import('./pages/admin/client_process/AddGroupLis
 const ClientMaster = lazy(() => import('./pages/admin/client_process/ClientMaster').then(module => ({ default: module.ClientMaster })));
 const ClientList = lazy(() => import('./pages/admin/client_process/ClientList').then(module => ({ default: module.ClientList })));
 const ClientContactDetail = lazy(() => import('./pages/admin/client_process/ClientContactDetail').then(module => ({ default: module.ClientContactDetail })));
-const Tasks = lazy(() => import('./pages/admin/Tasks').then(module => ({ default: module.Tasks })));
 const TaskDashboard = lazy(() => import('./pages/admin/task/TaskDashboard').then(module => ({ default: module.TaskDashboard })));
 const TaskMasterPage = lazy(() => import('./pages/admin/task/TaskMaster').then(module => ({ default: module.TaskMaster })));
 const TaskApplicability = lazy(() => import('./pages/admin/task/TaskApplicability').then(module => ({ default: module.TaskApplicability })));
@@ -36,6 +35,7 @@ const TaskInformation = lazy(() => import('./pages/admin/task/TaskInformation').
 const AllTaskUpdate = lazy(() => import('./pages/admin/task/AllTaskUpdate').then(module => ({ default: module.AllTaskUpdate })));
 const OngoingTask = lazy(() => import('./pages/admin/task/OngoingTask').then(module => ({ default: module.OngoingTask })));
 const UDINList = lazy(() => import('./pages/admin/task/UDINList').then(module => ({ default: module.UDINList })));
+const FreeClientList = lazy(() => import('./pages/admin/task/FreeClientList').then(module => ({ default: module.FreeClientList })));
 const UploadFile = lazy(() => import('./pages/admin/UploadFile').then(module => ({ default: module.UploadFile })));
 const ManageFiles = lazy(() => import('./pages/admin/ManageFiles').then(module => ({ default: module.ManageFiles })));
 const Reminders = lazy(() => import('./pages/admin/Reminders').then(module => ({ default: module.Reminders })));
@@ -196,7 +196,6 @@ const AppRoutes: React.FC = () => {
           </Route>
           <Route path="tasks">
             <Route index element={<TaskDashboard />} />
-            <Route path="board" element={<Tasks />} />
             <Route path="approval" element={<TaskApproval />} />
             <Route path="approved-list" element={<ApprovedTaskList />} />
             <Route path="update-approved" element={<UpdateApprovedTask />} />
@@ -207,6 +206,7 @@ const AppRoutes: React.FC = () => {
             <Route path="all-update" element={<AllTaskUpdate />} />
             <Route path="ongoing" element={<OngoingTask />} />
             <Route path="udin-list" element={<UDINList />} />
+            <Route path="free-client-list" element={<FreeClientList />} />
           </Route>
           <Route path="task-master">
             <Route path="add" element={<TaskMasterPage />} />
