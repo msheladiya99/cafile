@@ -89,14 +89,17 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             return;
         }
 
-        // Check if client already exists
-        const existingClient = await Client.findOne({ email });
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context required' });
+
+        // Check if client already exists IN THIS FIRM
+        const existingClient = await Client.findOne({ email, firmId });
         if (existingClient) {
-            res.status(400).json({ message: 'Client with this email already exists' });
+            res.status(400).json({ message: 'Client with this email already exists in your firm' });
             return;
         }
 
-        // Check if custom username is already taken
+        // Check if custom username is already taken (Usernames must be globally unique for login)
         if (customUsername) {
             const existingUser = await User.findOne({ username: customUsername });
             if (existingUser) {
@@ -105,9 +108,9 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             }
         }
 
-        // Check if client code is already taken
+        // Check if client code is already taken IN THIS FIRM
         if (clientCode) {
-            const existingClientCode = await Client.findOne({ clientCode });
+            const existingClientCode = await Client.findOne({ clientCode, firmId });
             if (existingClientCode) {
                 res.status(400).json({ message: 'Client Code is already in use' });
                 return;
@@ -116,6 +119,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 
         // Create client
         const client = new Client({
+            firmId,
             name, email, phone, panNumber, aadharNumber, gstNumber,
             clientCode, groupName: groupName || undefined, itStatus: itStatus || undefined,
             masterType, subMaster: subMaster || undefined,
@@ -138,6 +142,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 
         // Create user account
         const user = new User({
+            firmId,
             username,
             passwordHash,
             role: 'CLIENT',
@@ -207,9 +212,11 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
         delete updates.createdAt;
         delete updates._id;
 
-        // Check if clientCode is being updated and if it's already taken
+        const firmId = req.firmId || req.user?.firmId;
+
+        // Check if clientCode is being updated and if it's already taken IN THIS FIRM
         if (updates.clientCode) {
-            const existingClientCode = await Client.findOne({ _id: { $ne: id }, clientCode: updates.clientCode } as any);
+            const existingClientCode = await Client.findOne({ _id: { $ne: id }, clientCode: updates.clientCode, firmId } as any);
             if (existingClientCode) {
                 res.status(400).json({ message: 'Client Code is already in use' });
                 return;
@@ -617,7 +624,8 @@ router.post('/migrate-lastlogin', requireAdmin, async (req: AuthRequest, res: Re
 // Get all staff users (Admin and Manager only)
 router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const users = await User.find({ role: { $ne: 'CLIENT' } })
+        const firmId = req.firmId || req.user?.firmId;
+        const users = await User.find({ role: { $ne: 'CLIENT' }, firmId })
             .select('_id username name email role')
             .sort({ name: 1 })
             .lean();

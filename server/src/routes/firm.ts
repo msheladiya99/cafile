@@ -86,9 +86,12 @@ router.put('/', requireStaff, async (req: AuthRequest, res: Response) => {
             });
         }
 
-        let firm = await FirmMaster.findOne();
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        let firm = await FirmMaster.findOne({ firmId });
         if (!firm) {
-            firm = await FirmMaster.create({ firmName: 'My CA Firm', ...updates });
+            firm = await FirmMaster.create({ firmId, firmName: req.firm?.firmName || 'My CA Firm', ...updates });
         } else {
             Object.assign(firm, updates);
             await firm.save();
@@ -125,9 +128,10 @@ router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthReques
         );
         fs.unlinkSync(req.file.path);
 
+        const firmId = req.firmId || req.user?.firmId;
         const directLink = `https://drive.google.com/uc?export=view&id=${uploadResult.fileId}`;
-        let firm = await FirmMaster.findOne();
-        if (!firm) firm = await FirmMaster.create({ firmName: 'My CA Firm' });
+        let firm = await FirmMaster.findOne({ firmId });
+        if (!firm) firm = await FirmMaster.create({ firmId, firmName: req.firm?.firmName || 'My CA Firm' });
         firm.logoUrl = directLink;
         await firm.save();
 
@@ -160,9 +164,10 @@ router.post('/stamp', requireAdmin, upload.single('stamp'), async (req: AuthRequ
         );
         fs.unlinkSync(req.file.path);
 
+        const firmId = req.firmId || req.user?.firmId;
         const directLink = `https://drive.google.com/uc?export=view&id=${uploadResult.fileId}`;
-        let firm = await FirmMaster.findOne();
-        if (!firm) firm = await FirmMaster.create({ firmName: 'My CA Firm' });
+        let firm = await FirmMaster.findOne({ firmId });
+        if (!firm) firm = await FirmMaster.create({ firmId, firmName: req.firm?.firmName || 'My CA Firm' });
         firm.signatureImageUrl = directLink;
         await firm.save();
 
@@ -304,7 +309,10 @@ router.get('/multi', async (req: AuthRequest, res: Response) => {
 // POST - create multi firm
 router.post('/multi', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const firm = await MultiFirm.create(req.body);
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const firm = await MultiFirm.create({ ...req.body, firmId });
         res.json(firm);
     } catch (error) {
         console.error('Create multi firm error:', error);
@@ -315,7 +323,8 @@ router.post('/multi', requireAdmin, async (req: AuthRequest, res: Response) => {
 // PUT - update multi firm
 router.put('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const firm = await MultiFirm.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const firmId = req.firmId || req.user?.firmId;
+        const firm = await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
         if (!firm) { res.status(404).json({ message: 'Not found' }); return; }
         res.json(firm);
     } catch (error) {
@@ -327,7 +336,9 @@ router.put('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) =
 // DELETE multi firm
 router.delete('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        await MultiFirm.findByIdAndDelete(req.params.id);
+        const firmId = req.firmId || req.user?.firmId;
+        const result = await MultiFirm.findOneAndDelete({ _id: req.params.id, firmId });
+        if (!result) return res.status(404).json({ message: 'Not found' });
         res.json({ message: 'Deleted' });
     } catch (error) {
         console.error('Delete multi firm error:', error);
@@ -382,17 +393,24 @@ router.get('/tax', async (req: AuthRequest, res: Response) => {
 
 router.post('/tax', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        // If new tax is default, unset others
-        if (req.body.isDefault) await TaxDetail.updateMany({}, { isDefault: false });
-        const tax = await TaxDetail.create(req.body);
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        // If new tax is default, unset others for THIS firm only
+        if (req.body.isDefault) await TaxDetail.updateMany({ firmId }, { isDefault: false });
+        const tax = await TaxDetail.create({ ...req.body, firmId });
         res.json(tax);
-    } catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 router.put('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        if (req.body.isDefault) await TaxDetail.updateMany({}, { isDefault: false });
-        const tax = await TaxDetail.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const firmId = req.firmId || req.user?.firmId;
+        if (req.body.isDefault) await TaxDetail.updateMany({ firmId }, { isDefault: false });
+        const tax = await TaxDetail.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
         if (!tax) { res.status(404).json({ message: 'Not found' }); return; }
         res.json(tax);
     } catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
@@ -412,8 +430,11 @@ router.get('/currency', async (req: AuthRequest, res: Response) => {
 
 router.post('/currency', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        if (req.body.isDefault) await Currency.updateMany({}, { isDefault: false });
-        const currency = await Currency.create(req.body);
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        if (req.body.isDefault) await Currency.updateMany({ firmId }, { isDefault: false });
+        const currency = await Currency.create({ ...req.body, firmId });
         res.json(currency);
     } catch (error) {
         console.error(error);
@@ -428,8 +449,9 @@ router.post('/currency', requireAdmin, async (req: AuthRequest, res: Response) =
 
 router.put('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        if (req.body.isDefault) await Currency.updateMany({}, { isDefault: false });
-        const currency = await Currency.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const firmId = req.firmId || req.user?.firmId;
+        if (req.body.isDefault) await Currency.updateMany({ firmId }, { isDefault: false });
+        const currency = await Currency.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
         if (!currency) { res.status(404).json({ message: 'Not found' }); return; }
         res.json(currency);
     } catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }

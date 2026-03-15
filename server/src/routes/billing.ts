@@ -122,8 +122,9 @@ router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
             const mf = await MultiFirm.findById(req.body.firmId);
             if (mf && mf.invoicePrefix) prefix = mf.invoicePrefix;
         } else {
+            const firmId = req.firmId || req.user?.firmId;
             const FirmMaster = mongoose.model('FirmMaster');
-            const fm = await FirmMaster.findOne();
+            const fm = await FirmMaster.findOne({ firmId });
             if (fm && fm.invoicePrefix) prefix = fm.invoicePrefix;
         }
 
