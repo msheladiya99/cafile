@@ -43,10 +43,8 @@ router.post('/login', async (req, res: Response) => {
             }
         }
 
-        // 3. Last fallback (if any)
-        if (!user && !req.firmId) {
-            user = await User.findOne(query);
-        }
+        // 3. Removed global fallback to enforce that firm users must login via their specific subdomains.
+        // This ensures mycafile.in/login is only accessible to users with firmId: null (Super Admins).
 
         if (!user) {
             res.status(401).json({ message: 'Invalid credentials' });
