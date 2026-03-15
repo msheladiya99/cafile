@@ -142,14 +142,14 @@ export const LandingPage: React.FC = () => {
                                 ))}
                                 <Button
                                     variant="text"
-                                    onClick={() => navigate('/login')}
+                                    onClick={() => navigate('/superadmin')}
                                     sx={{ color: '#1e1b4b', fontWeight: 800, textTransform: 'none' }}
                                 >
                                     Log In
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    onClick={() => navigate('/login')}
+                                    onClick={() => navigate('/superadmin')}
                                     sx={{
                                         borderRadius: '12px',
                                         px: 3,

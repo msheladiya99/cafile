@@ -155,7 +155,7 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+        <Route path="/superadmin" element={<SuperAdminLogin />} />
 
         {/* Super Admin Routes */}
         <Route

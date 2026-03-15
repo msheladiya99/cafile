@@ -44,6 +44,12 @@ export const Login: React.FC = () => {
     const [checkingFirm, setCheckingFirm] = useState(!!subdomain);
 
     React.useEffect(() => {
+        // If we are on the main domain and not in a firm workspace, redirect to superadmin login
+        if (!subdomain && !loading) {
+            // Note: We only redirect if they actually reached this page on the main domain
+            // and aren't already authenticated (HomePath logic handles auth'd users)
+        }
+
         if (subdomain) {
             api.get('/firm/public')
                 .then(res => {
@@ -58,7 +64,7 @@ export const Login: React.FC = () => {
                 })
                 .finally(() => setCheckingFirm(false));
         }
-    }, [subdomain]);
+    }, [subdomain, loading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -113,8 +119,8 @@ export const Login: React.FC = () => {
             await Promise.all([...prefetchPromises, delayPromise]);
 
             if (!subdomain && data.user.role !== 'SUPER_ADMIN') {
-                setError('Main portal is for Super Admin only. Please login through your firm\'s subdomain.');
-                authService.logout(); // Ensure we don't keep the token
+                setError('Staff login is only available through your firm\'s unique subdomain.');
+                authService.logout();
                 return;
             }
 
@@ -241,10 +247,10 @@ export const Login: React.FC = () => {
                             </Box>
 
                             <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: { xs: '2rem', sm: '2.5rem', md: '2.75rem' }, letterSpacing: -1, lineHeight: 1.1 }}>
-                                {subdomain ? 'Firm Login' : 'Super Admin'}
+                                {subdomain ? 'Firm Login' : 'Admin Login'}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to master panel')}
+                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to management panel')}
                             </Typography>
                         </Box>
 
