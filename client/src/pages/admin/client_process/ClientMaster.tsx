@@ -38,6 +38,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
 import { masterService, type ITStatus, type SubMaster } from '../../../services/masterService';
 import { adminService } from '../../../services/adminService';
+import { API_URL } from '../../../services/api';
 import type { CreateClientData, User, CreateClientResponse } from '../../../types';
 
 interface TabPanelProps {
@@ -905,7 +906,7 @@ export const ClientMaster: React.FC = () => {
                                         {profileImage ? (
                                             <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : formData?.profileImageUrl && clientToEdit?._id ? (
-                                            <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                            <img src={`${API_URL}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                         ) : (
                                             <PhotoCameraIcon sx={{ fontSize: 40, color: '#ccc' }} />
                                         )}

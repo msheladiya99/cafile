@@ -3,6 +3,7 @@ import { Box, Paper, TextField, Button, Typography, Alert, CircularProgress } fr
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import { API_URL } from '../../services/api';
 
 const SuperAdminLogin: React.FC = () => {
     const navigate = useNavigate();
@@ -19,7 +20,7 @@ const SuperAdminLogin: React.FC = () => {
 
         try {
             // Use the direct axios for the special super admin model route
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/super-admin/login`, { email, password });
+            const res = await axios.post(`${API_URL}/super-admin/login`, { email, password });
             setAuth(res.data.token, res.data.user);
             navigate('/super-admin/dashboard');
         } catch (err: unknown) {

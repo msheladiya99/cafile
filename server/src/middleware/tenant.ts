@@ -50,7 +50,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         !subdomain ||
         subdomain === 'www' ||
         subdomain === 'localhost' ||
-        subdomain === 'cacloud'
+        subdomain === 'cacloud' ||
+        subdomain === 'mycafile'
     ) {
         return next();
     }

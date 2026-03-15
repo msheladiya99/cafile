@@ -10,12 +10,12 @@ export const getSubdomain = () => {
 
     const parts = hostname.split('.');
 
-    // Handle Vercel deployments (e.g., project.vercel.app)
+    // Handle Vercel deployments
     if (hostname.endsWith('.vercel.app')) {
-        return parts.length > 3 ? parts[0] : '';
+        return parts.length > (hostname.includes('vercel.app') && parts[parts.length - 3] === 'vercel' ? 3 : 2) ? parts[0] : '';
     }
 
-    // Assuming domain is something like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
+    // Assuming domain is something like abc.mycafile.in or abc.cacloud.in
     if (parts.length >= 3) {
         return parts[0];
     }
@@ -28,6 +28,8 @@ export const isSuperAdminDomain = () => {
     const subdomain = getSubdomain();
 
     return (
+        hostname === 'mycafile.in' ||
+        hostname === 'www.mycafile.in' ||
         hostname === 'cacloud.in' ||
         hostname === 'www.cacloud.in' ||
         (hostname === 'localhost' && !subdomain) ||

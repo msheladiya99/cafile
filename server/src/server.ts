@@ -38,9 +38,13 @@ app.use(helmet());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
+    'https://mycafile.in',
+    'https://www.mycafile.in',
+    'https://cafile.vercel.app',
     process.env.CLIENT_URL,
-    /\.cacloud\.in$/,
-    /\.vercel\.app$/ // Allow Vercel subdomains for dev/preview
+    /(^|\.)mycafile\.in$/,
+    /(^|\.)cacloud\.in$/,
+    /\.vercel\.app$/
 ].filter(Boolean) as (string | RegExp)[];
 
 app.use(cors({
