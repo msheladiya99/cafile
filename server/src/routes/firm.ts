@@ -32,12 +32,20 @@ router.get('/public', async (req, res: Response) => {
 router.use(authenticate);
 
 // GET /api/firm — get firm details (single record, upserted)
-router.get('/', async (_req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        let firm = await FirmMaster.findOne();
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            return res.status(400).json({ message: 'Firm context required' });
+        }
+
+        let firm = await FirmMaster.findOne({ firmId });
         if (!firm) {
-            // Auto-create a blank firm master on first access
-            firm = await FirmMaster.create({ firmName: 'My CA Firm' });
+            // Auto-create a blank firm master for this specific firm
+            firm = await FirmMaster.create({
+                firmId,
+                firmName: req.firm?.firmName || 'My CA Firm'
+            });
         }
         res.json(firm);
     } catch (error) {

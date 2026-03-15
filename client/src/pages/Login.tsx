@@ -119,7 +119,9 @@ export const Login: React.FC = () => {
                 navigate('/client/dashboard');
             }
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Invalid credentials';
+            console.error('Login error:', err);
+            const axiosError = err as any; // Standard cast for axios errors in catch blocks
+            const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Login failed. Please check your credentials.';
             setError(errorMessage);
         } finally {
             setLoading(false);

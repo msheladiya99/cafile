@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import { tenantPlugin } from '../utils/tenantPlugin';
 
+// Apply global tenant plugin for multi-tenant isolation BEFORE any connection or model loading
+// This must happen before any mongoose.model() calls occur in the application.
+mongoose.plugin(tenantPlugin);
+
 export const connectDB = async (): Promise<void> => {
     try {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ca-office';
-
-        // Apply global tenant plugin for multi-tenant isolation
-        mongoose.plugin(tenantPlugin);
 
         await mongoose.connect(mongoUri);
 

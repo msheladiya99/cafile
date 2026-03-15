@@ -18,29 +18,34 @@ router.post('/login', async (req, res: Response) => {
             return;
         }
 
-        // Find user by username OR email
-        const query: any = {
+        // Find user by email (case-insensitive) OR username
+        const normalizedUsername = username.trim();
+        const query = {
             $or: [
-                { username: username },
-                { email: username.toLowerCase() }
+                { username: normalizedUsername },
+                { email: normalizedUsername.toLowerCase() }
             ]
         };
 
-        let user;
-        if (req.firmId) {
-            // If on a subdomain, user must belong to that firm
-            query.firmId = req.firmId;
-            user = await User.findOne(query);
-        } else {
-            // On main domain, we primarily look for global users (firmId: null)
-            // This includes the seeded 'admin' and 'SUPER_ADMIN' users.
-            user = await User.findOne({ ...query, firmId: null });
+        // 1. First, check if it's a global user (SUPER_ADMIN)
+        let user = await User.findOne({ ...query, firmId: null });
 
-            // Fallback: If no global user found, but it might be a firm admin 
-            // trying to login from the main domain (which we allowed in previous steps)
-            if (!user) {
-                user = await User.findOne(query);
+        // 2. If not found, and we are on a firm subdomain, look for user in that firm
+        if (!user && req.firmId) {
+            user = await User.findOne({ ...query, firmId: req.firmId });
+
+            // Critical check: If user belongs to a firm, we MUST verify the firm is active
+            if (user && req.firm) {
+                if (req.firm.status !== 'active') {
+                    res.status(403).json({ message: 'Firm account is suspended. Please contact support.' });
+                    return;
+                }
             }
+        }
+
+        // 3. Last fallback (if any)
+        if (!user && !req.firmId) {
+            user = await User.findOne(query);
         }
 
         if (!user) {
@@ -79,12 +84,12 @@ router.post('/login', async (req, res: Response) => {
                 permissions: user.permissions
             },
             process.env.JWT_SECRET!,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
+            { expiresIn: '7d' }
         );
 
-        // Get user name (from Client if applicable, otherwise username)
-        let name = user.username;
-        if (user.clientId) {
+        // Get user name and details
+        let name = user.name || user.username;
+        if (user.clientId && !user.name) {
             const client = await Client.findById(user.clientId);
             if (client) {
                 name = client.name;
@@ -96,10 +101,11 @@ router.post('/login', async (req, res: Response) => {
             user: {
                 id: user._id,
                 username: user.username,
-                name,
                 role: user.role,
+                firmId: user.firmId,
                 clientId: user.clientId,
-                permissions: user.permissions
+                permissions: user.permissions,
+                name: name
             }
         });
     } catch (error) {

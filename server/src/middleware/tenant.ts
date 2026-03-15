@@ -30,13 +30,37 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     const headerTenant = req.headers['x-tenant-id'];
     if (headerTenant && typeof headerTenant === 'string') {
         subdomain = headerTenant.toLowerCase();
-    } else if (parts.length >= 3) {
-        // Handle Vercel and Render deployments
-        if (host.includes('vercel.app') || host.includes('onrender.com')) {
-            subdomain = parts.length > 3 ? parts[0].toLowerCase() : '';
+    } else {
+        // Robust subdomain extraction
+        // Detect current base domain (e.g., mycafile.in)
+        const hostParts = host.split(':'); // remove port
+        const hostname = hostParts[0].toLowerCase();
+
+        // Skip for bare IP addresses
+        if (/^[\d.]+$/.test(hostname)) {
+            subdomain = '';
         } else {
-            // If it's a domain like abc.cacloud.in (parts: ['abc', 'cacloud', 'in'])
-            subdomain = parts[0].toLowerCase();
+            // Check for known base domains
+            const bases = ['mycafile.in', 'cacloud.in', 'vercel.app', 'onrender.com', 'localhost'];
+            let foundBase = '';
+            for (const b of bases) {
+                if (hostname.endsWith(b)) {
+                    foundBase = b;
+                    break;
+                }
+            }
+
+            if (foundBase) {
+                // If hostname is 'paresh.co.mycafile.in' and base is 'mycafile.in'
+                // Subdomain is 'paresh.co'
+                const subStr = hostname.replace(`.${foundBase}`, '').replace(foundBase, '');
+                if (subStr && subStr !== 'www') {
+                    subdomain = subStr;
+                }
+            } else if (parts.length >= 3) {
+                // Fallback for unknown domains
+                subdomain = parts.slice(0, parts.length - 2).join('.');
+            }
         }
     }
 
@@ -49,6 +73,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         req.baseUrl.startsWith('/api/super-admin') ||
         !subdomain ||
         subdomain === 'www' ||
+        subdomain === 'api' ||
+        subdomain === 'admin' ||
         subdomain === 'localhost' ||
         subdomain === 'cacloud' ||
         subdomain === 'mycafile'
