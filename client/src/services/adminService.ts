@@ -14,16 +14,6 @@ export const adminService = {
         return response.data;
     },
 
-    getITStatus: async (): Promise<{ _id: string; name: string }[]> => {
-        const response = await api.get('/admin/it-status');
-        return response.data;
-    },
-
-    getSubMasters: async (): Promise<{ _id: string; name: string }[]> => {
-        const response = await api.get('/admin/sub-master');
-        return response.data;
-    },
-
     getClient: async (id: string): Promise<Client> => {
         const response = await api.get(`/admin/clients/${id}`);
         return response.data;
