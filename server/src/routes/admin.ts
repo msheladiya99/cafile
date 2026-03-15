@@ -749,8 +749,7 @@ router.get('/client-groups', authenticate, async (req: AuthRequest, res: Respons
     }
 });
 
-// -- IT Status Routes --
-router.post('/it-status', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, status } = req.body;
         if (!name) return res.status(400).json({ message: 'Name is required' });
@@ -758,31 +757,39 @@ router.post('/it-status', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
-        const existing = await ITStatus.findOne({ name, firmId });
+        const existing = await ITStatus.findOne({ name, firmId: new mongoose.Types.ObjectId(firmId) });
         if (existing) return res.status(400).json({ message: 'IT Status with this name already exists' });
 
-        const item = new ITStatus({ name, description, status, firmId });
+        const item = new ITStatus({
+            name,
+            description,
+            status,
+            firmId: new mongoose.Types.ObjectId(firmId)
+        });
         await item.save();
 
         res.status(201).json(item);
     } catch (error) {
         console.error('Create IT Status error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
     }
 });
 
-router.get('/it-status', authenticate, async (req: AuthRequest, res: Response) => {
+router.get('/it-status', async (req: AuthRequest, res: Response) => {
     try {
         const firmId = req.firmId || req.user?.firmId;
-        const items = await ITStatus.find({ firmId }).sort({ name: 1 }).lean();
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const items = await ITStatus.find({ firmId: new mongoose.Types.ObjectId(firmId) }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Get IT Status error:', error);
+        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
     }
 });
 
 // -- Sub Master Routes --
-router.post('/sub-master', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, status } = req.body;
         if (!name) return res.status(400).json({ message: 'Name is required' });
@@ -790,26 +797,34 @@ router.post('/sub-master', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAF
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
-        const existing = await SubMaster.findOne({ name, firmId });
+        const existing = await SubMaster.findOne({ name, firmId: new mongoose.Types.ObjectId(firmId) });
         if (existing) return res.status(400).json({ message: 'Sub Master with this name already exists' });
 
-        const item = new SubMaster({ name, description, status, firmId });
+        const item = new SubMaster({
+            name,
+            description,
+            status,
+            firmId: new mongoose.Types.ObjectId(firmId)
+        });
         await item.save();
 
         res.status(201).json(item);
     } catch (error) {
         console.error('Create Sub Master error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
     }
 });
 
-router.get('/sub-master', authenticate, async (req: AuthRequest, res: Response) => {
+router.get('/sub-master', async (req: AuthRequest, res: Response) => {
     try {
         const firmId = req.firmId || req.user?.firmId;
-        const items = await SubMaster.find({ firmId }).sort({ name: 1 }).lean();
+        if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
+
+        const items = await SubMaster.find({ firmId: new mongoose.Types.ObjectId(firmId) }).sort({ name: 1 }).lean();
         res.json(items);
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Get Sub Master error:', error);
+        res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : String(error) });
     }
 });
 
