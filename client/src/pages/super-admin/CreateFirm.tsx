@@ -18,7 +18,8 @@ const CreateFirm: React.FC = () => {
         adminName: '',
         adminPassword: '',
         mobileNumber: '',
-        planType: 'Trial'
+        planType: 'Trial',
+        maxAdmins: 5
     });
 
     const createMutation = useMutation({
@@ -89,6 +90,14 @@ const CreateFirm: React.FC = () => {
                                 value={formData.planType} onChange={e => setFormData({ ...formData, planType: e.target.value })}>
                                 {['Trial', 'Basic', 'Professional', 'Enterprise'].map((option) => (
                                     <MenuItem key={option} value={option}>{option}</MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth select label="Max Admin Capacity"
+                                value={formData.maxAdmins} onChange={e => setFormData({ ...formData, maxAdmins: Number(e.target.value) })}>
+                                {[1, 2, 3, 4, 5].map((num) => (
+                                    <MenuItem key={num} value={num}>{num} Admin{num > 1 ? 's' : ''}</MenuItem>
                                 ))}
                             </TextField>
                         </Grid>

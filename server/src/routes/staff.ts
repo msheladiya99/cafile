@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import { User } from '../models/User';
+import { Firm } from '../models/Firm';
 import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
 
@@ -138,6 +139,27 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             return;
         }
 
+        // Enforce maxAdmins limit if creating an ADMIN
+        if (actualRole === 'ADMIN') {
+            const firm = await Firm.findById(req.firmId);
+            if (!firm) {
+                res.status(404).json({ message: 'Firm not found' });
+                return;
+            }
+
+            const currentAdminsCount = await User.countDocuments({
+                firmId: req.firmId,
+                role: 'ADMIN'
+            });
+
+            if (currentAdminsCount >= (firm.maxAdmins || 5)) {
+                res.status(400).json({
+                    message: `Cannot create more admins. This firm is limited to ${firm.maxAdmins || 5} admins.`
+                });
+                return;
+            }
+        }
+
         // Generate credentials if not provided
         const name = `${firstName} ${lastName}`.trim();
         const finalUsername = reqUsername || generateUsername(firstName);
@@ -160,7 +182,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             passport, passportNo, passportAuthority, passportDateFrom, passportDateTo,
             visa, visaNo, visaAuthority, visaDateFrom, visaDateTo,
             eid, eidNo, eidAuthority, eidDateFrom, eidDateTo,
-            bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
+            bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress,
+            firmId: req.firmId
         });
         await user.save();
 

@@ -10,7 +10,7 @@ const FirmDetails: React.FC = () => {
     const queryClient = useQueryClient();
 
     const [editMode, setEditMode] = useState(false);
-    const [formData, setFormData] = useState({ plan: '', status: '' });
+    const [formData, setFormData] = useState({ plan: '', status: '', maxAdmins: 5 });
     const [resetPassword, setResetPassword] = useState('');
     const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
@@ -23,7 +23,7 @@ const FirmDetails: React.FC = () => {
     });
 
     const updateFirmMutation = useMutation({
-        mutationFn: async (updatedData: { plan: string; status: string }) => {
+        mutationFn: async (updatedData: { plan: string; status: string; maxAdmins: number }) => {
             return api.patch(`/super-admin/firms/${id}`, updatedData);
         },
         onSuccess: () => {
@@ -60,7 +60,11 @@ const FirmDetails: React.FC = () => {
 
     const handleEditToggle = () => {
         if (!editMode) {
-            setFormData({ plan: firm.plan.toLowerCase(), status: firm.status.toLowerCase() });
+            setFormData({
+                plan: firm.plan.toLowerCase(),
+                status: firm.status.toLowerCase(),
+                maxAdmins: firm.maxAdmins || 5
+            });
             setEditMode(true);
         } else {
             setEditMode(false);
@@ -137,6 +141,18 @@ const FirmDetails: React.FC = () => {
                                     <Box>
                                         <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>Status</Typography>
                                         <Chip label={firm.status} color={firm.status === 'active' ? 'success' : 'error'} sx={{ fontWeight: 800, textTransform: 'uppercase' }} />
+                                    </Box>
+                                )}
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                {editMode ? (
+                                    <TextField fullWidth select label="Max Admin Capacity" value={formData.maxAdmins} onChange={e => setFormData({ ...formData, maxAdmins: Number(e.target.value) })}>
+                                        {[1, 2, 3, 4, 5].map(num => <MenuItem key={num} value={num}>{num} Admin{num > 1 ? 's' : ''}</MenuItem>)}
+                                    </TextField>
+                                ) : (
+                                    <Box>
+                                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>Max Admin Capacity</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>{firm.maxAdmins || 5} Admins</Typography>
                                     </Box>
                                 )}
                             </Grid>

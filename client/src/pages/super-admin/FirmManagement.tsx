@@ -24,6 +24,7 @@ interface IFirm {
     mobile?: string;
     plan: string;
     status: string;
+    maxAdmins: number;
     usersCount: number;
     clientsCount: number;
     createdAt: string;
@@ -127,6 +128,7 @@ const FirmManagement: React.FC = () => {
                                 <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Users</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Max Admins</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Clients</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>Created Date</TableCell>
                                 <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
@@ -159,6 +161,7 @@ const FirmManagement: React.FC = () => {
                                             />
                                         </TableCell>
                                         <TableCell>{firm.usersCount || 0}</TableCell>
+                                        <TableCell>{firm.maxAdmins || 5}</TableCell>
                                         <TableCell>{firm.clientsCount || 0}</TableCell>
                                         <TableCell>{new Date(firm.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell align="right">

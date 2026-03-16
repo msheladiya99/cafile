@@ -144,6 +144,7 @@ const initialFormData = {
     reference: '',
     description: '',
     status: true,
+    role: 'STAFF',
 
     emergencyFirstName: '',
     emergencyLastName: '',
@@ -302,6 +303,10 @@ export const EmployeeMaster: React.FC = () => {
             if (staffData.documents && staffData.documents.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setDocuments(staffData.documents as any);
+            }
+            
+            if (staffData.role) {
+                setFormData(prev => ({ ...prev, role: staffData.role }));
             }
         } else if (!isEditMode) {
             setFormData(initialFormData);
@@ -628,10 +633,24 @@ export const EmployeeMaster: React.FC = () => {
                                         displayEmpty
                                         name="designation"
                                         value={formData.designation}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, designation: e.target.value as string }))}
+                                        onChange={(e) => {
+                                            const val = e.target.value as string;
+                                            const roleMap: Record<string, string> = {
+                                                'Admin': 'ADMIN',
+                                                'Manager': 'MANAGER',
+                                                'Staff': 'STAFF',
+                                                'Intern': 'INTERN'
+                                            };
+                                            setFormData(prev => ({ 
+                                                ...prev, 
+                                                designation: val,
+                                                role: roleMap[val] || 'STAFF'
+                                            }));
+                                        }}
                                         sx={{ borderRadius: 1.5, color: formData.designation ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Designation</MenuItem>
+                                        <MenuItem value="Admin">Admin</MenuItem>
                                         <MenuItem value="Manager">Manager</MenuItem>
                                         <MenuItem value="Staff">Staff</MenuItem>
                                         <MenuItem value="Intern">Intern</MenuItem>

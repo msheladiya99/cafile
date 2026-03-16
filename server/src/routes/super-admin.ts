@@ -172,7 +172,7 @@ router.get('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Respo
 
 router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType } = req.body;
+        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType, maxAdmins } = req.body;
         let { subdomain } = req.body;
 
         // Auto-generate subdomain if not provided
@@ -208,7 +208,8 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             plan: planType?.toLowerCase() || 'trial',
             status: 'active',
             mobile: mobileNumber,
-            googleDriveRootFolderId
+            googleDriveRootFolderId,
+            maxAdmins: Number(maxAdmins) || 5
         });
 
         const bcrypt = await import('bcryptjs');
