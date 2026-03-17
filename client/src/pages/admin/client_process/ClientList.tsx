@@ -19,7 +19,8 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
-    FilterList as FilterListIcon
+    FilterList as FilterListIcon,
+    LockReset as LockResetIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -97,6 +98,18 @@ export const ClientList: React.FC = () => {
             return true;
         });
     }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
+
+    const handleResetPassword = async (clientId: string) => {
+        if (window.confirm('Are you sure you want to reset this client\'s password and send them an email?')) {
+            try {
+                const result = await adminService.resetClientPassword(clientId);
+                alert(`Password Reset Successful!\n\nNew Password: ${result.password}\n\nAn email has also been sent to the client.`);
+            } catch (error) {
+                console.error('Reset password error:', error);
+                alert('Failed to reset password. Please try again.');
+            }
+        }
+    };
 
     return (
         <PageContainer>
@@ -304,7 +317,16 @@ export const ClientList: React.FC = () => {
                                         <TableRow key={client._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
                                             <TableCell sx={{ fontWeight: 500 }}>
                                                 {client.name}
-                                                {client.clientCode && <Typography variant="caption" display="block" color="text.secondary">{client.clientCode}</Typography>}
+                                                {client.username && (
+                                                    <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                                                        ID: {client.username}
+                                                    </Typography>
+                                                )}
+                                                {client.clientCode && (
+                                                    <Typography variant="caption" display="block" color="text.secondary">
+                                                        Code: {client.clientCode}
+                                                    </Typography>
+                                                )}
                                             </TableCell>
                                             <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
                                             <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
@@ -331,6 +353,15 @@ export const ClientList: React.FC = () => {
                                                     aria-label="View client details"
                                                 >
                                                     <VisibilityIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
+                                                    onClick={() => handleResetPassword(client._id)}
+                                                    aria-label="Reset password"
+                                                    title="Reset & Send Email"
+                                                >
+                                                    <LockResetIcon fontSize="small" />
                                                 </IconButton>
                                                 <IconButton
                                                     size="small"

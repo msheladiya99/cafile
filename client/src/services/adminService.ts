@@ -82,6 +82,11 @@ export const adminService = {
         return response.data;
     },
 
+    resendCredentials: async (clientId: string, password: string): Promise<{ message: string }> => {
+        const response = await api.post(`/admin/clients/${clientId}/send-credentials`, { password });
+        return response.data;
+    },
+
     deleteClient: async (clientId: string): Promise<void> => {
         await api.delete(`/admin/clients/${clientId}`);
     },

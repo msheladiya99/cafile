@@ -10,7 +10,7 @@ import { SubMaster } from '../models/SubMaster';
 import { ActivityLog } from '../models/ActivityLog';
 import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
 import { upload } from '../middleware/upload';
-import { sendFileUploadEmail, sendWelcomeEmail } from '../services/emailService';
+import { sendFileUploadEmail, sendWelcomeEmail, sendPasswordChangeEmail } from '../services/emailService';
 import { getDriveService } from '../services/googleDrive';
 import fs from 'fs';
 import path from 'path';
@@ -179,7 +179,24 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
             .populate('itStatus', 'name')
             .sort({ createdAt: -1 })
             .lean();
-        res.json(clients);
+
+        // Fetch usernames for these clients
+        const clientIds = clients.map(c => c._id);
+        const users = await User.find({ clientId: { $in: clientIds }, role: 'CLIENT' }).select('clientId username').lean();
+
+        const usernameMap = users.reduce((acc: any, u: any) => {
+            if (u.clientId) {
+                acc[u.clientId.toString()] = u.username;
+            }
+            return acc;
+        }, {} as Record<string, string>);
+
+        const clientsWithUsername = clients.map(client => ({
+            ...client,
+            username: usernameMap[client._id.toString()] || ''
+        }));
+
+        res.json(clientsWithUsername);
     } catch (error) {
         console.error('Get clients error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -189,12 +206,22 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
 // Get single client
 router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const client = await Client.findById(req.params.id).lean();
+        const client = await Client.findById(req.params.id)
+            .populate('groupName', 'groupName')
+            .populate('itStatus', 'name')
+            .lean();
         if (!client) {
             res.status(404).json({ message: 'Client not found' });
             return;
         }
-        res.json(client);
+
+        // Fetch associated username
+        const user = await User.findOne({ clientId: client._id, role: 'CLIENT' }).select('username').lean();
+
+        res.json({
+            ...client,
+            username: user?.username || ''
+        });
     } catch (error) {
         console.error('Get client error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -532,6 +559,36 @@ router.get('/clients/:clientId/credentials', async (req: AuthRequest, res: Respo
     }
 });
 
+// Send credentials via email
+router.post('/clients/:clientId/send-credentials', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { clientId } = req.params;
+        const { password } = req.body; // Admin provides the password (from reset or recent creation)
+
+        if (!password) {
+            return res.status(400).json({ message: 'Password is required to send credentials email' });
+        }
+
+        const client = await Client.findById(clientId);
+        if (!client) return res.status(404).json({ message: 'Client not found' });
+
+        const user = await User.findOne({ clientId, role: 'CLIENT' });
+        if (!user) return res.status(404).json({ message: 'Client user not found' });
+
+        await sendWelcomeEmail({
+            clientEmail: client.email,
+            clientName: client.name,
+            username: user.username,
+            password: password
+        });
+
+        res.json({ message: 'Credentials sent successfully' });
+    } catch (error) {
+        console.error('Send credentials error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Reset client password (Admin and Manager only)
 router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
@@ -543,6 +600,12 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
             return;
         }
 
+        const client = await Client.findById(clientId);
+        if (!client) {
+            res.status(404).json({ message: 'Client not found' });
+            return;
+        }
+
         // Generate new password
         const newPassword = generatePassword();
         const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -551,10 +614,18 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
         user.passwordHash = passwordHash;
         await user.save();
 
+        // Send email with new password
+        await sendPasswordChangeEmail({
+            userEmail: client.email,
+            userName: client.name,
+            username: user.username,
+            newPassword: newPassword
+        });
+
         res.json({
             username: user.username,
             password: newPassword,
-            message: 'Password reset successfully'
+            message: 'Password reset and email sent successfully'
         });
     } catch (error) {
         console.error('Reset password error:', error);
