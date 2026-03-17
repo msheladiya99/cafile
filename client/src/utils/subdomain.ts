@@ -8,15 +8,27 @@ export const getSubdomain = () => {
         return params.get('firm') || '';
     }
 
+    // For local development with .localhost subdomains
+    if (hostname.endsWith('.localhost')) {
+        const parts = hostname.split('.');
+        if (parts.length >= 2 && parts[0] !== 'localhost') {
+            return parts[0].toLowerCase();
+        }
+    }
+
     const parts = hostname.split('.');
 
     // Handle Vercel deployments
     if (hostname.endsWith('.vercel.app')) {
-        return parts.length > (hostname.includes('vercel.app') && parts[parts.length - 3] === 'vercel' ? 3 : 2) ? parts[0] : '';
+        const isBranchPreview = hostname.includes('vercel.app') && parts.length > 3;
+        return parts.length > (isBranchPreview ? 3 : 2) ? parts[0] : '';
     }
 
     // Assuming domain is something like abc.mycafile.in or abc.cacloud.in
-    if (parts.length >= 3) {
+    // If it has at least one dot (parts.length >= 2) and ends with our production domains
+    const isProdDomain = hostname.endsWith('.mycafile.in') || hostname.endsWith('.cacloud.in');
+
+    if (isProdDomain && parts.length >= 3) {
         const subdomain = parts[0].toLowerCase();
         if (['www', 'superadmin', 'super-admin', 'admin'].includes(subdomain)) return '';
         return subdomain;
@@ -34,7 +46,8 @@ export const isSuperAdminDomain = () => {
         hostname === 'www.mycafile.in' ||
         hostname === 'cacloud.in' ||
         hostname === 'www.cacloud.in' ||
-        (hostname === 'localhost' && !subdomain) ||
+        hostname === 'localhost' ||
+        (hostname.endsWith('.localhost') && !subdomain) ||
         (hostname.endsWith('.vercel.app') && !subdomain)
     );
 };

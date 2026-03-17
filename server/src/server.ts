@@ -38,13 +38,19 @@ app.use(helmet());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
     'https://mycafile.in',
     'https://www.mycafile.in',
     'https://cafile.vercel.app',
     process.env.CLIENT_URL,
-    /(^|\.)mycafile\.in$/,
-    /(^|\.)cacloud\.in$/,
-    /\.vercel\.app$/
+    // Regex to match subdomains and main domains for our production and staging URLs
+    /^https?:\/\/([^/]+\.)?mycafile\.in$/,
+    /^https?:\/\/([^/]+\.)?cacloud\.in$/,
+    /^https?:\/\/([^/]+\.)?vercel\.app$/,
+    // Support local subdomains
+    /^https?:\/\/([^/]+\.)?localhost(:\d+)?$/,
+    /^https?:\/\/([^/]+\.)?127\.0\.0\.1(:\d+)?$/
 ].filter(Boolean) as (string | RegExp)[];
 
 app.use(cors({
@@ -62,6 +68,7 @@ app.use(cors({
         if (isAllowed) {
             callback(null, true);
         } else {
+            console.error('🚫 CORS blocked origin:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },

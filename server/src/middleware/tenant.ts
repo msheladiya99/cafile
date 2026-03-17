@@ -64,6 +64,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         }
     }
 
+    console.log('🔍 Tenant Subdomain:', subdomain || 'ROOT/NONE', 'Host:', host);
+
     // Skip middleware for:
     // 1. Super admin base path
     // 2. Main domain (no subdomain or 'www' or matches base domain)
@@ -89,6 +91,7 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         const firm = await Firm.findOne({ subdomain, status: 'active' });
 
         if (!firm) {
+            console.log('❌ Firm not found for subdomain:', subdomain);
             return res.status(404).json({ message: 'Firm not found' });
         }
 
