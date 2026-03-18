@@ -604,6 +604,16 @@ export const ClientMaster: React.FC = () => {
         }
     });
 
+    const resetClientPasswordMutation = useMutation({
+        mutationFn: () => adminService.resetClientPassword(id!),
+        onSuccess: () => {
+            showSnackbar('New password has been generated and emailed to the client.', 'success');
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            showSnackbar(err.response?.data?.message || 'Failed to reset password', 'error');
+        }
+    });
+
     const handleSaveClient = () => {
         if (!formData.name || !formData.groupName || !formData.itStatus || !formData.masterType) {
             showSnackbar('Please complete the required Basic Form fields', 'error');
@@ -836,7 +846,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="currency"
                                         value={formData.currency}
-                                        onChange={handleInputChange as any}
+                                        onChange={handleInputChange}
                                         sx={{ borderRadius: 1.5, color: formData.currency ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Currency...</MenuItem>
@@ -967,8 +977,33 @@ export const ClientMaster: React.FC = () => {
                                     );
                                 })}
                             </Section>
-                        </Box>
 
+                            {id && (
+                                <Section title="Login Security" icon={<GridViewIcon />}>
+                                    <Box sx={{ bgcolor: '#fffbeb', p: 2, borderRadius: 2, border: '1px solid #fef3c7', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        <Box>
+                                            <Typography variant="body2" sx={{ color: '#92400e', fontWeight: 600 }}>Reset Portal Password</Typography>
+                                            <Typography sx={{ color: '#b45309', fontSize: '0.75rem' }}>A new secure password will be generated and emailed to the client.</Typography>
+                                        </Box>
+                                        <Button
+                                            variant="contained"
+                                            color="warning"
+                                            size="small"
+                                            fullWidth
+                                            sx={{ textTransform: 'none', borderRadius: 1.5, fontWeight: 600, boxShadow: 'none' }}
+                                            onClick={() => {
+                                                if (window.confirm('Reset this client\'s password and send email?')) {
+                                                    resetClientPasswordMutation.mutate();
+                                                }
+                                            }}
+                                            disabled={resetClientPasswordMutation.isPending}
+                                        >
+                                            {resetClientPasswordMutation.isPending ? 'Resetting...' : 'Reset & Send Email'}
+                                        </Button>
+                                    </Box>
+                                </Section>
+                            )}
+                        </Box>
                     </Box>
 
                 </CustomTabPanel>
@@ -1139,7 +1174,7 @@ export const ClientMaster: React.FC = () => {
                                     <Typography variant="body2" color="text.secondary">Client Legal Detail Not Found</Typography>
                                 ) : (
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                        {formData.legalDocuments.map((doc, index) => (
+                                        {formData.legalDocuments.map((doc: { documentName: string; description?: string; fileName: string }, index: number) => (
                                             <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <Box>
                                                     <Typography variant="subtitle2" fontWeight="600">{doc.documentName}</Typography>

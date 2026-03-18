@@ -51,6 +51,7 @@ export const EmployeeList: React.FC = () => {
     const employees = staffData.map(emp => ({
         id: emp._id,
         name: emp.name,
+        code: emp.employeeCode,
         designation: emp.designation || emp.role,
         status: emp.status !== false ? 'Active' : 'Inactive'
     })).filter(emp => {
@@ -133,6 +134,7 @@ export const EmployeeList: React.FC = () => {
                         <Table>
                             <TableHead>
                                 <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Emp Code</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Designation</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
@@ -142,19 +144,20 @@ export const EmployeeList: React.FC = () => {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                                             <CircularProgress size={24} />
                                         </TableCell>
                                     </TableRow>
                                 ) : employees.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                        <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
                                             No employees found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     employees.map((emp) => (
                                         <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                                            <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>{emp.code || '---'}</TableCell>
                                             <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
                                             <TableCell>{emp.designation}</TableCell>
                                             <TableCell>

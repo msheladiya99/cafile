@@ -376,3 +376,138 @@ export const sendPasswordChangeEmail = async (params: SendPasswordChangeEmailPar
         return false;
     }
 };
+
+const emailBrand = process.env.EMAIL_FROM_NAME || 'CA Office Portal';
+const portalUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+// ─────────────────────────────────────────────
+// Employee / Staff account created
+// ─────────────────────────────────────────────
+interface SendEmployeeWelcomeEmailParams {
+    employeeEmail: string;
+    employeeName: string;
+    username: string;
+    password: string;
+    role: string;
+}
+
+export const sendEmployeeWelcomeEmail = async (params: SendEmployeeWelcomeEmailParams): Promise<boolean> => {
+    const { employeeEmail, employeeName, username, password, role } = params;
+    const transporter = createTransporter();
+    if (!transporter) {
+        console.log('Employee welcome email skipped (not configured)');
+        return false;
+    }
+    try {
+        await transporter.sendMail({
+            from: { name: emailBrand, address: process.env.EMAIL_USER! },
+            to: employeeEmail,
+            subject: `Welcome to ${emailBrand} – Your Employee Account`,
+            html: `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+  .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;border-radius:10px 10px 0 0;text-align:center}
+  .content{background:#f8f9fa;padding:30px;border-radius:0 0 10px 10px}
+  .credentials{background:white;padding:20px;border-radius:8px;margin:20px 0;border:2px solid #667eea}
+  .credential-row{padding:12px 15px;background:#f0f4ff;margin:8px 0;border-radius:6px}
+  .label{font-weight:600;color:#555;font-size:12px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+  .value{font-size:18px;color:#667eea;font-weight:800;font-family:monospace}
+  .role-badge{display:inline-block;background:#667eea;color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:10px}
+  .btn{display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white!important;padding:14px 36px;text-decoration:none;border-radius:8px;font-weight:700;margin:20px 0;font-size:15px}
+  .warning{background:#fff3cd;border-left:4px solid #ffc107;padding:14px;margin:18px 0;border-radius:4px}
+  .footer{text-align:center;color:#999;font-size:13px;margin-top:24px;padding-top:18px;border-top:1px solid #e9ecef}
+</style></head>
+<body>
+<div class="header">
+  <h1 style="margin:0;font-size:26px">👋 Welcome to the Team!</h1>
+  <p style="margin:8px 0 0;opacity:.85">Your ${emailBrand} account is ready</p>
+</div>
+<div class="content">
+  <p>Hi <strong>${employeeName}</strong>,</p>
+  <p>Your employee account has been set up. Log in to the portal to view and manage your assigned tasks.</p>
+  <div class="credentials">
+    <h3 style="margin-top:0;color:#667eea">🔐 Your Login Credentials</h3>
+    <span class="role-badge">${role}</span>
+    <div class="credential-row"><span class="label">Username</span><span class="value">${username}</span></div>
+    <div class="credential-row"><span class="label">Password (Temporary)</span><span class="value">${password}</span></div>
+    <div class="credential-row"><span class="label">Portal URL</span><span class="value" style="font-size:14px">${portalUrl}</span></div>
+  </div>
+  <div class="warning">⚠️ <strong>Important:</strong> Keep these credentials confidential. Change your password after first login.</div>
+  <center><a href="${portalUrl}" class="btn">Login to Portal →</a></center>
+  <p style="color:#666;font-size:13px">If you have issues logging in, contact your administrator.</p>
+</div>
+<div class="footer"><p>Automated message from ${emailBrand}. Do not reply.</p></div>
+</body></html>`,
+        });
+        console.log(`Employee welcome email sent to ${employeeEmail}`);
+        return true;
+    } catch (error) {
+        console.error('Error sending employee welcome email:', error);
+        return false;
+    }
+};
+
+// ─────────────────────────────────────────────
+// Employee / Staff password reset
+// ─────────────────────────────────────────────
+interface SendEmployeePasswordResetEmailParams {
+    employeeEmail: string;
+    employeeName: string;
+    username: string;
+    newPassword: string;
+}
+
+export const sendEmployeePasswordResetEmail = async (params: SendEmployeePasswordResetEmailParams): Promise<boolean> => {
+    const { employeeEmail, employeeName, username, newPassword } = params;
+    const transporter = createTransporter();
+    if (!transporter) {
+        console.log('Employee password reset email skipped (not configured)');
+        return false;
+    }
+    try {
+        await transporter.sendMail({
+            from: { name: emailBrand, address: process.env.EMAIL_USER! },
+            to: employeeEmail,
+            subject: `Password Reset – ${emailBrand}`,
+            html: `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}
+  .header{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:white;padding:30px;border-radius:10px 10px 0 0;text-align:center}
+  .content{background:#f8f9fa;padding:30px;border-radius:0 0 10px 10px}
+  .credentials{background:white;padding:20px;border-radius:8px;margin:20px 0;border:2px solid #f59e0b}
+  .credential-row{padding:12px 15px;background:#fffbeb;margin:8px 0;border-radius:6px}
+  .label{font-weight:600;color:#555;font-size:12px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+  .value{font-size:18px;color:#d97706;font-weight:800;font-family:monospace}
+  .btn{display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:white!important;padding:14px 36px;text-decoration:none;border-radius:8px;font-weight:700;margin:20px 0;font-size:15px}
+  .alert{background:#fee2e2;border-left:4px solid #ef4444;padding:14px;margin:18px 0;border-radius:4px}
+  .footer{text-align:center;color:#999;font-size:13px;margin-top:24px;padding-top:18px;border-top:1px solid #e9ecef}
+</style></head>
+<body>
+<div class="header">
+  <h1 style="margin:0;font-size:26px">🔑 Password Reset</h1>
+  <p style="margin:8px 0 0;opacity:.9">Your password has been reset by an administrator</p>
+</div>
+<div class="content">
+  <p>Hi <strong>${employeeName}</strong>,</p>
+  <p>Your portal password has been reset. Use the credentials below to log in.</p>
+  <div class="credentials">
+    <h3 style="margin-top:0;color:#d97706">🔐 New Login Credentials</h3>
+    <div class="credential-row"><span class="label">Username</span><span class="value">${username}</span></div>
+    <div class="credential-row"><span class="label">New Password</span><span class="value">${newPassword}</span></div>
+  </div>
+  <div class="alert">⚠️ <strong>Security Notice:</strong> If you did not request this reset, contact your administrator immediately.</div>
+  <center><a href="${portalUrl}" class="btn">Login Now →</a></center>
+  <p style="color:#666;font-size:13px">We recommend changing your password after logging in from your profile settings.</p>
+</div>
+<div class="footer"><p>Automated message from ${emailBrand}. Do not reply.</p></div>
+</body></html>`,
+        });
+        console.log(`Employee password reset email sent to ${employeeEmail}`);
+        return true;
+    } catch (error) {
+        console.error('Error sending employee password reset email:', error);
+        return false;
+    }
+};

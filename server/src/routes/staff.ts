@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import { Firm } from '../models/Firm';
 import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
+import { sendEmployeeWelcomeEmail, sendEmployeePasswordResetEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -187,6 +188,17 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         });
         await user.save();
 
+        // Send welcome email with credentials (async, non-blocking)
+        if (email) {
+            sendEmployeeWelcomeEmail({
+                employeeEmail: email,
+                employeeName: name,
+                username: finalUsername,
+                password: finalPassword,
+                role: actualRole,
+            }).catch(err => console.error('Failed to send employee welcome email:', err));
+        }
+
         res.status(201).json({
             user: {
                 id: user._id,
@@ -261,10 +273,20 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
         user.passwordHash = passwordHash;
         await user.save();
 
+        // Send password reset email (async, non-blocking)
+        if (user.email) {
+            sendEmployeePasswordResetEmail({
+                employeeEmail: user.email,
+                employeeName: user.name || user.username,
+                username: user.username,
+                newPassword,
+            }).catch(err => console.error('Failed to send employee password reset email:', err));
+        }
+
         res.json({
             username: user.username,
             password: newPassword,
-            message: 'Password reset successfully'
+            message: 'Password reset successfully. Email sent to employee.'
         });
     } catch (error) {
         console.error('Reset staff password error:', error);

@@ -329,6 +329,23 @@ export const EmployeeMaster: React.FC = () => {
         }
     });
 
+    const resetPasswordMutation = useMutation({
+        mutationFn: () => staffService.resetPassword(id!),
+        onSuccess: () => {
+            showSnackbar(`Password reset successfully! Login credentials sent to ${formData.email}.`, 'success');
+        },
+        onError: (error: Error | unknown) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            showSnackbar((error as any).response?.data?.message || 'Error resetting password', 'error');
+        }
+    });
+
+    const handleResetPassword = () => {
+        if (window.confirm('Are you sure you want to reset this employee\'s password? A new password will be generated and emailed to them.')) {
+            resetPasswordMutation.mutate();
+        }
+    };
+
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
     };
@@ -558,8 +575,8 @@ export const EmployeeMaster: React.FC = () => {
                                 <FormRow label="Last Name" required>
                                     <TextField name="lastName" value={formData.lastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                 </FormRow>
-                                <FormRow label="Employee Code">
-                                    <TextField name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                <FormRow label="Employee ID / Code">
+                                    <TextField name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="System ID will be used if blank" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                 </FormRow>
                                 <FormRow label="Address" required>
                                     <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
@@ -745,7 +762,7 @@ export const EmployeeMaster: React.FC = () => {
                                         }}
                                     />
                                 </FormRow>
-                                <FormRow label="Confirm Password" required>
+                                <FormRow label="Confirm Password" required={!isEditMode}>
                                     <TextField
                                         name="confirmPassword"
                                         type={showPassword ? 'text' : 'password'}
@@ -758,6 +775,21 @@ export const EmployeeMaster: React.FC = () => {
                                         helperText={formData.password !== formData.confirmPassword && !!formData.confirmPassword ? 'Passwords do not match' : ''}
                                     />
                                 </FormRow>
+
+                                {isEditMode && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                                        <Button
+                                            variant="outlined"
+                                            color="warning"
+                                            size="small"
+                                            onClick={handleResetPassword}
+                                            disabled={resetPasswordMutation.isPending}
+                                            sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                                        >
+                                            {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password & Send Email'}
+                                        </Button>
+                                    </Box>
+                                )}
                             </Section>
 
                             {Object.values(extraFieldLabels).some(label => !!label.trim()) && (
@@ -794,7 +826,7 @@ export const EmployeeMaster: React.FC = () => {
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Employee">
                                         <Typography sx={{ color: 'text.primary', fontSize: '0.85rem', pt: { xs: 0, sm: 0.8 } }}>
-                                            {formData.firstName || 'Employee Name'} {formData.lastName || ''} - {isEditMode ? id : 'New'}
+                                            {formData.firstName || 'Employee Name'} {formData.lastName || ''} - {isEditMode ? (formData.employeeCode || id) : 'New'}
                                         </Typography>
                                     </FormRow>
                                 </Box>
