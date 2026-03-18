@@ -10,41 +10,60 @@ import {
     TableBody,
     TableCell,
     TableContainer,
+    TableHead,
     TableRow,
     IconButton,
     TextField,
+    Chip,
+    Button,
+    CircularProgress,
+    LinearProgress,
+    Tooltip,
 } from '@mui/material';
 import {
     List as ListIcon,
-    ExpandMore as ExpandMoreIcon,
     Update as CycleIcon,
-    Close as CloseIcon,
+    Search as SearchIcon,
+    ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
-import type { TaskMasterData, Client, User } from '../../../types';
+import { taskService } from '../../../services/taskService';
+import type { TaskMasterData, Client, User, Task } from '../../../types';
+
+const STATUS_MAP: Record<string, { label: string; color: 'default' | 'warning' | 'info' | 'success' | 'error' | 'primary' }> = {
+    PENDING: { label: 'Pending', color: 'warning' },
+    IN_PROCESS: { label: 'In Process', color: 'info' },
+    PENDING_FOR_APPROVAL: { label: 'Pending Approval', color: 'primary' },
+    APPROVED: { label: 'Approved', color: 'success' },
+    DONE: { label: 'Done', color: 'success' },
+    CANCELLED: { label: 'Cancelled', color: 'default' },
+    ON_HOLD: { label: 'On Hold', color: 'default' },
+    PENDING_FROM_CLIENT: { label: 'Pending Client', color: 'warning' },
+    PENDING_FROM_DEPARTMENT: { label: 'Pending Dept', color: 'warning' },
+    REJECTED: { label: 'Rejected', color: 'error' },
+};
 
 export const TaskCycleDetail: React.FC = () => {
-    const [assignBy, setAssignBy] = useState('');
-    const [assignTo, setAssignTo] = useState('');
+    const [assignedTo, setAssignedTo] = useState('');
     const [groupName, setGroupName] = useState('');
     const [clientName, setClientName] = useState('');
     const [selectedTask, setSelectedTask] = useState('');
-    const [frequencyType, setFrequencyType] = useState('Sel...');
     const [frequency, setFrequency] = useState('');
-    const [subTask, setSubTask] = useState('');
-    const [year, setYear] = useState(new Date().getFullYear().toString());
     const [status, setStatus] = useState('');
-    const [dateType, setDateType] = useState('On Effective ...');
+    const [year, setYear] = useState(new Date().getFullYear().toString());
+    const [startFrom, setStartFrom] = useState('');
+    const [startTo, setStartTo] = useState('');
+    const [searchedOnce, setSearchedOnce] = useState(false);
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
         return Array.from({ length: 11 }, (_, i) => (currentYear - 5 + i).toString());
     }, []);
 
-    // Fetch data for dropdowns
+    // Fetch dropdown data
     const { data: taskMasters = [] } = useQuery({
         queryKey: ['taskMasters'],
         queryFn: taskMasterService.getTaskMasters
@@ -65,8 +84,47 @@ export const TaskCycleDetail: React.FC = () => {
         queryFn: adminService.getStaffUsers
     });
 
+    // Fetch task cycle data
+    const { data: cycleTasks = [], isFetching, refetch } = useQuery<Task[]>({
+        queryKey: ['taskCycle', assignedTo, clientName, selectedTask, frequency, status],
+        queryFn: () => taskService.getTaskCycle({
+            assignedTo: assignedTo || undefined,
+            clientId: clientName || undefined,
+            taskMasterId: selectedTask || undefined,
+            frequency: frequency || undefined,
+            status: status || undefined,
+            startDate: startFrom || undefined,
+            endDate: startTo || undefined,
+        }),
+        enabled: false,
+    });
+
+    const handleSearch = () => {
+        setSearchedOnce(true);
+        refetch();
+    };
+
+    // Filter by group client-side
+    const filteredClients = useMemo(() => {
+        if (!groupName) return clients;
+        return clients.filter((c: Client) => {
+            const g = c.groupName;
+            const gId = typeof g === 'object' ? (g as { _id: string })?._id : g;
+            return gId === groupName;
+        });
+    }, [clients, groupName]);
+
+    // Summary stats
+    const stats = useMemo(() => {
+        if (cycleTasks.length === 0) return null;
+        const done = cycleTasks.filter(t => t.status === 'DONE').length;
+        const inProcess = cycleTasks.filter(t => t.status === 'IN_PROCESS').length;
+        const pending = cycleTasks.filter(t => t.status === 'PENDING').length;
+        const overdue = cycleTasks.filter(t => t.isOverdue).length;
+        return { done, inProcess, pending, overdue, total: cycleTasks.length };
+    }, [cycleTasks]);
+
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
-    const statuses = ['Pending', 'In Progress', 'Completed', 'On Hold', 'Cancelled'];
 
     return (
         <Box sx={{ p: 0 }}>
@@ -82,79 +140,91 @@ export const TaskCycleDetail: React.FC = () => {
             }}>
                 <CycleIcon />
                 <Typography variant="h6" fontWeight="500">Task Cycle Detail</Typography>
+                <Typography variant="body2" sx={{ ml: 'auto', opacity: 0.85 }}>
+                    View full lifecycle of recurring tasks
+                </Typography>
             </Paper>
 
             {/* Selection Form */}
             <Paper sx={{ p: 3, mb: 1, borderRadius: '0 0 8px 8px' }}>
                 <Grid container spacing={2}>
-                    {/* Row 1 */}
+                    {/* Assign By (from) */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Assign By</Typography>
-                            <Select size="small" fullWidth displayEmpty value={assignBy} onChange={(e) => setAssignBy(e.target.value)}>
-                                <MenuItem value=""><em>Choose Employee...</em></MenuItem>
+                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Assigned To</Typography>
+                            <Select size="small" fullWidth displayEmpty value={assignedTo}
+                                onChange={(e) => setAssignedTo(e.target.value)}>
+                                <MenuItem value=""><em>All Employees</em></MenuItem>
                                 {staffUsers.map((u: User) => (
-                                    <MenuItem key={u._id} value={u._id}>{u.name || u.username}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Assign To</Typography>
-                            <Select size="small" fullWidth displayEmpty value={assignTo} onChange={(e) => setAssignTo(e.target.value)}>
-                                <MenuItem value=""><em>Choose Employee...</em></MenuItem>
-                                {staffUsers.map((u: User) => (
-                                    <MenuItem key={u._id} value={u._id}>{u.name || u.username}</MenuItem>
+                                    <MenuItem key={u._id} value={u._id}>{u.name || u.username} ({u.role})</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 2 */}
+                    {/* Status */}
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" alignItems="center">
+                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
+                            <Select size="small" fullWidth displayEmpty value={status}
+                                onChange={(e) => setStatus(e.target.value)}>
+                                <MenuItem value=""><em>All Statuses</em></MenuItem>
+                                {Object.entries(STATUS_MAP).map(([val, { label }]) => (
+                                    <MenuItem key={val} value={val}>{label}</MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
+                    </Grid>
+
+                    {/* Group Name */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Group Name</Typography>
-                            <Select size="small" fullWidth displayEmpty value={groupName} onChange={(e) => setGroupName(e.target.value)}>
-                                <MenuItem value=""><em>Choose a Group...</em></MenuItem>
+                            <Select size="small" fullWidth displayEmpty value={groupName}
+                                onChange={(e) => { setGroupName(e.target.value); setClientName(''); }}>
+                                <MenuItem value=""><em>All Groups</em></MenuItem>
                                 {clientGroups.map((g: { _id: string; groupName: string }) => (
                                     <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
+
+                    {/* Client Name */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Client Name</Typography>
-                            <Select size="small" fullWidth displayEmpty value={clientName} onChange={(e) => setClientName(e.target.value)}>
-                                <MenuItem value=""><em>Choose a Client...</em></MenuItem>
-                                {clients.map((c: Client) => (
+                            <Select size="small" fullWidth displayEmpty value={clientName}
+                                onChange={(e) => setClientName(e.target.value)}>
+                                <MenuItem value=""><em>All Clients</em></MenuItem>
+                                {filteredClients.map((c: Client) => (
                                     <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 3 */}
+                    {/* Task */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Task</Typography>
-                            <Select size="small" fullWidth displayEmpty value={selectedTask} onChange={(e) => setSelectedTask(e.target.value)}>
-                                <MenuItem value=""><em>Choose a Task...</em></MenuItem>
+                            <Select size="small" fullWidth displayEmpty value={selectedTask}
+                                onChange={(e) => setSelectedTask(e.target.value)}>
+                                <MenuItem value=""><em>All Tasks</em></MenuItem>
                                 {taskMasters.map((t: TaskMasterData) => (
                                     <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
+
+                    {/* Frequency */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center" gap={1}>
+                        <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Frequency</Typography>
-                            <Select size="small" sx={{ width: 100 }} value={frequencyType} onChange={(e) => setFrequencyType(e.target.value)}>
-                                <MenuItem value="Sel...">Sel...</MenuItem>
-                            </Select>
-                            <Select size="small" fullWidth displayEmpty value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-                                <MenuItem value=""><em>Select an Option</em></MenuItem>
+                            <Select size="small" fullWidth displayEmpty value={frequency}
+                                onChange={(e) => setFrequency(e.target.value)}>
+                                <MenuItem value=""><em>All Frequencies</em></MenuItem>
                                 {frequencies.map(f => (
                                     <MenuItem key={f} value={f}>{f}</MenuItem>
                                 ))}
@@ -162,20 +232,13 @@ export const TaskCycleDetail: React.FC = () => {
                         </Box>
                     </Grid>
 
-                    {/* Row 4 */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Sub Task</Typography>
-                            <Select size="small" fullWidth displayEmpty value={subTask} onChange={(e) => setSubTask(e.target.value)}>
-                                <MenuItem value=""><em>Choose a Subtask...</em></MenuItem>
-                            </Select>
-                        </Box>
-                    </Grid>
+                    {/* Year */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Year</Typography>
-                            <Select size="small" fullWidth displayEmpty value={year} onChange={(e) => setYear(e.target.value)}>
-                                <MenuItem value=""><em>Choose Year...</em></MenuItem>
+                            <Select size="small" fullWidth displayEmpty value={year}
+                                onChange={(e) => setYear(e.target.value)}>
+                                <MenuItem value=""><em>All Years</em></MenuItem>
                                 {years.map(y => (
                                     <MenuItem key={y} value={y}>{y}</MenuItem>
                                 ))}
@@ -183,37 +246,45 @@ export const TaskCycleDetail: React.FC = () => {
                         </Box>
                     </Grid>
 
-                    {/* Row 5 */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
-                            <Select size="small" fullWidth displayEmpty value={status} onChange={(e) => setStatus(e.target.value)}>
-                                <MenuItem value=""><em>None selected</em></MenuItem>
-                                {statuses.map(s => (
-                                    <MenuItem key={s} value={s}>{s}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
+                    {/* Date range */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center" gap={1}>
-                            <Select size="small" sx={{ width: 140 }} value={dateType} onChange={(e) => setDateType(e.target.value)}>
-                                <MenuItem value="On Effective ...">On Effective ...</MenuItem>
-                            </Select>
-                            <Box display="flex" alignItems="center" gap={0} sx={{ border: '1px solid #ddd', borderRadius: 1, overflow: 'hidden' }}>
-                                <TextField size="small" placeholder="From" sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' }, width: 120 }} />
-                                <Box sx={{ px: 1, bgcolor: '#f0f0f0', py: 1, borderLeft: '1px solid #ddd', borderRight: '1px solid #ddd', fontSize: '0.8rem' }}>To</Box>
-                                <TextField size="small" placeholder="To" sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' }, width: 120 }} />
-                            </Box>
-                            <IconButton size="small" sx={{ bgcolor: '#ff5252', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#ff1744' } }}>
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
+                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Target Date</Typography>
+                            <TextField size="small" type="date" placeholder="From" value={startFrom}
+                                onChange={(e) => setStartFrom(e.target.value)}
+                                sx={{ flex: 1 }} InputLabelProps={{ shrink: true }} />
+                            <Typography variant="body2" color="text.secondary">to</Typography>
+                            <TextField size="small" type="date" placeholder="To" value={startTo}
+                                onChange={(e) => setStartTo(e.target.value)}
+                                sx={{ flex: 1 }} InputLabelProps={{ shrink: true }} />
+                        </Box>
+                    </Grid>
+
+                    {/* Search button */}
+                    <Grid size={{ xs: 12 }}>
+                        <Box display="flex" justifyContent="center" mt={1}>
+                            <Button variant="contained" startIcon={<SearchIcon />}
+                                onClick={handleSearch} disabled={isFetching}
+                                sx={{ bgcolor: '#667eea', px: 4, '&:hover': { bgcolor: '#764ba2' } }}>
+                                {isFetching ? 'Searching...' : 'Search Task Cycle'}
+                            </Button>
                         </Box>
                     </Grid>
                 </Grid>
+
+                {/* Summary */}
+                {stats && (
+                    <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Chip label={`Total: ${stats.total}`} color="primary" variant="outlined" />
+                        <Chip label={`Done: ${stats.done}`} color="success" variant="outlined" />
+                        <Chip label={`In Process: ${stats.inProcess}`} color="info" variant="outlined" />
+                        <Chip label={`Pending: ${stats.pending}`} color="warning" variant="outlined" />
+                        <Chip label={`Overdue: ${stats.overdue}`} color="error" variant="outlined" />
+                    </Box>
+                )}
             </Paper>
 
-            {/* Job List Section */}
+            {/* Job List */}
             <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
@@ -222,24 +293,107 @@ export const TaskCycleDetail: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                     <Box display="flex" alignItems="center" gap={1}>
                         <ListIcon fontSize="small" />
-                        <Typography fontWeight="500">Job List</Typography>
+                        <Typography fontWeight="500">
+                            Task Cycle List {searchedOnce && `(${cycleTasks.length} records)`}
+                        </Typography>
                     </Box>
+                    {isFetching && <CircularProgress size={18} sx={{ color: 'white' }} />}
                     <IconButton size="small" sx={{ color: 'white' }}>
                         <ExpandMoreIcon />
                     </IconButton>
                 </Box>
+
+                {isFetching && <LinearProgress />}
+
                 <TableContainer sx={{ minHeight: 150, bgcolor: '#f8f9fa' }}>
                     <Table size="small">
+                        {searchedOnce && cycleTasks.length > 0 && (
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 600 }}>#</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Task</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Client</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Frequency</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Assigned To</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Progress</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Target Date</TableCell>
+                                </TableRow>
+                            </TableHead>
+                        )}
                         <TableBody>
-                            <TableRow>
-                                <TableCell align="center" colSpan={10} sx={{ color: 'text.secondary', py: 6 }}>
-                                    No Record Found
-                                </TableCell>
-                            </TableRow>
+                            {!searchedOnce ? (
+                                <TableRow>
+                                    <TableCell align="center" colSpan={8} sx={{ color: 'text.secondary', py: 6 }}>
+                                        Use filters above and click "Search Task Cycle" to view task history.
+                                    </TableCell>
+                                </TableRow>
+                            ) : cycleTasks.length === 0 ? (
+                                <TableRow>
+                                    <TableCell align="center" colSpan={8} sx={{ color: 'text.secondary', py: 6 }}>
+                                        No tasks found matching the selected filters.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                cycleTasks.map((task: Task, idx: number) => {
+                                    const statusInfo = STATUS_MAP[task.status] || { label: task.status, color: 'default' as const };
+                                    const assignedUsers = Array.isArray(task.assignedTo)
+                                        ? task.assignedTo.map((u: string | User) =>
+                                            typeof u === 'object' ? (u.name || u.username) : u
+                                        ).join(', ')
+                                        : '—';
+                                    return (
+                                        <TableRow key={task._id} hover
+                                            sx={{ bgcolor: task.isOverdue ? 'rgba(255,82,82,0.04)' : 'inherit' }}>
+                                            <TableCell>{idx + 1}</TableCell>
+                                            <TableCell sx={{ fontWeight: 500 }}>{task.title}</TableCell>
+                                            <TableCell>
+                                                {typeof task.clientId === 'object'
+                                                    ? (task.clientId as Client)?.name || '—'
+                                                    : '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip label={task.frequency || 'One Time'} size="small" variant="outlined" />
+                                            </TableCell>
+                                            <TableCell sx={{ fontSize: '0.8rem' }}>{assignedUsers || '—'}</TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={statusInfo.label}
+                                                    size="small"
+                                                    color={statusInfo.color}
+                                                    variant="filled"
+                                                />
+                                            </TableCell>
+                                            <TableCell sx={{ minWidth: 100 }}>
+                                                <Tooltip title={`${task.progressPercentage}%`}>
+                                                    <Box>
+                                                        <LinearProgress
+                                                            variant="determinate"
+                                                            value={task.progressPercentage || 0}
+                                                            sx={{ height: 6, borderRadius: 3,
+                                                                bgcolor: '#e0e0e0',
+                                                                '& .MuiLinearProgress-bar': {
+                                                                    bgcolor: task.status === 'DONE' ? '#4caf50' : '#667eea'
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Typography variant="caption" color="text.secondary">{task.progressPercentage}%</Typography>
+                                                    </Box>
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell sx={{ color: task.isOverdue ? 'error.main' : 'inherit', fontWeight: task.isOverdue ? 600 : 400 }}>
+                                                {new Date(task.targetDate).toLocaleDateString('en-IN')}
+                                                {task.isOverdue && (
+                                                    <Typography component="div" variant="caption" color="error">Overdue</Typography>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>

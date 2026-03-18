@@ -63,6 +63,8 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                             frequency: taskMaster.frequency || 'One Time',
                             createdBy,
                             department: department || taskMaster.department,
+                            itStatus: req.body.itStatus,
+                            subMaster: req.body.subMaster,
                             status: 'Active'
                         },
                         { upsert: true, new: true }
@@ -72,12 +74,16 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                     const firstTask = new Task({
                         title: taskMaster.taskName,
                         description: taskMaster.description,
-                        category: 'CLIENT_WORK',
+                        category: department || taskMaster.department || 'CLIENT_WORK',
                         createdBy,
-                        assignedTo: taskMaster.reportingManager ? [taskMaster.reportingManager] : [],
+                        assignedTo: [],
+                        reportingManager: taskMaster.reportingManager,
                         clientId,
                         firmId,
+                        taskMasterId: taskMaster._id,
+                        frequency: taskMaster.frequency || 'One Time',
                         billingAmount: taskMaster.billingAmount || 0,
+                        billingType: 'SINGLE_CLIENT',
                         targetDate: new Date(startDate),
                         estimatedHours: 1,
                         checklist: taskMaster.subtasks.map(s => ({
@@ -124,6 +130,22 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
         });
     } catch (error) {
         console.error('Apply task error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Remove task applicability
+router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const applicability = await TaskApplicability.findOne({ _id: req.params.id, firmId: req.firmId });
+        if (!applicability) {
+            res.status(404).json({ message: 'Applicability record not found' });
+            return;
+        }
+        await TaskApplicability.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Task applicability removed successfully' });
+    } catch (error) {
+        console.error('Remove applicability error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

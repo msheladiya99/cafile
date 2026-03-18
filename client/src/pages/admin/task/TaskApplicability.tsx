@@ -20,16 +20,21 @@ import {
     TableHead,
     TableRow,
     IconButton,
+    Chip,
+    Tooltip,
 } from '@mui/material';
 import {
     Add as AddIcon,
     List as ListIcon,
     KeyboardArrowUp as UpIcon,
     Info as InfoIcon,
+    Delete as DeleteIcon,
+    CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
+import { taskService } from '../../../services/taskService';
 import { taskApplicabilityService } from '../../../services/taskApplicabilityService';
 import type { TaskMasterData, Client, TaskApplicability as TaskApplicabilityType } from '../../../types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,7 +47,7 @@ export const TaskApplicability: React.FC = () => {
     const isSingleTask = searchParams.get('single') === 'true';
     const navigate = useNavigate();
 
-    // Recurrence Task State
+    // ─── Recurrence Task State ───
     const [basedOn, setBasedOn] = useState<'Task' | 'Client'>('Task');
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTask, setSelectedTask] = useState('');
@@ -52,15 +57,17 @@ export const TaskApplicability: React.FC = () => {
     const [department, setDepartment] = useState('');
     const [infiniteApplicability, setInfiniteApplicability] = useState(true);
 
-    // Single Task State
+    // ─── Single Task State ───
     const [singleGroupName, setSingleGroupName] = useState('');
     const [singleClientName, setSingleClientName] = useState('');
     const [singleTask, setSingleTask] = useState('');
     const [singleFrequency, setSingleFrequency] = useState('');
     const [singleYear, setSingleYear] = useState(new Date().getFullYear().toString());
     const [singleDepartment, setSingleDepartment] = useState('');
+    const [singleTargetDate, setSingleTargetDate] = useState(new Date().toISOString().split('T')[0]);
 
     const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
     const queryClient = useQueryClient();
 
     const years = useMemo(() => {
@@ -68,7 +75,7 @@ export const TaskApplicability: React.FC = () => {
         return Array.from({ length: 11 }, (_, i) => (currentYear - 5 + i).toString());
     }, []);
 
-    // Fetch data for dropdowns
+    // ─── Data Fetches ───
     const { data: taskMasters = [] } = useQuery({
         queryKey: ['taskMasters'],
         queryFn: taskMasterService.getTaskMasters
@@ -94,62 +101,186 @@ export const TaskApplicability: React.FC = () => {
         queryFn: adminService.getClients
     });
 
+    // Query key changes depending on what's selected (task or client)
+    const appliedQueryKey = useMemo(() => {
+        if (isSingleTask) return ['taskApplicability', 'single', singleClientName];
+        if (basedOn === 'Task') return ['taskApplicability', 'task', selectedTask];
+        return ['taskApplicability', 'client', singleClientName];
+    }, [isSingleTask, basedOn, selectedTask, singleClientName]);
+
     const { data: appliedTasks = [], refetch: refetchApplied } = useQuery({
-        queryKey: ['taskApplicability', selectedTask],
-        queryFn: () => taskApplicabilityService.getApplicabilities({ taskMasterId: selectedTask }),
-        enabled: !!selectedTask
+        queryKey: appliedQueryKey,
+        queryFn: () => taskApplicabilityService.getApplicabilities(
+            basedOn === 'Task'
+                ? { taskMasterId: selectedTask }
+                : { clientId: singleClientName }
+        ),
+        enabled: basedOn === 'Task' ? !!selectedTask : !!singleClientName
     });
 
+    // ─── Apply Mutation (Recurrence) ───
     const applyMutation = useMutation({
         mutationFn: taskApplicabilityService.applyTask,
         onSuccess: () => {
             toast.success('Task applied successfully');
             setSelectedClientIds([]);
+            setSelectedTaskIds([]);
             refetchApplied();
             queryClient.invalidateQueries({ queryKey: ['tasks'] });
         },
         onError: (err: AxiosError<{ message: string }>) => {
             toast.error(err.response?.data?.message || 'Failed to apply task');
         }
-
     });
 
-    const handleApply = () => {
-        if (!selectedTask) {
-            toast.error('Please select a task');
-            return;
+    // ─── Remove Applicability Mutation ───
+    const removeMutation = useMutation({
+        mutationFn: (id: string) => taskApplicabilityService.removeApplicability(id),
+        onSuccess: () => {
+            toast.success('Task applicability removed');
+            refetchApplied();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            toast.error(err.response?.data?.message || 'Failed to remove');
         }
-        if (selectedClientIds.length === 0) {
-            toast.error('Please select at least one client');
+    });
+
+    // ─── handleApply (Recurrence) ───
+    const handleApply = () => {
+        if (basedOn === 'Task') {
+            if (!selectedTask) return toast.error('Please select a task');
+            if (selectedClientIds.length === 0) return toast.error('Please select at least one client');
+            applyMutation.mutate({
+                taskMasterId: selectedTask,
+                clientIds: selectedClientIds,
+                startDate,
+                infinite: infiniteApplicability,
+                department: department,
+                itStatus,
+                subMaster
+            });
+        } else {
+            // Based On Client
+            if (!singleClientName) return toast.error('Please select a client');
+            if (selectedTaskIds.length === 0) return toast.error('Please select at least one task');
+            // Apply each chosen task with the department
+            const applyNext = (idx: number) => {
+                if (idx >= selectedTaskIds.length) return;
+                applyMutation.mutate({
+                    taskMasterId: selectedTaskIds[idx],
+                    clientIds: [singleClientName],
+                    startDate,
+                    infinite: infiniteApplicability,
+                    department: department   // ✅ Fixed: now passes department
+                }, {
+                    onSettled: () => applyNext(idx + 1)
+                });
+            };
+            applyNext(0);
+        }
+    };
+
+    // ─── handleSingleSave (Start Single Task) ───
+    const handleSingleSave = async () => {
+        if (!singleClientName || !singleTask || !singleYear || !singleTargetDate) {
+            toast.error('Please fill all required fields (*)');
             return;
         }
 
-        applyMutation.mutate({
-            taskMasterId: selectedTask,
-            clientIds: selectedClientIds,
-            startDate,
-            infinite: infiniteApplicability,
-            department: department
-        });
+        const master = taskMasters.find((t: TaskMasterData) => t._id === singleTask);
+        if (!master) return;
+
+        try {
+            const taskData = {
+                title: master.taskName,
+                description: master.description || '',
+                category: (singleDepartment || master.department || 'CLIENT_WORK') as import('../../../types').TaskCategory,
+                reportingManager: master.reportingManager
+                    ? (typeof master.reportingManager === 'string'
+                        ? master.reportingManager
+                        : (master.reportingManager as { _id: string })._id)
+                    : undefined,
+                assignedTo: [],
+                clientId: singleClientName,
+                priority: 'MEDIUM' as const,
+                targetDate: singleTargetDate,
+                estimatedHours: 1,
+                frequency: singleFrequency || master.frequency || 'One Time',
+                taskMasterId: master._id,
+                year: singleYear,
+                checklist: (master.subtasks || []).map(s => s.name)
+            };
+
+            await taskService.createTask(taskData);
+            toast.success('Single task started successfully');
+            navigate('/admin/tasks/ongoing');
+        } catch (error: unknown) {
+            const axiosErr = error as import('axios').AxiosError<{ message: string }>;
+            toast.error(axiosErr.response?.data?.message || 'Failed to start task');
+        }
     };
 
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
     const departments = ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance'];
 
+    // ─── Filtered Clients (Recurrence - Based On Task) ───
     const filteredClients = useMemo(() => {
-        return clients.filter(client => {
-            if (groupName && client.groupName !== groupName && (client.groupName as { _id: string })?._id !== groupName) return false;
-            if (itStatus && client.itStatus !== itStatus && (client.itStatus as { _id: string })?._id !== itStatus) return false;
-            if (subMaster && client.subMaster !== subMaster && (client.subMaster as { _id: string })?._id !== subMaster) return false;
-
-
-            // Don't show already applied clients for this task
-            const isAlreadyApplied = appliedTasks.some(at =>
-                (typeof at.clientId === 'string' ? at.clientId : at.clientId?._id) === client._id
-            );
+        return clients.filter((client: Client) => {
+            if (groupName) {
+                const g = client.groupName;
+                const gId = typeof g === 'object' ? (g as { _id: string })?._id : g;
+                if (gId !== groupName) return false;
+            }
+            if (itStatus) {
+                const it = client.itStatus;
+                const iId = typeof it === 'object' ? (it as { _id: string })?._id : it;
+                if (iId !== itStatus) return false;
+            }
+            if (subMaster) {
+                const sm = client.subMaster;
+                const sId = typeof sm === 'object' ? (sm as { _id: string })?._id : sm;
+                if (sId !== subMaster) return false;
+            }
+            // Hide already applied
+            const isAlreadyApplied = appliedTasks.some((at: TaskApplicabilityType) => {
+                const cid = at.clientId;
+                return (typeof cid === 'string' ? cid : (cid as Client)?._id) === client._id;
+            });
             return !isAlreadyApplied;
         });
     }, [clients, groupName, itStatus, subMaster, appliedTasks]);
+
+    // ─── Filtered Tasks (Recurrence - Based On Client) ───
+    const filteredTasks = useMemo(() => {
+        return taskMasters.filter((master: TaskMasterData) => {
+            const isAlreadyApplied = appliedTasks.some((at: TaskApplicabilityType) => {
+                const tid = at.taskMasterId;
+                return (typeof tid === 'string' ? tid : (tid as TaskMasterData)?._id) === master._id;
+            });
+            return !isAlreadyApplied;
+        });
+    }, [taskMasters, appliedTasks]);
+
+    // ─── Filtered Clients for Single Task (by singleGroupName) ───
+    const singleFilteredClients = useMemo(() => {
+        if (!singleGroupName) return clients;
+        return clients.filter((client: Client) => {
+            const g = client.groupName;
+            const gId = typeof g === 'object' ? (g as { _id: string })?._id : g;
+            return gId === singleGroupName;
+        });
+    }, [clients, singleGroupName]);
+
+    // ─── Get selected task master details for auto-fill ───
+    const selectedTaskMaster = useMemo(() =>
+        taskMasters.find((t: TaskMasterData) => t._id === singleTask),
+        [taskMasters, singleTask]
+    );
+
+    // Auto-fill frequency and department from selected task master
+    const effectiveFrequency = singleFrequency || selectedTaskMaster?.frequency || '';
+    const effectiveDepartment = singleDepartment || selectedTaskMaster?.department || '';
 
     return (
         <Box sx={{ p: 0 }}>
@@ -196,39 +327,31 @@ export const TaskApplicability: React.FC = () => {
                         </Button>
                     </Box>
                 )}
-            </Paper>
-
-            {isSingleTask && (
-                <Box sx={{ bgcolor: 'rgba(102, 126, 234, 0.1)', p: 1, display: 'flex', justifyContent: 'flex-end', px: 2 }}>
+                {isSingleTask && (
                     <Button
                         variant="contained"
                         size="small"
-                        sx={{
-                            bgcolor: '#764ba2',
-                            fontSize: '0.75rem',
-                            py: 0.5,
-                            '&:hover': { bgcolor: '#667eea' }
-                        }}
+                        onClick={() => navigate('/admin/tasks/ongoing')}
+                        sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
                     >
-                        Add New
+                        View Ongoing Tasks
                     </Button>
-                </Box>
-            )}
+                )}
+            </Paper>
 
             {/* Selection Form */}
             <Paper sx={{ p: 3, mb: 3, borderRadius: '0 0 8px 8px' }}>
                 {isSingleTask ? (
+                    /* ══════════════════════════════════════════
+                       START SINGLE TASK FORM
+                    ══════════════════════════════════════════ */
                     <Grid container spacing={3}>
+                        {/* Group Name */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Group Name</Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleGroupName}
-                                    onChange={(e) => setSingleGroupName(e.target.value)}
-                                >
+                                <Select size="small" fullWidth displayEmpty value={singleGroupName}
+                                    onChange={(e) => { setSingleGroupName(e.target.value); setSingleClientName(''); }}>
                                     <MenuItem value=""><em>Choose a Group...</em></MenuItem>
                                     {clientGroups.map((g: { _id: string; groupName: string }) => (
                                         <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
@@ -236,34 +359,31 @@ export const TaskApplicability: React.FC = () => {
                                 </Select>
                             </Box>
                         </Grid>
+
+                        {/* Client Name - filtered by group */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Client Name <span style={{ color: 'red' }}>*</span></Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleClientName}
-                                    onChange={(e) => setSingleClientName(e.target.value)}
-                                >
+                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                                    Client Name <span style={{ color: 'red' }}>*</span>
+                                </Typography>
+                                <Select size="small" fullWidth displayEmpty value={singleClientName}
+                                    onChange={(e) => setSingleClientName(e.target.value)}>
                                     <MenuItem value=""><em>Choose a Client...</em></MenuItem>
-                                    {clients.map((c: Client) => (
+                                    {singleFilteredClients.map((c: Client) => (  // ✅ Fixed: filtered by group
                                         <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                     ))}
                                 </Select>
                             </Box>
                         </Grid>
 
+                        {/* Task */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Task <span style={{ color: 'red' }}>*</span></Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleTask}
-                                    onChange={(e) => setSingleTask(e.target.value)}
-                                >
+                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                                    Task <span style={{ color: 'red' }}>*</span>
+                                </Typography>
+                                <Select size="small" fullWidth displayEmpty value={singleTask}
+                                    onChange={(e) => { setSingleTask(e.target.value); setSingleFrequency(''); setSingleDepartment(''); }}>
                                     <MenuItem value=""><em>Choose a Task...</em></MenuItem>
                                     {taskMasters.map((t: TaskMasterData) => (
                                         <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
@@ -271,34 +391,35 @@ export const TaskApplicability: React.FC = () => {
                                 </Select>
                             </Box>
                         </Grid>
+
+                        {/* Frequency - auto-filled from task master */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Frequency</Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleFrequency}
-                                    onChange={(e) => setSingleFrequency(e.target.value)}
-                                >
+                                <Select size="small" fullWidth displayEmpty
+                                    value={effectiveFrequency}
+                                    onChange={(e) => setSingleFrequency(e.target.value)}>
                                     <MenuItem value=""><em>Choose a Frequency...</em></MenuItem>
                                     {frequencies.map(f => (
                                         <MenuItem key={f} value={f}>{f}</MenuItem>
                                     ))}
                                 </Select>
                             </Box>
+                            {selectedTaskMaster?.frequency && !singleFrequency && (
+                                <Typography variant="caption" color="primary" sx={{ ml: 18, mt: 0.3, display: 'block' }}>
+                                    Auto-filled from task: {selectedTaskMaster.frequency}
+                                </Typography>
+                            )}
                         </Grid>
 
+                        {/* Year */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Year <span style={{ color: 'red' }}>*</span></Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleYear}
-                                    onChange={(e) => setSingleYear(e.target.value)}
-                                >
+                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                                    Year <span style={{ color: 'red' }}>*</span>
+                                </Typography>
+                                <Select size="small" fullWidth displayEmpty value={singleYear}
+                                    onChange={(e) => setSingleYear(e.target.value)}>
                                     <MenuItem value=""><em>Choose Year...</em></MenuItem>
                                     {years.map(y => (
                                         <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -307,16 +428,13 @@ export const TaskApplicability: React.FC = () => {
                             </Box>
                         </Grid>
 
+                        {/* Department - auto-filled from task master */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Department</Typography>
-                                <Select
-                                    size="small"
-                                    fullWidth
-                                    displayEmpty
-                                    value={singleDepartment}
-                                    onChange={(e) => setSingleDepartment(e.target.value)}
-                                >
+                                <Select size="small" fullWidth displayEmpty
+                                    value={effectiveDepartment}
+                                    onChange={(e) => setSingleDepartment(e.target.value)}>
                                     <MenuItem value=""><em>Choose a Department...</em></MenuItem>
                                     {departments.map(d => (
                                         <MenuItem key={d} value={d}>{d}</MenuItem>
@@ -325,83 +443,81 @@ export const TaskApplicability: React.FC = () => {
                             </Box>
                         </Grid>
 
+                        {/* Target Date */}
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Box display="flex" alignItems="center">
+                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                                    Target Date <span style={{ color: 'red' }}>*</span>
+                                </Typography>
+                                <TextField type="date" size="small" fullWidth
+                                    value={singleTargetDate}
+                                    onChange={(e) => setSingleTargetDate(e.target.value)} />
+                            </Box>
+                        </Grid>
+
+                        {/* Task Info Preview */}
+                        {selectedTaskMaster && (
+                            <Grid size={{ xs: 12 }}>
+                                <Box sx={{ bgcolor: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 2, p: 2, ml: 18 }}>
+                                    <Typography variant="body2" fontWeight={600} color="primary" mb={0.5}>Task Details</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        <strong>Description:</strong> {selectedTaskMaster.description || '—'} &nbsp;|&nbsp;
+                                        <strong>Mode:</strong> {selectedTaskMaster.mode} &nbsp;|&nbsp;
+                                        <strong>Billing:</strong> ₹{selectedTaskMaster.billingAmount || 0} &nbsp;|&nbsp;
+                                        <strong>Subtasks:</strong> {selectedTaskMaster.subtasks?.length || 0}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                        )}
+
+                        {/* Save / Cancel buttons */}
                         <Grid size={{ xs: 12 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 2 }}>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    sx={{
-                                        bgcolor: '#667eea',
-                                        px: 3,
-                                        '&:hover': { bgcolor: '#764ba2' }
-                                    }}
-                                >
-                                    Save
+                                <Button variant="contained" size="small" onClick={handleSingleSave}
+                                    sx={{ bgcolor: '#667eea', px: 3, '&:hover': { bgcolor: '#764ba2' } }}>
+                                    Save & Start Task
                                 </Button>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    sx={{
-                                        bgcolor: '#ff5252',
-                                        px: 3,
-                                        '&:hover': { bgcolor: '#f44336' }
-                                    }}
-                                >
+                                <Button variant="contained" size="small" onClick={() => navigate('/admin/tasks/ongoing')}
+                                    sx={{ bgcolor: '#ff5252', px: 3, '&:hover': { bgcolor: '#f44336' } }}>
                                     Cancel
                                 </Button>
                             </Box>
                         </Grid>
                     </Grid>
                 ) : (
+                    /* ══════════════════════════════════════════
+                       SET RECURRENCE TASK FORM
+                    ══════════════════════════════════════════ */
                     <Grid container spacing={3} alignItems="center">
-                        {/* Always visible header fields */}
+                        {/* Based On + Start Date (always visible) */}
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Typography sx={{ width: 140, color: 'text.secondary' }}>Based On <span style={{ color: 'red' }}>*</span></Typography>
-                                <RadioGroup
-                                    row
-                                    value={basedOn}
-                                    onChange={(e) => setBasedOn(e.target.value as 'Task' | 'Client')}
-                                >
-                                    <FormControlLabel
-                                        value="Task"
-                                        control={<Radio size="small" sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }} />}
-                                        label="Task"
-                                    />
-                                    <FormControlLabel
-                                        value="Client"
-                                        control={<Radio size="small" sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }} />}
-                                        label="Client"
-                                    />
+                                <RadioGroup row value={basedOn} onChange={(e) => {
+                                    setBasedOn(e.target.value as 'Task' | 'Client');
+                                    setSelectedTask(''); setSingleClientName(''); setSelectedClientIds([]); setSelectedTaskIds([]);
+                                }}>
+                                    <FormControlLabel value="Task" control={<Radio size="small" sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }} />} label="Task" />
+                                    <FormControlLabel value="Client" control={<Radio size="small" sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }} />} label="Client" />
                                 </RadioGroup>
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" alignItems="center">
                                 <Typography sx={{ width: 140, color: 'text.secondary' }}>Start Date <span style={{ color: 'red' }}>*</span></Typography>
-                                <TextField
-                                    type="date"
-                                    size="small"
-                                    fullWidth
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                />
+                                <TextField type="date" size="small" fullWidth value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)} />
                             </Box>
                         </Grid>
 
-                        {/* Conditional Fields based on "Task" */}
+                        {/* ── Based On = Task ── */}
                         {basedOn === 'Task' && (
                             <>
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Task <span style={{ color: 'red' }}>*</span></Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={selectedTask}
-                                            onChange={(e) => setSelectedTask(e.target.value)}
-                                        >
+                                        <Select size="small" fullWidth displayEmpty value={selectedTask}
+                                            onChange={(e) => { setSelectedTask(e.target.value); setSelectedClientIds([]); }}>
                                             <MenuItem value=""><em>Choose a Task...</em></MenuItem>
                                             {taskMasters.map((t: TaskMasterData) => (
                                                 <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
@@ -412,14 +528,9 @@ export const TaskApplicability: React.FC = () => {
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Group Name</Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={groupName}
-                                            onChange={(e) => setGroupName(e.target.value)}
-                                        >
-                                            <MenuItem value=""><em>Choose a Group...</em></MenuItem>
+                                        <Select size="small" fullWidth displayEmpty value={groupName}
+                                            onChange={(e) => setGroupName(e.target.value)}>
+                                            <MenuItem value=""><em>All Groups</em></MenuItem>
                                             {clientGroups.map((g: { _id: string; groupName: string }) => (
                                                 <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                             ))}
@@ -429,14 +540,9 @@ export const TaskApplicability: React.FC = () => {
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>IT Status</Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={itStatus}
-                                            onChange={(e) => setITStatus(e.target.value)}
-                                        >
-                                            <MenuItem value=""><em>Choose IT Status...</em></MenuItem>
+                                        <Select size="small" fullWidth displayEmpty value={itStatus}
+                                            onChange={(e) => setITStatus(e.target.value)}>
+                                            <MenuItem value=""><em>All IT Statuses</em></MenuItem>
                                             {itStatuses.map((s: { _id: string; name: string }) => (
                                                 <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
                                             ))}
@@ -446,53 +552,21 @@ export const TaskApplicability: React.FC = () => {
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Sub Master</Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={subMaster}
-                                            onChange={(e) => setSubMaster(e.target.value)}
-                                        >
-                                            <MenuItem value=""><em>Choose a Sub Master...</em></MenuItem>
+                                        <Select size="small" fullWidth displayEmpty value={subMaster}
+                                            onChange={(e) => setSubMaster(e.target.value)}>
+                                            <MenuItem value=""><em>All Sub Masters</em></MenuItem>
                                             {subMasters.map((s: { _id: string; name: string }) => (
                                                 <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
                                             ))}
                                         </Select>
                                     </Box>
                                 </Grid>
-                            </>
-                        )}
-
-                        {/* Conditional Fields based on "Client" */}
-                        {basedOn === 'Client' && (
-                            <>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <Box display="flex" alignItems="center">
-                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>Client <span style={{ color: 'red' }}>*</span></Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={singleClientName}
-                                            onChange={(e) => setSingleClientName(e.target.value)}
-                                        >
-                                            <MenuItem value=""><em>Choose a Client...</em></MenuItem>
-                                            {clients.map((c: Client) => (
-                                                <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </Box>
-                                </Grid>
+                                {/* ✅ Fixed: Department also shown in Task mode */}
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Department</Typography>
-                                        <Select
-                                            size="small"
-                                            fullWidth
-                                            displayEmpty
-                                            value={department}
-                                            onChange={(e) => setDepartment(e.target.value)}
-                                        >
+                                        <Select size="small" fullWidth displayEmpty value={department}
+                                            onChange={(e) => setDepartment(e.target.value)}>
                                             <MenuItem value=""><em>Choose a Department...</em></MenuItem>
                                             {departments.map(d => (
                                                 <MenuItem key={d} value={d}>{d}</MenuItem>
@@ -503,22 +577,53 @@ export const TaskApplicability: React.FC = () => {
                             </>
                         )}
 
+                        {/* ── Based On = Client ── */}
+                        {basedOn === 'Client' && (
+                            <>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Box display="flex" alignItems="center">
+                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>Client <span style={{ color: 'red' }}>*</span></Typography>
+                                        <Select size="small" fullWidth displayEmpty value={singleClientName}
+                                            onChange={(e) => { setSingleClientName(e.target.value); setSelectedTaskIds([]); }}>
+                                            <MenuItem value=""><em>Choose a Client...</em></MenuItem>
+                                            {clients.map((c: Client) => (
+                                                <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Box display="flex" alignItems="center">
+                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>Department</Typography>
+                                        <Select size="small" fullWidth displayEmpty value={department}
+                                            onChange={(e) => setDepartment(e.target.value)}>
+                                            <MenuItem value=""><em>Choose a Department...</em></MenuItem>
+                                            {departments.map(d => (
+                                                <MenuItem key={d} value={d}>{d}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </Box>
+                                </Grid>
+                            </>
+                        )}
+
+                        {/* Infinite Applicability checkbox */}
                         <Grid size={{ xs: 12 }}>
                             <Box display="flex" alignItems="center">
                                 <Box sx={{ width: 140 }} />
                                 <FormControlLabel
                                     control={
-                                        <Checkbox
-                                            checked={infiniteApplicability}
+                                        <Checkbox checked={infiniteApplicability}
                                             onChange={(e) => setInfiniteApplicability(e.target.checked)}
                                             size="small"
-                                            sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }}
-                                        />
+                                            sx={{ color: '#667eea', '&.Mui-checked': { color: '#764ba2' } }} />
                                     }
                                     label={
                                         <Box display="flex" alignItems="center" gap={0.5}>
-                                            <Typography variant="body2" fontWeight="500" sx={{ color: '#764ba2' }}>Infinite Applicability.</Typography>
-                                            <InfoIcon sx={{ fontSize: 16, color: '#667eea' }} />
+                                            <Typography variant="body2" fontWeight="500" sx={{ color: '#764ba2' }}>Infinite Applicability</Typography>
+                                            <Tooltip title="Task will auto-renew each cycle (e.g., monthly, yearly) forever until manually stopped.">
+                                                <InfoIcon sx={{ fontSize: 16, color: '#667eea' }} />
+                                            </Tooltip>
                                         </Box>
                                     }
                                 />
@@ -528,8 +633,12 @@ export const TaskApplicability: React.FC = () => {
                 )}
             </Paper>
 
+            {/* ══════════════════════════════════════════
+                RECURRENCE TASK — TWO PANEL TABLE
+            ══════════════════════════════════════════ */}
             {!isSingleTask && (
                 <Grid container spacing={3}>
+                    {/* LEFT: New (eligible) items */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
                             <Box sx={{
@@ -541,72 +650,104 @@ export const TaskApplicability: React.FC = () => {
                                 gap: 1
                             }}>
                                 <ListIcon fontSize="small" />
-                                <Typography fontWeight="500">New Task</Typography>
+                                <Typography fontWeight="500">
+                                    {basedOn === 'Task' ? `New Clients (${filteredClients.length})` : `New Tasks (${filteredTasks.length})`}
+                                </Typography>
                             </Box>
                             <TableContainer sx={{ minHeight: 300, bgcolor: '#f8f9fa' }}>
                                 <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
                                             <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    size="small"
-                                                    indeterminate={selectedClientIds.length > 0 && selectedClientIds.length < filteredClients.length}
-                                                    checked={filteredClients.length > 0 && selectedClientIds.length === filteredClients.length}
+                                                <Checkbox size="small"
+                                                    indeterminate={
+                                                        basedOn === 'Task'
+                                                            ? selectedClientIds.length > 0 && selectedClientIds.length < filteredClients.length
+                                                            : selectedTaskIds.length > 0 && selectedTaskIds.length < filteredTasks.length
+                                                    }
+                                                    checked={
+                                                        basedOn === 'Task'
+                                                            ? filteredClients.length > 0 && selectedClientIds.length === filteredClients.length
+                                                            : filteredTasks.length > 0 && selectedTaskIds.length === filteredTasks.length
+                                                    }
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
-                                                            setSelectedClientIds(filteredClients.map(c => c._id));
+                                                            if (basedOn === 'Task') setSelectedClientIds(filteredClients.map(c => c._id));
+                                                            else setSelectedTaskIds(filteredTasks.map(t => t._id!));
                                                         } else {
                                                             setSelectedClientIds([]);
+                                                            setSelectedTaskIds([]);
                                                         }
-                                                    }}
-                                                />
+                                                    }} />
                                             </TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Group</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>{basedOn === 'Task' ? 'Client Name' : 'Task Name'}</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>{basedOn === 'Task' ? 'Group' : 'Frequency'}</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {filteredClients.map((client) => (
-                                            <TableRow key={client._id} hover>
-                                                <TableCell padding="checkbox">
-                                                    <Checkbox
-                                                        size="small"
-                                                        checked={selectedClientIds.includes(client._id)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setSelectedClientIds([...selectedClientIds, client._id]);
-                                                            } else {
-                                                                setSelectedClientIds(selectedClientIds.filter(id => id !== client._id));
-                                                            }
-                                                        }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>{client.name}</TableCell>
-                                                <TableCell>{typeof client.groupName === 'object' ? client.groupName?.groupName : client.groupName}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {filteredClients.length === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                                                    No eligible clients found
-                                                </TableCell>
-                                            </TableRow>
+                                        {basedOn === 'Task' ? (
+                                            filteredClients.length > 0 ? filteredClients.map((client: Client) => (
+                                                <TableRow key={client._id} hover>
+                                                    <TableCell padding="checkbox">
+                                                        <Checkbox size="small"
+                                                            checked={selectedClientIds.includes(client._id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) setSelectedClientIds([...selectedClientIds, client._id]);
+                                                                else setSelectedClientIds(selectedClientIds.filter(id => id !== client._id));
+                                                            }} />
+                                                    </TableCell>
+                                                    <TableCell>{client.name}</TableCell>
+                                                    <TableCell>
+                                                        {typeof client.groupName === 'object'
+                                                            ? (client.groupName as { _id: string; groupName: string })?.groupName
+                                                            : client.groupName || '—'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={3} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                        {selectedTask ? 'All clients already have this task applied' : 'Select a task to see eligible clients'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        ) : (
+                                            filteredTasks.length > 0 ? filteredTasks.map((master: TaskMasterData) => (
+                                                <TableRow key={master._id} hover>
+                                                    <TableCell padding="checkbox">
+                                                        <Checkbox size="small"
+                                                            checked={selectedTaskIds.includes(master._id!)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) setSelectedTaskIds([...selectedTaskIds, master._id!]);
+                                                                else setSelectedTaskIds(selectedTaskIds.filter(id => id !== master._id));
+                                                            }} />
+                                                    </TableCell>
+                                                    <TableCell>{master.taskName}</TableCell>
+                                                    <TableCell>
+                                                        <Chip label={master.frequency || 'One Time'} size="small" variant="outlined" color="primary" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={3} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                                        {singleClientName ? 'All tasks already applied for this client' : 'Select a client to see eligible tasks'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
                                         )}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
                             <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-                                <Button
-                                    variant="contained"
-                                    onClick={handleApply}
-                                    disabled={applyMutation.isPending || selectedClientIds.length === 0}
-                                    sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}
-                                >
-                                    Apply to Selected
+                                <Button variant="contained" onClick={handleApply} startIcon={<CheckCircleIcon />}
+                                    disabled={applyMutation.isPending || (basedOn === 'Task' ? selectedClientIds.length === 0 : selectedTaskIds.length === 0)}
+                                    sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}>
+                                    {applyMutation.isPending ? 'Applying...' : `Apply to Selected (${basedOn === 'Task' ? selectedClientIds.length : selectedTaskIds.length})`}
                                 </Button>
                             </Box>
                         </Paper>
                     </Grid>
+
+                    {/* RIGHT: Already applied */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
                             <Box sx={{
@@ -619,7 +760,7 @@ export const TaskApplicability: React.FC = () => {
                             }}>
                                 <Box display="flex" alignItems="center" gap={1}>
                                     <ListIcon fontSize="small" />
-                                    <Typography fontWeight="500">Applied</Typography>
+                                    <Typography fontWeight="500">Applied ({appliedTasks.length})</Typography>
                                 </Box>
                                 <IconButton size="small" sx={{ color: 'white' }}>
                                     <UpIcon />
@@ -629,23 +770,43 @@ export const TaskApplicability: React.FC = () => {
                                 <Table size="small" stickyHeader>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>{basedOn === 'Task' ? 'Client Name' : 'Task Name'}</TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>Frequency</TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>Start Date</TableCell>
+                                            <TableCell sx={{ fontWeight: 600 }}>Action</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {appliedTasks.map((at: TaskApplicabilityType) => (
                                             <TableRow key={at._id} hover>
-                                                <TableCell>{(at.clientId as Client)?.name || 'Unknown'}</TableCell>
-                                                <TableCell>{at.frequency}</TableCell>
-                                                <TableCell>{new Date(at.startDate).toLocaleDateString()}</TableCell>
+                                                <TableCell>
+                                                    {basedOn === 'Task'
+                                                        ? ((at.clientId as Client)?.name || 'Unknown')
+                                                        : ((at.taskMasterId as TaskMasterData)?.taskName || 'Unknown')
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip label={at.frequency} size="small" color="success" variant="outlined" />
+                                                </TableCell>
+                                                <TableCell>{new Date(at.startDate).toLocaleDateString('en-IN')}</TableCell>
+                                                <TableCell>
+                                                    <Tooltip title="Remove applicability">
+                                                        <IconButton size="small" color="error"
+                                                            onClick={() => {
+                                                                if (at._id && window.confirm('Remove this task applicability?')) {
+                                                                    removeMutation.mutate(at._id);
+                                                                }
+                                                            }}>
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                         {appliedTasks.length === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                                                    No applied tasks found for this master
+                                                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                                    No applied tasks found
                                                 </TableCell>
                                             </TableRow>
                                         )}

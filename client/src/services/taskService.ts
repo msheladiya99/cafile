@@ -9,8 +9,11 @@ export const taskService = {
         assignedTo?: string;
         clientId?: string;
         clientGroupId?: string;
+        taskMasterId?: string;
+        frequency?: string;
         overdue?: boolean;
         myTasks?: boolean;
+        reportingManager?: string;
     }): Promise<Task[]> => {
         const params = new URLSearchParams();
         if (filters) {
@@ -122,4 +125,47 @@ export const taskService = {
         const response = await api.post('/tasks/recurrence', data);
         return response.data;
     },
+
+    // Transfer Tasks
+    transferTasks: async (data: {
+        fromUserId: string;
+        toUserId: string;
+        clientId?: string;
+        taskMasterId?: string;
+        frequency?: string;
+        removeFromCurrent: boolean;
+    }): Promise<{ message: string; transferredCount: number }> => {
+        const response = await api.post('/tasks/transfer', data);
+        return response.data;
+    },
+
+    getTransferPreview: async (params: {
+        fromUserId: string;
+        clientId?: string;
+        taskMasterId?: string;
+        frequency?: string;
+    }): Promise<Task[]> => {
+        const query = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v); });
+        const response = await api.get(`/tasks/transfer/preview?${query.toString()}`);
+        return response.data;
+    },
+
+    // Task Cycle - get all tasks with filters for cycle view
+    getTaskCycle: async (params: {
+        assignedTo?: string;
+        clientId?: string;
+        taskMasterId?: string;
+        frequency?: string;
+        status?: string;
+        year?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<Task[]> => {
+        const query = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v); });
+        const response = await api.get(`/tasks?${query.toString()}`);
+        return response.data;
+    },
 };
+

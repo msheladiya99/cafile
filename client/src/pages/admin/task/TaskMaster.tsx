@@ -518,7 +518,7 @@ export const TaskMaster: React.FC = () => {
                         {/* Row 3 */}
                         <TextField
                             select
-                            label="Reporting Manager *"
+                            label="Approval Access (Reporting Manager) *"
                             variant="outlined"
                             value={formData.reportingManager}
                             onChange={(e) => setFormData({ ...formData, reportingManager: e.target.value })}

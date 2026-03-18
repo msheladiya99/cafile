@@ -14,8 +14,15 @@ export const taskApplicabilityService = {
         startDate: string;
         infinite: boolean;
         department?: string;
+        itStatus?: string;
+        subMaster?: string;
     }) => {
         const response = await api.post('/task-applicability/apply', data);
+        return response.data;
+    },
+
+    removeApplicability: async (id: string) => {
+        const response = await api.delete(`/task-applicability/${id}`);
         return response.data;
     }
 };

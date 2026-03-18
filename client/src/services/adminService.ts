@@ -161,4 +161,12 @@ export const adminService = {
         const response = await api.get('/admin/employee/free-list');
         return response.data;
     },
+    getITStatus: async (): Promise<{ _id: string; name: string }[]> => {
+        const response = await api.get('/admin/it-status');
+        return response.data;
+    },
+    getSubMasters: async (): Promise<{ _id: string; name: string }[]> => {
+        const response = await api.get('/admin/sub-master');
+        return response.data;
+    },
 };

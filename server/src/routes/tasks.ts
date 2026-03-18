@@ -31,7 +31,11 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             tags,
             checklist,
             firmId,
-            billingAmount
+            billingAmount,
+            reportingManager,
+            frequency,
+            taskMasterId,
+            year
         } = req.body;
 
         if (!title || !targetDate || !estimatedHours) {
@@ -63,6 +67,10 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             tags: tags || [],
             firmId: firmId || req.firmId || req.user?.firmId,
             billingAmount: billingAmount || 0,
+            reportingManager,
+            frequency,
+            taskMasterId,
+            year,
             checklist: checklist ? checklist.map((item: string) => ({
                 id: uuidv4(),
                 text: item,
@@ -77,7 +85,9 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName');
+            .populate('firmId', 'firmName')
+            .populate('reportingManager', 'username name email')
+            .populate('taskMasterId', 'taskName frequency');
 
         res.status(201).json({
             task: populatedTask,
@@ -92,20 +102,31 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks } = req.query;
+        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager } = req.query;
 
         const filter: any = { firmId: req.firmId };
 
-        // Role-based filtering (STRICT ISOLATION)
+        // Role-based filtering (STRICT ISOLATION with Approval Support)
         if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {
-            // Staff/Interns ONLY see tasks assigned to them - NO EXCEPTIONS
-            filter.assignedTo = req.user!.userId;
+            // Staff/Interns see tasks assigned to them OR tasks they need to approve
+            filter.$or = [
+                { assignedTo: req.user!.userId },
+                { reportingManager: req.user!.userId }
+            ];
         } else {
             // Admin/Manager can override with specific filters
             if (myTasks === 'true') {
-                filter.assignedTo = req.user!.userId;
-            } else if (assignedTo) {
-                filter.assignedTo = assignedTo;
+                filter.$or = [
+                    { assignedTo: req.user!.userId },
+                    { reportingManager: req.user!.userId }
+                ];
+            } else {
+                if (assignedTo) {
+                    filter.assignedTo = assignedTo;
+                }
+                if (reportingManager) {
+                    filter.reportingManager = reportingManager;
+                }
             }
         }
 
@@ -122,6 +143,15 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         if (clientGroupId) {
             filter.clientGroupId = clientGroupId;
         }
+        if (taskMasterId) {
+            filter.taskMasterId = taskMasterId;
+        }
+        if (frequency) {
+            filter.frequency = frequency;
+        }
+        if (reportingManager) {
+            filter.reportingManager = reportingManager;
+        }
         if (overdue === 'true') {
             filter.targetDate = { $lt: new Date() };
             filter.status = { $nin: ['DONE', 'CANCELLED'] };
@@ -133,6 +163,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
             .populate('firmId', 'firmName')
+            .populate('reportingManager', 'username name email')
             .sort({ priority: -1, targetDate: 1 })
             .lean();
 
@@ -146,6 +177,89 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         res.json(tasksWithOverdue);
     } catch (error) {
         console.error('Get tasks error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ============================================
+// TRANSFER TASK  — registered BEFORE /:id
+// ============================================
+
+// Get tasks for transfer preview
+router.get('/transfer/preview', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { fromUserId, clientId, taskMasterId, frequency } = req.query;
+        if (!fromUserId) {
+            res.status(400).json({ message: 'fromUserId is required' });
+            return;
+        }
+        const filter: any = {
+            firmId: req.firmId,
+            assignedTo: fromUserId,
+            status: { $nin: ['DONE', 'CANCELLED'] }
+        };
+        if (clientId) filter.clientId = clientId;
+        if (taskMasterId) filter.taskMasterId = taskMasterId;
+        if (frequency) filter.frequency = frequency;
+
+        const now = new Date();
+        const tasks = await Task.find(filter)
+            .populate('clientId', 'name email')
+            .populate('assignedTo', 'name username')
+            .populate('taskMasterId', 'taskName frequency')
+            .sort({ targetDate: 1 })
+            .lean();
+
+        const tasksWithOverdue = tasks.map(t => ({
+            ...t,
+            isOverdue: t.status !== 'DONE' && t.status !== 'CANCELLED' && t.targetDate && new Date(t.targetDate) < now
+        }));
+        res.json(tasksWithOverdue);
+    } catch (error) {
+        console.error('Transfer preview error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Transfer tasks from one employee to another
+router.post('/transfer', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { fromUserId, toUserId, clientId, taskMasterId, frequency, removeFromCurrent } = req.body;
+        if (!fromUserId || !toUserId) {
+            res.status(400).json({ message: 'fromUserId and toUserId are required' });
+            return;
+        }
+        if (fromUserId === toUserId) {
+            res.status(400).json({ message: 'Transfer From and Transfer To cannot be the same employee' });
+            return;
+        }
+        const filter: any = {
+            firmId: req.firmId,
+            assignedTo: fromUserId,
+            status: { $nin: ['DONE', 'CANCELLED'] }
+        };
+        if (clientId) filter.clientId = clientId;
+        if (taskMasterId) filter.taskMasterId = taskMasterId;
+        if (frequency) filter.frequency = frequency;
+
+        const tasks = await Task.find(filter);
+        if (tasks.length === 0) {
+            res.status(404).json({ message: 'No eligible tasks found for transfer' });
+            return;
+        }
+        for (const task of tasks) {
+            if (removeFromCurrent) {
+                task.assignedTo = task.assignedTo.filter((id: any) => id.toString() !== fromUserId) as any;
+            }
+            const alreadyAssigned = task.assignedTo.some((id: any) => id.toString() === toUserId);
+            if (!alreadyAssigned) {
+                (task.assignedTo as any).push(toUserId);
+            }
+            await task.save();
+        }
+        res.json({ message: `${tasks.length} task(s) transferred successfully`, transferredCount: tasks.length });
+    } catch (error) {
+        console.error('Transfer task error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -477,7 +591,8 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName');
+            .populate('firmId', 'firmName')
+            .populate('reportingManager', 'username name email');
 
         res.json({
             task: updatedTask,
@@ -512,6 +627,27 @@ router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
                 res.status(400).json({ message: 'Timer is already running' });
                 return;
             }
+
+            // Important Check: Stop any other running timers for this user first
+            const otherTasks = await Task.find({
+                firmId: req.firmId,
+                assignedTo: req.user!.userId,
+                currentTimerStart: { $exists: true },
+                _id: { $ne: task._id }
+            });
+
+            for (const other of otherTasks) {
+                const duration = Math.floor((new Date().getTime() - other.currentTimerStart!.getTime()) / 60000);
+                other.timeEntries.push({
+                    startTime: other.currentTimerStart!,
+                    endTime: new Date(),
+                    duration
+                });
+                other.actualTimeSpent += duration;
+                other.currentTimerStart = undefined;
+                await other.save();
+            }
+
             task.currentTimerStart = new Date();
 
             // Auto-update status to IN_PROCESS if it's PENDING
@@ -753,13 +889,8 @@ router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
     }
 });
 
-// ============================================
-// ANALYTICS & REPORTING
-// ============================================
-
-// Get analytics dashboard data
+// Analytics dashboard
 router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
-    try {
         const { startDate, endDate } = req.query;
 
         const dateFilter: any = {};
@@ -770,6 +901,7 @@ router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (re
             dateFilter.createdAt = { ...dateFilter.createdAt, $lte: new Date(endDate as string) };
         }
 
+        try {
         // Total tasks by status
         const tasksByStatus = await Task.aggregate([
             { $match: dateFilter },
@@ -807,7 +939,7 @@ router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (re
 
         const avgEfficiency = tasksWithTime.length > 0
             ? tasksWithTime.reduce((acc, task) => {
-                const estimated = task.estimatedHours * 60; // convert to minutes
+                const estimated = task.estimatedHours * 60;
                 const actual = task.actualTimeSpent;
                 const efficiency = (estimated / actual) * 100;
                 return acc + efficiency;

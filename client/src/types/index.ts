@@ -285,6 +285,9 @@ export interface Task {
     // Metadata
     tags: string[];
     isOverdue: boolean;
+    reportingManager?: string | User;
+    taskMasterId?: string;
+    frequency?: string;
 
     createdAt: string;
     updatedAt: string;
@@ -305,6 +308,10 @@ export interface CreateTaskData {
     estimatedHours: number;
     tags?: string[];
     checklist?: string[];
+    reportingManager?: string;
+    frequency?: string;
+    taskMasterId?: string;
+    year?: string;
 }
 
 export interface TaskAnalytics {

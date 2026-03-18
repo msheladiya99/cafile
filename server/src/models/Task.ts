@@ -68,6 +68,9 @@ export interface ITask extends Document {
     checklist: IChecklistItem[];
 
     // Metadata
+    taskMasterId?: mongoose.Types.ObjectId;
+    frequency?: string;
+    reportingManager?: mongoose.Types.ObjectId;
     tags: string[];
     isOverdue: boolean;
 
@@ -151,6 +154,9 @@ const taskSchema = new Schema<ITask>({
     checklist: [ChecklistItemSchema],
 
     // Metadata
+    taskMasterId: { type: Schema.Types.ObjectId, ref: 'TaskMaster' },
+    frequency: { type: String },
+    reportingManager: { type: Schema.Types.ObjectId, ref: 'User' },
     tags: [{ type: String }],
     isOverdue: { type: Boolean, default: false }
 }, {
