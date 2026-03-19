@@ -177,6 +177,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             role: actualRole,
             permissions: permissions || [],
             status: status !== undefined ? status : true,
+            // Employee profile fields
+            firstName, lastName,
+            employeeCode, address, country, state, city, postalCode,
+            mobileNumber, birthDate, designation, joiningDate, monthlySalary,
+            ratePerHours, leavingDate, reference, description,
             emergencyFirstName, emergencyLastName, emergencyRelationship, emergencyPhone,
             field1, field2, field3, field4, field5, field6, field7, documents,
             pfNumber, esiNumber, aadharNumber, drivingLicenceNo,
@@ -318,19 +323,14 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Prevent updating CLIENT and ADMIN users
+        // Prevent updating CLIENT users from staff management
         if (user.role === 'CLIENT') {
             res.status(400).json({ message: 'Cannot update client users from staff management' });
             return;
         }
 
-        if (user.role === 'ADMIN') {
-            res.status(403).json({ message: 'Cannot update admin users for security reasons' });
-            return;
-        }
-
         if (role) {
-            const validStaffRoles = ['MANAGER', 'STAFF', 'INTERN'];
+            const validStaffRoles = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'];
             if (!validStaffRoles.includes(role)) {
                 res.status(400).json({ message: 'Invalid staff role' });
                 return;

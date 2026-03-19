@@ -52,6 +52,7 @@ export const EmployeeList: React.FC = () => {
         id: emp._id,
         name: emp.name,
         code: emp.employeeCode,
+        loginId: emp.username,
         designation: emp.designation || emp.role,
         status: emp.status !== false ? 'Active' : 'Inactive'
     })).filter(emp => {
@@ -136,6 +137,7 @@ export const EmployeeList: React.FC = () => {
                                 <TableRow sx={{ bgcolor: '#f8fafc' }}>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Emp Code</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Login ID</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Designation</TableCell>
                                     <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
                                     <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
@@ -144,13 +146,13 @@ export const EmployeeList: React.FC = () => {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                                             <CircularProgress size={24} />
                                         </TableCell>
                                     </TableRow>
                                 ) : employees.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'text.secondary' }}>
                                             No employees found.
                                         </TableCell>
                                     </TableRow>
@@ -159,6 +161,7 @@ export const EmployeeList: React.FC = () => {
                                         <TableRow key={emp.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
                                             <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>{emp.code || '---'}</TableCell>
                                             <TableCell sx={{ fontWeight: 500 }}>{emp.name}</TableCell>
+                                            <TableCell sx={{ fontWeight: 500, color: '#667eea' }}>{emp.loginId || '---'}</TableCell>
                                             <TableCell>{emp.designation}</TableCell>
                                             <TableCell>
                                                 <Box sx={{
