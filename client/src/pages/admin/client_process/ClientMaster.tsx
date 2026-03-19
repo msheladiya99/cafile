@@ -880,7 +880,7 @@ export const ClientMaster: React.FC = () => {
                                         displayEmpty
                                         name="currency"
                                         value={formData.currency}
-                                        onChange={handleInputChange}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value as string }))}
                                         sx={{ borderRadius: 1.5, color: formData.currency ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Currency...</MenuItem>

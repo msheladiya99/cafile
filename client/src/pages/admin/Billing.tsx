@@ -129,7 +129,7 @@ const PaymentHistoryDialog: React.FC<{
                         InputProps={{ sx: { borderRadius: 2 } }}
                     />
                     <Grid container spacing={2}>
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 label="Payment Date"
                                 type="date"
@@ -140,7 +140,7 @@ const PaymentHistoryDialog: React.FC<{
                                 InputProps={{ sx: { borderRadius: 2 } }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid size={{ xs: 6 }}>
                             <TextField
                                 select
                                 label="Method"
@@ -215,7 +215,7 @@ const ServiceDialog: React.FC<{
             <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>{initialData ? 'Edit Service' : 'Add New Service'}</DialogTitle>
             <DialogContent>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <TextField
                             label="Service Name"
                             fullWidth
@@ -225,7 +225,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <TextField
                             label="Description"
                             fullWidth
@@ -237,7 +237,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             label="Base Price"
                             type="number"
@@ -248,7 +248,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             select
                             label="Category"
@@ -382,7 +382,7 @@ const InvoiceDialog: React.FC<{
                             <MenuItem value="CLIENT_GROUP">Client Group</MenuItem>
                         </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             select
                             label="Issuing Firm"
