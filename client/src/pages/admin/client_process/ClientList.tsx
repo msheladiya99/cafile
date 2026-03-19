@@ -13,6 +13,12 @@ import {
     TableRow,
     TableHead,
     IconButton,
+    useMediaQuery,
+    useTheme,
+    Card,
+    CardContent,
+    Stack,
+    Divider
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -35,6 +41,8 @@ import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from 
 
 export const ClientList: React.FC = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const { data: clients = [], isLoading } = useQuery<Client[]>({
         queryKey: ['clients'],
@@ -117,14 +125,23 @@ export const ClientList: React.FC = () => {
             <PageHeader
                 title="Client List"
                 actions={
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1.5, 
+                        flexWrap: 'wrap',
+                        width: { xs: '100%', sm: 'auto' },
+                        '& .MuiButton-root': { 
+                            flex: { xs: 1, sm: 'none' },
+                            whiteSpace: 'nowrap'
+                        }
+                    }}>
+                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
                             Add New
                         </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
                             List
                         </Button>
-                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
                             Field Master
                         </Button>
                     </Box>
@@ -290,101 +307,196 @@ export const ClientList: React.FC = () => {
 
                 {/* List Section */}
                 <Section title="List" icon={<FormatListBulletedIcon />}>
-                    <TableContainer>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow sx={{ bgcolor: '#f1f5f9' }}>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client Name</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
-                                    </TableRow>
-                                ) : filteredClients.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ color: 'text.secondary', py: 4 }}>
-                                            No clients found.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredClients.map((client) => (
-                                        <TableRow key={client._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
-                                            <TableCell sx={{ fontWeight: 500 }}>
-                                                {client.name}
-                                                {client.username && (
-                                                    <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                                                        ID: {client.username}
+                    {isMobile ? (
+                        <Stack spacing={2}>
+                            {isLoading ? (
+                                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>Loading clients...</Box>
+                            ) : filteredClients.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>No clients found.</Box>
+                            ) : (
+                                filteredClients.map((client) => (
+                                    <Card key={client._id} variant="outlined" sx={{ borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}>
+                                        <CardContent sx={{ p: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                                <Box>
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b', lineHeight: 1.2 }}>
+                                                        {client.name}
                                                     </Typography>
-                                                )}
-                                                {client.clientCode && (
-                                                    <Typography variant="caption" display="block" color="text.secondary">
-                                                        Code: {client.clientCode}
-                                                    </Typography>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
-                                            <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
-                                            <TableCell>
+                                                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                                        {client.username && (
+                                                            <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 700, bgcolor: '#eef2ff', px: 0.8, py: 0.2, borderRadius: 1 }}>
+                                                                ID: {client.username}
+                                                            </Typography>
+                                                        )}
+                                                        {client.clientCode && (
+                                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, bgcolor: '#f1f5f9', px: 0.8, py: 0.2, borderRadius: 1 }}>
+                                                                Code: {client.clientCode}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Box>
                                                 <Box sx={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    px: 1.5,
-                                                    py: 0.5,
-                                                    borderRadius: 2,
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 600,
-                                                    bgcolor: client.status !== false ? '#e8f5e9' : '#ffebee',
-                                                    color: client.status !== false ? 'success.main' : 'error.main'
+                                                    px: 1,
+                                                    py: 0.3,
+                                                    borderRadius: 1,
+                                                    fontSize: '0.65rem',
+                                                    fontWeight: 700,
+                                                    textTransform: 'uppercase',
+                                                    bgcolor: client.status !== false ? '#dcfce7' : '#fee2e2',
+                                                    color: client.status !== false ? '#15803d' : '#b91c1c'
                                                 }}>
                                                     {client.status !== false ? 'Active' : 'Inactive'}
                                                 </Box>
-                                            </TableCell>
-                                            <TableCell align="right">
+                                            </Box>
+
+                                            <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
+
+                                            <Stack spacing={1} sx={{ mb: 2 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography variant="caption" color="text.secondary">Group Name</Typography>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                                        {(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}
+                                                    </Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography variant="caption" color="text.secondary">IT Status</Typography>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                                        {(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+
+                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: '#f8fafc', m: -2, mt: 0, p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
                                                 <IconButton
                                                     size="small"
-                                                    sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }}
+                                                    sx={{ color: '#6366f1', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
                                                     onClick={() => navigate(`/admin/client/${client._id}`)}
-                                                    aria-label="View client details"
                                                 >
-                                                    <VisibilityIcon fontSize="small" />
+                                                    <VisibilityIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                                 <IconButton
                                                     size="small"
-                                                    sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
+                                                    sx={{ color: '#f59e0b', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
                                                     onClick={() => handleResetPassword(client._id)}
-                                                    aria-label="Reset password"
-                                                    title="Reset & Send Email"
                                                 >
-                                                    <LockResetIcon fontSize="small" />
+                                                    <LockResetIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                                 <IconButton
                                                     size="small"
-                                                    sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}
+                                                    sx={{ color: '#06b6d4', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
                                                     onClick={() => navigate(`/admin/client/master/${client._id}`)}
-                                                    aria-label="Edit client"
                                                 >
-                                                    <EditIcon fontSize="small" />
+                                                    <EditIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                                 <IconButton
                                                     size="small"
-                                                    sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
-                                                    aria-label="Delete client"
+                                                    sx={{ color: '#ef4444', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
                                                 >
-                                                    <DeleteIcon fontSize="small" />
+                                                    <DeleteIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </Stack>
+                    ) : (
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#f1f5f9' }}>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {isLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
+                                        </TableRow>
+                                    ) : filteredClients.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center" sx={{ color: 'text.secondary', py: 4 }}>
+                                                No clients found.
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        filteredClients.map((client) => (
+                                            <TableRow key={client._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                                                <TableCell sx={{ fontWeight: 500 }}>
+                                                    {client.name}
+                                                    {client.username && (
+                                                        <Typography variant="caption" display="block" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                                                            ID: {client.username}
+                                                        </Typography>
+                                                    )}
+                                                    {client.clientCode && (
+                                                        <Typography variant="caption" display="block" color="text.secondary">
+                                                            Code: {client.clientCode}
+                                                        </Typography>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
+                                                <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
+                                                <TableCell>
+                                                    <Box sx={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        px: 1.5,
+                                                        py: 0.5,
+                                                        borderRadius: 2,
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600,
+                                                        bgcolor: client.status !== false ? '#e8f5e9' : '#ffebee',
+                                                        color: client.status !== false ? 'success.main' : 'error.main'
+                                                    }}>
+                                                        {client.status !== false ? 'Active' : 'Inactive'}
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }}
+                                                        onClick={() => navigate(`/admin/client/${client._id}`)}
+                                                        aria-label="View client details"
+                                                    >
+                                                        <VisibilityIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
+                                                        onClick={() => handleResetPassword(client._id)}
+                                                        aria-label="Reset password"
+                                                        title="Reset & Send Email"
+                                                    >
+                                                        <LockResetIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}
+                                                        onClick={() => navigate(`/admin/client/master/${client._id}`)}
+                                                        aria-label="Edit client"
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
+                                                        aria-label="Delete client"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
                 </Section>
 
             </ContentContainer>

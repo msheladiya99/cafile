@@ -47,7 +47,9 @@ import type { Invoice, ServiceItem, InvoiceItem } from '../../services/billingSe
 import { adminService } from '../../services/adminService';
 import { clientGroupService } from '../../services/clientGroupService';
 import firmService from '../../services/firmService';
+import type { IMultiFirmData } from '../../services/firmService';
 import type { Client } from '../../types';
+import type { ClientGroup } from '../../services/clientGroupService';
 import { generateInvoicePDF } from '../../utils/invoiceGenerator';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@mui/material';
@@ -127,7 +129,7 @@ const PaymentHistoryDialog: React.FC<{
                         InputProps={{ sx: { borderRadius: 2 } }}
                     />
                     <Grid container spacing={2}>
-                        <Grid size={{ xs: 6 }}>
+                        <Grid item xs={6}>
                             <TextField
                                 label="Payment Date"
                                 type="date"
@@ -138,7 +140,7 @@ const PaymentHistoryDialog: React.FC<{
                                 InputProps={{ sx: { borderRadius: 2 } }}
                             />
                         </Grid>
-                        <Grid size={{ xs: 6 }}>
+                        <Grid item xs={6}>
                             <TextField
                                 select
                                 label="Method"
@@ -213,7 +215,7 @@ const ServiceDialog: React.FC<{
             <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>{initialData ? 'Edit Service' : 'Add New Service'}</DialogTitle>
             <DialogContent>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid item xs={12}>
                         <TextField
                             label="Service Name"
                             fullWidth
@@ -223,7 +225,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid item xs={12}>
                         <TextField
                             label="Description"
                             fullWidth
@@ -235,7 +237,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Grid item xs={12} sm={6}>
                         <TextField
                             label="Base Price"
                             type="number"
@@ -246,7 +248,7 @@ const ServiceDialog: React.FC<{
                             InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Grid item xs={12} sm={6}>
                         <TextField
                             select
                             label="Category"
@@ -284,8 +286,8 @@ const InvoiceDialog: React.FC<{
     onClose: () => void;
     onSubmit: (data: Partial<Invoice>) => void;
     clients: Client[];
-    clientGroups: any[];
-    multiFirms: any[];
+    clientGroups: ClientGroup[];
+    multiFirms: IMultiFirmData[];
     services: ServiceItem[];
     initialData?: Invoice | null;
 }> = ({ open, onClose, onSubmit, clients, clientGroups, multiFirms, services, initialData }) => {
@@ -372,7 +374,7 @@ const InvoiceDialog: React.FC<{
                             label="Billing Type"
                             fullWidth
                             value={formData.billingType}
-                            onChange={(e) => setFormData({ ...formData, billingType: e.target.value as any, clientId: '', clientGroupId: '' })}
+                            onChange={(e) => setFormData({ ...formData, billingType: e.target.value as 'SINGLE_CLIENT' | 'CLIENT_GROUP', clientId: '', clientGroupId: '' })}
                             InputProps={{ sx: { borderRadius: 2 } }}
                             disabled={!!initialData}
                         >
@@ -380,7 +382,7 @@ const InvoiceDialog: React.FC<{
                             <MenuItem value="CLIENT_GROUP">Client Group</MenuItem>
                         </TextField>
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Grid item xs={12} sm={6}>
                         <TextField
                             select
                             label="Issuing Firm"
@@ -391,7 +393,7 @@ const InvoiceDialog: React.FC<{
                             disabled={!!initialData}
                         >
                             <MenuItem value="">Primary Firm</MenuItem>
-                            {multiFirms.map((f: any) => (
+                            {multiFirms.map((f: IMultiFirmData) => (
                                 <MenuItem key={f._id} value={f._id}>{f.firmName} (Multi Firm)</MenuItem>
                             ))}
                         </TextField>
@@ -425,7 +427,7 @@ const InvoiceDialog: React.FC<{
                                     InputProps={{ sx: { borderRadius: 2 } }}
                                     disabled={!!initialData} // Lock group on edit
                                 >
-                                    {clientGroups.map((g: any) => (
+                                    {clientGroups.map((g: ClientGroup) => (
                                         <MenuItem key={g._id} value={g._id}>{g.groupName} ({g.email}) </MenuItem>
                                     ))}
                                 </TextField>
@@ -441,7 +443,7 @@ const InvoiceDialog: React.FC<{
                                                 .filter(c => {
                                                     if (!c.groupName) return false;
                                                     if (typeof c.groupName === 'string') return c.groupName === formData.clientGroupId;
-                                                    return (c.groupName as any)._id === formData.clientGroupId;
+                                                    return (c.groupName as { _id: string })._id === formData.clientGroupId;
                                                 })
                                                 .map(c => c.name)
                                                 .join(', ') || 'No clients mapped to this group'}
@@ -827,24 +829,40 @@ export const Billing: React.FC = () => {
 
     return (
         <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 2, sm: 3 } }}>
-            <Box mb={5}>
-                <Typography variant="h4" sx={{
-                    fontSize: { xs: '1.75rem', md: '2.5rem' },
-                    fontWeight: 800,
-                    background: 'linear-gradient(45deg, #1a237e 30%, #283593 90%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    mb: 1
-                }}>
-                    Billing & Invoicing
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
-                    Manage your client invoices, services, and track payments efficiently.
-                </Typography>
-            </Box>
+            <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', mb: 3 }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                        <Typography variant="h5" fontWeight="600">Billing & Invoicing</Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                            Manage your client invoices, services, and track payments efficiently.
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={() => setInvoiceDialogOpen(true)}
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                        >
+                            New Invoice
+                        </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                        >
+                            Add Service
+                        </Button>
+                    </Box>
+                </Box>
+            </Paper>
 
-            {/* Summary Cards */}
-            <Grid container spacing={3} sx={{ mb: 5 }}>
+            <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 4 }}>
+                {/* Summary Cards */}
+                <Grid container spacing={3} sx={{ mb: 4 }}>
                 {[
                     { title: 'Total Invoiced', value: `₹${totalBilled.toLocaleString()}`, color: '#667eea', icon: <DownloadIcon sx={{ opacity: 0.8 }} /> },
                     { title: 'Pending Payments', value: `₹${pendingAmount.toLocaleString()}`, color: '#ef5350', icon: <DeleteIcon sx={{ opacity: 0.8 }} /> },
@@ -1256,6 +1274,7 @@ export const Billing: React.FC = () => {
                 onDelete={handleDeletePayment}
                 invoice={paymentTarget}
             />
+            </Paper>
         </Container>
     );
 };

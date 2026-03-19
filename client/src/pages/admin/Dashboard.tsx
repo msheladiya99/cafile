@@ -150,8 +150,8 @@ export const AdminDashboard: React.FC = () => {
             </Box>
 
             {/* Top Stats Row */}
-            <Grid container spacing={3} mb={6}>
-                <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid container spacing={2} mb={4}>
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
@@ -162,7 +162,7 @@ export const AdminDashboard: React.FC = () => {
                         </Avatar>
                     </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
@@ -173,7 +173,7 @@ export const AdminDashboard: React.FC = () => {
                         </Avatar>
                     </Paper>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
                     <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
@@ -190,7 +190,7 @@ export const AdminDashboard: React.FC = () => {
             <Grid container spacing={3} mb={6}>
 
                 {/* 1. Mini GST Compliance Calendar */}
-                <Grid size={{ xs: 12, md: 4 }} display="flex">
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} display="flex">
                     <Paper
                         sx={{
                             p: 3,
@@ -250,9 +250,9 @@ export const AdminDashboard: React.FC = () => {
                                             textAlign: 'center',
                                             py: 0.75,
                                             fontWeight: 700,
-                                            fontSize: '0.6rem',
-                                            color: '#555555',
-                                            letterSpacing: '0.3px'
+                                            fontSize: '0.7rem',
+                                            color: '#64748b',
+                                            letterSpacing: '0.5px'
                                         }}
                                     >
                                         {day}
@@ -328,7 +328,7 @@ export const AdminDashboard: React.FC = () => {
                                                     fontWeight={isToday ? 700 : isGSTDeadline ? 600 : 400}
                                                     color={textColor}
                                                     sx={{
-                                                        fontSize: '0.8rem',
+                                                        fontSize: '0.85rem',
                                                         lineHeight: 1
                                                     }}
                                                 >
@@ -446,7 +446,7 @@ export const AdminDashboard: React.FC = () => {
                 </Grid>
 
                 {/* 2. Quick Actions Panel */}
-                <Grid size={{ xs: 12, md: 4 }} display="flex">
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} display="flex">
                     <Paper
                         sx={{
                             p: { xs: 2.5, md: 3 },
@@ -501,7 +501,7 @@ export const AdminDashboard: React.FC = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
-                                    <PeopleIcon sx={{ fontSize: { xs: 24, md: 24 } }} />
+                                    <PeopleIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
                                 <Box>
                                     <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
@@ -538,7 +538,7 @@ export const AdminDashboard: React.FC = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
-                                    <EventIcon sx={{ fontSize: { xs: 24, md: 24 } }} />
+                                    <EventIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
                                 <Box>
                                     <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
@@ -576,7 +576,7 @@ export const AdminDashboard: React.FC = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
-                                    <UploadIcon sx={{ fontSize: { xs: 24, md: 24 } }} />
+                                    <UploadIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
                                 <Box>
                                     <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
@@ -614,7 +614,7 @@ export const AdminDashboard: React.FC = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
-                                    <TrendingUp sx={{ fontSize: { xs: 24, md: 24 } }} />
+                                    <TrendingUp sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
                                 <Box>
                                     <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
@@ -627,7 +627,7 @@ export const AdminDashboard: React.FC = () => {
                 </Grid>
 
                 {/* 3. Smart To-Do List Section */}
-                <Grid size={{ xs: 12, md: 4 }} display="flex">
+                <Grid size={{ xs: 12, md: 12, lg: 4 }} display="flex">
                     <Paper
                         sx={{
                             p: { xs: 2, md: 3 },

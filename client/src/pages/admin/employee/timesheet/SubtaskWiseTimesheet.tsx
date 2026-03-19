@@ -8,7 +8,8 @@ import {
     FormControl,
     Button,
     TextField,
-    CircularProgress
+    CircularProgress,
+    Grid
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -75,126 +76,135 @@ export const SubtaskWiseTimesheet: React.FC = () => {
             </Paper>
 
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
-                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: 'repeat(12, 1fr)' }} gap={3} alignItems="center">
-
+                <Grid container spacing={3} alignItems="center">
                     {/* Row 1 */}
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Group Name</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Group Name</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')}>
+                                <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose a Group...</MenuItem>
                                     {loadingGroups ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
                                         groups.map((group: { _id: string; groupName: string }) => <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Client Name</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Client Name</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')}>
+                                <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose a Client...</MenuItem>
                                     {loadingClients ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
                                         clients.map((client: { _id: string; name: string }) => <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
                     {/* Row 2 */}
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Task</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Task</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.task} onChange={handleChange('task')}>
+                                <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose a Task...</MenuItem>
                                     {loadingTasks ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
                                         tasks.map((task: { _id: string; title: string }) => <MenuItem key={task._id} value={task._id}>{task.title}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Frequency</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Frequency</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')}>
+                                <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Select an Option</MenuItem>
                                     {frequencies.map((freq) => <MenuItem key={freq} value={freq}>{freq}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
                     {/* Row 3 */}
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Sub Task</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Sub Task</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.subTask} onChange={handleChange('subTask')}>
+                                <Select displayEmpty value={filterData.subTask} onChange={handleChange('subTask')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Select an Option</MenuItem>
                                     {loadingSubMasters ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
                                         subMasters.map((subTask: { _id: string; name: string }) => <MenuItem key={subTask._id} value={subTask._id}>{subTask.name}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Year</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Year</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.year} onChange={handleChange('year')}>
+                                <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose Year...</MenuItem>
                                     {years.map((year) => <MenuItem key={year} value={year}>{year}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
                     {/* Row 4 */}
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Employee</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Employee</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')}>
+                                <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                     {loadingStaff ? <MenuItem disabled><CircularProgress size={20} /></MenuItem> :
                                         staff.map((s: { _id: string; name?: string; role?: string }) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Status</Typography>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 } }}>Status</Typography>
                             <FormControl size="small" fullWidth>
-                                <Select displayEmpty value={filterData.status} onChange={handleChange('status')}>
+                                <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: 1.5 }}>
                                     <MenuItem value="" disabled>Choose a Status...</MenuItem>
                                     {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
                     {/* Row 5 */}
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 13, width: 100 }}>Date</Typography>
-                            <TextField type="date" size="small" value={filterData.dateFrom} onChange={handleChange('dateFrom')} sx={{ flex: 1 }} />
-                            <Box sx={{ bgcolor: '#f0f0f0', px: 2, py: 1, border: '1px solid #ddd' }}>To</Box>
-                            <TextField type="date" size="small" value={filterData.dateTo} onChange={handleChange('dateTo')} sx={{ flex: 1 }} />
-                            <Button variant="contained" color="error" onClick={handleClear} sx={{ minWidth: 40, p: 1 }}>
-                                <ClearIcon />
-                            </Button>
-                        </Box>
-                    </Box>
-                </Box>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Grid container spacing={1} alignItems="center">
+                            <Grid size={{ xs: 12, md: 'auto' }}>
+                                <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 100 }, mb: { xs: 0.5, md: 0 } }}>Date</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 5, md: 4 }}>
+                                <TextField fullWidth type="date" size="small" value={filterData.dateFrom} onChange={handleChange('dateFrom')} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            </Grid>
+                            <Grid size={{ xs: 2, md: 'auto' }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <Box sx={{ bgcolor: '#f0f0f0', px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1, fontSize: '0.8rem' }}>To</Box>
+                            </Grid>
+                            <Grid size={{ xs: 5, md: 4 }}>
+                                <TextField fullWidth type="date" size="small" value={filterData.dateTo} onChange={handleChange('dateTo')} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 'auto' }}>
+                                <Button fullWidth variant="contained" color="error" onClick={handleClear} sx={{ minWidth: { xs: '100%', md: 40 }, p: 1 }}>
+                                    <ClearIcon />
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
             </Paper>
 
             {/* List Section */}

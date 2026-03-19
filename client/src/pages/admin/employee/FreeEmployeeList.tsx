@@ -11,6 +11,10 @@ import {
     TableRow,
     CircularProgress,
     IconButton,
+    useMediaQuery,
+    useTheme,
+    Card,
+    CardContent
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -20,6 +24,9 @@ import { useQuery } from '@tanstack/react-query';
 import { adminService } from '../../../services/adminService';
 
 export const FreeEmployeeList: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
     const { data: employees = [], isLoading } = useQuery({
         queryKey: ['freeEmployees'],
         queryFn: adminService.getFreeEmployees
@@ -84,6 +91,46 @@ export const FreeEmployeeList: React.FC = () => {
                     <Box sx={{ py: 3, textAlign: 'center', color: 'text.secondary', fontWeight: 600 }}>
                         <Typography variant="body2">No Free Employees Found</Typography>
                     </Box>
+                ) : isMobile ? (
+                    <>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
+                            {employees.map((emp, index) => {
+                                const nameParts = (emp.name || emp.username).split(' ');
+                                const firstName = nameParts[0] || '';
+                                const lastName = nameParts.slice(1).join(' ') || '';
+
+                                return (
+                                    <Card key={emp._id} sx={{ borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
+                                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                            <Box display="flex" justifyContent="space-between" mb={1.5}>
+                                                <Typography variant="subtitle1" fontWeight="600" color="text.primary">
+                                                    {firstName} {lastName}
+                                                </Typography>
+                                                <Box sx={{ bgcolor: 'primary.light', color: 'primary.contrastText', px: 1, py: 0.5, borderRadius: 1, fontSize: '0.75rem', fontWeight: 600 }}>
+                                                    ID: {index + 1}
+                                                </Box>
+                                            </Box>
+
+                                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1.5}>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Mobile Number</Typography>
+                                                    <Typography variant="body2" fontWeight="500">{emp.phone || 'N/A'}</Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Email</Typography>
+                                                    <Typography variant="body2" fontWeight="500" noWrap>{emp.email || 'N/A'}</Typography>
+                                                </Box>
+                                                <Box gridColumn="span 2">
+                                                    <Typography variant="caption" color="text.secondary" display="block">Designation</Typography>
+                                                    <Typography variant="body2" fontWeight="500">{emp.role}</Typography>
+                                                </Box>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </Box>
+                    </>
                 ) : (
                     <TableContainer>
                         <Table size="small">

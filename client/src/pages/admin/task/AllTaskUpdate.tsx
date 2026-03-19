@@ -9,6 +9,8 @@ import {
     Grid,
     TextField,
     IconButton,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     Update as UpdateIcon,
@@ -21,6 +23,9 @@ import type { TaskMasterData, Client, User, TaskStatus, Subtask } from '../../..
 import toast from 'react-hot-toast';
 
 export const AllTaskUpdate: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [date, setDate] = useState('14-Mar-2026');
     const [employee, setEmployee] = useState('');
     const [client, setClient] = useState('');
@@ -115,8 +120,8 @@ export const AllTaskUpdate: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* Row 1 */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Date <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <TextField
@@ -128,8 +133,8 @@ export const AllTaskUpdate: React.FC = () => {
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Employee <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth displayEmpty value={employee} onChange={(e) => setEmployee(e.target.value)}>
@@ -143,8 +148,8 @@ export const AllTaskUpdate: React.FC = () => {
 
                     {/* Row 2 */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Client <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth displayEmpty value={client} onChange={(e) => setClient(e.target.value)}>
@@ -156,8 +161,8 @@ export const AllTaskUpdate: React.FC = () => {
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Year <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth displayEmpty value={year} onChange={(e) => setYear(e.target.value)}>
@@ -171,24 +176,26 @@ export const AllTaskUpdate: React.FC = () => {
 
                     {/* Row 3 */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 1}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Task <span style={{ color: 'red' }}>*</span>
                             </Typography>
-                            <Select size="small" fullWidth displayEmpty value={task} onChange={(e) => setTask(e.target.value)}>
-                                <MenuItem value=""><em>Select an Option</em></MenuItem>
-                                {taskMasters.map((t: TaskMasterData) => (
-                                    <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
-                                ))}
-                            </Select>
-                            <IconButton size="small" sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#7cb342' } }}>
-                                <TaskDetailsIcon fontSize="small" />
-                            </IconButton>
+                            <Box display="flex" width="100%" gap={1}>
+                                <Select size="small" fullWidth displayEmpty value={task} onChange={(e) => setTask(e.target.value)}>
+                                    <MenuItem value=""><em>Select an Option</em></MenuItem>
+                                    {taskMasters.map((t: TaskMasterData) => (
+                                        <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
+                                    ))}
+                                </Select>
+                                <IconButton size="small" sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#7cb342' } }}>
+                                    <TaskDetailsIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Subtask <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth displayEmpty value={subtask} onChange={(e) => setSubtask(e.target.value)}>
@@ -202,8 +209,8 @@ export const AllTaskUpdate: React.FC = () => {
 
                     {/* Row 4 */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Place <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth value={place} onChange={(e) => setPlace(e.target.value)}>
@@ -214,8 +221,8 @@ export const AllTaskUpdate: React.FC = () => {
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
                             <Select size="small" fullWidth displayEmpty value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
                                 <MenuItem value=""><em>Select Status</em></MenuItem>
                                 {taskStatuses.map(s => (
@@ -227,26 +234,28 @@ export const AllTaskUpdate: React.FC = () => {
 
                     {/* Row 5 */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 1}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Time Spent <span style={{ color: 'red' }}>*</span>
                             </Typography>
-                            <Select size="small" sx={{ width: 140 }} value={timeSpentType} onChange={(e) => setTimeSpentType(e.target.value)}>
-                                <MenuItem value="Direct Time">Direct Time</MenuItem>
-                            </Select>
-                            <TextField
-                                size="small"
-                                fullWidth
-                                value={timeSpent}
-                                onChange={(e) => setTimeSpent(e.target.value)}
-                            />
+                            <Box display="flex" width="100%" gap={1}>
+                                <Select size="small" sx={{ width: { xs: 120, sm: 140 } }} value={timeSpentType} onChange={(e) => setTimeSpentType(e.target.value)}>
+                                    <MenuItem value="Direct Time">Direct Time</MenuItem>
+                                </Select>
+                                <TextField
+                                    size="small"
+                                    fullWidth
+                                    value={timeSpent}
+                                    onChange={(e) => setTimeSpent(e.target.value)}
+                                />
+                            </Box>
                         </Box>
                     </Grid>
 
                     {/* Row 6 */}
                     <Grid size={{ xs: 12 }}>
-                        <Box display="flex">
-                            <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem', mt: 1 }}>Description</Typography>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'flex-start'} gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem', mt: isMobile ? 0 : 1 }}>Description</Typography>
                             <TextField
                                 multiline
                                 rows={2}

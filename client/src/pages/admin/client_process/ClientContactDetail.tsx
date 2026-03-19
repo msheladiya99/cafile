@@ -12,7 +12,13 @@ import {
     TableHead,
     TableRow,
     Chip,
-    CircularProgress
+    CircularProgress,
+    Card,
+    CardContent,
+    Stack,
+    Divider,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -23,9 +29,13 @@ import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../../components/common/UIComponents';
+import { Helmet } from 'react-helmet-async';
 
 
 export const ClientContactDetail: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+
     const { data: clients = [], isLoading, isError } = useQuery({
         queryKey: ['clients'],
         queryFn: adminService.getClients
@@ -75,6 +85,10 @@ export const ClientContactDetail: React.FC = () => {
 
     return (
         <PageContainer>
+            <Helmet>
+                <title>Client Contact List | MyCAFile</title>
+                <meta name="description" content="View and manage multiple contact persons for all clients." />
+            </Helmet>
             {/* Header Section */}
             <PageHeader title="Client Contact Detail" />
 
@@ -82,7 +96,7 @@ export const ClientContactDetail: React.FC = () => {
 
                 {/* Filters Section */}
                 <Section title="Filter Options" icon={<FilterListIcon />}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 0, lg: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
                             <FilterRow label="Group Name" inputId="filter-group">
@@ -141,12 +155,12 @@ export const ClientContactDetail: React.FC = () => {
                                 </Select>
                             </FilterRow>
                             <FilterRow label="Search" inputId="filter-search-text">
-                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                                     <Select
                                         size="small"
                                         value={filterSearchType}
                                         onChange={(e) => setFilterSearchType(e.target.value)}
-                                        sx={{ width: '150px', borderRadius: 1.5 }}
+                                        sx={{ width: { xs: '100%', sm: '150px' }, borderRadius: 1.5 }}
                                         inputProps={{ 'aria-label': 'Search Category' }}
                                     >
                                         <MenuItem value="name">By Contact Name</MenuItem>
@@ -155,6 +169,7 @@ export const ClientContactDetail: React.FC = () => {
                                         id="filter-search-text"
                                         fullWidth
                                         size="small"
+                                        placeholder="Enter name..."
                                         value={filterSearchText}
                                         onChange={(e) => setFilterSearchText(e.target.value)}
                                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
@@ -182,24 +197,93 @@ export const ClientContactDetail: React.FC = () => {
                                 No Record Found
                             </Typography>
                         </Box>
+                    ) : isMobile ? (
+                        <Stack spacing={2}>
+                            {filteredClients.map((client) => {
+                                const contacts = client.multipleContacts || [];
+                                const allContacts = [
+                                    {
+                                        name: client.name,
+                                        designation: 'Primary',
+                                        mobile: client.phone,
+                                        email: client.email,
+                                        status: client.status,
+                                        isPrimary: true
+                                    },
+                                    ...contacts
+                                ];
+
+                                return allContacts.map((contact, idx) => (
+                                    <Card key={`${client._id}-${idx}`} variant="outlined" sx={{ borderRadius: 2, borderColor: 'divider' }}>
+                                        <CardContent sx={{ p: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                                <Box>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                                                        {contact.name || (idx === 0 ? client.name : 'Unnamed Contact')}
+                                                    </Typography>
+                                                    {idx === 0 && (
+                                                        <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                            Client: {client.name}
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                    {idx === 0 && (
+                                                        <Chip label="Primary" size="small" color="primary" variant="outlined" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700 }} />
+                                                    )}
+                                                    <Box sx={{
+                                                        px: 1,
+                                                        py: 0.2,
+                                                        borderRadius: 1,
+                                                        fontSize: '0.65rem',
+                                                        fontWeight: 700,
+                                                        textTransform: 'uppercase',
+                                                        bgcolor: contact.status ? '#dcfce7' : '#fee2e2',
+                                                        color: contact.status ? '#15803d' : '#b91c1c'
+                                                    }}>
+                                                        {contact.status ? 'Active' : 'Inactive'}
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                            
+                                            <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
+                                            
+                                            <Stack spacing={0.8}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography variant="caption" color="text.secondary">Designation</Typography>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>{contact.designation || '-'}</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography variant="caption" color="text.secondary">Mobile</Typography>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>{contact.mobile || '-'}</Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <Typography variant="caption" color="text.secondary">Email</Typography>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>{contact.email || '-'}</Typography>
+                                                </Box>
+                                            </Stack>
+                                        </CardContent>
+                                    </Card>
+                                ));
+                            })}
+                        </Stack>
                     ) : (
                         <TableContainer>
                             <Table size="small">
-                                <TableHead sx={{ bgcolor: '#f1f5f9' }}>
-                                    <TableRow>
-                                        <TableCell sx={{ fontWeight: 600 }}>Client Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>Contact Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>Designation</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>Mobile</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#f1f5f9' }}>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Client Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Contact Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Designation</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Mobile</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Email</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Status</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {filteredClients.map((client) => {
                                         const contacts = client.multipleContacts || [];
                                         const allContacts = [
-                                            // Include primary contact
                                             {
                                                 name: client.name,
                                                 designation: 'Primary',
@@ -212,26 +296,34 @@ export const ClientContactDetail: React.FC = () => {
                                         ];
 
                                         return allContacts.map((contact, idx) => (
-                                            <TableRow key={`${client._id}-${idx}`} hover>
-                                                <TableCell>{idx === 0 ? client.name : ''}</TableCell>
-                                                <TableCell>
-                                                    {contact.name}
-                                                    {('isPrimary' in contact && contact.isPrimary) && <Chip label="Primary" size="small" color="primary" sx={{ ml: 1, height: 20, fontSize: '0.65rem' }} />}
+                                            <TableRow key={`${client._id}-${idx}`} hover sx={{ '&:last-child td': { borderBottom: idx === allContacts.length - 1 ? '1px solid #e2e8f0' : 'none' } }}>
+                                                <TableCell sx={{ fontWeight: idx === 0 ? 600 : 400, color: idx === 0 ? 'text.primary' : 'text.disabled' }}>
+                                                    {idx === 0 ? client.name : ''}
                                                 </TableCell>
-                                                <TableCell>{contact.designation}</TableCell>
-                                                <TableCell>{contact.mobile}</TableCell>
-                                                <TableCell>{contact.email}</TableCell>
                                                 <TableCell>
-                                                    <Chip
-                                                        label={contact.status ? 'Active' : 'Inactive'}
-                                                        size="small"
-                                                        sx={{
-                                                            bgcolor: contact.status ? '#e8f5e9' : '#ffebee',
-                                                            color: contact.status ? 'success.main' : 'error.main',
-                                                            fontWeight: 600,
-                                                            height: 22
-                                                        }}
-                                                    />
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{contact.name || (idx === 0 ? client.name : '-')}</Typography>
+                                                        {('isPrimary' in contact && contact.isPrimary) && (
+                                                            <Chip label="Primary" size="small" color="primary" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700, bgcolor: '#eef2ff', color: '#6366f1' }} />
+                                                        )}
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell sx={{ color: 'text.secondary' }}>{contact.designation}</TableCell>
+                                                <TableCell sx={{ fontWeight: 500, color: 'primary.main' }}>{contact.mobile}</TableCell>
+                                                <TableCell sx={{ color: 'text.secondary' }}>{contact.email}</TableCell>
+                                                <TableCell>
+                                                    <Box sx={{
+                                                        display: 'inline-flex',
+                                                        px: 1.2,
+                                                        py: 0.4,
+                                                        borderRadius: 2,
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: 600,
+                                                        bgcolor: contact.status ? '#e8f5e9' : '#ffebee',
+                                                        color: contact.status ? 'success.main' : 'error.main'
+                                                    }}>
+                                                        {contact.status ? 'Active' : 'Inactive'}
+                                                    </Box>
                                                 </TableCell>
                                             </TableRow>
                                         ));

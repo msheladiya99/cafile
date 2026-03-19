@@ -11,6 +11,10 @@ import {
     TableRow,
     TableHead,
     IconButton,
+    useMediaQuery,
+    useTheme,
+    Paper,
+    Typography,
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -25,6 +29,8 @@ import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from 
 
 
 export const EmployeeList: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
     const [filterDesignation, setFilterDesignation] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -131,6 +137,56 @@ export const EmployeeList: React.FC = () => {
 
                 {/* List Section */}
                 <Section title="Employee List" icon={<FormatListBulletedIcon />}>
+                    {isMobile ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
+                            {isLoading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                                    <CircularProgress size={24} />
+                                </Box>
+                            ) : employees.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 3, color: 'text.secondary' }}>
+                                    No employees found.
+                                </Box>
+                            ) : (
+                                employees.map((emp) => (
+                                    <Paper key={emp.id} sx={{ p: 2, borderRadius: 2, border: '1px solid #e0e0e0', boxShadow: 'none' }}>
+                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                                            <Box>
+                                                <Typography variant="body1" fontWeight={700} color="#334155">{emp.name}</Typography>
+                                                <Typography variant="body2" color="#667eea" fontWeight={600}>Code: {emp.code || '---'}</Typography>
+                                            </Box>
+                                            <Box sx={{
+                                                display: 'inline-flex', alignItems: 'center', px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.75rem', fontWeight: 600,
+                                                bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee', color: emp.status === 'Active' ? 'success.main' : 'error.main'
+                                            }}>
+                                                {emp.status}
+                                            </Box>
+                                        </Box>
+                                        
+                                        <Box display="flex" justifyContent="space-between" my={1.5}>
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">Login ID</Typography>
+                                                <Typography variant="body2" fontWeight={500} color="#667eea">{emp.loginId || '---'}</Typography>
+                                            </Box>
+                                            <Box textAlign="right">
+                                                <Typography variant="caption" color="text.secondary" display="block">Designation</Typography>
+                                                <Typography variant="body2" fontWeight={500}>{emp.designation}</Typography>
+                                            </Box>
+                                        </Box>
+
+                                        <Box display="flex" justifyContent="flex-end" pt={1.5} borderTop="1px solid #f0f0f0">
+                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
+                                                <EditIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    </Paper>
+                                ))
+                            )}
+                        </Box>
+                    ) : (
                     <TableContainer>
                         <Table>
                             <TableHead>
@@ -192,6 +248,7 @@ export const EmployeeList: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    )}
                 </Section>
             </ContentContainer>
 

@@ -59,7 +59,7 @@ function CustomTabPanel(props: TabPanelProps) {
             {...other}
         >
             {value === index && (
-                <Box sx={{ pt: 3 }}>
+                <Box>
                     {children}
                 </Box>
             )}
@@ -106,8 +106,8 @@ interface SectionProps {
 }
 
 const Section = ({ title, icon, children }: SectionProps) => (
-    <Paper elevation={0} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+    <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: '#f5f7fa', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
             {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
             <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
         </Box>
@@ -636,39 +636,70 @@ export const ClientMaster: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <Box sx={{ p: { xs: 1.5, md: 3 }, overflowX: 'hidden' }}>
             {/* Header Section */}
             <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h5" fontWeight="600">Client Master</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                <Box sx={{ 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                    color: 'white', 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2.5, 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'flex-start', sm: 'center' }, 
+                    gap: 2.5 
+                }}>
+                    <Typography variant="h5" fontWeight="700" sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, letterSpacing: '-0.02em' }}>Client Master</Typography>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1.5, 
+                        flexWrap: 'wrap', 
+                        width: { xs: '100%', sm: 'auto' },
+                        '& .MuiButton-root': { 
+                            flex: { xs: '1 1 calc(50% - 12px)', sm: 'none' },
+                            minWidth: { xs: 'fit-content', sm: 'auto' }
+                        }
+                    }}>
+                        <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Add IT Status
                         </Button>
-                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Add New
                         </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             List
                         </Button>
-                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Field Master
                         </Button>
                     </Box>
                 </Box>
-            </Paper>
-
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#f8fafc' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fff', px: 1 }}>
                     <Tabs
                         value={tabValue}
                         onChange={handleTabChange}
                         variant="scrollable"
                         scrollButtons="auto"
                         sx={{
-                            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.9rem', color: 'text.secondary', minHeight: 48 },
-                            '& .Mui-selected': { color: 'primary.main', bgcolor: 'rgba(102, 126, 234, 0.08)' },
-                            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' }
+                            '& .MuiTab-root': { 
+                                textTransform: 'none', 
+                                fontWeight: 700, 
+                                fontSize: '0.82rem', 
+                                color: 'text.secondary', 
+                                minHeight: 48,
+                                px: { xs: 2, sm: 4 }
+                            },
+                            '& .Mui-selected': { color: '#667eea !important' },
+                            '& .MuiTabs-indicator': { 
+                                bgcolor: '#667eea', 
+                                height: 3, 
+                                borderRadius: '3px 3px 0 0' 
+                            }
                         }}
                     >
                         <Tab label="Client Information" />
@@ -677,9 +708,12 @@ export const ClientMaster: React.FC = () => {
                         <Tab label="Work Assign" />
                     </Tabs>
                 </Box>
+            </Paper>
+
+            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', pt: 0 }}>
 
                 <CustomTabPanel value={tabValue} index={0}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: 3, pb: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: { xs: 1.5, md: 3 }, pb: 3, pt: { xs: 2, md: 3 } }}>
 
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
@@ -1010,56 +1044,56 @@ export const ClientMaster: React.FC = () => {
 
                 {/* Placeholders for other tabs */}
                 <CustomTabPanel value={tabValue} index={1}>
-                    <Box sx={{ p: { xs: 2, md: 3 } }}>
+                    <Box sx={{ p: { xs: 1.5, md: 3 }, pt: { xs: 2, md: 3 } }}>
                         {/* Multiple Contact Form */}
-                        <Paper elevation={0} sx={{ mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                             <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-                                <GridViewIcon sx={{ width: 20, height: 20, color: 'text.secondary' }} />
-                                <Typography variant="subtitle2" fontWeight="700" color="text.primary">Client Multiple Contact</Typography>
+                                <GridViewIcon sx={{ width: 20, height: 20, color: '#1e293b' }} />
+                                <Typography variant="subtitle2" fontWeight="700" color="#1e293b">Client Multiple Contact</Typography>
                             </Box>
-                            <Box sx={{ p: 3 }}>
-                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Client</Typography>
-                                        <Typography sx={{ flex: 1, color: 'text.primary', fontSize: '0.9rem' }}>{formData.name || 'N/A'}</Typography>
-                                    </Box>
-                                    <Box sx={{ display: { xs: 'none', md: 'block' } }}></Box>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Name <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="name" value={contactForm.name} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Designation <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="designation" value={contactForm.designation} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <Box sx={{ p: { xs: 2, md: 3 } }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Client</Typography>
+                                        <Typography sx={{ flex: 1, color: '#1e293b', fontSize: '0.9rem', fontWeight: 500 }}>{formData.name || 'N/A'}</Typography>
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Mobile <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="mobile" value={contactForm.mobile} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Name <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="name" value={contactForm.name} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Email <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="email" value={contactForm.email} onChange={handleContactFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Designation <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="designation" value={contactForm.designation} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem', pt: 1 }}>Description</Typography>
-                                        <TextField name="description" value={contactForm.description} onChange={handleContactFormChange} multiline rows={2} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Mobile <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="mobile" value={contactForm.mobile} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '120px', color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: contactForm.status ? '#2e3a47' : '#e0e0e0', borderRadius: 4, px: 2, height: 32 }}>
-                                            <Typography variant="body2" sx={{ color: contactForm.status ? '#00e5ff' : 'text.secondary', mr: 1, fontWeight: 600, fontSize: '0.75rem' }}>{contactForm.status ? 'Active' : 'Inactive'}</Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Email <span style={{ color: 'red' }}>*</span></Typography>
+                                        <TextField name="email" value={contactForm.email} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'flex-start' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, pt: { sm: 1 } }}>Description</Typography>
+                                        <TextField name="description" value={contactForm.description} onChange={handleContactFormChange} multiline rows={2} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Status</Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: contactForm.status ? '#2e3a47' : '#f1f5f9', borderRadius: 4, px: 2, height: 32 }}>
+                                            <Typography variant="body2" sx={{ color: contactForm.status ? '#00e5ff' : 'text.secondary', mr: 1, fontWeight: 700, fontSize: '0.72rem' }}>{contactForm.status ? 'ACTIVE' : 'INACTIVE'}</Typography>
                                             <Switch size="small" sx={{ mr: -1, '& .MuiSwitch-switchBase.Mui-checked': { color: '#00e5ff' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#00e5ff' } }} checked={contactForm.status} onChange={e => setContactForm(prev => ({ ...prev, status: e.target.checked }))} />
                                         </Box>
                                     </Box>
                                 </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                                    <Button variant="contained" onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                    <Button variant="contained" onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
                                         Save
                                     </Button>
-                                    <Button variant="contained" onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                    <Button variant="contained" onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
                                         Cancel
                                     </Button>
                                 </Box>
@@ -1094,24 +1128,23 @@ export const ClientMaster: React.FC = () => {
                     </Box>
                 </CustomTabPanel>
                 <CustomTabPanel value={tabValue} index={2}>
-                    <Box sx={{ p: { xs: 2, md: 3 } }}>
+                    <Box sx={{ p: { xs: 1.5, md: 3 }, pt: { xs: 2, md: 3 } }}>
                         {/* Legal Document Form */}
-                        <Paper elevation={0} sx={{ mb: 4, border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                             <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-                                <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="subtitle2" fontWeight="700" color="#1e293b" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <span>📄</span> Legal Document
                                 </Typography>
                             </Box>
-                            <Box sx={{ p: 3 }}>
-                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Client</Typography>
-                                        <Typography sx={{ flex: 1, color: 'text.primary', fontSize: '0.9rem' }}>{formData.name || 'N/A'}</Typography>
+                            <Box sx={{ p: { xs: 2, md: 3 } }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Client</Typography>
+                                        <Typography sx={{ flex: 1, color: '#1e293b', fontSize: '0.9rem', fontWeight: 500 }}>{formData.name || 'N/A'}</Typography>
                                     </Box>
-                                    <Box sx={{ display: { xs: 'none', md: 'block' } }}></Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Document name <span style={{ color: 'red' }}>*</span></Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Document name <span style={{ color: 'red' }}>*</span></Typography>
                                         <Autocomplete
                                             fullWidth
                                             size="small"
@@ -1130,33 +1163,34 @@ export const ClientMaster: React.FC = () => {
                                                     }}
                                                 />
                                             )}
+                                            sx={{ flex: 1, width: '100%' }}
                                         />
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem' }}>Description</Typography>
-                                        <TextField name="description" value={legalForm.description} onChange={handleLegalFormChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Description</Typography>
+                                        <TextField name="description" value={legalForm.description} onChange={handleLegalFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography sx={{ width: '130px', color: 'text.secondary', fontSize: '0.9rem', flexShrink: 0 }}>Browse Document <span style={{ color: 'red' }}>*</span></Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
-                                            <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                                        <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>Browse Document <span style={{ color: 'red' }}>*</span></Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%', flex: 1 }}>
+                                            <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500, whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                                                 Choose File
                                                 <input type="file" hidden onChange={e => setLegalForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))} />
                                             </Button>
-                                            <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
                                                 {legalForm.file ? legalForm.file.name : 'No file chosen'}
                                             </Typography>
                                         </Box>
                                     </Box>
                                 </Box>
 
-                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                                    <Button variant="contained" onClick={handleAddLegalForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                    <Button variant="contained" onClick={handleAddLegalForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
                                         Save
                                     </Button>
-                                    <Button variant="contained" onClick={handleCancelLegalForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 3, py: 0.8, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
+                                    <Button variant="contained" onClick={handleCancelLegalForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
                                         Cancel
                                     </Button>
                                 </Box>

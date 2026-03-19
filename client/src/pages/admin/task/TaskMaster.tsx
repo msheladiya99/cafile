@@ -16,12 +16,15 @@ import {
     TableHead,
     TableRow,
     Chip,
-    Grid,
     Select,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
+    useMediaQuery,
+    useTheme,
+    Grid,
+    Divider
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, FormatListBulleted as ListIcon, Close as CloseIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,6 +40,8 @@ export const TaskMaster: React.FC = () => {
     const queryClient = useQueryClient();
     const location = useLocation();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const view = location.pathname.includes('/list') ? 'list' : 'form';
     const setView = (v: 'form' | 'list') => {
@@ -207,19 +212,20 @@ export const TaskMaster: React.FC = () => {
 
     if (view === 'list') {
         return (
-            <Box sx={{ p: 2, bgcolor: '#f4f6f8', minHeight: '100vh' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 2, borderRadius: '4px 4px 0 0' }}>
-                    <Typography variant="h5" color="white" fontWeight="600">Task List</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'rgba(102, 126, 234, 0.8)', p: 1, display: 'flex', justifyContent: 'flex-end', borderRadius: '0 0 4px 4px', mb: 2 }}>
-                    <Button size="small" variant="contained" onClick={() => { resetForm(); setView('form'); }} sx={{ bgcolor: '#8b8b8b', color: 'white', textTransform: 'none', px: 3, '&:hover': { bgcolor: '#707070' } }}>Add New</Button>
-                </Box>
+            <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 3 }}>
+                    <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: { xs: 2, sm: 2.5 }, color: 'white', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+                        <Typography variant="h5" fontWeight="600" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Task List</Typography>
+                        <Button size="small" fullWidth={isMobile} variant="contained" onClick={() => { resetForm(); setView('form'); }} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', px: 3, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, borderRadius: 2, boxShadow: 'none' }}>
+                            Add New
+                        </Button>
+                    </Box>
 
-                <Paper elevation={0} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0', mx: 2 }}>
+                <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 3, mx: { xs: 1, sm: 2 }, borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                     <Grid container spacing={4}>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" mb={2} alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Department</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Department</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -236,8 +242,8 @@ export const TaskMaster: React.FC = () => {
                                     <MenuItem value="Compliance">Compliance</MenuItem>
                                 </Select>
                             </Box>
-                            <Box display="flex" mb={2} alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Frequency</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Frequency</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -254,8 +260,8 @@ export const TaskMaster: React.FC = () => {
                                     <MenuItem value="Yearly">Yearly</MenuItem>
                                 </Select>
                             </Box>
-                            <Box display="flex" mb={2} alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Reporting Manager</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Reporting Manager</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -270,8 +276,8 @@ export const TaskMaster: React.FC = () => {
                                     ))}
                                 </Select>
                             </Box>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>UDIN</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>UDIN</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -287,8 +293,8 @@ export const TaskMaster: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" mb={2} alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Mode</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Mode</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -303,8 +309,8 @@ export const TaskMaster: React.FC = () => {
                                     <MenuItem value="Adhoc">Adhoc</MenuItem>
                                 </Select>
                             </Box>
-                            <Box display="flex" mb={2} alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Status</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Status</Typography>
                                 <Select
                                     size="small"
                                     fullWidth
@@ -318,8 +324,8 @@ export const TaskMaster: React.FC = () => {
                                     <MenuItem value="Inactive">Inactive</MenuItem>
                                 </Select>
                             </Box>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Task</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Task</Typography>
                                 <Select size="small" fullWidth displayEmpty value="" sx={{ bgcolor: '#fbfffb' }}>
                                     <MenuItem value="">Choose a Task...</MenuItem>
                                 </Select>
@@ -328,128 +334,179 @@ export const TaskMaster: React.FC = () => {
                     </Grid>
                 </Paper>
 
-                <Box sx={{ mx: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 1.5, display: 'flex', alignItems: 'center', color: 'white', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}>
+                <Box sx={{ mx: { xs: 0, sm: 2 }, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 1.5, display: 'flex', alignItems: 'center', color: 'white', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}>
                     <ListIcon sx={{ mr: 1 }} />
                     <Typography fontWeight="bold">Task List</Typography>
                 </Box>
-                <Paper elevation={0} sx={{ mx: 2, borderRadius: 0, border: '1px solid #e0e0e0', borderTop: 'none' }}>
-                    <TableContainer>
-                        <Table>
-                            {taskMasters.length > 0 && (
-                                <TableHead sx={{ bgcolor: '#f5f5f5' }}>
-                                    <TableRow>
-                                        <TableCell sx={{ fontWeight: 700 }}>Task Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Mode</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Frequency</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Billing</TableCell>
-                                        <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                            )}
-                            <TableBody>
-                                {taskMasters.map((tm: TaskMasterData) => (
-                                    <TableRow key={tm._id} hover>
-                                        <TableCell>{tm.taskName}</TableCell>
-                                        <TableCell>{tm.mode}</TableCell>
-                                        <TableCell>{tm.frequency || '-'}</TableCell>
-                                        <TableCell>{tm.department}</TableCell>
-                                        <TableCell>₹{tm.billingAmount || 0}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={tm.status}
-                                                size="small"
-                                                color={tm.status === 'Active' ? 'success' : 'default'}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <IconButton size="small" onClick={() => {
+                <Paper elevation={0} sx={{ mx: { xs: 0, sm: 2 }, borderRadius: 0, border: '1px solid #e0e0e0', borderTop: 'none', overflowX: 'auto' }}>
+                    {isMobile ? (
+                        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: '#f8fafc' }}>
+                            {taskMasters.length > 0 ? taskMasters.map((tm: TaskMasterData) => (
+                                <Paper key={tm._id} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="700" color="primary.main">{tm.taskName}</Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{tm.department}</Typography>
+                                        </Box>
+                                        <Chip
+                                            label={tm.status}
+                                            size="small"
+                                            color={tm.status === 'Active' ? 'success' : 'default'}
+                                            sx={{ fontWeight: 600, fontSize: '0.7rem' }}
+                                        />
+                                    </Box>
+                                    
+                                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" display="block">Mode</Typography>
+                                            <Typography variant="body2" fontWeight="500">{tm.mode}</Typography>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" display="block">Frequency</Typography>
+                                            <Typography variant="body2" fontWeight="500">{tm.frequency || '-'}</Typography>
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" display="block">Billing Amount</Typography>
+                                            <Typography variant="body2" fontWeight="500">₹{tm.billingAmount || 0}</Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Divider sx={{ my: 1 }} />
+                                    
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="primary"
+                                            startIcon={<EditIcon />}
+                                            onClick={() => {
                                                 const rm = tm.reportingManager;
                                                 const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
-                                                // Normalize mode: convert 'Recurring' to 'Recurrence'
                                                 const mode = tm.mode === 'Recurring' ? 'Recurrence' : tm.mode;
                                                 setFormData({ ...tm, reportingManager: rmId, mode });
                                                 setView('form');
-                                            }} color="primary">
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton size="small" onClick={() => {
+                                            }}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<DeleteIcon />}
+                                            onClick={() => {
                                                 const id = tm._id;
                                                 if (id && window.confirm('Delete this task master?')) {
                                                     deleteMutation.mutate(id);
                                                 }
-                                            }} color="error">
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {taskMasters.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 3, fontWeight: 600, color: 'text.secondary' }}>
-                                            No Record Found
-                                        </TableCell>
-                                    </TableRow>
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </Box>
+                                </Paper>
+                            )) : (
+                                <Box p={3} textAlign="center">
+                                    <Typography color="text.secondary">No Record Found</Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    ) : (
+                        <TableContainer>
+                            <Table>
+                                {taskMasters.length > 0 && (
+                                    <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 700 }}>Task Name</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Mode</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Frequency</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Department</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Billing</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                                        </TableRow>
+                                    </TableHead>
                                 )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                <TableBody>
+                                    {taskMasters.map((tm: TaskMasterData) => (
+                                        <TableRow key={tm._id} hover>
+                                            <TableCell>{tm.taskName}</TableCell>
+                                            <TableCell>{tm.mode}</TableCell>
+                                            <TableCell>{tm.frequency || '-'}</TableCell>
+                                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tm.department}</TableCell>
+                                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>₹{tm.billingAmount || 0}</TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={tm.status}
+                                                    size="small"
+                                                    color={tm.status === 'Active' ? 'success' : 'default'}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <IconButton size="small" onClick={() => {
+                                                    const rm = tm.reportingManager;
+                                                    const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
+                                                    // Normalize mode: convert 'Recurring' to 'Recurrence'
+                                                    const mode = tm.mode === 'Recurring' ? 'Recurrence' : tm.mode;
+                                                    setFormData({ ...tm, reportingManager: rmId, mode });
+                                                    setView('form');
+                                                }} color="primary">
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton size="small" onClick={() => {
+                                                    const id = tm._id;
+                                                    if (id && window.confirm('Delete this task master?')) {
+                                                        deleteMutation.mutate(id);
+                                                    }
+                                                }} color="error">
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {taskMasters.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center" sx={{ py: 3, fontWeight: 600, color: 'text.secondary' }}>
+                                                No Record Found
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
                 </Paper>
+            </Paper>
             </Box>
         );
     }
 
     return (
         <Box sx={{ p: 2, bgcolor: '#f4f6f8', minHeight: '100vh' }}>
-            <Box mb={2}>
-                <Typography variant="h5" fontWeight="700" color="primary.dark">
-                    Task Master
-                </Typography>
-            </Box>
-
-            <Paper
-                elevation={1}
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    p: 1,
-                    mb: 2,
-                    borderRadius: 1
-                }}
-            >
-                <Box display="flex" gap={1}>
-                    <Button
-                        size="small"
-                        onClick={() => { setView('form'); resetForm(); }}
-                        sx={{
-                            bgcolor: 'rgba(255,255,255,0.2)',
-                            color: 'white',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                        }}
-                    >
-                        Add New
-                    </Button>
-                    <Button
-                        size="small"
-                        onClick={() => setView('list')}
-                        sx={{
-                            bgcolor: 'transparent',
-                            color: 'white',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                        }}
-                    >
-                        List
-                    </Button>
+            <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', mb: 3 }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h5" fontWeight="600">Task Master</Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            size="small"
+                            onClick={() => { setView('form'); resetForm(); }}
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+                        >
+                            Add New
+                        </Button>
+                        <Button
+                            size="small"
+                            onClick={() => setView('list')}
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}
+                        >
+                            List
+                        </Button>
+                    </Box>
                 </Box>
-            </Paper>            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+            </Paper>
+
+            {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{success}</Alert>}
 
             <form onSubmit={handleSubmit}>
                 <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>

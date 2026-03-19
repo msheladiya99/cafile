@@ -18,7 +18,9 @@ import {
     List,
     FileSpreadsheet,
     Pencil,
-    Check
+    Check,
+    Upload,
+    X
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
@@ -27,16 +29,29 @@ import type { FirmMasterData, IMultiFirmData } from '../../services/firmService'
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 interface FieldRowProps { label: string; required?: boolean; children: React.ReactNode }
 const Row: React.FC<FieldRowProps> = ({ label, required, children }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
-        <Typography sx={{ width: 160, flexShrink: 0, fontSize: '0.82rem', color: '#444', fontWeight: 500 }}>
-            {label}{required && <span style={{ color: 'red' }}>*</span>}
+    <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        mb: 2, 
+        gap: { xs: 0.5, sm: 1.5 } 
+    }}>
+        <Typography sx={{ 
+            width: { xs: '100%', sm: 160 }, 
+            flexShrink: 0, 
+            fontSize: '0.82rem', 
+            color: 'text.secondary', 
+            fontWeight: 600,
+            opacity: 0.9
+        }}>
+            {label}{required && <span style={{ color: 'red', marginLeft: '2px' }}>*</span>}
         </Typography>
-        <Box sx={{ flex: 1 }}>{children}</Box>
+        <Box sx={{ flex: 1, width: '100%' }}>{children}</Box>
     </Box>
 );
 
 const SectionHead: React.FC<{ icon?: React.ReactNode; title: string }> = ({ icon, title }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0', width: '100%', boxSizing: 'border-box' }}>
         {icon && <Box sx={{ color: '#667eea', display: 'flex' }}>{icon}</Box>}
         <Typography fontSize="0.82rem" fontWeight={700} color="#444">{title}</Typography>
     </Box>
@@ -49,8 +64,24 @@ interface ImgBoxProps { label: string; url?: string; onUpload: (f: File) => void
 const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading }) => (
     <Box sx={{ mb: 1.5 }}>
         <SectionHead title={label} />
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 120, height: 100, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: 1.5 
+        }}>
+            <Box sx={{ 
+                width: { xs: '100%', sm: 120 }, 
+                height: 100, 
+                border: '2px dashed #ccc', 
+                borderRadius: 1, 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                bgcolor: '#fafafa', 
+                overflow: 'hidden', 
+                position: 'relative' 
+            }}>
                 {loading ? <CircularProgress size={20} /> : url
                     ? (
                         <>
@@ -60,24 +91,30 @@ const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading
                                     size="small"
                                     onClick={onRemove}
                                     title="Remove Image"
-                                    sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.7)', padding: 0.5, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                                    sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.7)', padding: 0.5, '&:hover': { bgcolor: 'white' } }}
                                 >
-                                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#d32f2f', lineHeight: 1 }}>✕</span>
+                                    <X size={14} color="#d32f2f" />
                                 </IconButton>
                             )}
                         </>
                     )
-                    : <Camera size={30} color="#ccc" />}
+                    : (
+                        <Box component="label" sx={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Upload size={24} color="#ccc" />
+                            <Typography fontSize="0.65rem" color="#aaa" mt={0.5}>Upload</Typography>
+                            <input type="file" hidden accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
+                        </Box>
+                    )}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
                 <Button component="label" size="small"
                     sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, textTransform: 'none', px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap' }}>
                     Choose File
                     <input type="file" hidden accept="image/jpeg,image/png" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
                 </Button>
-                <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1 }}>{url ? 'Image set' : 'No file chosen'}</Typography>
+                <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{url ? 'Image set' : 'No file chosen'}</Typography>
             </Box>
-            <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 0.5, fontSize: '0.72rem', width: '100%' }}>
+            <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: 1, fontSize: '0.72rem', width: '100%' }}>
                 <strong>NOTE!</strong> JPEG or PNG Image Format only
             </Box>
         </Box>
@@ -162,7 +199,7 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
 
     return (
         <Box>
-            <Paper sx={{ p: 2.5, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                     <Row label="Document Name *">
                         <Select value={docName} onChange={(e) => setDocName(e.target.value as string)} fullWidth displayEmpty {...selSx}>
@@ -337,7 +374,7 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
 
     return (
         <Box>
-            <Paper sx={{ p: 2.5, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
                 <Row label="Currency *">
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Select value={curr.currencyCode} onChange={(e) => handleCurrencySelect(e.target.value as string)} displayEmpty size="small" sx={{ minWidth: 200, borderRadius: 1, fontSize: '0.82rem' }}>
@@ -439,7 +476,7 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
 
     return (
         <Box>
-            <Paper sx={{ p: 2.5, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', maxWidth: 700 }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5, maxWidth: 700 }}>
                 <Row label="Name *">
                     <TextField value={tax.name} onChange={(e) => setTax(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} />
                 </Row>
@@ -712,7 +749,7 @@ const PartnersTab: React.FC<{
 
     return (
         <Box>
-            <Paper sx={{ p: 2.5, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
                 <Typography fontSize="0.9rem" fontWeight={700} color="#444" mb={2}>{editIdx !== null ? 'Edit Partner' : 'Add New Partner'}</Typography>
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 4 }}>
@@ -836,31 +873,75 @@ export const FirmMasterPage: React.FC = () => {
     const tabs = ['Firm Info', 'Partners', 'Firm Documents', 'Add Multi Firm', 'Tax Detail', 'Currency', 'Invoice'];
 
     return (
-        <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+        <Box sx={{ p: { xs: 1, sm: 2 }, overflowX: 'hidden' }}>
             {/* Header */}
             <Paper sx={{ mb: 2, borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2.5, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                    color: 'white', 
+                    px: { xs: 1.5, sm: 2.5 }, 
+                    py: 1.5, 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: { xs: 1.5, sm: 0 }
+                }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         {(form.showLogo !== false && form.logoUrl)
                             ? <Avatar src={form.logoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(255,255,255,0.5)' }} />
                             : <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 36, height: 36 }}><Building2 size={16} /></Avatar>}
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1, 
+                        width: { xs: '100%', sm: 'auto' },
+                        flexWrap: 'wrap'
+                    }}>
                         <Button variant="contained" size="small"
                             onClick={() => setFieldModal(true)}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, borderRadius: 1.5, boxShadow: 'none', textTransform: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
+                            sx={{ 
+                                bgcolor: 'rgba(255,255,255,0.15)', 
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, 
+                                borderRadius: 1.5, 
+                                boxShadow: 'none', 
+                                textTransform: 'none', 
+                                fontWeight: 700, 
+                                fontSize: '0.82rem',
+                                flex: { xs: 1, sm: 'none' },
+                                whiteSpace: 'nowrap'
+                            }}>
                             Field Master
                         </Button>
                         <Button variant="contained" size="small" startIcon={saveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <Save size={16} />}
                             onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
                             disabled={saveMutation.isPending}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.22)', '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, borderRadius: 1.5, boxShadow: 'none', textTransform: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
+                            sx={{ 
+                                bgcolor: 'rgba(255,255,255,0.22)', 
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, 
+                                borderRadius: 1.5, 
+                                boxShadow: 'none', 
+                                textTransform: 'none', 
+                                fontWeight: 700, 
+                                fontSize: '0.82rem',
+                                flex: { xs: 1, sm: 'none' }
+                            }}>
                             {saveMutation.isPending ? 'Saving...' : 'Save'}
                         </Button>
                         <Button variant="outlined" size="small"
                             onClick={() => firm && setForm({ ...BLANK, ...firm })}
-                            sx={{ bgcolor: 'transparent', color: 'white', borderColor: 'rgba(255,255,255,0.4)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'white' }, borderRadius: 1.5, textTransform: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
+                            sx={{ 
+                                bgcolor: 'transparent', 
+                                color: 'white', 
+                                borderColor: 'rgba(255,255,255,0.4)', 
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'white' }, 
+                                borderRadius: 1.5, 
+                                textTransform: 'none', 
+                                fontWeight: 700, 
+                                fontSize: '0.82rem',
+                                flex: { xs: 1, sm: 'none' }
+                            }}>
                             Cancel
                         </Button>
                     </Box>
@@ -871,162 +952,169 @@ export const FirmMasterPage: React.FC = () => {
                 </Tabs>
             </Paper>
 
-            {/* ── TAB 0: Firm Info ── */}
             {tab === 0 && (
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', lg: 'row' } }}>
-                    {/* LEFT COLUMN */}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
-                            <Row label="Firm Name*"><TextField value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
-                            <Row label="Short Name*"><TextField value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
-                            <Row label="Address*">
-                                <TextField value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} />
-                            </Row>
-                            <Row label="Country*">
-                                <Select value={form.country || ''} onChange={sel('country')} fullWidth displayEmpty {...selSx}>
-                                    <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Country...</em></MenuItem>
-                                    {COUNTRY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
-                                </Select>
-                            </Row>
-                            <Row label="State*">
-                                <Select value={form.state || ''} onChange={sel('state')} fullWidth displayEmpty {...selSx}>
-                                    <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a State...</em></MenuItem>
-                                    {STATE_LIST.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.82rem' }}>{s}</MenuItem>)}
-                                </Select>
-                            </Row>
-                            <Row label="City*">
-                                <Select value={form.city || ''} onChange={sel('city')} fullWidth displayEmpty {...selSx}>
-                                    <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a City...</em></MenuItem>
-                                    {CITY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
-                                </Select>
-                            </Row>
-                            <Row label="Postal Code"><TextField value={form.postalCode || ''} onChange={f('postalCode')} fullWidth {...sx} /></Row>
-                            <Row label="Mobile Number*"><TextField value={form.mobile || ''} onChange={f('mobile')} fullWidth {...sx} /></Row>
-                            <Row label="Email*"><TextField value={form.email || ''} onChange={f('email')} type="email" fullWidth {...sx} /></Row>
-                            <Row label="Phone(L)"><TextField value={form.phoneL || ''} onChange={f('phoneL')} fullWidth {...sx} /></Row>
-                            <Row label="Firm Type*">
-                                <Select value={form.firmType || ''} onChange={sel('firmType')} fullWidth displayEmpty {...selSx}>
-                                    <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>
-                                    {FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}
-                                </Select>
-                            </Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
-                            <Row label="Bank Name*"><TextField value={form.bankName || ''} onChange={f('bankName')} fullWidth {...sx} /></Row>
-                            <Row label="Bank Branch*"><TextField value={form.bankBranch || ''} onChange={f('bankBranch')} fullWidth {...sx} /></Row>
-                            <Row label="Account Holder Name*"><TextField value={form.accountHolderName || ''} onChange={f('accountHolderName')} fullWidth {...sx} /></Row>
-                            <Row label="Bank A/C No*"><TextField value={form.accountNumber || ''} onChange={f('accountNumber')} fullWidth {...sx} /></Row>
-                            <Row label="Bank IFS Code"><TextField value={form.ifscCode || ''} onChange={f('ifscCode')} fullWidth {...sx} /></Row>
-                            <Row label="IBAN No."><TextField value={form.ibanNo || ''} onChange={f('ibanNo')} fullWidth {...sx} /></Row>
-                            <Row label="Swift Code"><TextField value={form.swiftCode || ''} onChange={f('swiftCode')} fullWidth {...sx} /></Row>
-                            <Row label="Micr Code"><TextField value={form.micrCode || ''} onChange={f('micrCode')} fullWidth {...sx} /></Row>
-                            <Row label="PAN No*"><TextField value={form.panNumber || ''} onChange={f('panNumber')} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Other Details" />
-                            <Row label="Firm Zone">
-                                <Select value={form.firmZone || ''} onChange={sel('firmZone')} fullWidth displayEmpty {...selSx}>
-                                    {ZONES.map(z => <MenuItem key={z} value={z} sx={{ fontSize: '0.8rem' }}>{z}</MenuItem>)}
-                                </Select>
-                            </Row>
-                            <Row label="Client Code Prefix*"><TextField value={form.clientCodePrefix || ''} onChange={f('clientCodePrefix')} fullWidth {...sx} /></Row>
-                            <Row label="Invoice Prefix*"><TextField value={form.invoicePrefix || ''} onChange={f('invoicePrefix')} fullWidth {...sx} /></Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Invoice & Daily Report Email ID" />
-                            <Row label="Email*">
-                                <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
-                            </Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Support Detail" />
-                            <Row label="Email*">
-                                <TextField value={form.supportEmails || ''} onChange={f('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
-                            </Row>
-                            <Row label="Mobile Number*"><TextField value={form.supportMobile || ''} onChange={f('supportMobile')} fullWidth {...sx} /></Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Timer Auto Close" />
-                            <Row label="Auto Close Hours">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#667eea', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#5a6fd6' }, width: 28, height: 28 }}><Plus size={16} /></IconButton>
-                                    <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
-                                    <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
-                                </Box>
-                            </Row>
-                        </Paper>
-                    </Box>
-
-                    {/* RIGHT COLUMN */}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={form.showLogo !== false} onChange={(e) => setForm(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
-                                    label={<Typography fontSize="0.75rem" fontWeight={600} color={form.showLogo !== false ? 'primary' : 'text.secondary'}>{form.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
-                                />
-                            </Box>
-                            <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} onRemove={() => setForm(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Registration Detail" />
-                            <Row label="GSTIN"><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
-                            <Row label="Membership No"><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
-                            <Row label="Membership Date"><TextField value={form.membershipDate ? form.membershipDate.split('T')[0] : ''} onChange={f('membershipDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
-                            <Row label="FRN No"><TextField value={form.frnNo || ''} onChange={f('frnNo')} fullWidth {...sx} /></Row>
-                            <Row label="FRN Date"><TextField value={form.frnDate ? form.frnDate.split('T')[0] : ''} onChange={f('frnDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
-                            <Row label="Licence No"><TextField value={form.licenceNo || ''} onChange={f('licenceNo')} fullWidth {...sx} /></Row>
-                            <Row label="Licence Authority"><TextField value={form.licenceAuthority || ''} onChange={f('licenceAuthority')} fullWidth {...sx} /></Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <SectionHead title="Social Networking Detail" />
-                            <Row label="Web Address"><TextField value={form.website || ''} onChange={f('website')} fullWidth {...sx} placeholder="https://..." /></Row>
-                            <Row label="Facebook"><TextField value={form.facebook || ''} onChange={f('facebook')} fullWidth {...sx} /></Row>
-                            <Row label="Twitter"><TextField value={form.twitter || ''} onChange={f('twitter')} fullWidth {...sx} /></Row>
-                            <Row label="Google +"><TextField value={form.googlePlus || ''} onChange={f('googlePlus')} fullWidth {...sx} /></Row>
-                            <Row label="PMS App URL"><TextField value={form.pmsAppUrl || ''} onChange={f('pmsAppUrl')} fullWidth {...sx} /></Row>
-                        </Paper>
-
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
-                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
-                                <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
-                            </Box>
-                            {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
-                                <Row key={n} label={(form.extraFieldLabels && form.extraFieldLabels[i]) || `Field ${n}`}>
-                                    <TextField value={(form as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={f(`extraField${n}` as keyof FirmMasterData)} fullWidth {...sx} />
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', flexDirection: { xs: 'column', lg: 'row' }, width: '100%', minWidth: 0 }}>
+                        {/* LEFT COLUMN */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
+                                <Row label="Firm Name*"><TextField value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
+                                <Row label="Short Name*"><TextField value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
+                                <Row label="Address*">
+                                    <TextField value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} />
                                 </Row>
-                            ))}
-                        </Paper>
+                                <Row label="Country*">
+                                    <Select value={form.country || ''} onChange={sel('country')} fullWidth displayEmpty {...selSx}>
+                                        <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Country...</em></MenuItem>
+                                        {COUNTRY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
+                                    </Select>
+                                </Row>
+                                <Row label="State*">
+                                    <Select value={form.state || ''} onChange={sel('state')} fullWidth displayEmpty {...selSx}>
+                                        <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a State...</em></MenuItem>
+                                        {STATE_LIST.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.82rem' }}>{s}</MenuItem>)}
+                                    </Select>
+                                </Row>
+                                <Row label="City*">
+                                    <Select value={form.city || ''} onChange={sel('city')} fullWidth displayEmpty {...selSx}>
+                                        <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a City...</em></MenuItem>
+                                        {CITY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
+                                    </Select>
+                                </Row>
+                                <Row label="Postal Code"><TextField value={form.postalCode || ''} onChange={f('postalCode')} fullWidth {...sx} /></Row>
+                                <Row label="Mobile Number*"><TextField value={form.mobile || ''} onChange={f('mobile')} fullWidth {...sx} /></Row>
+                                <Row label="Email*"><TextField value={form.email || ''} onChange={f('email')} type="email" fullWidth {...sx} /></Row>
+                                <Row label="Phone(L)"><TextField value={form.phoneL || ''} onChange={f('phoneL')} fullWidth {...sx} /></Row>
+                                <Row label="Firm Type*">
+                                    <Select value={form.firmType || ''} onChange={sel('firmType')} fullWidth displayEmpty {...selSx}>
+                                        <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>
+                                        {FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}
+                                    </Select>
+                                </Row>
+                            </Paper>
 
-                        <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <ImgBox label="Firm Signature" url={form.signatureImageUrl} onUpload={handleSig} onRemove={() => setForm(p => ({ ...p, signatureImageUrl: '' }))} loading={sigLoading} />
-                        </Paper>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
+                                <Row label="Bank Name*"><TextField value={form.bankName || ''} onChange={f('bankName')} fullWidth {...sx} /></Row>
+                                <Row label="Bank Branch*"><TextField value={form.bankBranch || ''} onChange={f('bankBranch')} fullWidth {...sx} /></Row>
+                                <Row label="Account Holder Name*"><TextField value={form.accountHolderName || ''} onChange={f('accountHolderName')} fullWidth {...sx} /></Row>
+                                <Row label="Bank A/C No*"><TextField value={form.accountNumber || ''} onChange={f('accountNumber')} fullWidth {...sx} /></Row>
+                                <Row label="Bank IFS Code"><TextField value={form.ifscCode || ''} onChange={f('ifscCode')} fullWidth {...sx} /></Row>
+                                <Row label="IBAN No."><TextField value={form.ibanNo || ''} onChange={f('ibanNo')} fullWidth {...sx} /></Row>
+                                <Row label="Swift Code"><TextField value={form.swiftCode || ''} onChange={f('swiftCode')} fullWidth {...sx} /></Row>
+                                <Row label="Micr Code"><TextField value={form.micrCode || ''} onChange={f('micrCode')} fullWidth {...sx} /></Row>
+                                <Row label="PAN No*"><TextField value={form.panNumber || ''} onChange={f('panNumber')} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Other Details" />
+                                <Row label="Firm Zone">
+                                    <Select value={form.firmZone || ''} onChange={sel('firmZone')} fullWidth displayEmpty {...selSx}>
+                                        {ZONES.map(z => <MenuItem key={z} value={z} sx={{ fontSize: '0.8rem' }}>{z}</MenuItem>)}
+                                    </Select>
+                                </Row>
+                                <Row label="Client Code Prefix*"><TextField value={form.clientCodePrefix || ''} onChange={f('clientCodePrefix')} fullWidth {...sx} /></Row>
+                                <Row label="Invoice Prefix*"><TextField value={form.invoicePrefix || ''} onChange={f('invoicePrefix')} fullWidth {...sx} /></Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Invoice & Daily Report Email ID" />
+                                <Row label="Email*">
+                                    <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
+                                </Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Support Detail" />
+                                <Row label="Email*">
+                                    <TextField value={form.supportEmails || ''} onChange={f('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
+                                </Row>
+                                <Row label="Mobile Number*"><TextField value={form.supportMobile || ''} onChange={f('supportMobile')} fullWidth {...sx} /></Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Timer Auto Close" />
+                                <Row label="Auto Close Hours">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#667eea', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#5a6fd6' }, width: 28, height: 28 }}><Plus size={16} /></IconButton>
+                                        <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
+                                        <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
+                                    </Box>
+                                </Row>
+                            </Paper>
+                        </Box>
+
+                        {/* RIGHT COLUMN */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
+                                    <FormControlLabel
+                                        control={<Switch size="small" checked={form.showLogo !== false} onChange={(e) => setForm(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                        label={<Typography fontSize="0.75rem" fontWeight={600} color={form.showLogo !== false ? 'primary' : 'text.secondary'}>{form.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
+                                    />
+                                </Box>
+                                <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} onRemove={() => setForm(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Registration Detail" />
+                                <Row label="GSTIN"><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
+                                <Row label="Membership No"><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
+                                <Row label="Membership Date"><TextField value={form.membershipDate ? form.membershipDate.split('T')[0] : ''} onChange={f('membershipDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                                <Row label="FRN No"><TextField value={form.frnNo || ''} onChange={f('frnNo')} fullWidth {...sx} /></Row>
+                                <Row label="FRN Date"><TextField value={form.frnDate ? form.frnDate.split('T')[0] : ''} onChange={f('frnDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                                <Row label="Licence No"><TextField value={form.licenceNo || ''} onChange={f('licenceNo')} fullWidth {...sx} /></Row>
+                                <Row label="Licence Authority"><TextField value={form.licenceAuthority || ''} onChange={f('licenceAuthority')} fullWidth {...sx} /></Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                                <SectionHead title="Social Networking Detail" />
+                                <Row label="Web Address"><TextField value={form.website || ''} onChange={f('website')} fullWidth {...sx} placeholder="https://..." /></Row>
+                                <Row label="Facebook"><TextField value={form.facebook || ''} onChange={f('facebook')} fullWidth {...sx} /></Row>
+                                <Row label="Twitter"><TextField value={form.twitter || ''} onChange={f('twitter')} fullWidth {...sx} /></Row>
+                                <Row label="Google +"><TextField value={form.googlePlus || ''} onChange={f('googlePlus')} fullWidth {...sx} /></Row>
+                                <Row label="PMS App URL"><TextField value={form.pmsAppUrl || ''} onChange={f('pmsAppUrl')} fullWidth {...sx} /></Row>
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
+                                    <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
+                                    <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
+                                </Box>
+                                {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
+                                    <Row key={n} label={(form.extraFieldLabels && form.extraFieldLabels[i]) || `Field ${n}`}>
+                                        <TextField value={(form as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={f(`extraField${n}` as keyof FirmMasterData)} fullWidth {...sx} />
+                                    </Row>
+                                ))}
+                            </Paper>
+
+                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                                <ImgBox label="Firm Signature" url={form.signatureImageUrl} onUpload={handleSig} onRemove={() => setForm(p => ({ ...p, signatureImageUrl: '' }))} loading={sigLoading} />
+                            </Paper>
+                        </Box>
                     </Box>
-                </Box>
+                </Paper>
             )}
 
             {/* ── TAB 1: Partners ── */}
             {tab === 1 && (
-                <PartnersTab
-                    partners={form.partners || []}
-                    onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
-                    toast={toast}
-                />
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <PartnersTab
+                        partners={form.partners || []}
+                        onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
+                        toast={toast}
+                    />
+                </Paper>
             )}
 
             {/* ── TAB 2: Firm Documents ── */}
-            {tab === 2 && <FirmDocumentsTab toast={toast} />}
+            {tab === 2 && (
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <FirmDocumentsTab toast={toast} />
+                </Paper>
+            )}
 
 
             {/* ── TAB 3: Add Multi Firm ── */}
@@ -1034,17 +1122,25 @@ export const FirmMasterPage: React.FC = () => {
 
 
             {/* ── TAB 4: Tax Detail ── */}
-            {tab === 4 && <TaxDetailTab toast={toast} />}
+            {tab === 4 && (
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <TaxDetailTab toast={toast} />
+                </Paper>
+            )}
 
 
             {/* ── TAB 5: Currency ── */}
-            {tab === 5 && <CurrencyTab toast={toast} />}
+            {tab === 5 && (
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <CurrencyTab toast={toast} />
+                </Paper>
+            )}
 
 
             {/* ── TAB 6: Invoice ── */}
             {tab === 6 && (
-                <Box>
-                    <Paper sx={{ p: 3, mb: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', maxWidth: 800 }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 1.5, maxWidth: 800 }}>
                         <SectionHead icon={<Receipt size={16} />} title="Invoice Settings" />
                         <Grid container spacing={3}>
                             <Grid size={{ xs: 12, md: 6 }}>
@@ -1070,7 +1166,13 @@ export const FirmMasterPage: React.FC = () => {
                             value={form.invoiceTemplate || 'template1'}
                             onChange={(e) => setForm(p => ({ ...p, invoiceTemplate: e.target.value }))}
                         >
-                            <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+                            <Box sx={{ 
+                            display: 'flex', 
+                            gap: 3, 
+                            mt: 2, 
+                            flexWrap: 'wrap',
+                            justifyContent: { xs: 'center', sm: 'flex-start' }
+                        }}>
                                 {[
                                     { id: 'template1', name: 'Classic Professional', desc: 'Detailed, formal layout' },
                                     { id: 'template2', name: 'Modern Minimalist', desc: 'Clean, sleek design' }
@@ -1143,7 +1245,7 @@ export const FirmMasterPage: React.FC = () => {
                         </RadioGroup>
                     </Paper>
 
-                    <Paper sx={{ p: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', maxWidth: 800 }}>
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 1.5, maxWidth: 800 }}>
                         <SectionHead title="Invoice Terms & Conditions" />
                         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
                             These terms will be displayed at the bottom of every invoice generated.
@@ -1160,7 +1262,7 @@ export const FirmMasterPage: React.FC = () => {
                             />
                         </Box>
                     </Paper>
-                </Box>
+                </Paper>
             )}
 
             {/* Save / Cancel Footer (Only for tabs that modify firm-wide record) */}

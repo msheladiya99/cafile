@@ -23,7 +23,8 @@ import {
     Paper,
     alpha,
     useTheme,
-    Select
+    Select,
+    useMediaQuery
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -82,6 +83,8 @@ const statusColors: Record<string, 'default' | 'success' | 'warning' | 'error'> 
 export const ClientLedger: React.FC = () => {
     const theme = useTheme();
     const [selectedClient, setSelectedClient] = useState<string>('');
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
     const [selectedStaff, setSelectedStaff] = useState<string>('');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
@@ -165,7 +168,7 @@ export const ClientLedger: React.FC = () => {
 
                 {/* Filters Section */}
                 <Section title="Filter Options" icon={<FilterListIcon />}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: isTablet ? 'column' : 'row', gap: { xs: 0, lg: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
                             <FilterRow label="Staff Member" inputId="staff-select">
@@ -304,39 +307,45 @@ export const ClientLedger: React.FC = () => {
                                     ].map((card, index) => {
                                         const Icon = card.icon;
                                         return (
-                                            <Grid size={{ xs: 6, sm: 3 }} key={index}>
+                                            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={index}>
                                                 <Paper
                                                     sx={{
-                                                        p: 2,
-                                                        borderRadius: 2,
+                                                        p: { xs: 1.5, sm: 2 },
+                                                        borderRadius: 2.5,
+                                                        height: '100%',
                                                         border: `1px solid ${alpha(card.color, 0.2)}`,
+                                                        bgcolor: '#ffffff',
                                                         transition: 'all 0.2s',
                                                         '&:hover': {
                                                             transform: 'translateY(-4px)',
-                                                            boxShadow: `0 4px 12px ${alpha(card.color, 0.2)}`,
+                                                            boxShadow: `0 8px 16px ${alpha(card.color, 0.1)}`,
                                                         },
                                                     }}
                                                 >
-                                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5 }}>
                                                         <Box
                                                             sx={{
-                                                                p: 1,
+                                                                width: 36,
+                                                                height: 36,
                                                                 borderRadius: 1.5,
                                                                 bgcolor: card.bgColor,
                                                                 display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
                                                             }}
                                                         >
-                                                            <Icon sx={{ fontSize: 20, color: card.color }} />
+                                                            <Icon sx={{ fontSize: 18, color: card.color }} />
                                                         </Box>
                                                         <Box sx={{ minWidth: 0, flex: 1 }}>
-                                                            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.2 }}>
-                                                                {card.value}
-                                                            </Typography>
-                                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>
                                                                 {card.label}
                                                             </Typography>
+                                                            <Typography variant="subtitle1" sx={{ fontWeight: 800, fontSize: { xs: '0.95rem', sm: '1.1rem' }, color: '#1e293b' }}>
+                                                                {card.value}
+                                                            </Typography>
                                                         </Box>
-                                                    </Stack>
+                                                    </Box>
                                                 </Paper>
                                             </Grid>
                                         );
@@ -362,12 +371,27 @@ export const ClientLedger: React.FC = () => {
                                             },
                                         }}
                                     >
-                                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                            <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', pr: 2 }}>
+                                        <AccordionSummary 
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{ 
+                                                px: { xs: 1, sm: 2 },
+                                                '& .MuiAccordionSummary-content': { 
+                                                    minWidth: 0,
+                                                    my: { xs: 1, sm: 1.5 }
+                                                } 
+                                            }}
+                                        >
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center',
+                                                gap: { xs: 1.5, sm: 2 },
+                                                width: '100%',
+                                                minWidth: 0
+                                            }}>
                                                 <Box
                                                     sx={{
-                                                        width: 40,
-                                                        height: 40,
+                                                        width: { xs: 36, sm: 40 },
+                                                        height: { xs: 36, sm: 40 },
                                                         borderRadius: 1.5,
                                                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                                         display: 'flex',
@@ -376,64 +400,63 @@ export const ClientLedger: React.FC = () => {
                                                         flexShrink: 0,
                                                     }}
                                                 >
-                                                    <PersonIcon sx={{ color: 'white', fontSize: 20 }} />
+                                                    <PersonIcon sx={{ color: 'white', fontSize: { xs: 18, sm: 20 } }} />
                                                 </Box>
-                                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
-                                                        {clientLedger.client.name}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary" noWrap>
-                                                        {clientLedger.client.email}
-                                                    </Typography>
+                                                
+                                                <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography variant="subtitle2" sx={{ fontWeight: 800, lineHeight: 1.2, color: '#1e293b', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                                                            {clientLedger.client.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                                                            {clientLedger.client.clientCode || clientLedger.client.email}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
-                                                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+
+                                                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0 }}>
                                                     <Chip
                                                         label={formatCurrency(clientLedger.summary.totalDue)}
                                                         size="small"
                                                         color={clientLedger.summary.totalDue > 0 ? 'error' : 'success'}
-                                                        sx={{ fontWeight: 700, height: 24 }}
+                                                        sx={{ fontWeight: 800, height: 24, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                                                     />
-                                                    {clientLedger.summary.totalOverdue > 0 && (
-                                                        <Chip
-                                                            icon={<WarningIcon sx={{ fontSize: 14 }} />}
-                                                            label={formatCurrency(clientLedger.summary.totalOverdue)}
-                                                            size="small"
-                                                            color="warning"
-                                                            sx={{ fontWeight: 700, height: 24 }}
-                                                        />
-                                                    )}
-                                                </Stack>
-                                            </Stack>
+                                                </Box>
+                                            </Box>
                                         </AccordionSummary>
                                         <AccordionDetails sx={{ pt: 0, pb: 2 }}>
                                             {/* Compact Metrics */}
-                                            <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                                            <Grid container spacing={1} sx={{ mb: 2 }}>
                                                 {[
-                                                    { label: 'Billed', value: formatCurrency(clientLedger.summary.totalBilled), icon: ReceiptIcon, color: '#667eea' },
+                                                    { label: 'Billed', value: formatCurrency(clientLedger.summary.totalBilled), icon: ReceiptIcon, color: '#6366f1' },
                                                     { label: 'Paid', value: formatCurrency(clientLedger.summary.totalPaid), icon: CheckCircleIcon, color: '#10b981' },
                                                     { label: 'Due', value: formatCurrency(clientLedger.summary.totalDue), icon: WarningIcon, color: '#ef4444' },
-                                                    { label: 'Invoices', value: clientLedger.summary.totalInvoices, icon: ReceiptIcon, color: '#6b7280' },
-                                                    { label: 'Rate', value: `${clientLedger.summary.paymentRate}%`, icon: TrendingUpIcon, color: '#3b82f6' },
+                                                    { label: 'Invoices', value: clientLedger.summary.totalInvoices, icon: ReceiptIcon, color: '#64748b' },
+                                                    { label: 'Rate', value: `${clientLedger.summary.paymentRate}%`, icon: TrendingUpIcon, color: '#6366f1' },
                                                     { label: 'Avg Days', value: clientLedger.summary.avgPaymentDays, icon: ScheduleIcon, color: '#8b5cf6' },
                                                 ].map((metric, i) => {
                                                     const Icon = metric.icon;
                                                     return (
-                                                        <Grid size={{ xs: 6, sm: 4, md: 2 }} key={i}>
+                                                        <Grid size={{ xs: 4, sm: 4, md: 4, lg: 2 }} key={i}>
                                                             <Paper
                                                                 variant="outlined"
                                                                 sx={{
-                                                                    p: 1.5,
+                                                                    p: 1.2,
                                                                     textAlign: 'center',
-                                                                    borderRadius: 1.5,
-                                                                    borderColor: alpha(metric.color, 0.2),
-                                                                    bgcolor: alpha(metric.color, 0.03),
+                                                                    borderRadius: 2,
+                                                                    borderColor: alpha(metric.color, 0.1),
+                                                                    bgcolor: alpha(metric.color, 0.02),
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    gap: 0.2
                                                                 }}
                                                             >
-                                                                <Icon sx={{ fontSize: 16, color: metric.color, mb: 0.5 }} />
-                                                                <Typography variant="body2" sx={{ fontWeight: 700, color: metric.color }}>
+                                                                <Icon sx={{ fontSize: 16, color: metric.color }} />
+                                                                <Typography variant="caption" sx={{ fontWeight: 800, color: '#1e293b', lineHeight: 1 }}>
                                                                     {metric.value}
                                                                 </Typography>
-                                                                <Typography variant="caption" color="text.secondary">
+                                                                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
                                                                     {metric.label}
                                                                 </Typography>
                                                             </Paper>
@@ -453,6 +476,50 @@ export const ClientLedger: React.FC = () => {
                                             </Stack>
                                             {clientLedger.ledgerEntries.length === 0 ? (
                                                 <Alert severity="info" sx={{ py: 1 }}>No transactions found</Alert>
+                                            ) : isMobile ? (
+                                                <Stack spacing={1.5}>
+                                                    {clientLedger.ledgerEntries.map((entry, index) => (
+                                                        <Paper
+                                                            key={index}
+                                                            variant="outlined"
+                                                            sx={{
+                                                                p: 1.5,
+                                                                borderRadius: 2,
+                                                                borderColor: 'divider',
+                                                                bgcolor: entry.type === 'PAYMENT' ? 'rgba(16, 185, 129, 0.02)' : '#ffffff'
+                                                            }}
+                                                        >
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
+                                                                <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary' }}>
+                                                                    {formatDate(entry.date)}
+                                                                </Typography>
+                                                                <Chip 
+                                                                    label={entry.type} 
+                                                                    size="small" 
+                                                                    color={entry.type === 'PAYMENT' ? 'success' : 'default'}
+                                                                    sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700 }} 
+                                                                />
+                                                            </Box>
+                                                            <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.2 }}>
+                                                                {entry.description}
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', gap: 1.5, borderTop: '1px dashed', borderColor: 'divider', pt: 1.2 }}>
+                                                                <Box sx={{ flex: 1 }}>
+                                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.6rem' }}>DEBIT</Typography>
+                                                                    <Typography variant="caption" color="error" sx={{ fontWeight: 800 }}>{entry.debit > 0 ? formatCurrency(entry.debit) : '-'}</Typography>
+                                                                </Box>
+                                                                <Box sx={{ flex: 1 }}>
+                                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.6rem' }}>CREDIT</Typography>
+                                                                    <Typography variant="caption" color="success.main" sx={{ fontWeight: 800 }}>{entry.credit > 0 ? formatCurrency(entry.credit) : '-'}</Typography>
+                                                                </Box>
+                                                                <Box sx={{ flex: 1, textAlign: 'right' }}>
+                                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.6rem' }}>BALANCE</Typography>
+                                                                    <Typography variant="caption" sx={{ fontWeight: 900, color: '#1e293b' }}>{formatCurrency(entry.balance)}</Typography>
+                                                                </Box>
+                                                            </Box>
+                                                        </Paper>
+                                                    ))}
+                                                </Stack>
                                             ) : (
                                                 <TableContainer
                                                     component={Paper}
@@ -509,7 +576,7 @@ export const ClientLedger: React.FC = () => {
                                                                     <TableCell align="right">
                                                                         {entry.credit > 0 && (
                                                                             <Typography variant="caption" color="success.main" sx={{ fontWeight: 700 }}>
-                                                                                {formatCurrency(entry.credit)}
+                                                                                {formatCurrency(entry.credit) || 0}
                                                                             </Typography>
                                                                         )}
                                                                     </TableCell>

@@ -28,6 +28,11 @@ import {
     Snackbar,
     Alert,
     InputAdornment,
+    useMediaQuery,
+    useTheme,
+    Stack,
+    Chip,
+    alpha
 } from '@mui/material';
 import {
     GridView as GridViewIcon,
@@ -111,8 +116,8 @@ interface SectionProps {
 }
 
 const Section = ({ title, icon, children }: SectionProps) => (
-    <Paper elevation={0} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+    <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: '#f5f7fa', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
             {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
             <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
         </Box>
@@ -198,6 +203,9 @@ const initialFormData = {
 export const EmployeeMaster: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
     const isEditMode = !!id;
     const [tabValue, setTabValue] = useState(0);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
@@ -524,27 +532,24 @@ export const EmployeeMaster: React.FC = () => {
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header Section */}
             <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h5" fontWeight="600">{isEditMode ? 'Edit Employee' : 'Employee Master'}</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/employee/master')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: { xs: 2.5, sm: 3 }, py: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+                    <Typography variant="h5" fontWeight="700" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, letterSpacing: '-0.01em' }}>{isEditMode ? 'Edit Employee' : 'Employee Master'}</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/master')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Add New
                         </Button>
-                        <Button variant="contained" size="small" onClick={() => setOpenDesignationDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenDesignationDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Designation
                         </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/employee/list')} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             List
                         </Button>
-                        <Button variant="contained" size="small" onClick={() => setOpenFieldMasterDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenFieldMasterDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Field Master
                         </Button>
                     </Box>
                 </Box>
-            </Paper>
-
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#f8fafc' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fff', px: 1 }}>
                     <Tabs
                         value={tabValue}
                         onChange={handleTabChange}
@@ -552,19 +557,21 @@ export const EmployeeMaster: React.FC = () => {
                         scrollButtons="auto"
                         sx={{
                             '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.9rem', color: 'text.secondary', minHeight: 48 },
-                            '& .Mui-selected': { color: '#667eea', bgcolor: 'rgba(102, 126, 234, 0.08)' },
-                            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0', backgroundColor: '#667eea' }
+                            '& .Mui-selected': { color: 'primary.main' },
+                            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' }
                         }}
                     >
-                        <Tab label="Employee Information" sx={{ bgcolor: tabValue === 0 ? '#667eea !important' : 'inherit', color: tabValue === 0 ? 'white !important' : 'inherit' }} />
-                        <Tab label="Employee Document" />
-                        <Tab label="Employee Other Detail" />
-                        <Tab label="Employee Rule" />
+                        <Tab label="Information" />
+                        <Tab label="Document" />
+                        <Tab label="Other Detail" />
+                        <Tab label="Rule" />
                     </Tabs>
                 </Box>
+            </Paper>
 
+            <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', mb: 3 }}>
                 <CustomTabPanel value={tabValue} index={0}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: 3, pb: 0 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: 3, pb: 0, pt: 2 }}>
 
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
@@ -807,11 +814,11 @@ export const EmployeeMaster: React.FC = () => {
                             )}
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3, pb: 3 }}>
-                        <Button variant="contained" onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#667eea', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}>
+                    <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 3, pb: 3, px: isMobile ? 3 : 0 }}>
+                        <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#667eea', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' }, height: 44 }}>
                             {isEditMode ? 'Update' : 'Save'}
                         </Button>
-                        <Button variant="contained" onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                        <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                             Cancel
                         </Button>
                     </Box>
@@ -989,20 +996,26 @@ export const EmployeeMaster: React.FC = () => {
 
                         </Box>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, mt: 2 }}>
                             <Button
                                 variant="contained"
                                 onClick={handleSaveDocument}
                                 disabled={isUploading}
+                                fullWidth={isMobile}
                                 sx={{ px: 4, bgcolor: '#667eea', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
                             >
                                 {isUploading ? 'Uploading...' : (editingDocumentId ? 'Update Document' : 'Add Document')}
                             </Button>
-                            <Button variant="contained" onClick={() => {
-                                setDocumentForm({ documentType: '', date: new Date().toISOString().split('T')[0], documentFormat: 'Original Hard Copy', fileLocation: '', fileLabel: '', description: '', returnable: true });
-                                setSelectedFile(null);
-                                setEditingDocumentId(null);
-                            }} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                            <Button 
+                                variant="contained" 
+                                fullWidth={isMobile}
+                                onClick={() => {
+                                    setDocumentForm({ documentType: '', date: new Date().toISOString().split('T')[0], documentFormat: 'Original Hard Copy', fileLocation: '', fileLabel: '', description: '', returnable: true });
+                                    setSelectedFile(null);
+                                    setEditingDocumentId(null);
+                                }} 
+                                sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
+                            >
                                 Cancel
                             </Button>
                         </Box>
@@ -1018,26 +1031,64 @@ export const EmployeeMaster: React.FC = () => {
                                     <GetAppIcon fontSize="small" />
                                 </IconButton>
                             </Box>
-                            <TableContainer sx={{ border: '1px solid #e2e8f0', borderTop: 'none' }}>
-                                <Table size="small">
-                                    <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                        <TableRow>
-                                            <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Document Type</TableCell>
-                                            <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Date</TableCell>
-                                            <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Format</TableCell>
-                                            <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Location</TableCell>
-                                            <TableCell align="center" sx={{ fontWeight: 600, color: '#64748b' }}>Actions</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {documents.length === 0 ? (
+
+                            {documents.length === 0 ? (
+                                <Box sx={{ p: 4, textAlign: 'center', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
+                                    <Typography variant="body2" color="text.secondary">No documents added yet</Typography>
+                                </Box>
+                            ) : isMobile ? (
+                                <Stack spacing={2} sx={{ p: 2, border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
+                                    {documents.map((doc) => (
+                                        <Paper key={doc.id || doc._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{doc.documentType}</Typography>
+                                                <Chip label={doc.documentFormat} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                            </Box>
+                                            <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Date</Typography>
+                                                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{doc.date}</Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Location</Typography>
+                                                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>{doc.fileLocation}</Typography>
+                                                </Box>
+                                            </Box>
+                                            <Divider sx={{ mb: 1.5 }} />
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                                    {doc.driveWebViewLink && (
+                                                        <Button size="small" variant="outlined" component="a" href={doc.driveWebViewLink} target="_blank" startIcon={<Visibility sx={{ fontSize: 16 }} />} sx={{ textTransform: 'none', height: 28, fontSize: '0.75rem' }}>
+                                                            View
+                                                        </Button>
+                                                    )}
+                                                </Box>
+                                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                                    <IconButton size="small" onClick={() => handleEditDocument(doc)} sx={{ color: '#667eea', bgcolor: alpha('#667eea', 0.1) }}>
+                                                        <EditIcon sx={{ fontSize: 16 }} />
+                                                    </IconButton>
+                                                    <IconButton size="small" onClick={() => handleDeleteDocument(doc._id || doc.id!)} sx={{ color: '#ff6c60', bgcolor: alpha('#ff6c60', 0.1) }}>
+                                                        <DeleteIcon sx={{ fontSize: 16 }} />
+                                                    </IconButton>
+                                                </Box>
+                                            </Box>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <TableContainer sx={{ border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
+                                    <Table size="small">
+                                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
                                             <TableRow>
-                                                <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                                                    No documents added yet
-                                                </TableCell>
+                                                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Document Type</TableCell>
+                                                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Format</TableCell>
+                                                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Location</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 600, color: '#64748b' }}>Actions</TableCell>
                                             </TableRow>
-                                        ) : (
-                                            documents.map((doc) => (
+                                        </TableHead>
+                                        <TableBody>
+                                            {documents.map((doc) => (
                                                 <TableRow key={doc.id || doc._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
                                                     <TableCell sx={{ fontSize: '0.85rem' }}>{doc.documentType}</TableCell>
                                                     <TableCell sx={{ fontSize: '0.85rem' }}>{doc.date}</TableCell>
@@ -1059,20 +1110,20 @@ export const EmployeeMaster: React.FC = () => {
                                                         </Box>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
                         </Box>
                     </Box>
 
                     {/* Tab Footer Actions */}
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3, pb: 3 }}>
-                        <Button variant="contained" onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1, textTransform: 'none', boxShadow: 'none' }}>
+                    <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 3, pb: 3, px: isMobile ? 3 : 0 }}>
+                        <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
                             {isEditMode ? 'Update' : 'Save'}
                         </Button>
-                        <Button variant="contained" onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                        <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                             Cancel
                         </Button>
                     </Box>
@@ -1275,11 +1326,11 @@ export const EmployeeMaster: React.FC = () => {
                             </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
-                            <Button variant="contained" onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1, textTransform: 'none', boxShadow: 'none' }}>
+                        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
+                            <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
                                 {isEditMode ? 'Update' : 'Save'}
                             </Button>
-                            <Button variant="contained" onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                            <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                                 Cancel
                             </Button>
                         </Box>
@@ -1305,27 +1356,28 @@ export const EmployeeMaster: React.FC = () => {
                             <Divider sx={{ mb: 1, mt: -1 }} />
 
                             {/* Row 2: Checkbox */}
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1.5, sm: 0 } }}>
                                 <Typography sx={{ width: { xs: '100%', sm: '300px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>
                                     Start Single Task Approval Allow Popup Access
                                 </Typography>
-                                <Box sx={{ flex: 1 }}>
-                                    <Box sx={{ width: 22, height: 22, bgcolor: '#667eea', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                        <Box component="svg" viewBox="0 0 24 24" fill="white" sx={{ width: 16, height: 16 }}>
+                                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                                    <Box sx={{ width: 28, height: 28, bgcolor: '#667eea', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)' }}>
+                                        <Box component="svg" viewBox="0 0 24 24" fill="white" sx={{ width: 18, height: 18 }}>
                                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                         </Box>
                                     </Box>
+                                    <Typography variant="caption" sx={{ ml: 1.5, color: '#667eea', fontWeight: 700 }}>Enabled</Typography>
                                 </Box>
                             </Box>
                             <Divider sx={{ mt: 1 }} />
 
                         </Box>
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
-                            <Button variant="contained" onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1, textTransform: 'none', boxShadow: 'none' }}>
+                        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
+                            <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
                                 {isEditMode ? 'Update' : 'Save'}
                             </Button>
-                            <Button variant="contained" onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
+                            <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                                 Cancel
                             </Button>
                         </Box>

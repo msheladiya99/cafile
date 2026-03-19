@@ -14,7 +14,8 @@ import {
     TableHead,
     TableRow,
     CircularProgress,
-    TextField
+    TextField,
+    Grid
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -58,15 +59,16 @@ export const EmployeeLoginDetail: React.FC = () => {
             </Paper>
 
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
-                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: 'repeat(12, 1fr)' }} gap={3} alignItems="center">
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 4' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>Employee</Typography>
+                <Grid container spacing={3} alignItems="center">
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: 14, width: { xs: '100%', md: 80 } }}>Employee</Typography>
                             <FormControl size="small" fullWidth>
                                 <Select
                                     displayEmpty
                                     value={selectedEmployee}
                                     onChange={(e) => setSelectedEmployee(e.target.value)}
+                                    sx={{ borderRadius: 1.5 }}
                                 >
                                     <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                     {!isLoadingStaff && staffMembers.map((staff: { _id: string, name?: string, username: string }) => (
@@ -75,39 +77,52 @@ export const EmployeeLoginDetail: React.FC = () => {
                                 </Select>
                             </FormControl>
                         </Box>
-                    </Box>
+                    </Grid>
 
-                    <Box gridColumn={{ xs: 'span 1', md: 'span 6' }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>Date</Typography>
-                            <TextField
-                                type="date"
-                                size="small"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                                sx={{ flex: 1 }}
-                            />
-                            <Box sx={{ bgcolor: '#f0f0f0', px: 2, py: 1, border: '1px solid #ddd' }}>
-                                To
-                            </Box>
-                            <TextField
-                                type="date"
-                                size="small"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                                sx={{ flex: 1 }}
-                            />
-                            <Button
-                                variant="contained"
-                                color="error"
-                                onClick={handleClear}
-                                sx={{ minWidth: 40, p: 1 }}
-                            >
-                                <ClearIcon />
-                            </Button>
-                        </Box>
-                    </Box>
-                </Box>
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Grid container spacing={1} alignItems="center">
+                            <Grid size={{ xs: 12, md: 'auto' }}>
+                                <Typography sx={{ color: 'text.secondary', fontSize: 13, width: { xs: '100%', md: 60 }, mb: { xs: 0.5, md: 0 } }}>Date</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 5, md: 4 }}>
+                                <TextField
+                                    fullWidth
+                                    type="date"
+                                    size="small"
+                                    value={dateFrom}
+                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 2, md: 'auto' }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <Box sx={{ bgcolor: '#f0f0f0', px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1, fontSize: '0.8rem' }}>
+                                    To
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 5, md: 4 }}>
+                                <TextField
+                                    fullWidth
+                                    type="date"
+                                    size="small"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 'auto' }}>
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    color="error"
+                                    onClick={handleClear}
+                                    sx={{ minWidth: { xs: '100%', md: 40 }, p: 1 }}
+                                >
+                                    <ClearIcon />
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
             </Paper>
 
             {/* List Section */}

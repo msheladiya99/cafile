@@ -82,8 +82,8 @@ export const AddAttendance: React.FC = () => {
 
             <Paper sx={{ p: 4, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
                 <Grid container spacing={4} sx={{ maxWidth: 800 }}>
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '120px', flexShrink: 0 }}>
+                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
                             Employee <span style={{ color: 'red' }}>*</span>
                         </Typography>
                         <Select
@@ -105,8 +105,8 @@ export const AddAttendance: React.FC = () => {
                         </Select>
                     </Grid>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '120px', flexShrink: 0 }}>
+                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
                             Date <span style={{ color: 'red' }}>*</span>
                         </Typography>
                         <TextField
@@ -120,54 +120,56 @@ export const AddAttendance: React.FC = () => {
                         />
                     </Grid>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '120px', flexShrink: 0 }}>
+                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
                             In Time <span style={{ color: 'red' }}>*</span>
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, width: { xs: '100%', sm: 'auto' } }}>
                             <Checkbox
                                 name="inTimeChecked"
                                 checked={formData.inTimeChecked}
                                 onChange={handleInputChange}
-                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' } }}
+                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: { xs: 0, sm: 1 } }}
                             />
                             <TextField
                                 size="small"
+                                fullWidth
                                 type="time"
                                 name="inTime"
                                 value={formData.inTime}
                                 onChange={handleInputChange}
                                 disabled={!formData.inTimeChecked}
-                                sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
                             />
                         </Box>
                     </Grid>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '120px', flexShrink: 0 }}>
+                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
                             Out Time
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, width: { xs: '100%', sm: 'auto' } }}>
                             <Checkbox
                                 name="outTimeChecked"
                                 checked={formData.outTimeChecked}
                                 onChange={handleInputChange}
-                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' } }}
+                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: { xs: 0, sm: 1 } }}
                             />
                             <TextField
                                 size="small"
+                                fullWidth
                                 type="time"
                                 name="outTime"
                                 value={formData.outTime}
                                 onChange={handleInputChange}
                                 disabled={!formData.outTimeChecked}
-                                sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
                             />
                         </Box>
                     </Grid>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '120px', flexShrink: 0, pt: 1 }}>
+                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start', gap: { xs: 0.5, sm: 2 } }}>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0, pt: { xs: 0, sm: 1 } }}>
                             Description
                         </Typography>
                         <TextField

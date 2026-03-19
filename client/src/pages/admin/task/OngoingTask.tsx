@@ -5,7 +5,7 @@ import {
     Chip, Avatar, AvatarGroup, Tooltip, IconButton, TextField, Button,
     Dialog, DialogTitle, DialogContent, DialogActions, Divider, List,
     ListItem, ListItemText, Checkbox, FormControl,
-    LinearProgress, Alert, Badge, InputAdornment,
+    LinearProgress, Alert, Badge, InputAdornment, useMediaQuery, useTheme,
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -65,6 +65,8 @@ const PRIORITY_BADGE: Record<string, { label: string; color: string }> = {
 };
 
 export const OngoingTask: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user } = useAuth();
     const [groupName, setGroupName] = useState('');
     const [clientName, setClientName] = useState('');
@@ -500,10 +502,10 @@ export const OngoingTask: React.FC = () => {
         <Box sx={{ p: 0 }}>
             {/* ── Header ── */}
             <Paper elevation={0} sx={{
-                px: 3, py: 2,
+                px: { xs: 2.5, sm: 3 }, py: { xs: 2.5, sm: 2 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white', borderRadius: '12px 12px 0 0',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5,
+                display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2,
             }}>
                 <Box display="flex" alignItems="center" gap={1.5}>
                     <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -514,13 +516,13 @@ export const OngoingTask: React.FC = () => {
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>Manage, process and track all tasks</Typography>
                     </Box>
                 </Box>
-                <Box display="flex" gap={1} alignItems="center">
+                <Box display="flex" gap={1} alignItems="center" width={isMobile ? '100%' : 'auto'}>
                     <TextField
-                        size="small" placeholder="Search task or client..."
+                        size="small" placeholder="Search task..."
                         value={search} onChange={e => setSearch(e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }} /></InputAdornment> }}
                         sx={{
-                            width: 220, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
+                            width: { xs: '100%', sm: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
                             '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } },
                             '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
                         }} />
@@ -596,6 +598,90 @@ export const OngoingTask: React.FC = () => {
                     <IconButton size="small"><ExpandMoreIcon /></IconButton>
                 </Box>
 
+                {isMobile ? (
+                    <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {tasksLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                                <CircularProgress size={28} sx={{ color: '#667eea' }} />
+                            </Box>
+                        ) : filteredTasks.length > 0 ? (
+                            filteredTasks.map((task: Task) => {
+                                const cfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.PENDING;
+                                const pri = PRIORITY_BADGE[task.priority] || { label: task.priority, color: '#e2e8f0' };
+                                const pct = task.checklist?.length > 0
+                                    ? Math.round(task.checklist.filter(c => c.completed).length / task.checklist.length * 100)
+                                    : task.progressPercentage || 0;
+
+                                return (
+                                    <Paper key={task._id} sx={{ p: 2, borderRadius: 2, border: '1px solid #e0e0e0', boxShadow: 'none', position: 'relative', ...(task.isOverdue && task.status !== 'DONE' ? { bgcolor: '#fff5f5' } : {}) }}>
+                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                                            <Box>
+                                                <Typography variant="body2" fontWeight={700} color="#667eea">
+                                                    {(task.clientId as Client)?.name || 'Internal'}
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight={700} lineHeight={1.2} mt={0.5}>
+                                                    {task.title}
+                                                </Typography>
+                                                {(task as Task & { frequency?: string }).frequency && (
+                                                    <Typography variant="caption" color="text.secondary" display="block">
+                                                        {(task as Task & { frequency?: string }).frequency}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                            <Chip label={pri.label} size="small" sx={{ bgcolor: pri.color, fontWeight: 700, fontSize: '0.62rem', height: 20 }} />
+                                        </Box>
+
+                                        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1.5} mb={1}>
+                                            <Chip
+                                                label={cfg.label}
+                                                size="small"
+                                                sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, fontSize: '0.7rem', border: `1px solid ${cfg.color}30` }}
+                                            />
+                                            <Box textAlign="right">
+                                                <Typography variant="caption" sx={{ color: task.isOverdue && task.status !== 'DONE' ? 'error.main' : 'text.secondary', fontWeight: task.isOverdue ? 700 : 500 }}>
+                                                    🎯 {task.targetDate ? new Date(task.targetDate).toLocaleDateString('en-IN') : '—'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        
+                                        <Box mb={2}>
+                                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                                                <Typography variant="caption" color="text.secondary">Progress</Typography>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={600}>{pct}%</Typography>
+                                            </Box>
+                                            <LinearProgress variant="determinate" value={pct} sx={{ height: 6, borderRadius: 3, bgcolor: '#e2e8f0', '& .MuiLinearProgress-bar': { bgcolor: pct === 100 ? '#10b981' : '#667eea' } }} />
+                                        </Box>
+
+                                        <Box display="flex" justifyContent="space-between" alignItems="center" pt={1.5} borderTop="1px solid #f0f0f0">
+                                            <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.62rem' } }}>
+                                                {(task.assignedTo as User[] || []).map((u: User) => (
+                                                    <Avatar key={u._id} sx={{ bgcolor: '#667eea' }}>
+                                                        {(u.name || u.username || '?').charAt(0).toUpperCase()}
+                                                    </Avatar>
+                                                ))}
+                                            </AvatarGroup>
+                                            <Button size="small" variant="contained"
+                                                onClick={() => setProcessingTask(task)}
+                                                sx={{
+                                                    fontSize: '0.75rem', py: 0.5, px: 2, textTransform: 'none', fontWeight: 700,
+                                                    borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    boxShadow: '0 2px 8px rgba(102,126,234,0.35)',
+                                                }}>
+                                                Process Task
+                                            </Button>
+                                        </Box>
+                                    </Paper>
+                                );
+                            })
+                        ) : (
+                            <Box sx={{ textAlign: 'center', py: 6 }}>
+                                <CheckIcon sx={{ fontSize: 48, color: '#10b981', opacity: 0.5, mb: 1.5 }} />
+                                <Typography variant="h6" fontWeight={700} color="text.secondary">No Tasks Found</Typography>
+                                <Typography variant="body2" color="text.disabled" mt={0.5}>{activeFilters > 0 ? 'Try adjusting your filters.' : 'No tasks assigned.'}</Typography>
+                            </Box>
+                        )}
+                    </Box>
+                ) : (
                 <TableContainer sx={{ maxHeight: 520 }}>
                     <Table size="small" stickyHeader>
                         <TableHead>
@@ -706,6 +792,7 @@ export const OngoingTask: React.FC = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                )}
             </Paper>
 
             {renderModal()}

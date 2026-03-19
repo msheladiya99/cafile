@@ -22,6 +22,8 @@ import {
     IconButton,
     Chip,
     Tooltip,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -46,6 +48,8 @@ export const TaskApplicability: React.FC = () => {
     const [searchParams] = useSearchParams();
     const isSingleTask = searchParams.get('single') === 'true';
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     // ─── Recurrence Task State ───
     const [basedOn, setBasedOn] = useState<'Task' | 'Client'>('Task');
@@ -286,19 +290,22 @@ export const TaskApplicability: React.FC = () => {
         <Box sx={{ p: 0 }}>
             {/* Header */}
             <Paper elevation={0} sx={{
-                p: 2,
+                p: { xs: 2.5, sm: 2 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: { xs: 'flex-start', md: 'center' },
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                gap: { xs: 2, md: 0 }
             }}>
-                <Typography variant="h6" fontWeight="500">
-                    {isSingleTask ? 'Start Single Task' : 'Set Recurrence Task'}
+                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+                    {isSingleTask ? 'Start Single Task & Applicability' : 'Task Applicability Setup'}
                 </Typography>
                 {!isSingleTask && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, width: { xs: '100%', md: 'auto' } }}>
                         <Button
                             variant="contained"
                             size="small"
@@ -340,7 +347,7 @@ export const TaskApplicability: React.FC = () => {
             </Paper>
 
             {/* Selection Form */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: '0 0 8px 8px' }}>
+            <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '0 0 8px 8px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
                 {isSingleTask ? (
                     /* ══════════════════════════════════════════
                        START SINGLE TASK FORM
@@ -348,8 +355,8 @@ export const TaskApplicability: React.FC = () => {
                     <Grid container spacing={3}>
                         {/* Group Name */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Group Name</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Group Name</Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleGroupName}
                                     onChange={(e) => { setSingleGroupName(e.target.value); setSingleClientName(''); }}>
                                     <MenuItem value=""><em>Choose a Group...</em></MenuItem>
@@ -362,8 +369,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Client Name - filtered by group */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                     Client Name <span style={{ color: 'red' }}>*</span>
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleClientName}
@@ -378,8 +385,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Task */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                     Task <span style={{ color: 'red' }}>*</span>
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleTask}
@@ -394,8 +401,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Frequency - auto-filled from task master */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Frequency</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Frequency</Typography>
                                 <Select size="small" fullWidth displayEmpty
                                     value={effectiveFrequency}
                                     onChange={(e) => setSingleFrequency(e.target.value)}>
@@ -414,8 +421,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Year */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                     Year <span style={{ color: 'red' }}>*</span>
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleYear}
@@ -430,8 +437,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Department - auto-filled from task master */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Department</Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Department</Typography>
                                 <Select size="small" fullWidth displayEmpty
                                     value={effectiveDepartment}
                                     onChange={(e) => setSingleDepartment(e.target.value)}>
@@ -445,8 +452,8 @@ export const TaskApplicability: React.FC = () => {
 
                         {/* Target Date */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                     Target Date <span style={{ color: 'red' }}>*</span>
                                 </Typography>
                                 <TextField type="date" size="small" fullWidth
@@ -488,11 +495,11 @@ export const TaskApplicability: React.FC = () => {
                     /* ══════════════════════════════════════════
                        SET RECURRENCE TASK FORM
                     ══════════════════════════════════════════ */
-                    <Grid container spacing={3} alignItems="center">
+                    <Grid container spacing={3} alignItems={isMobile ? 'flex-start' : "center"}>
                         {/* Based On + Start Date (always visible) */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Box display="flex" alignItems="center">
-                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Based On <span style={{ color: 'red' }}>*</span></Typography>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary' }}>Based On <span style={{ color: 'red' }}>*</span></Typography>
                                 <RadioGroup row value={basedOn} onChange={(e) => {
                                     setBasedOn(e.target.value as 'Task' | 'Client');
                                     setSelectedTask(''); setSingleClientName(''); setSelectedClientIds([]); setSelectedTaskIds([]);

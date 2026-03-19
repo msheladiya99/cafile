@@ -4,7 +4,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableRow,
     IconButton, TableHead, Chip, Dialog, DialogTitle,
     DialogContent, DialogActions, TextField, Divider, Alert,
-    Avatar, Tooltip, LinearProgress, Badge, InputAdornment,
+    Avatar, Tooltip, LinearProgress, Badge, InputAdornment, useMediaQuery, useTheme
 } from '@mui/material';
 import {
     CheckCircle as ApproveIcon,
@@ -50,6 +50,8 @@ export const TaskApproval: React.FC = () => {
 
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -122,11 +124,13 @@ export const TaskApproval: React.FC = () => {
         <Box sx={{ p: 0 }}>
             {/* ── Header ── */}
             <Paper elevation={0} sx={{
-                p: 2.5,
+                p: { xs: 2.5, sm: 2 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 borderRadius: '12px 12px 0 0',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                display: 'flex', flexDirection: { xs: 'column', md: 'row' }, 
+                justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' },
+                gap: { xs: 2, md: 0 }
             }}>
                 <Box display="flex" alignItems="center" gap={1.5}>
                     <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -137,7 +141,7 @@ export const TaskApproval: React.FC = () => {
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>Review & approve completed tasks</Typography>
                     </Box>
                 </Box>
-                <Box display="flex" alignItems="center" gap={1.5}>
+                <Box display="flex" alignItems="center" gap={1.5} sx={{ width: { xs: '100%', md: 'auto' } }}>
                     <TextField
                         size="small"
                         placeholder="Search tasks or client..."
@@ -145,7 +149,7 @@ export const TaskApproval: React.FC = () => {
                         onChange={e => setSearch(e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }} /></InputAdornment> }}
                         sx={{
-                            width: 220, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
+                            flexGrow: { xs: 1, md: 0 }, width: { xs: '100%', md: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
                             '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } },
                             '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
                         }}
@@ -234,24 +238,13 @@ export const TaskApproval: React.FC = () => {
                 {tasksLoading && <LinearProgress sx={{ height: 3 }} />}
 
                 <TableContainer sx={{ maxHeight: 560 }}>
-                    <Table size="small" stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                {['#', 'Client', 'Task / Frequency', 'Assigned To', 'Due Date', 'Time', 'Checklist', 'Actions'].map(h => (
-                                    <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5 }}>{h}</TableCell>
-                                ))}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                    {isMobile ? (
+                        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: '#f8fafc' }}>
                             {tasksLoading ? (
-                                <TableRow>
-                                    <TableCell align="center" colSpan={8} sx={{ py: 6 }}>
-                                        <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-                                            <LinearProgress sx={{ width: 200, borderRadius: 2 }} />
-                                            <Typography variant="caption" color="text.secondary">Loading approval queue…</Typography>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
+                                <Box display="flex" flexDirection="column" alignItems="center" gap={1} py={4}>
+                                    <LinearProgress sx={{ width: 200, borderRadius: 2 }} />
+                                    <Typography variant="caption" color="text.secondary">Loading approval queue…</Typography>
+                                </Box>
                             ) : filteredTasks.length > 0 ? (
                                 filteredTasks.map((task, index) => {
                                     const completed = task.checklist?.filter(c => c.completed).length ?? 0;
@@ -262,113 +255,224 @@ export const TaskApproval: React.FC = () => {
                                     const freq = (task as Task & { frequency?: string }).frequency;
 
                                     return (
-                                        <TableRow key={task._id} hover sx={{
-                                            '&:hover': { bgcolor: '#fafafe' },
-                                            ...(isOverdue ? { bgcolor: '#fff5f5' } : {})
-                                        }}>
-                                            <TableCell>
-                                                <Typography variant="caption" fontWeight={700} color="text.secondary">{index + 1}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={600}>{(task.clientId as Client)?.name || 'Internal'}</Typography>
-                                            </TableCell>
-                                            <TableCell sx={{ maxWidth: 200 }}>
-                                                <Typography variant="body2" fontWeight={600} noWrap title={task.title}>{task.title}</Typography>
+                                        <Paper key={task._id} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: isOverdue ? '#fff5f5' : 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                                <Box>
+                                                    <Typography variant="caption" fontWeight="700" color="text.secondary" mr={1}>#{index + 1}</Typography>
+                                                    <Typography variant="subtitle1" component="span" fontWeight="700" color="primary.main">{task.title}</Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 600 }}>{(task.clientId as Client)?.name || 'Internal'}</Typography>
+                                                </Box>
                                                 {freq && (
                                                     <Chip label={freq} size="small" sx={{
-                                                        height: 18, fontSize: '0.62rem', fontWeight: 700, mt: 0.25,
+                                                        height: 20, fontSize: '0.65rem', fontWeight: 700,
                                                         bgcolor: `${FREQ_COLORS[freq] || '#94a3b8'}15`,
                                                         color: FREQ_COLORS[freq] || '#94a3b8',
                                                     }} />
                                                 )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box display="flex" gap={0.5} flexWrap="wrap">
-                                                    {(task.assignedTo as User[])?.slice(0, 3).map(u => (
-                                                        <Tooltip key={u._id} title={u.name || u.username}>
-                                                            <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#667eea' }}>
-                                                                {(u.name || u.username || '?').charAt(0).toUpperCase()}
-                                                            </Avatar>
-                                                        </Tooltip>
-                                                    ))}
+                                            </Box>
+                                            
+                                            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Assigned To</Typography>
+                                                    <Typography variant="body2" fontWeight="500" noWrap>{getAssignedNames(task)}</Typography>
                                                 </Box>
-                                                <Typography variant="caption" color="text.secondary" noWrap>{getAssignedNames(task)}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" sx={{ color: isOverdue ? 'error.main' : 'inherit', fontWeight: isOverdue ? 700 : 400 }}>
-                                                    {task.targetDate ? new Date(task.targetDate).toLocaleDateString('en-IN') : '—'}
-                                                </Typography>
-                                                {isOverdue && (
-                                                    <Box display="flex" alignItems="center" gap={0.25}>
-                                                        <WarningIcon sx={{ fontSize: 12, color: 'error.main' }} />
-                                                        <Typography variant="caption" color="error.main" fontWeight={700}>Overdue</Typography>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Due Date</Typography>
+                                                    <Box display="flex" alignItems="center" gap={0.5}>
+                                                        <Typography variant="body2" sx={{ color: isOverdue ? 'error.main' : 'inherit', fontWeight: isOverdue ? 700 : 500 }}>
+                                                            {task.targetDate ? new Date(task.targetDate).toLocaleDateString('en-IN') : '—'}
+                                                        </Typography>
+                                                        {isOverdue && <WarningIcon sx={{ fontSize: 12, color: 'error.main' }} />}
                                                     </Box>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box display="flex" alignItems="center" gap={0.5}>
-                                                    <TimerIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" fontWeight={600}>{timeH}h</Typography>
                                                 </Box>
-                                                <Typography variant="caption" color={timeH > (task.estimatedHours || 1) ? 'error.main' : 'text.secondary'}>
-                                                    Est: {task.estimatedHours || 1}h
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell sx={{ minWidth: 100 }}>
-                                                {total > 0 ? (
-                                                    <Box>
-                                                        <LinearProgress variant="determinate" value={pct} sx={{
-                                                            height: 5, borderRadius: 3, bgcolor: '#e2e8f0',
-                                                            '& .MuiLinearProgress-bar': { bgcolor: pct === 100 ? '#10b981' : '#667eea' }
-                                                        }} />
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Time Spent</Typography>
+                                                    <Typography variant="body2" color={timeH > (task.estimatedHours || 1) ? 'error.main' : 'text.secondary'} fontWeight="600">
+                                                        {timeH}h <span style={{fontWeight: 400}}>Est: {task.estimatedHours || 1}h</span>
+                                                    </Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">Checklist</Typography>
+                                                    {total > 0 ? (
                                                         <Typography variant="caption" color={pct === 100 ? 'success.main' : 'text.secondary'} fontWeight={600}>
                                                             {completed}/{total} ({pct}%)
                                                         </Typography>
-                                                    </Box>
-                                                ) : (
-                                                    <Chip label="N/A" size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box display="flex" gap={0.5} alignItems="center">
-                                                    <Tooltip title="View task details">
-                                                        <IconButton size="small" onClick={() => setDetailTask(task)}
-                                                            sx={{ color: '#667eea', bgcolor: '#f0f0ff', '&:hover': { bgcolor: '#667eea', color: 'white' } }}>
-                                                            <InfoIcon sx={{ fontSize: 16 }} />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Button size="small" variant="contained" color="success"
-                                                        startIcon={<ApproveIcon sx={{ fontSize: 14 }} />}
-                                                        onClick={() => handleApprove(task._id)}
-                                                        disabled={updateStatusMutation.isPending}
-                                                        sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
-                                                        Approve
-                                                    </Button>
-                                                    <Button size="small" variant="contained" color="error"
-                                                        startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
-                                                        onClick={() => setRejectTask(task)}
-                                                        disabled={updateStatusMutation.isPending}
-                                                        sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
-                                                        Reject
-                                                    </Button>
+                                                    ) : (
+                                                        <Typography variant="caption" color="text.secondary">N/A</Typography>
+                                                    )}
                                                 </Box>
-                                            </TableCell>
-                                        </TableRow>
+                                            </Box>
+
+                                            <Divider sx={{ my: 1 }} />
+                                            
+                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                                <Button size="small" variant="outlined" startIcon={<InfoIcon />} onClick={() => setDetailTask(task)}
+                                                    sx={{ textTransform: 'none', fontWeight: 600 }}>
+                                                    Info
+                                                </Button>
+                                                <Button size="small" variant="contained" color="error"
+                                                    startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
+                                                    onClick={() => setRejectTask(task)}
+                                                    disabled={updateStatusMutation.isPending}
+                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                    Reject
+                                                </Button>
+                                                <Button size="small" variant="contained" color="success"
+                                                    startIcon={<ApproveIcon sx={{ fontSize: 14 }} />}
+                                                    onClick={() => handleApprove(task._id)}
+                                                    disabled={updateStatusMutation.isPending}
+                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                    Approve
+                                                </Button>
+                                            </Box>
+                                        </Paper>
                                     );
                                 })
                             ) : (
-                                <TableRow>
-                                    <TableCell align="center" colSpan={8} sx={{ py: 10 }}>
-                                        <DoneIcon sx={{ fontSize: 56, color: '#10b981', opacity: 0.6, display: 'block', mx: 'auto', mb: 1.5 }} />
-                                        <Typography variant="h6" fontWeight={700} color="text.secondary">All Caught Up!</Typography>
-                                        <Typography variant="body2" color="text.disabled" mt={0.5}>
-                                            No tasks are pending approval right now.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
+                                <Box p={4} textAlign="center">
+                                    <DoneIcon sx={{ fontSize: 40, color: '#10b981', opacity: 0.6, display: 'block', mx: 'auto', mb: 1 }} />
+                                    <Typography variant="subtitle1" fontWeight={700} color="text.secondary">All Caught Up!</Typography>
+                                    <Typography variant="body2" color="text.disabled">No tasks are pending approval right now.</Typography>
+                                </Box>
                             )}
-                        </TableBody>
-                    </Table>
+                        </Box>
+                    ) : (
+                        <Table size="small" stickyHeader>
+                            <TableHead>
+                                <TableRow>
+                                    {['#', 'Client', 'Task / Frequency', 'Assigned To', 'Due Date', 'Time', 'Checklist', 'Actions'].map(h => (
+                                        <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5 }}>{h}</TableCell>
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {tasksLoading ? (
+                                    <TableRow>
+                                        <TableCell align="center" colSpan={8} sx={{ py: 6 }}>
+                                            <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                                                <LinearProgress sx={{ width: 200, borderRadius: 2 }} />
+                                                <Typography variant="caption" color="text.secondary">Loading approval queue…</Typography>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredTasks.length > 0 ? (
+                                    filteredTasks.map((task, index) => {
+                                        const completed = task.checklist?.filter(c => c.completed).length ?? 0;
+                                        const total = task.checklist?.length ?? 0;
+                                        const pct = total > 0 ? Math.round((completed / total) * 100) : 100;
+                                        const timeH = Math.round((task.actualTimeSpent || 0) / 60 * 10) / 10;
+                                        const isOverdue = task.isOverdue;
+                                        const freq = (task as Task & { frequency?: string }).frequency;
+
+                                        return (
+                                            <TableRow key={task._id} hover sx={{
+                                                '&:hover': { bgcolor: '#fafafe' },
+                                                ...(isOverdue ? { bgcolor: '#fff5f5' } : {})
+                                            }}>
+                                                <TableCell>
+                                                    <Typography variant="caption" fontWeight={700} color="text.secondary">{index + 1}</Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" fontWeight={600}>{(task.clientId as Client)?.name || 'Internal'}</Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ maxWidth: 200 }}>
+                                                    <Typography variant="body2" fontWeight={600} noWrap title={task.title}>{task.title}</Typography>
+                                                    {freq && (
+                                                        <Chip label={freq} size="small" sx={{
+                                                            height: 18, fontSize: '0.62rem', fontWeight: 700, mt: 0.25,
+                                                            bgcolor: `${FREQ_COLORS[freq] || '#94a3b8'}15`,
+                                                            color: FREQ_COLORS[freq] || '#94a3b8',
+                                                        }} />
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box display="flex" gap={0.5} flexWrap="wrap">
+                                                        {(task.assignedTo as User[])?.slice(0, 3).map(u => (
+                                                            <Tooltip key={u._id} title={u.name || u.username}>
+                                                                <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#667eea' }}>
+                                                                    {(u.name || u.username || '?').charAt(0).toUpperCase()}
+                                                                </Avatar>
+                                                            </Tooltip>
+                                                        ))}
+                                                    </Box>
+                                                    <Typography variant="caption" color="text.secondary" noWrap>{getAssignedNames(task)}</Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ color: isOverdue ? 'error.main' : 'inherit', fontWeight: isOverdue ? 700 : 400 }}>
+                                                        {task.targetDate ? new Date(task.targetDate).toLocaleDateString('en-IN') : '—'}
+                                                    </Typography>
+                                                    {isOverdue && (
+                                                        <Box display="flex" alignItems="center" gap={0.25}>
+                                                            <WarningIcon sx={{ fontSize: 12, color: 'error.main' }} />
+                                                            <Typography variant="caption" color="error.main" fontWeight={700}>Overdue</Typography>
+                                                        </Box>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box display="flex" alignItems="center" gap={0.5}>
+                                                        <TimerIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
+                                                        <Typography variant="caption" fontWeight={600}>{timeH}h</Typography>
+                                                    </Box>
+                                                    <Typography variant="caption" color={timeH > (task.estimatedHours || 1) ? 'error.main' : 'text.secondary'}>
+                                                        Est: {task.estimatedHours || 1}h
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ minWidth: 100 }}>
+                                                    {total > 0 ? (
+                                                        <Box>
+                                                            <LinearProgress variant="determinate" value={pct} sx={{
+                                                                height: 5, borderRadius: 3, bgcolor: '#e2e8f0',
+                                                                '& .MuiLinearProgress-bar': { bgcolor: pct === 100 ? '#10b981' : '#667eea' }
+                                                            }} />
+                                                            <Typography variant="caption" color={pct === 100 ? 'success.main' : 'text.secondary'} fontWeight={600}>
+                                                                {completed}/{total} ({pct}%)
+                                                            </Typography>
+                                                        </Box>
+                                                    ) : (
+                                                        <Chip label="N/A" size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box display="flex" gap={0.5} alignItems="center">
+                                                        <Tooltip title="View task details">
+                                                            <IconButton size="small" onClick={() => setDetailTask(task)}
+                                                                sx={{ color: '#667eea', bgcolor: '#f0f0ff', '&:hover': { bgcolor: '#667eea', color: 'white' } }}>
+                                                                <InfoIcon sx={{ fontSize: 16 }} />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Button size="small" variant="contained" color="success"
+                                                            startIcon={<ApproveIcon sx={{ fontSize: 14 }} />}
+                                                            onClick={() => handleApprove(task._id)}
+                                                            disabled={updateStatusMutation.isPending}
+                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                            Approve
+                                                        </Button>
+                                                        <Button size="small" variant="contained" color="error"
+                                                            startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
+                                                            onClick={() => setRejectTask(task)}
+                                                            disabled={updateStatusMutation.isPending}
+                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                            Reject
+                                                        </Button>
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                ) : (
+                                    <TableRow>
+                                        <TableCell align="center" colSpan={8} sx={{ py: 10 }}>
+                                            <DoneIcon sx={{ fontSize: 56, color: '#10b981', opacity: 0.6, display: 'block', mx: 'auto', mb: 1.5 }} />
+                                            <Typography variant="h6" fontWeight={700} color="text.secondary">All Caught Up!</Typography>
+                                            <Typography variant="body2" color="text.disabled" mt={0.5}>
+                                                No tasks are pending approval right now.
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    )}
                 </TableContainer>
             </Paper>
 
