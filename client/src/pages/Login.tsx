@@ -24,6 +24,8 @@ import { authService } from '../services/authService';
 import { adminService } from '../services/adminService';
 import { reminderService } from '../services/reminderService';
 import { clientService } from '../services/clientService';
+import settingsService from '../services/settingsService';
+import firmService from '../services/firmService';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { Helmet } from 'react-helmet-async';
@@ -39,6 +41,7 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('Signing in...');
     const [showPassword, setShowPassword] = useState(false);
     const [firm, setFirm] = useState<{ firmName: string; logo?: string; status: string } | null>(null);
     const [checkingFirm, setCheckingFirm] = useState(!!subdomain);
@@ -85,7 +88,8 @@ export const Login: React.FC = () => {
 
             const prefetchPromises: Promise<unknown>[] = [];
 
-            if (data.user.role === 'SUPER_ADMIN') {
+             if (data.user.role === 'SUPER_ADMIN') {
+                setLoadingMessage('Fetching global analytics...');
                 prefetchPromises.push(queryClient.prefetchQuery({
                     queryKey: ['super-admin-dashboard'],
                     queryFn: async () => {
@@ -94,9 +98,14 @@ export const Login: React.FC = () => {
                     }
                 }));
             } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
+                setLoadingMessage('Loading firm workspace...');
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['firm'], queryFn: firmService.getFirm }));
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['settings'], queryFn: settingsService.getSettings }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['clients'], queryFn: adminService.getClients }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['upcoming-reminders'], queryFn: reminderService.getUpcomingReminders }));
             } else if (data.user.role === 'CLIENT') {
+                setLoadingMessage('Accessing client portal...');
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['firm'], queryFn: firmService.getFirm }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-stats'], queryFn: clientService.getStats }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-reminders'], queryFn: clientService.getReminders }));
             }
@@ -319,7 +328,7 @@ export const Login: React.FC = () => {
                                     variant="contained"
                                     disabled={loading}
                                     disableElevation
-                                    sx={{
+                                     sx={{
                                         py: 2,
                                         mt: 2,
                                         borderRadius: 4,
@@ -332,10 +341,17 @@ export const Login: React.FC = () => {
                                             background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
                                             transform: 'scale(1.02)'
                                         },
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        flexDirection: 'column',
+                                        gap: 1
                                     }}
                                 >
-                                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                                    {loading ? (
+                                        <Stack direction="row" spacing={2} alignItems="center">
+                                            <CircularProgress size={20} color="inherit" />
+                                            <Typography variant="body2" fontWeight={700}>{loadingMessage}</Typography>
+                                        </Stack>
+                                    ) : 'Sign In'}
                                 </Button>
 
                                 <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.75rem', mt: 2, px: 2, display: 'block' }}>

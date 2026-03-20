@@ -49,7 +49,28 @@ export const LandingPage: React.FC = () => {
         setMobileMenuOpen(open);
     };
 
-    const navItems = ['Solutions', 'Features', 'Testimonials', 'Pricing'];
+    const navItems = [
+        { name: 'Solutions', id: 'solutions' },
+        { name: 'Features', id: 'features' },
+        { name: 'Testimonials', id: 'testimonials' },
+        { name: 'Pricing', id: 'pricing' }
+    ];
+
+    const scrollToSection = (id: string) => {
+        const element = document.getElementById(id);
+        if (element) {
+            const offset = 80;
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = element.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     const solutions = [
         {
@@ -131,13 +152,13 @@ export const LandingPage: React.FC = () => {
                         {!isMobile && (
                             <Stack direction="row" spacing={4} alignItems="center">
                                 {navItems.map((item) => (
-                                    <Typography key={item} variant="body2" fontWeight={700} sx={{
+                                    <Typography key={item.name} variant="body2" fontWeight={700} onClick={() => scrollToSection(item.id)} sx={{
                                         cursor: 'pointer',
                                         color: '#4b5563',
                                         '&:hover': { color: '#6366f1' },
                                         transition: 'color 0.2s'
                                     }}>
-                                        {item}
+                                        {item.name}
                                     </Typography>
                                 ))}
                                 <Button
@@ -187,10 +208,10 @@ export const LandingPage: React.FC = () => {
                         </Typography>
                     </Box>
                     <List>
-                        {navItems.map((text) => (
-                            <ListItem key={text} disablePadding>
-                                <ListItemButton onClick={toggleMobileMenu(false)} sx={{ borderRadius: '12px', mb: 1 }}>
-                                    <ListItemText primary={text} primaryTypographyProps={{ fontWeight: 700, color: '#4b5563' }} />
+                        {navItems.map((item) => (
+                            <ListItem key={item.name} disablePadding>
+                                <ListItemButton onClick={() => { scrollToSection(item.id); setMobileMenuOpen(false); }} sx={{ borderRadius: '12px', mb: 1 }}>
+                                    <ListItemText primary={item.name} primaryTypographyProps={{ fontWeight: 700, color: '#4b5563' }} />
                                 </ListItemButton>
                             </ListItem>
                         ))}
@@ -367,7 +388,7 @@ export const LandingPage: React.FC = () => {
                     </Box>
 
                     {/* Solutions Grid */}
-                    <Box sx={{ py: { xs: 10, md: 15 } }}>
+                    <Box id="solutions" sx={{ py: { xs: 10, md: 15 } }}>
                         <Box sx={{ textAlign: 'center', mb: 8 }}>
                             <Typography variant="h3" sx={{
                                 fontWeight: 1000,
@@ -439,7 +460,7 @@ export const LandingPage: React.FC = () => {
                     </Box>
 
                     {/* Detailed Feature 1 */}
-                    <Grid container spacing={{ xs: 6, md: 8 }} alignItems="center" sx={{ py: 10 }}>
+                    <Grid id="features" container spacing={{ xs: 6, md: 8 }} alignItems="center" sx={{ py: 10 }}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2 }}>
                                 DATA FOCUS
@@ -516,7 +537,7 @@ export const LandingPage: React.FC = () => {
                     </Grid>
 
                     {/* Testimonials */}
-                    <Box sx={{ py: 15, textAlign: 'center' }}>
+                    <Box id="testimonials" sx={{ py: 15, textAlign: 'center' }}>
                         <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2, fontSize: '0.75rem' }}>
                             CLIENT STORIES
                         </Typography>
@@ -571,9 +592,84 @@ export const LandingPage: React.FC = () => {
                         </Grid>
                     </Box>
 
-                    {/* Pricing Teaser / Stats */}
+                    {/* Pricing Section */}
+                    <Box id="pricing" sx={{ py: 15 }}>
+                        <Box sx={{ textAlign: 'center', mb: 8 }}>
+                            <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2 }}>
+                                TRANSPARENT PRICING
+                            </Typography>
+                            <Typography variant="h3" sx={{ fontWeight: 1000, color: '#0f172a', mb: 2, letterSpacing: -1, fontSize: { xs: '1.75rem', md: '3rem' } }}>
+                                Simple plans for every firm
+                            </Typography>
+                        </Box>
+                        <Grid container spacing={4} justifyContent="center">
+                            {[
+                                {
+                                    name: 'Professional',
+                                    price: '₹14,999',
+                                    period: 'per year',
+                                    features: ['Multi-Firm Support', '10 Staff Members', 'Unlimited Clients', '50GB Storage', 'Standard Support'],
+                                    recommended: false
+                                },
+                                {
+                                    name: 'Premium',
+                                    price: '₹24,999',
+                                    period: 'per year',
+                                    features: ['Everything in Professional', 'Unlimited Staff Members', 'Custom Subdomain', '250GB Storage', 'Priority 24/7 Support'],
+                                    recommended: true
+                                }
+                            ].map((plan, i) => (
+                                <Grid size={{ xs: 12, md: 5, lg: 4 }} key={i}>
+                                    <Card sx={{
+                                        p: 5,
+                                        borderRadius: '32px',
+                                        height: '100%',
+                                        border: plan.recommended ? '2px solid #6366f1' : '1px solid #e2e8f0',
+                                        boxShadow: plan.recommended ? '0 20px 40px rgba(99, 102, 241, 0.1)' : 'none',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        {plan.recommended && (
+                                            <Box sx={{ position: 'absolute', top: 24, right: 24, bgcolor: '#6366f1', color: 'white', px: 2, py: 0.5, borderRadius: 10, fontSize: '0.75rem', fontWeight: 800 }}>
+                                                MOST POPULAR
+                                            </Box>
+                                        )}
+                                        <Typography variant="h5" sx={{ fontWeight: 1000, color: '#0f172a', mb: 1 }}>{plan.name}</Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 4 }}>
+                                            <Typography variant="h3" sx={{ fontWeight: 1000, color: '#1e293b' }}>{plan.price}</Typography>
+                                            <Typography variant="body2" sx={{ ml: 1, color: '#64748b' }}>/{plan.period}</Typography>
+                                        </Box>
+                                        <Stack spacing={2} sx={{ mb: 5, flexGrow: 1 }}>
+                                            {plan.features.map((feat, j) => (
+                                                <Stack direction="row" spacing={1.5} alignItems="center" key={j}>
+                                                    <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20 }} />
+                                                    <Typography variant="body2" sx={{ color: '#475569', fontWeight: 500 }}>{feat}</Typography>
+                                                </Stack>
+                                            ))}
+                                        </Stack>
+                                        <Button
+                                            variant={plan.recommended ? 'contained' : 'outlined'}
+                                            fullWidth
+                                            sx={{
+                                                borderRadius: '14px',
+                                                py: 1.5,
+                                                fontWeight: 800,
+                                                textTransform: 'none',
+                                                ...(plan.recommended && { background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' })
+                                            }}
+                                        >
+                                            Get Started
+                                        </Button>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+
+                    {/* Stats Section moved below pricing */}
                     <Paper elevation={0} sx={{
-                        py: 10,
+                        py: 8,
                         px: 4,
                         borderRadius: '40px',
                         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
@@ -594,16 +690,8 @@ export const LandingPage: React.FC = () => {
                             ].map((stat, i) => (
                                 <Grid size={{ xs: 6, md: 3 }} key={i}>
                                     <Box sx={{ mb: 2, color: '#6366f1' }}>{stat.icon}</Box>
-                                    <Typography variant="h3" sx={{
-                                        fontWeight: 1000,
-                                        mb: 1,
-                                        fontSize: { xs: '1.5rem', md: '3rem' }
-                                    }}>{stat.val}</Typography>
-                                    <Typography variant="subtitle1" sx={{
-                                        opacity: 0.6,
-                                        fontWeight: 700,
-                                        fontSize: { xs: '0.8rem', md: '1rem' }
-                                    }}>{stat.label}</Typography>
+                                    <Typography variant="h4" sx={{ fontWeight: 1000, mb: 1 }}>{stat.val}</Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.6, fontWeight: 700 }}>{stat.label}</Typography>
                                 </Grid>
                             ))}
                         </Grid>

@@ -11,7 +11,7 @@
     <meta name="description" content="My CA File is the leading CA office management software in India. Manage clients, documents, employee tasks, and GST/ITR compliance in one secure platform." />
     <meta name="keywords" content="CA office management software, chartered accountant software, CA client management system, CA practice management India, GST ITR tracking software" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://www.mycafile.in" />
+    <!-- This will be handled dynamically by react-helmet-async -->
 
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website" />
@@ -37,6 +37,8 @@
     <!-- Performance Optimizations -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://ca-office-backend.onrender.com" crossorigin />
+    <link rel="dns-prefetch" href="https://ca-office-backend.onrender.com" />
     
     <!-- Structured Data for SEO (JSON-LD) -->
     <script type="application/ld+json">
@@ -45,14 +47,21 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "My CA File",
+        "alternateName": "MyCAFile",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "url": "https://www.mycafile.in",
-        "description": "Comprehensive CA Office Management Software for Indian Chartered Accountants.",
+        "description": "Premium CA Office Management Software built for Indian Chartered Accountants. Manage ITR, GST, Audits, and document workflows seamlessly.",
         "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "INR"
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR",
+          "availability": "https://schema.org/InStock"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.9",
+          "reviewCount": "120"
         }
       },
       {
@@ -61,20 +70,59 @@
         "name": "My CA File",
         "url": "https://www.mycafile.in",
         "logo": "https://www.mycafile.in/favicon.png",
+        "description": "Leading provider of practice management solutions for Chartered Accountants in India.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Surat",
+          "addressRegion": "Gujarat",
+          "addressCountry": "IN"
+        },
         "sameAs": [
-          "https://www.linkedin.com/company/mycafile"
+          "https://www.linkedin.com/company/mycafile",
+          "https://twitter.com/mycafile"
         ]
       },
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "My CA File",
+        "alternateName": "MyCAFile-Portal",
         "url": "https://www.mycafile.in",
         "potentialAction": {
           "@type": "SearchAction",
           "target": "https://www.mycafile.in/search?q={search_term_string}",
           "query-input": "required name=search_term_string"
         }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": [
+          {
+            "@type": "SiteNavigationElement",
+            "position": 1,
+            "name": "Solutions",
+            "url": "https://www.mycafile.in/#solutions"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "position": 2,
+            "name": "Features",
+            "url": "https://www.mycafile.in/#features"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "position": 3,
+            "name": "Pricing",
+            "url": "https://www.mycafile.in/#pricing"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "position": 4,
+            "name": "Login",
+            "url": "https://www.mycafile.in/login"
+          }
+        ]
       }
     ]
     </script>

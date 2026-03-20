@@ -9,9 +9,9 @@ import { isSuperAdminDomain } from './utils/subdomain';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-// Core layouts and pages - eager load for critical performance
-import { AdminLayout } from './layouts/AdminLayout';
-import { AdminDashboard } from './pages/admin/Dashboard';
+// Core layouts and pages - now lazy loaded to reduce initial bundle size
+const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
 
 // Lazy load other layouts and secondary pages
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
