@@ -13,17 +13,11 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
-          'mui-vendor': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'utils-vendor': ['axios', 'date-fns', 'framer-motion', 'lucide-react'],
-          'pdf-vendor': ['pdfjs-dist', 'react-pdf', 'jspdf', 'jspdf-autotable'],
-          'charts-vendor': ['recharts'],
-        },
+        // Letting Vite handle chunks automatically is often best for tree-shaking
       },
     },
     chunkSizeWarningLimit: 600,
-    sourcemap: true,
+    sourcemap: false,
   },
   esbuild: {
     drop: ['console', 'debugger'],

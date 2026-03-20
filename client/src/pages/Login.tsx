@@ -14,11 +14,9 @@ import {
     Stack
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import {
-    Visibility,
-    VisibilityOff,
-    ShieldOutlined,
-} from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import ShieldOutlined from '@mui/icons-material/ShieldOutlined';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { adminService } from '../services/adminService';

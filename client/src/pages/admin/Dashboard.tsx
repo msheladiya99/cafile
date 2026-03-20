@@ -302,9 +302,9 @@ export const AdminDashboard: React.FC = () => {
                                         let hoverBg = 'rgba(0,0,0,0.04)';
 
                                         if (isToday) {
-                                            bgColor = '#E65100'; // Darker orange for better contrast with white text
-                                            textColor = 'white';
-                                            hoverBg = '#BF360C';
+                                            bgColor = '#334155'; // Dark Navy for maximum contrast with white text
+                                            textColor = '#ffffff';
+                                            hoverBg = '#1e293b';
                                         } else if (isGSTDeadline) {
                                             bgColor = `${deadlineInfo.color}15`;
                                             hoverBg = `${deadlineInfo.color}30`;

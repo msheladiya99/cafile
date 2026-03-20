@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -76,9 +76,28 @@ const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ d
 
 
 const LoadingScreen = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-    <CircularProgress />
-  </Box>
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: '100vh',
+    background: '#f8fafc'
+  }}>
+    <div className="spinner"></div>
+    <style>{`
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(102, 126, 234, 0.1);
+        border-radius: 50%;
+        border-top-color: #667eea;
+        animation: spin 1s ease-in-out infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
 );
 
 const queryClient = new QueryClient({
