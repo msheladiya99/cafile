@@ -111,7 +111,7 @@ const SuperAdminLogin: React.FC = () => {
                     width: '600px',
                     height: '600px',
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(255, 75, 43, 0.05) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 70%)',
                     zIndex: 1,
                     top: '50%',
                     left: '50%',
@@ -153,7 +153,7 @@ const SuperAdminLogin: React.FC = () => {
                     >
                         <Box mb={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                <Box sx={{ bgcolor: '#FF4B2B', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
+                                <Box sx={{ bgcolor: '#4f46e5', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
                                     <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
                                 </Box>
                                 <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
@@ -190,8 +190,8 @@ const SuperAdminLogin: React.FC = () => {
                                             height: 56,
                                             bgcolor: '#f9fafb',
                                             '& fieldset': { borderColor: '#e5e7eb' },
-                                            '&:hover fieldset': { borderColor: '#FF4B2B' },
-                                            '&.Mui-focused fieldset': { borderColor: '#FF4B2B' },
+                                            '&:hover fieldset': { borderColor: '#4f46e5' },
+                                            '&.Mui-focused fieldset': { borderColor: '#4f46e5' },
                                             transition: 'all 0.2s'
                                         }
                                     }}
@@ -217,8 +217,8 @@ const SuperAdminLogin: React.FC = () => {
                                             height: 56,
                                             bgcolor: '#f9fafb',
                                             '& fieldset': { borderColor: '#e5e7eb' },
-                                            '&:hover fieldset': { borderColor: '#FF4B2B' },
-                                            '&.Mui-focused fieldset': { borderColor: '#FF4B2B' },
+                                            '&:hover fieldset': { borderColor: '#4f46e5' },
+                                            '&.Mui-focused fieldset': { borderColor: '#4f46e5' },
                                             transition: 'all 0.2s'
                                         }
                                     }}
@@ -237,10 +237,10 @@ const SuperAdminLogin: React.FC = () => {
                                         fontSize: '1rem',
                                         fontWeight: 800,
                                         textTransform: 'none',
-                                        background: 'linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%)',
+                                        background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                         color: 'white',
                                         '&:hover': {
-                                            background: 'linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)',
+                                            background: 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)',
                                             transform: 'scale(1.02)'
                                         },
                                         transition: 'all 0.2s'
@@ -255,10 +255,10 @@ const SuperAdminLogin: React.FC = () => {
 
                                 <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', gap: 1 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 1 }}>
-                                        <Typography variant="caption" sx={{ color: '#FF4B2B', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                        <Typography variant="caption" sx={{ color: '#4f46e5', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                                             Privacy Policy
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: '#FF4B2B', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
+                                        <Typography variant="caption" sx={{ color: '#4f46e5', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
                                             Terms of Use
                                         </Typography>
                                     </Box>

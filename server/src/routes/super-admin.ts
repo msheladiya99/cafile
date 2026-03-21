@@ -9,6 +9,7 @@ import Invoice from '../models/Invoice';
 import { File } from '../models/File';
 import { SuperAdmin } from '../models/SuperAdmin';
 import { ActivityLog } from '../models/ActivityLog';
+import { Plan } from '../models/Plan';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
 import mongoose from 'mongoose';
@@ -479,6 +480,41 @@ router.get('/security-logs', async (req, res: Response) => {
         res.json(formattedLogs);
     } catch (error) {
         console.error('Get security logs error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Plans
+router.get('/plans', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
+    try {
+        let plans = await Plan.find().sort({ createdAt: 1 });
+        if (plans.length === 0) {
+            const defaultPlans = [
+                { name: 'trial', displayName: 'Trial', price: 'Free', staffLimit: 3, clientLimit: 10, storageGB: 1, tasks: 'Unlimited', isActive: true },
+                { name: 'basic', displayName: 'Basic', price: '₹999/mo', staffLimit: 5, clientLimit: 100, storageGB: 10, tasks: 'Unlimited', isActive: true },
+                { name: 'professional', displayName: 'Professional', price: '₹2,999/mo', staffLimit: 20, clientLimit: 500, storageGB: 100, tasks: 'Unlimited', isActive: true },
+                { name: 'enterprise', displayName: 'Enterprise', price: 'Custom', staffLimit: 99999, clientLimit: 99999, storageGB: 1024, tasks: 'Unlimited', isActive: true }
+            ];
+            await Plan.insertMany(defaultPlans);
+            plans = await Plan.find().sort({ createdAt: 1 });
+        }
+        res.json(plans);
+    } catch (error) {
+        console.error('Get plans error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.put('/plans/:id', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
+    try {
+        const { displayName, price, staffLimit, clientLimit, storageGB, tasks } = req.body;
+        const plan = await Plan.findByIdAndUpdate(req.params.id, {
+            displayName, price, staffLimit, clientLimit, storageGB, tasks
+        }, { new: true });
+        if (!plan) return res.status(404).json({ message: 'Plan not found' });
+        res.json(plan);
+    } catch (error) {
+        console.error('Update plan error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

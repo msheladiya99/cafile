@@ -118,6 +118,20 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             }
         }
 
+        // Enforce client limit
+        const firm = await Firm.findById(firmId);
+        const { Plan } = await import('../models/Plan');
+        const plan = await Plan.findOne({ name: firm?.plan });
+        const clientLimit = plan ? plan.clientLimit : 10;
+        
+        if (clientLimit > 0 && clientLimit < 99999) {
+            const currentClientsCount = await Client.countDocuments({ firmId });
+            if (currentClientsCount >= clientLimit) {
+                res.status(400).json({ message: `Client limit reached for your ${plan?.displayName || firm?.plan} plan. Please upgrade to add more clients.` });
+                return;
+            }
+        }
+
         // Create client
         const client = new Client({
             firmId,
@@ -231,8 +245,21 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
             errors: [] as string[]
         };
 
+        const firm = await Firm.findById(firmId);
+        const { Plan } = await import('../models/Plan');
+        const plan = await Plan.findOne({ name: firm?.plan });
+        const clientLimit = plan ? plan.clientLimit : 10;
+        let currentClientsCount = await Client.countDocuments({ firmId });
+
         for (let i = 0; i < clients.length; i++) {
             const clientData = clients[i];
+
+            if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
+                results.failed++;
+                results.errors.push(`Row ${i + 1}: Client limit reached for your ${plan?.displayName || firm?.plan} plan`);
+                continue;
+            }
+
             try {
                 if (!clientData.name || !clientData.email || !clientData.phone) {
                     throw new Error(`Row ${i + 1}: Name, email, and phone are required for ${clientData.name || 'Unknown'}`);
@@ -330,6 +357,7 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                     password
                 }).catch(err => console.error('Failed to send welcome email in bulk:', err));
 
+                currentClientsCount++;
                 results.successful++;
             } catch (err: any) {
                 results.failed++;

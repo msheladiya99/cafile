@@ -140,14 +140,31 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Enforce maxAdmins limit if creating an ADMIN
-        if (actualRole === 'ADMIN') {
-            const firm = await Firm.findById(req.firmId);
-            if (!firm) {
-                res.status(404).json({ message: 'Firm not found' });
+        const firm = await Firm.findById(req.firmId);
+        if (!firm) {
+            res.status(404).json({ message: 'Firm not found' });
+            return;
+        }
+
+        const { Plan } = await import('../models/Plan');
+        const plan = await Plan.findOne({ name: firm.plan });
+        const staffLimit = plan ? plan.staffLimit : 5;
+
+        // General staff limit
+        if (staffLimit > 0 && staffLimit < 99999) {
+            const currentStaffCount = await User.countDocuments({
+                firmId: req.firmId,
+                role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
+            });
+
+            if (currentStaffCount >= staffLimit) {
+                res.status(400).json({ message: `Staff limit reached for your ${plan?.displayName || firm.plan} plan.` });
                 return;
             }
+        }
 
+        // Enforce maxAdmins limit if creating an ADMIN
+        if (actualRole === 'ADMIN') {
             const currentAdminsCount = await User.countDocuments({
                 firmId: req.firmId,
                 role: 'ADMIN'

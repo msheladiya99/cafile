@@ -715,96 +715,100 @@ export const LandingPage: React.FC = () => {
                                         recommended: false,
                                         badge: 'Best Value'
                                     }
-                                ].map((plan, i) => (
-                                    <Grid size={{ xs: 12, md: 4 }} key={i}>
-                                        <Card sx={{
-                                            p: { xs: 4, md: 5 },
-                                            borderRadius: '32px',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            transition: 'all 0.4s ease',
-                                            border: plan.recommended ? '2px solid #FF602E' : '1px solid #e2e8f0',
-                                            position: 'relative',
-                                            transform: plan.recommended ? { md: 'scale(1.03)' } : 'none',
-                                            boxShadow: plan.recommended ? '0 30px 60px rgba(0,0,0,0.08)' : '0 10px 30px rgba(0,0,0,0.02)',
-                                            '&:hover': {
-                                                transform: plan.recommended ? { md: 'scale(1.05) translateY(-5px)' } : 'translateY(-5px)',
-                                                boxShadow: '0 40px 80px rgba(0,0,0,0.1)'
-                                            }
-                                        }}>
-                                            {plan.badge && (
+                                ].map((plan, i) => {
+                                    const isMiddle = i === 1;
+                                    const bgConfig = isMiddle 
+                                        ? 'linear-gradient(135deg, #e0e8ff 0%, #d4ddf6 100%)' 
+                                        : '#f3f4f6';
+                                    const btnClass = '#111';
+                                    const textColor = '#000';
+
+                                    return (
+                                        <Grid size={{ xs: 12, md: 4 }} key={i}>
+                                            <Card sx={{ 
+                                                height: '100%', 
+                                                borderRadius: '32px', 
+                                                border: '1px solid #e5e7eb',
+                                                bgcolor: '#ffffff',
+                                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.05)', 
+                                                display: 'flex', 
+                                                flexDirection: 'column',
+                                                p: 1.5,
+                                                position: 'relative',
+                                                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-10px)',
+                                                    boxShadow: '0 30px 60px -15px rgba(0,0,0,0.1)'
+                                                }
+                                            }}>
+                                                {/* Top colored box */}
                                                 <Box sx={{ 
-                                                    position: 'absolute', 
-                                                    top: -16, 
-                                                    left: '50%', 
-                                                    transform: 'translateX(-50%)', 
-                                                    bgcolor: plan.recommended ? '#FF602E' : '#1e293b', 
-                                                    color: 'white', 
-                                                    px: 3, 
-                                                    py: 0.8, 
-                                                    borderRadius: 10, 
-                                                    fontSize: '0.75rem', 
-                                                    fontWeight: 900,
-                                                    letterSpacing: 1,
-                                                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                                                    background: bgConfig, 
+                                                    borderRadius: '24px', 
+                                                    p: 3, 
+                                                    pb: 4,
+                                                    mb: 1
                                                 }}>
-                                                    {plan.badge.toUpperCase()}
-                                                </Box>
-                                            )}
-                                            
-                                            <Box sx={{ mb: 4 }}>
-                                                <Typography variant="h5" sx={{ fontWeight: 1000, color: '#0f172a', mb: 1 }}>{plan.name}</Typography>
-                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>{plan.tagline}</Typography>
-                                            </Box>
+                                                    <Box sx={{ display: 'inline-block', bgcolor: '#fff', px: 2, py: 0.5, borderRadius: '12px', mb: 3 }}>
+                                                        <Typography variant="caption" sx={{ fontWeight: 900, color: '#000', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                                                            {plan.name}
+                                                        </Typography>
+                                                    </Box>
+                                                    
+                                                    <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 0.5 }}>
+                                                        <Typography sx={{ fontWeight: 900, color: textColor, fontSize: '1.8rem' }}>₹</Typography>
+                                                        <Typography sx={{ color: textColor, fontWeight: 900, fontSize: '3.5rem', lineHeight: 1, letterSpacing: '-2px' }}>
+                                                            {plan.price}
+                                                        </Typography>
+                                                        <Typography sx={{ color: '#4b5563', fontWeight: 700, fontSize: '1.2rem' }}>
+                                                            /{plan.period}
+                                                        </Typography>
+                                                    </Box>
 
-                                            <Box sx={{ mb: 5 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                                                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>₹</Typography>
-                                                    <Typography variant="h2" sx={{ fontWeight: 1000, color: '#1e293b', fontSize: '3.5rem', letterSpacing: -2 }}>
-                                                        {plan.price}
+                                                    <Typography sx={{ color: '#4b5563', fontWeight: 600, fontSize: '0.9rem', mb: 3 }}>
+                                                        {plan.tagline}
                                                     </Typography>
-                                                    <Typography variant="body1" sx={{ color: '#94a3b8', fontWeight: 600 }}>/{plan.period}</Typography>
+
+                                                    <Button 
+                                                        fullWidth
+                                                        variant="contained"
+                                                        onClick={() => navigate('/superadmin')}
+                                                        sx={{ 
+                                                            bgcolor: btnClass,
+                                                            color: '#fff',
+                                                            py: 1.8,
+                                                            borderRadius: '20px',
+                                                            fontWeight: 800,
+                                                            textTransform: 'none',
+                                                            fontSize: '1rem',
+                                                            boxShadow: '0 8px 16px rgba(0,0,0,0.15)',
+                                                            '&:hover': {
+                                                                bgcolor: '#000',
+                                                                boxShadow: '0 12px 24px rgba(0,0,0,0.25)',
+                                                            }
+                                                        }}
+                                                    >
+                                                        {plan.cta}
+                                                    </Button>
                                                 </Box>
-                                                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700 }}>
-                                                    Billed monthly
-                                                </Typography>
-                                            </Box>
 
-                                            <Stack spacing={2.2} sx={{ mb: 6, flexGrow: 1 }}>
-                                                {plan.features.map((feat, j) => (
-                                                    <Stack direction="row" spacing={1.5} alignItems="flex-start" key={j}>
-                                                        <CheckCircleIcon sx={{ fontSize: 18, color: plan.recommended ? '#FF602E' : '#22c55e', mt: 0.3 }} />
-                                                        <Typography variant="body2" sx={{ color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>{feat}</Typography>
+                                                {/* Bottom features list */}
+                                                <Box sx={{ p: 3, pt: 1, flexGrow: 1 }}>
+                                                    <Stack spacing={2.5}>
+                                                        {plan.features.map((feat, j) => (
+                                                            <Stack direction="row" spacing={1.5} alignItems="flex-start" key={j}>
+                                                                <CheckCircleIcon sx={{ fontSize: 18, color: '#9ca3af', mt: 0.3 }} />
+                                                                <Typography sx={{ color: '#111', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.4 }}>
+                                                                    {feat}
+                                                                </Typography>
+                                                            </Stack>
+                                                        ))}
                                                     </Stack>
-                                                ))}
-                                            </Stack>
-
-                                            <Button
-                                                fullWidth
-                                                variant="contained"
-                                                onClick={() => navigate('/superadmin')}
-                                                sx={{
-                                                    borderRadius: '16px',
-                                                    py: 2,
-                                                    fontSize: '1rem',
-                                                    fontWeight: 900,
-                                                    textTransform: 'none',
-                                                    background: plan.recommended ? 'linear-gradient(135deg, #FF602E 0%, #E25529 100%)' : '#1e293b',
-                                                    color: 'white',
-                                                    boxShadow: plan.recommended ? '0 10px 30px rgba(255, 96, 46, 0.25)' : 'none',
-                                                    transition: 'all 0.3s ease',
-                                                    '&:hover': {
-                                                        background: plan.recommended ? 'linear-gradient(135deg, #E25529 0%, #FF602E 100%)' : '#000',
-                                                        transform: 'scale(1.02)'
-                                                    }
-                                                }}
-                                            >
-                                                {plan.cta}
-                                            </Button>
-                                        </Card>
-                                    </Grid>
-                                ))}
+                                                </Box>
+                                            </Card>
+                                        </Grid>
+                                    );
+                                })}
                             </Grid>
 
                             {/* Trust & Verification Signals */}

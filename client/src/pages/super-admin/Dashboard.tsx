@@ -91,7 +91,7 @@ const SuperAdminDashboard: React.FC = () => {
     const formatCount = (n: number) => n || 0;
 
     const stats = [
-        { title: 'Total Firms', value: formatCount(widgets.totalFirms as number), icon: <BusinessIcon />, color: '#FF4B2B' },
+        { title: 'Total Firms', value: formatCount(widgets.totalFirms as number), icon: <BusinessIcon />, color: '#4f46e5' },
         { title: 'Total Clients', value: formatCount(widgets.totalClients as number), icon: <PeopleIcon />, color: '#2196F3' },
         { title: 'Total Staff', value: formatCount(widgets.totalStaff as number), icon: <AccountCircleIcon />, color: '#9C27B0' },
         { title: 'Total Documents', value: formatCount((widgets.totalInvoices as number || 0) + (widgets.totalFiles as number || 0)), icon: <AssignmentIcon />, color: '#00BCD4' },
@@ -130,7 +130,7 @@ const SuperAdminDashboard: React.FC = () => {
                                     <YAxis axisLine={false} tickLine={false} />
                                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                                     <Legend />
-                                    <Line type="monotone" dataKey="count" stroke="#FF4B2B" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="New Firms" />
+                                    <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="New Firms" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </Box>

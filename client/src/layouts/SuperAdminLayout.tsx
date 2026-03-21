@@ -88,13 +88,13 @@ export const SuperAdminLayout: React.FC = () => {
                                     borderRadius: 1.5,
                                     py: 1,
                                     '&.Mui-selected': {
-                                        background: 'linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%)',
+                                        background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                         color: 'white',
                                         '& .MuiListItemIcon-root': {
                                             color: 'white',
                                         },
                                         '&:hover': {
-                                            background: 'linear-gradient(135deg, #e63e20 0%, #e6355d 100%)',
+                                            background: 'linear-gradient(135deg, #4338ca 0%, #2563eb 100%)',
                                         },
                                     },
                                 }}
@@ -115,7 +115,7 @@ export const SuperAdminLayout: React.FC = () => {
                 position="fixed"
                 sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
-                    background: 'linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%)', // Distinct Red/Pink theme for Super Admin
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', // Distinct Indigo/Blue theme for Super Admin
                 }}
             >
                 <Toolbar>
@@ -153,7 +153,7 @@ export const SuperAdminLayout: React.FC = () => {
                             onClick={(e) => setAnchorEl(e.currentTarget)}
                             size="small"
                         >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: '#FF416C', fontWeight: 'bold' }}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: '#4f46e5', fontWeight: 'bold' }}>
                                 S
                             </Avatar>
                         </IconButton>
