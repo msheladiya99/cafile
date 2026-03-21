@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import {
     Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, IconButton, Chip, TextField, MenuItem, Grid, InputAdornment, Tooltip
+    TableHead, TableRow, IconButton, TextField, MenuItem, InputAdornment, Tooltip,
+    Avatar,
+    Stack,
+    CircularProgress
 } from '@mui/material';
 import {
-    Add as AddIcon,
     Visibility as ViewIcon,
     Block as BlockIcon,
     CheckCircle as CheckIcon,
     Search as SearchIcon,
-    Edit as EditIcon,
     Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -89,105 +90,189 @@ const FirmManagement: React.FC = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>Firm Management</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/super-admin/create-firm')} sx={{ px: 3, py: 1, borderRadius: 2, fontWeight: 700 }}>
-                    Create Firm
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 6 }}>
+                <Box>
+                    <Typography variant="h3" sx={{ fontWeight: 1000, color: '#111', letterSpacing: -1.5, mb: 1 }}>
+                        Firm Management
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                        Oversee all accounting firms registered on the platform.
+                    </Typography>
+                </Box>
+                <Button 
+                    variant="contained" 
+                    onClick={() => navigate('/super-admin/create-firm')} 
+                    sx={{ 
+                        px: 4, 
+                        py: 1.8, 
+                        borderRadius: '20px', 
+                        fontWeight: 900, 
+                        bgcolor: '#6366f1', 
+                        textTransform: 'none',
+                        boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
+                        '&:hover': { bgcolor: '#4f46e5', boxShadow: '0 15px 30px rgba(99, 102, 241, 0.3)' }
+                    }}
+                >
+                    + Add new firm
                 </Button>
             </Box>
 
-            <Paper sx={{ mb: 4, p: 2, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField fullWidth placeholder="Search by Firm or Subdomain..." size="small"
-                            variant="outlined" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                            InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>) }}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 4 }}>
-                        <TextField select fullWidth size="small" value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}>
-                            {['All Plans', 'Trial', 'Basic', 'Professional', 'Enterprise'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-                        </TextField>
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 4 }}>
-                        <TextField select fullWidth size="small" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                            {['All Status', 'active', 'suspended'].map(opt => <MenuItem key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</MenuItem>)}
-                        </TextField>
-                    </Grid>
-                </Grid>
-            </Paper>
+            <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <TextField 
+                    placeholder="Search by Firm or Subdomain..." 
+                    size="small"
+                    variant="outlined" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ 
+                        flexGrow: 1,
+                        bgcolor: '#f8fafc',
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '16px',
+                            fontWeight: 600,
+                            '& fieldset': { border: 'none' },
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
+                        }
+                    }}
+                    InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>) }}
+                />
+                <TextField 
+                    select 
+                    size="small" 
+                    value={planFilter} 
+                    onChange={(e) => setPlanFilter(e.target.value)}
+                    sx={{ 
+                        minWidth: 150,
+                        bgcolor: '#f8fafc',
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '16px',
+                            fontWeight: 600,
+                            '& fieldset': { border: 'none' }
+                        }
+                    }}
+                >
+                    {['All Plans', 'Trial', 'Basic', 'Professional', 'Enterprise'].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+                </TextField>
+                <TextField 
+                    select 
+                    size="small" 
+                    value={statusFilter} 
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    sx={{ 
+                        minWidth: 150,
+                        bgcolor: '#f8fafc',
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '16px',
+                            fontWeight: 600,
+                            '& fieldset': { border: 'none' }
+                        }
+                    }}
+                >
+                    {['All Status', 'active', 'suspended'].map(opt => <MenuItem key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</MenuItem>)}
+                </TextField>
+            </Box>
 
-            <Paper sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <Paper sx={{ borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.02)', overflow: 'hidden', border: '1px solid #f8fafc' }}>
                 <TableContainer>
                     <Table>
-                        <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 700 }}>Firm Name</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Subdomain</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Mobile</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Users</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Max Admins</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Clients</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>Created Date</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                        <TableHead>
+                            <TableRow sx={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <th style={{ textAlign: 'left', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Account / Firm</th>
+                                <th style={{ textAlign: 'left', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Subdomain</th>
+                                <th style={{ textAlign: 'left', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Service Package</th>
+                                <th style={{ textAlign: 'left', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Status</th>
+                                <th style={{ textAlign: 'left', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Metrics</th>
+                                <th style={{ textAlign: 'right', padding: '24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Actions</th>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {isLoading ? (
-                                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 3 }}>Loading...</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={6} align="center" sx={{ py: 5 }}><CircularProgress size={24} /></TableCell></TableRow>
                             ) : filteredFirms?.length === 0 ? (
-                                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 3, color: 'text.secondary' }}>No firms found</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={6} align="center" sx={{ py: 5, color: 'text.secondary', fontWeight: 700 }}>No registrations found</TableCell></TableRow>
                             ) : (
                                 filteredFirms?.map((firm) => (
-                                    <TableRow key={firm._id} hover>
-                                        <TableCell sx={{ fontWeight: 700 }}>{firm.firmName}</TableCell>
-                                        <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#666' }}>{firm.subdomain}.mycafile.in</Typography></TableCell>
-                                        <TableCell>{firm.mobile || '-'}</TableCell>
-                                        <TableCell>
-                                            <Chip label={firm.plan.charAt(0).toUpperCase() + firm.plan.slice(1)} size="small" sx={{
-                                                bgcolor: firm.plan?.toLowerCase() === 'enterprise' ? '#6200ea15' : '#e3f2fd',
-                                                color: firm.plan?.toLowerCase() === 'enterprise' ? '#6200ea' : '#1976d2',
-                                                fontWeight: 800
-                                            }} />
+                                    <TableRow key={firm._id} sx={{ '&:hover': { bgcolor: '#f8fafc' }, transition: 'all 0.2s ease', borderBottom: '1px solid #f8fafc' }}>
+                                        <TableCell sx={{ py: 3, px: 3 }}>
+                                            <Stack direction="row" spacing={2} alignItems="center" sx={{ whiteSpace: 'nowrap' }}>
+                                                <Avatar sx={{ bgcolor: '#eef2ff', color: '#6366f1', fontWeight: 900, borderRadius: '12px', width: 32, height: 32, fontSize: '0.875rem' }}>{firm.firmName ? firm.firmName.charAt(0) : 'F'}</Avatar>
+                                                <Typography variant="body2" sx={{ fontWeight: 800, color: '#1e293b' }}>{firm.firmName}</Typography>
+                                                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>• {firm.email}</Typography>
+                                            </Stack>
                                         </TableCell>
                                         <TableCell>
-                                            <Chip
-                                                label={firm.status}
-                                                size="small"
-                                                color={firm.status === 'active' ? 'success' : 'error'}
-                                                sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}
-                                            />
+                                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700, px: 1.5, py: 0.5, bgcolor: '#f1f5f9', borderRadius: '8px', display: 'inline-block' }}>
+                                                {firm.subdomain}.mycafile.in
+                                            </Typography>
                                         </TableCell>
-                                        <TableCell>{firm.usersCount || 0}</TableCell>
-                                        <TableCell>{firm.maxAdmins || 5}</TableCell>
-                                        <TableCell>{firm.clientsCount || 0}</TableCell>
-                                        <TableCell>{new Date(firm.createdAt).toLocaleDateString()}</TableCell>
+                                        <TableCell>
+                                            <Typography variant="caption" sx={{ 
+                                                fontWeight: 900, 
+                                                px: 1.5, 
+                                                py: 0.5, 
+                                                borderRadius: '8px', 
+                                                bgcolor: firm.plan?.toLowerCase() === 'enterprise' ? '#f5f3ff' : '#eff6ff', 
+                                                color: firm.plan?.toLowerCase() === 'enterprise' ? '#7c3aed' : '#2563eb',
+                                                letterSpacing: 0.5
+                                            }}>
+                                                {firm.plan?.toUpperCase()}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                             <Box sx={{ 
+                                                display: 'inline-flex', 
+                                                alignItems: 'center', 
+                                                gap: 1,
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: '8px',
+                                                bgcolor: firm.status === 'active' ? '#ecfdf5' : '#fff1f2',
+                                                color: firm.status === 'active' ? '#10b981' : '#f43f5e'
+                                            }}>
+                                                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'currentColor' }} />
+                                                <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase' }}>
+                                                    {firm.status === 'active' ? 'LIVE' : 'SUSPENDED'}
+                                                </Typography>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack direction="row" spacing={1}>
+                                                <Tooltip title="Clients">
+                                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b' }}>C:{firm.clientsCount || 0}</Typography>
+                                                </Tooltip>
+                                                <Tooltip title="Users">
+                                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b' }}>U:{firm.usersCount || 0}</Typography>
+                                                </Tooltip>
+                                            </Stack>
+                                        </TableCell>
                                         <TableCell align="right">
-                                            <Tooltip title="View Details">
-                                                <IconButton color="primary" onClick={() => navigate(`/super-admin/firms/${firm._id}`)}>
+                                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => navigate(`/super-admin/firms/${firm._id}`)}
+                                                    sx={{ bgcolor: '#f1f5f9', color: '#1e293b', '&:hover': { bgcolor: '#e2e8f0' } }}
+                                                >
                                                     <ViewIcon fontSize="small" />
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Edit firm (Mocked for Details Page)">
-                                                <IconButton sx={{ color: '#ff9800' }} onClick={() => navigate(`/super-admin/firms/${firm._id}`)}>
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={firm.status === 'active' ? 'Suspend Firm' : 'Activate Firm'}>
-                                                <IconButton
-                                                    color={firm.status === 'active' ? 'error' : 'success'}
+                                                <IconButton 
+                                                    size="small" 
                                                     onClick={() => handleToggleStatus(firm)}
+                                                    sx={{ 
+                                                        bgcolor: firm.status === 'active' ? '#fff1f2' : '#ecfdf5', 
+                                                        color: firm.status === 'active' ? '#f43f5e' : '#10b981',
+                                                        '&:hover': { opacity: 0.8 }
+                                                    }}
                                                 >
                                                     {firm.status === 'active' ? <BlockIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Delete Firm">
-                                                <IconButton color="error" onClick={() => handleDelete(firm._id)}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => handleDelete(firm._id)}
+                                                    sx={{ bgcolor: '#fdf2f2', color: '#e11d48', '&:hover': { bgcolor: '#fee2e2' } }}
+                                                >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
-                                            </Tooltip>
+                                            </Stack>
                                         </TableCell>
                                     </TableRow>
                                 ))

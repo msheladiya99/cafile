@@ -1,32 +1,30 @@
 import React from 'react';
 import {
     Grid,
-    Paper,
     Typography,
     Box,
     Card,
     CardContent,
-    CircularProgress
+    CircularProgress,
+    Stack
 } from '@mui/material';
 import {
-    Business as BusinessIcon,
-    People as PeopleIcon,
+    ArrowForward as ArrowForwardIcon,
     TrendingUp as TrendingUpIcon,
-    Assignment as AssignmentIcon,
-    AccountCircle as AccountCircleIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    BarChart, Bar, PieChart, Pie, Cell
+    LineChart, Line, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell
 } from 'recharts';
 
 interface StatCardProps {
     title: string;
     value: number | string;
-    icon: React.ReactNode;
+    subtitle: string;
     color: string;
+    icon?: React.ReactNode;
 }
 
 interface DashboardFirm {
@@ -38,24 +36,45 @@ interface DashboardFirm {
     createdAt: string;
 }
 
-const StatCard = ({ title, value, icon, color }: StatCardProps) => (
-    <Card sx={{ height: '100%', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-        <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Box sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: `${color}15`,
-                    color: color,
-                    display: 'flex'
-                }}>
-                    {icon}
-                </Box>
-                <Typography variant="h6" sx={{ ml: 2, fontWeight: 700, color: 'text.secondary', fontSize: '1rem' }}>
-                    {title}
-                </Typography>
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+const ProductCard = ({ title, value, subtitle, color }: StatCardProps) => (
+    <Card sx={{ 
+        height: '100%', 
+        borderRadius: '32px', 
+        overflow: 'hidden', 
+        border: 'none', 
+        boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
+        bgcolor: '#fff',
+        transition: 'transform 0.3s ease',
+        '&:hover': { transform: 'translateY(-10px)' }
+    }}>
+        <Box sx={{ height: '140px', bgcolor: color, position: 'relative' }}>
+            <Box sx={{ 
+                position: 'absolute', 
+                top: 20, 
+                left: 20, 
+                width: 12, 
+                height: 12, 
+                borderRadius: '50%', 
+                bgcolor: 'rgba(255,255,255,0.3)' 
+            }} />
+            <Box sx={{ 
+                position: 'absolute', 
+                top: 20, 
+                left: 40, 
+                width: 30, 
+                height: 6, 
+                borderRadius: '10px', 
+                bgcolor: 'rgba(255,255,255,0.2)' 
+            }} />
+        </Box>
+        <CardContent sx={{ p: 3 }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {subtitle} <ArrowForwardIcon sx={{ fontSize: 12 }} />
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#111', mt: 0.5 }}>
+                {title}
+            </Typography>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: '#111', mt: 1 }}>
                 {value}
             </Typography>
         </CardContent>
@@ -69,7 +88,7 @@ const SuperAdminDashboard: React.FC = () => {
             const res = await api.get('/super-admin/dashboard');
             return res.data;
         },
-        staleTime: 0, // Ensure we always get fresh data for Super Admin
+        staleTime: 0,
     });
 
     if (isLoading) {
@@ -87,67 +106,134 @@ const SuperAdminDashboard: React.FC = () => {
     }
     const { widgets = {}, charts = {}, recentFirms = [] } = (data as DashboardResponse) || {};
 
-    // Formatting numbers for display
-    const formatCount = (n: number) => n || 0;
-
     const stats = [
-        { title: 'Total Firms', value: formatCount(widgets.totalFirms as number), icon: <BusinessIcon />, color: '#4f46e5' },
-        { title: 'Total Clients', value: formatCount(widgets.totalClients as number), icon: <PeopleIcon />, color: '#2196F3' },
-        { title: 'Total Staff', value: formatCount(widgets.totalStaff as number), icon: <AccountCircleIcon />, color: '#9C27B0' },
-        { title: 'Total Documents', value: formatCount((widgets.totalInvoices as number || 0) + (widgets.totalFiles as number || 0)), icon: <AssignmentIcon />, color: '#00BCD4' },
-        { title: 'Storage Usage', value: (widgets.storageUsage as string) || '0 MB', icon: <TrendingUpIcon />, color: '#FF9800' },
-        { title: 'Total Revenue', value: `₹${formatCount(widgets.totalRevenue as number)}`, icon: <TrendingUpIcon />, color: '#3F51B5' },
+        { title: 'Registered Firms', value: widgets.totalFirms, subtitle: 'firms.overview', color: '#c7d2fe' },
+        { title: 'Platform Clients', value: widgets.totalClients, subtitle: 'clients.list', color: '#1e293b' },
+        { title: 'System Revenue', value: `₹${widgets.totalRevenue}`, subtitle: 'revenue.reports', color: '#fecaca' },
+        { title: 'Platform Health', value: 'Active', subtitle: 'health.check', color: '#4f46e5' },
     ];
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+    const COLORS = ['#6366f1', '#fb7185', '#fbbf24', '#2dd4bf'];
 
     return (
         <Box>
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 800 }}>
-                Platform Dashboard
-            </Typography>
+            <Box sx={{ mb: 6 }}>
+                <Typography variant="h3" sx={{ fontWeight: 1000, color: '#111', letterSpacing: -1.5, mb: 1 }}>
+                    Hello Super Admin!
+                </Typography>
+                <Typography variant="subtitle1" sx={{ color: '#94a3b8', fontWeight: 600 }}>
+                    Welcome to your platform overview. Everything is running smoothly.
+                </Typography>
+            </Box>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {stats.map((stat, index) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-                        <StatCard {...stat} />
+            <Box sx={{ mb: 8 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Key Metrics</Typography>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        View All Metrics <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                    </Typography>
+                </Box>
+                <Box sx={{ 
+                    overflowX: 'auto', 
+                    pb: 2,
+                    px: 3,
+                    mx: -3,
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    scrollbarWidth: 'none'
+                }}>
+                    <Grid container spacing={3} wrap="nowrap">
+                        {stats.map((stat, index) => (
+                            <Grid key={index} sx={{ flex: '0 0 auto', width: { xs: '280px', sm: '320px', md: 'calc(25% - 18px)' } }}>
+                                <ProductCard title={stat.title} value={String(stat.value)} subtitle={stat.subtitle} color={stat.color} />
+                            </Grid>
+                        ))}
                     </Grid>
-                ))}
-            </Grid>
+                </Box>
+            </Box>
 
-            {/* Charts Row 1 */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, lg: 8 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, minHeight: 400 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                            Firm Registrations (Last 6 Months)
+            <Grid container spacing={5}>
+                {/* Invoicing Style Table */}
+                <Grid xs={12} lg={8}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Recent Registrations</Typography>
+                        <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            View All Invoices <ArrowForwardIcon sx={{ fontSize: 14 }} />
                         </Typography>
-                        <Box sx={{ width: '100%', height: 320 }}>
+                    </Box>
+                    <Box sx={{ bgcolor: '#fff', borderRadius: '32px', p: 1, boxShadow: '0 10px 40px rgba(0,0,0,0.02)' }}>
+                        <Box sx={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                        <th style={{ textAlign: 'left', padding: '20px 24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Firm Name</th>
+                                        <th style={{ textAlign: 'left', padding: '20px 24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Plan</th>
+                                        <th style={{ textAlign: 'left', padding: '20px 24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Created</th>
+                                        <th style={{ textAlign: 'right', padding: '20px 24px', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {recentFirms.map((firm: DashboardFirm) => (
+                                        <tr key={firm._id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                            <td style={{ padding: '20px 24px' }}>
+                                                <Stack direction="row" spacing={2} alignItems="center">
+                                                    <Typography variant="body2" sx={{ fontWeight: 800, color: '#4f46e5', whiteSpace: 'nowrap' }}>#{firm._id.slice(-8)}</Typography>
+                                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#111', whiteSpace: 'nowrap' }}>{firm.firmName}</Typography>
+                                                </Stack>
+                                            </td>
+                                            <td style={{ padding: '20px 24px' }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#64748b' }}>{firm.plan.toUpperCase()}</Typography>
+                                            </td>
+                                            <td style={{ padding: '20px 24px' }}>
+                                                <Typography sx={{ 
+                                                    display: 'inline-block',
+                                                    px: 1.5, 
+                                                    py: 0.5, 
+                                                    borderRadius: '8px', 
+                                                    bgcolor: '#fef2f2', 
+                                                    color: '#ef4444', 
+                                                    fontSize: '0.75rem', 
+                                                    fontWeight: 800 
+                                                }}>
+                                                    {new Date(firm.createdAt).toISOString().split('T')[0]}
+                                                </Typography>
+                                            </td>
+                                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 900 }}>{firm.status === 'active' ? 'PAID' : 'PENDING'}</Typography>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </Box>
+                    </Box>
+                </Grid>
+
+                {/* Right Column Charts */}
+                <Grid xs={12} lg={4}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Analytics</Typography>
+                    </Box>
+                    <Box sx={{ bgcolor: '#fff', borderRadius: '32px', p: 4, boxShadow: '0 10px 40px rgba(0,0,0,0.02)', mb: 4 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3 }}>Growth Trend</Typography>
+                        <Box sx={{ width: '100%', height: 200 }}>
                             <ResponsiveContainer>
-                                <LineChart data={charts.firmRegistrations} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="New Firms" />
+                                <LineChart data={charts.firmRegistrations}>
+                                    <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={4} dot={false} />
+                                    <Tooltip />
                                 </LineChart>
                             </ResponsiveContainer>
                         </Box>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, lg: 4 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, minHeight: 400 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                            Task Activity
-                        </Typography>
-                        <Box sx={{ width: '100%', height: 320, display: 'flex', justifyContent: 'center' }}>
+                    </Box>
+                    
+                    <Box sx={{ bgcolor: '#fff', borderRadius: '32px', p: 4, boxShadow: '0 10px 40px rgba(0,0,0,0.02)' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3 }}>Task Distribution</Typography>
+                        <Box sx={{ width: '100%', height: 200, display: 'flex', justifyContent: 'center' }}>
                             <ResponsiveContainer>
                                 <PieChart>
                                     <Pie
                                         data={charts.taskActivity}
-                                        innerRadius={80}
-                                        outerRadius={120}
+                                        innerRadius={60}
+                                        outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
@@ -155,123 +241,57 @@ const SuperAdminDashboard: React.FC = () => {
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip />
-                                    <Legend />
                                 </PieChart>
                             </ResponsiveContainer>
                         </Box>
-                    </Paper>
+                    </Box>
                 </Grid>
             </Grid>
 
-            {/* Charts Row 2 */}
-            <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, minHeight: 400 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                            Platform Usage Metrics
-                        </Typography>
-                        <Box sx={{ width: '100%', height: 320 }}>
-                            <ResponsiveContainer>
-                                <BarChart data={[charts.platformUsage]} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" hide />
-                                    <YAxis />
-                                    <Tooltip cursor={{ fill: 'transparent' }} />
-                                    <Legend />
-                                    <Bar dataKey="clients" fill="#8884d8" name="Total Clients" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="files" fill="#82ca9d" name="Files Uploaded" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="tasks" fill="#ffc658" name="Total Tasks" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Box>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, minHeight: 400 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                            Monthly Revenue
-                        </Typography>
-                        <Box sx={{ width: '100%', height: 320 }}>
-                            <ResponsiveContainer>
-                                <LineChart data={charts.firmRegistrations} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" />
-                                    <YAxis tickFormatter={(value) => `₹${value}`} />
-                                    <Tooltip formatter={(value) => `₹${value}`} />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="revenue" stroke="#82ca9d" name="Revenue (₹)" strokeWidth={3} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </Box>
-                    </Paper>
-                </Grid>
-            </Grid>
-            {/* Recent Firms Section */}
-            <Typography variant="h5" sx={{ mt: 6, mb: 3, fontWeight: 700 }}>
-                Recent Firm Registrations
-            </Typography>
-            <Paper sx={{ borderRadius: 4, overflow: 'hidden', mb: 4, bgcolor: 'white' }}>
-                <Box sx={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Firm Name</th>
-                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Subdomain</th>
-                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Plan</th>
-                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Created Date</th>
-                                <th style={{ textAlign: 'left', padding: '16px 24px', color: '#64748b', fontWeight: 600 }}>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {recentFirms.map((firm: DashboardFirm) => (
-                                <tr key={firm._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '16px 24px', fontWeight: 700, color: '#1e293b' }}>{firm.firmName}</td>
-                                    <td style={{ padding: '16px 24px', color: '#64748b', fontFamily: 'monospace' }}>{firm.subdomain}.mycafile.in</td>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <Box sx={{
-                                            display: 'inline-flex',
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: 2,
-                                            fontSize: '0.75rem',
-                                            fontWeight: 800,
-                                            bgcolor: firm.plan === 'enterprise' ? '#f5f3ff' : '#eff6ff',
-                                            color: firm.plan === 'enterprise' ? '#7c3aed' : '#2563eb',
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            {firm.plan}
-                                        </Box>
-                                    </td>
-                                    <td style={{ padding: '16px 24px', color: '#64748b' }}>
-                                        {new Date(firm.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </td>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <Box sx={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: 0.5,
-                                            color: firm.status === 'active' ? '#10b981' : '#f59e0b',
-                                            fontWeight: 700,
-                                            fontSize: '0.85rem'
-                                        }}>
-                                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'currentColor' }} />
-                                            {firm.status.charAt(0).toUpperCase() + firm.status.slice(1)}
-                                        </Box>
-                                    </td>
-                                </tr>
-                            ))}
-                            {(!recentFirms.length) && (
-                                <tr>
-                                    <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-                                        No recent registrations found
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            {/* Video Guides Style Section */}
+            <Box sx={{ mt: 8 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Platform Guide & Tips</Typography>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        View All Guides <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                    </Typography>
                 </Box>
-            </Paper>
+                <Grid container spacing={3}>
+                    {[
+                        "How to manage multiple firms",
+                        "Setting up automated subscriptions",
+                        "Understanding system health metrics"
+                    ].map((guide, i) => (
+                        <Grid xs={12} md={4} key={i}>
+                            <Box sx={{ 
+                                bgcolor: '#fff', 
+                                p: 3, 
+                                borderRadius: '24px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 2,
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.01)',
+                                border: '1px solid #f8fafc',
+                                transition: 'all 0.2s ease',
+                                '&:hover': { bgcolor: '#f1f5f9', transform: 'translateX(5px)' }
+                            }}>
+                                <Box sx={{ 
+                                    width: 48, 
+                                    height: 48, 
+                                    borderRadius: '16px', 
+                                    bgcolor: i === 1 ? '#fecaca' : '#c7d2fe', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center' 
+                                }}>
+                                    <TrendingUpIcon sx={{ color: i === 1 ? '#ef4444' : '#6366f1' }} />
+                                </Box>
+                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{guide}</Typography>
+                            </Box>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
         </Box>
     );
 };

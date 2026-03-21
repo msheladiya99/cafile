@@ -2,36 +2,40 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     Box,
-    Drawer,
     AppBar,
     Toolbar,
-    List,
     Typography,
     IconButton,
+    Menu,
+    MenuItem,
+    Avatar,
+    Tooltip,
+    Tabs,
+    Tab,
+    Container,
+    Badge,
+    Drawer,
+    List,
     ListItem,
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Menu,
-    MenuItem,
     useMediaQuery,
-    useTheme,
-    Avatar,
-    Tooltip,
+    useTheme
 } from '@mui/material';
 import {
+    Logout as LogoutIcon,
+    Search as SearchIcon,
+    ChatBubbleOutline as ChatIcon,
+    Menu as MenuIcon,
     Dashboard as DashboardIcon,
     Business as BusinessIcon,
-    Logout as LogoutIcon,
-    Menu as MenuIcon,
+    Subscriptions as SubscriptionsIcon,
     Assessment as ReportsIcon,
     Settings as SettingsIcon,
-    Subscriptions as SubscriptionsIcon,
-    VpnKey as VpnKeyIcon,
+    VpnKey as VpnKeyIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-
-const drawerWidth = 240;
 
 const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -47,19 +51,30 @@ export const SuperAdminLayout: React.FC = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/super-admin/dashboard' },
-        { text: 'Firm Management', icon: <BusinessIcon />, path: '/super-admin/firms' },
+        { text: 'Firms', icon: <BusinessIcon />, path: '/super-admin/firms' },
         { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
-        { text: 'Global Analytics', icon: <ReportsIcon />, path: '/super-admin/analytics' },
-        { text: 'System Health', icon: <SettingsIcon />, path: '/super-admin/system-health' },
+        { text: 'Analytics', icon: <ReportsIcon />, path: '/super-admin/analytics' },
+        { text: 'Health', icon: <SettingsIcon />, path: '/super-admin/system-health' },
         { text: 'Security', icon: <VpnKeyIcon />, path: '/super-admin/security' },
     ];
 
-    const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
+    // Find active tab index based on current path - improved to catch subpages
+    const currentTabIndex = menuItems.findIndex(item => 
+        location.pathname === item.path || (item.path !== '/super-admin/dashboard' && location.pathname.startsWith(item.path))
+    );
+    const tabValue = currentTabIndex === -1 ? false : currentTabIndex;
+
+    const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+        navigate(menuItems[newValue].path);
+    };
+
+    const handleMobileMenuClick = (path: string) => {
+        navigate(path);
+        setMobileOpen(false);
     };
 
     const handleLogout = () => {
@@ -67,152 +82,187 @@ export const SuperAdminLayout: React.FC = () => {
         navigate('/login');
     };
 
-    const handleMenuItemClick = (path: string) => {
-        navigate(path);
-        if (isMobile) {
-            setMobileOpen(false);
-        }
-    };
+    return (
+        <Box sx={{ bgcolor: '#eef2ff', minHeight: '100vh', pb: 10 }}>
+            <AppBar 
+                position="static" 
+                elevation={0} 
+                sx={{ 
+                    bgcolor: 'transparent', 
+                    color: '#1e293b', 
+                    pt: 2, 
+                    px: { xs: 2, md: 5 } 
+                }}
+            >
+                <Container maxWidth="xl" sx={{ p: '0 !important' }}>
+                    <Toolbar sx={{ justifyContent: 'space-between', bgcolor: '#fff', borderRadius: '24px', px: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {isMobile && (
+                                <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 1 }}>
+                                    <MenuIcon />
+                                </IconButton>
+                            )}
+                            <Box sx={{ 
+                                width: 32, 
+                                height: 32, 
+                                bgcolor: '#6366f1', 
+                                borderRadius: '10px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                transform: 'rotate(-10deg)',
+                                cursor: 'pointer'
+                            }} onClick={() => navigate('/super-admin/dashboard')}>
+                                <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1rem' }}>S</Typography>
+                            </Box>
+                            <Typography variant="h6" sx={{ fontWeight: 1000, color: '#4f46e5', mt: 0.5, letterSpacing: -1 }}>mycafile</Typography>
+                        </Box>
 
-    const drawerContent = (
-        <>
-            <Toolbar />
-            <Box sx={{ overflow: 'auto', mt: 2 }}>
-                <List>
-                    {menuItems.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ mb: 0.5, px: 1 }}>
-                            <ListItemButton
-                                selected={location.pathname === item.path}
-                                onClick={() => handleMenuItemClick(item.path)}
-                                sx={{
-                                    borderRadius: 1.5,
-                                    py: 1,
-                                    '&.Mui-selected': {
-                                        background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
-                                        color: 'white',
-                                        '& .MuiListItemIcon-root': {
-                                            color: 'white',
+                        {!isMobile && (
+                            <Tabs 
+                                value={tabValue} 
+                                onChange={handleTabChange}
+                                centered
+                                sx={{ 
+                                    '& .MuiTabs-indicator': { height: 0 },
+                                    '& .MuiTab-root': {
+                                        textTransform: 'none',
+                                        fontWeight: 800,
+                                        fontSize: '0.9rem',
+                                        color: '#94a3b8',
+                                        minWidth: 100,
+                                        borderRadius: '14px',
+                                        m: 0.5,
+                                        transition: 'all 0.2s ease',
+                                        '&.Mui-selected': {
+                                            bgcolor: '#f1f5f9',
+                                            color: '#1e293b'
                                         },
                                         '&:hover': {
-                                            background: 'linear-gradient(135deg, #4338ca 0%, #2563eb 100%)',
-                                        },
-                                    },
+                                            color: '#6366f1'
+                                        }
+                                    }
                                 }}
                             >
-                                <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
+                                {menuItems.map((item, index) => (
+                                    <Tab key={index} label={item.text} />
+                                ))}
+                            </Tabs>
+                        )}
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <IconButton size="small" sx={{ color: '#94a3b8' }}><SearchIcon /></IconButton>
+                            <IconButton size="small" sx={{ color: '#94a3b8' }}>
+                                <Badge variant="dot" color="error"><ChatIcon /></Badge>
+                            </IconButton>
+                            <Tooltip title="Admin Account">
+                                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
+                                    <Avatar sx={{ width: 32, height: 32, border: '2px solid #f1f5f9', bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800 }}>S</Avatar>
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={() => setAnchorEl(null)}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            PaperProps={{
+                                elevation: 0,
+                                sx: { mt: 1.5, minWidth: 200, borderRadius: '20px', filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.08))', overflow: 'visible' }
+                            }}
+                        >
+                            <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #f1f5f9' }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Super Admin</Typography>
+                                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>admin@mycafile.in</Typography>
+                            </Box>
+                            <MenuItem onClick={handleLogout} sx={{ color: 'error.main', mx: 1, borderRadius: '12px', my: 1 }}>
+                                <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+                                <Typography variant="body2" sx={{ fontWeight: 800 }}>Logout</Typography>
+                            </MenuItem>
+                        </Menu>
+                    </Toolbar>
+                </Container>
+            </AppBar>
+
+            {/* Mobile Navigation Drawer */}
+            <Drawer
+                anchor="left"
+                open={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                PaperProps={{ sx: { width: 280, borderRadius: '0 32px 32px 0', p: 2 } }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, px: 1 }}>
+                    <Box sx={{ width: 32, height: 32, bgcolor: '#6366f1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography sx={{ color: '#fff', fontWeight: 900 }}>S</Typography>
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: -1 }}>mycafile</Typography>
+                </Box>
+                <List>
+                    {menuItems.map((item) => (
+                        <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+                            <ListItemButton 
+                                onClick={() => handleMobileMenuClick(item.path)}
+                                selected={location.pathname.startsWith(item.path)}
+                                sx={{ borderRadius: '12px', '&.Mui-selected': { bgcolor: '#f1f5f9', color: '#1e293b' } }}
+                            >
+                                <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
+                                <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.9rem' }} />
                             </ListItemButton>
                         </ListItem>
                     ))}
                 </List>
-            </Box>
-        </>
-    );
-
-    return (
-        <Box sx={{ display: 'flex' }}>
-            <AppBar
-                position="fixed"
-                sx={{
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', // Distinct Indigo/Blue theme for Super Admin
-                }}
-            >
-                <Toolbar>
-                    {isMobile && (
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            edge="start"
-                            onClick={handleDrawerToggle}
-                            sx={{ mr: 2 }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                    )}
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 800 }}>
-                        MY CA FILE | SUPER ADMIN
-                    </Typography>
-
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        bgcolor: 'rgba(255,255,255,0.15)',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 2,
-                        mr: 2
-                    }}>
-                        <Typography variant="caption" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>
-                            SECURE SESSION: {formatTime(remainingTime)}
-                        </Typography>
-                    </Box>
-
-                    <Tooltip title="Admin Account">
-                        <IconButton
-                            onClick={(e) => setAnchorEl(e.currentTarget)}
-                            size="small"
-                        >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: '#4f46e5', fontWeight: 'bold' }}>
-                                S
-                            </Avatar>
-                        </IconButton>
-                    </Tooltip>
-
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={() => setAnchorEl(null)}
-                        PaperProps={{
-                            elevation: 0,
-                            sx: {
-                                filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.1))',
-                                mt: 1.5,
-                                width: 200,
-                                borderRadius: 2
-                            }
-                        }}
-                    >
-                        <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                            <ListItemIcon sx={{ color: 'error.main' }}>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>Logout</Typography>
-                        </MenuItem>
-                    </Menu>
-                </Toolbar>
-            </AppBar>
-
-            <Drawer
-                variant={isMobile ? "temporary" : "permanent"}
-                open={isMobile ? mobileOpen : true}
-                onClose={handleDrawerToggle}
-                sx={{
-                    width: drawerWidth,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        bgcolor: '#fafafa',
-                        borderRight: '1px solid rgba(0,0,0,0.05)'
-                    },
-                }}
-            >
-                {drawerContent}
+                <Box sx={{ mt: 'auto', p: 2, bgcolor: '#f8fafc', borderRadius: '16px' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#94a3b8', display: 'block', mb: 1 }}>SESSION TIME</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 900, fontFamily: 'monospace', color: '#6366f1' }}>{formatTime(remainingTime)}</Typography>
+                </Box>
             </Drawer>
 
-            <Box
-                component="main"
-                sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    bgcolor: '#f4f6f8',
-                    minHeight: '100vh',
-                }}
-            >
-                <Toolbar />
-                <Outlet />
-            </Box>
+            <Container maxWidth="xl" sx={{ mt: 2 }}>
+                <Box sx={{ 
+                    bgcolor: '#fff', 
+                    borderRadius: '48px', 
+                    minHeight: '85vh',
+                    p: { xs: 2.5, md: 6 },
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.02)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    {/* Background decorative shapes like Sheeld */}
+                    <Box sx={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, borderRadius: '50%', bgcolor: '#f5f3ff', zIndex: 0 }} />
+                    <Box sx={{ position: 'absolute', bottom: -50, left: -50, width: 200, height: 200, borderRadius: '50%', bgcolor: '#eff6ff', zIndex: 0 }} />
+
+                    <Box sx={{ position: 'relative', zIndex: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
+                            <Box sx={{ 
+                                bgcolor: '#f8fafc', 
+                                px: 2.5, 
+                                py: 1, 
+                                borderRadius: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                border: '1px solid #f1f5f9'
+                            }}>
+                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', animation: 'pulse 2s infinite' }} />
+                                <Typography variant="caption" sx={{ fontWeight: 900, color: '#475569', letterSpacing: 1.5 }}>
+                                    SECURE SESSION: {formatTime(remainingTime)}
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Outlet />
+                    </Box>
+                </Box>
+            </Container>
+
+            <style>{`
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
         </Box>
     );
 };

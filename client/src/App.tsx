@@ -11,7 +11,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import WhatsAppButton from './components/WhatsAppButton';
 
-// Core layouts and pages - now lazy loaded to reduce initial bundle size
+// Core layouts and pages
 const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
 
@@ -64,13 +64,13 @@ const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module 
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
 
-// Main Entry Pages - Static imports for SEO and LCP speed
+// Main Entry Pages
 import { LandingPage } from './pages/LandingPage';
 import GSTSoftwarePage from './pages/seo/GSTSoftwarePage';
 import ITRSoftwarePage from './pages/seo/ITRSoftwarePage';
 import CAPracticeManagementPage from './pages/seo/CAPracticeManagementPage';
 
-// Super Admin & Company Pages - Still lazy loaded for better chunk splitting
+// Super Admin & Company Pages
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
 const FirmManagement = lazy(() => import('./pages/super-admin/FirmManagement'));
 const CreateFirm = lazy(() => import('./pages/super-admin/CreateFirm'));
@@ -87,78 +87,23 @@ const PressPage = lazy(() => import('./pages/company/PressPage'));
 
 
 const LoadingScreen = () => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    minHeight: '100vh',
-    background: '#f8fafc'
-  }}>
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
     <div className="spinner"></div>
-    <style>{`
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(102, 126, 234, 0.1);
-        border-radius: 50%;
-        border-top-color: #667eea;
-        animation: spin 1s ease-in-out infinite;
-      }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-    `}</style>
+    <style>{` .spinner { width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 1s ease-in-out infinite; } @keyframes spin { to { transform: rotate(360deg); } } `}</style>
   </div>
 );
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 30000, // 30 seconds
-      gcTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
+  defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1, staleTime: 30000, gcTime: 1000 * 60 * 5 } },
 });
 
 const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#667eea',
-    },
-    secondary: {
-      main: '#764ba2',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 700,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  shape: {
-    borderRadius: 8,
-  },
+  palette: { primary: { main: '#667eea' }, secondary: { main: '#764ba2' } },
+  typography: { fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif', h4: { fontWeight: 700 }, h6: { fontWeight: 600 } },
+  shape: { borderRadius: 8 },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 600,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-        },
-      },
-    },
+    MuiButton: { styleOverrides: { root: { textTransform: 'none', fontWeight: 600 } } },
+    MuiCard: { styleOverrides: { root: { boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' } } },
   },
 });
 
@@ -174,18 +119,14 @@ const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to={getHomePath()} replace />
-            ) : (
-              <Login />
-            )
-          }
-        />
-
+        <Route path="/login" element={isAuthenticated ? <Navigate to={getHomePath()} replace /> : <Login />} />
+        
+        {/* Support both underscore and hyphen for Super Admin base routes */}
         <Route path="/superadmin" element={<SuperAdminLogin />} />
+        
+        {/* Redirect underscored super_admin to hyphenated super-admin */}
+        <Route path="/super_admin" element={<Navigate to="/super-admin" replace />} />
+        <Route path="/super_admin/*" element={<Navigate to="/super-admin" replace />} />
 
         {/* Super Admin Routes */}
         <Route
@@ -196,7 +137,7 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<SuperAdminDashboard />} />
           <Route path="firms" element={<FirmManagement />} />
           <Route path="create-firm" element={<CreateFirm />} />
@@ -205,19 +146,12 @@ const AppRoutes: React.FC = () => {
           <Route path="analytics" element={<Analytics />} />
           <Route path="system-health" element={<SystemHealth />} />
           <Route path="security" element={<SecurityLogs />} />
-          <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Admin/Staff Routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requireStaff>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin" element={<ProtectedRoute requireStaff><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="reports" element={<MonthlyReports />} />
           <Route path="clients" element={<Clients />} />
@@ -251,94 +185,49 @@ const AppRoutes: React.FC = () => {
           <Route path="upload" element={<UploadFile />} />
           <Route path="files" element={<ManageFiles />} />
           <Route path="reminders" element={<Reminders />} />
-
           <Route path="billing" element={<Billing />} />
-          <Route
-            path="client-ledger"
-            element={
-              <ProtectedRoute requireAdmin>
-                <ClientLedger />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="client-ledger" element={<ProtectedRoute requireAdmin><ClientLedger /></ProtectedRoute>} />
           <Route path="fileregister" element={<FileRegister />} />
-
-          <Route
-            path="firm-master"
-            element={
-              <ProtectedRoute requireAdmin>
-                <FirmMasterPage />
-              </ProtectedRoute>
-            }
-          />
-
+          <Route path="firm-master" element={<ProtectedRoute requireAdmin><FirmMasterPage /></ProtectedRoute>} />
           <Route path="employee">
             <Route path="master" element={<EmployeeMaster />} />
             <Route path="master/:id" element={<EmployeeMaster />} />
             <Route path="list" element={<EmployeeList />} />
             <Route path="tasks" element={<EmpTaskSchedule />} />
-
             <Route path="timesheet">
               <Route path="entry" element={<EntryWiseTimesheet />} />
               <Route path="subtask" element={<SubtaskWiseTimesheet />} />
               <Route path="task" element={<TaskWiseTimesheet />} />
             </Route>
-
             <Route path="attendance">
               <Route path="add" element={<AddAttendance />} />
               <Route path="list" element={<AttendanceList />} />
             </Route>
-
             <Route path="login-detail" element={<EmployeeLoginDetail />} />
             <Route path="free-list" element={<FreeEmployeeList />} />
             <Route path="form108" element={<Form108 />} />
           </Route>
-
           <Route path="profile" element={<ProfileSettings />} />
         </Route>
 
-
         {/* Client Routes */}
-        <Route
-          path="/client"
-          element={
-            <ProtectedRoute requireClient>
-              <ClientLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/client/dashboard" replace />} />
+        <Route path="/client" element={<ProtectedRoute requireClient><ClientLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<ClientDashboard />} />
           <Route path="invoices" element={<ClientInvoices />} />
           <Route path="profile" element={<ProfileSettings />} />
-
           <Route path="files" element={<MyFiles />} />
         </Route>
 
-        {/* SEO Pages */}
         <Route path="/gst-software-india" element={<GSTSoftwarePage />} />
         <Route path="/itr-filing-software" element={<ITRSoftwarePage />} />
         <Route path="/ca-practice-management" element={<CAPracticeManagementPage />} />
-
-        {/* Company Pages */}
         <Route path="/about" element={<AboutPage />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/press" element={<PressPage />} />
 
-        {/* Default Route */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to={getHomePath()} replace />
-            ) : (
-              isSuperAdminDomain() ? <LandingPage /> : <Navigate to="/login" replace />
-            )
-          }
-        />
-
-        {/* 404 */}
+        <Route path="/" element={isAuthenticated ? <Navigate to={getHomePath()} replace /> : (isSuperAdminDomain() ? <LandingPage /> : <Navigate to="/login" replace />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense >
@@ -358,7 +247,6 @@ function App() {
               <Toaster position="top-right" />
               <AppRoutes />
             </AuthProvider>
-
           </BrowserRouter>
         </HelmetProvider>
       </ThemeProvider>
