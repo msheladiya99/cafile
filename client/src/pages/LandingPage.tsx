@@ -120,10 +120,23 @@ export const LandingPage: React.FC = () => {
     return (
         <Box sx={{ bgcolor: '#fff', minHeight: '100vh', overflowX: 'hidden' }}>
             <Helmet>
-                <title>My CA File | Premium CA Practice Management Software in Surat</title>
-                <meta name="description" content="Ultimate office portal for Chartered Accountants. Manage ITR, GST, Audits, and Clients with a secure, multi-tenant SaaS platform built for professional CA firms in Surat and across India." />
-                <meta name="keywords" content="CA Office Software, Surat CA Firm Portal, ITR Management SaaS, GST Compliance Tool, My CA File, Practice Management India" />
+                <title>My CA File | Best CA Practice Management Software for Indian Firms</title>
+                <meta name="description" content="Ultimate office portal for Chartered Accountants in India. Manage ITR, GST, Audits, Billing and Clients with a secure, multi-tenant SaaS platform built for professional CA firms." />
+                <meta name="keywords" content="CA Practice Management Software, GST Software for CA, ITR Filing Tool for CA India, CA Firm Office Management, My CA File Surat, Accountant Portal India, SaaS for CA" />
                 <link rel="canonical" href="https://www.mycafile.in" />
+                
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://www.mycafile.in" />
+                <meta property="og:title" content="My CA File | Premium CA Practice Management Software" />
+                <meta property="og:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
+                <meta property="og:image" content="https://www.mycafile.in/og-image.png" />
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content="https://www.mycafile.in" />
+                <meta property="twitter:title" content="My CA File | Premium CA Practice Management Software" />
+                <meta property="twitter:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
             </Helmet>
 
             {/* Premium Blurred Navbar */}
@@ -289,10 +302,10 @@ export const LandingPage: React.FC = () => {
                                 mb: 3,
                                 letterSpacing: { xs: -1, md: -2.5 }
                             }}>
-                                Unlock your practice <br />
+                                Best CA practice <br />
                                 <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    potential
-                                </span> with My CA File
+                                    management
+                                </span> software for Indian CA firms
                             </Typography>
                             <Typography variant="h5" sx={{
                                 color: '#64748b',
@@ -761,20 +774,22 @@ export const LandingPage: React.FC = () => {
                         </Grid>
 
                         <Grid size={{ xs: 6, md: 2 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Product</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Solutions</Typography>
                             <Stack spacing={2}>
-                                {['Features', 'Updates', 'Security', 'Enterprise'].map(item => (
-                                    <Typography key={item} variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>{item}</Typography>
-                                ))}
+                                <Typography variant="body2" onClick={() => navigate('/gst-software-india')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>GST Software</Typography>
+                                <Typography variant="body2" onClick={() => navigate('/itr-filing-software')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>ITR Software</Typography>
+                                <Typography variant="body2" onClick={() => navigate('/ca-practice-management')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Practice Management</Typography>
+                                <Typography variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Security</Typography>
                             </Stack>
                         </Grid>
 
                         <Grid size={{ xs: 6, md: 2 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Company</Typography>
                             <Stack spacing={2}>
-                                {['About', 'Careers', 'Contact', 'Press'].map(item => (
-                                    <Typography key={item} variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>{item}</Typography>
-                                ))}
+                                <Typography variant="body2" onClick={() => navigate('/about')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>About</Typography>
+                                <Typography variant="body2" onClick={() => navigate('/careers')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Careers</Typography>
+                                <Typography variant="body2" onClick={() => navigate('/contact')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Contact</Typography>
+                                <Typography variant="body2" onClick={() => navigate('/press')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Press</Typography>
                             </Stack>
                         </Grid>
 

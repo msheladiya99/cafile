@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import { isSuperAdminDomain } from './utils/subdomain';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
 
 // Core layouts and pages - now lazy loaded to reduce initial bundle size
 const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
@@ -73,6 +74,13 @@ const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
+const GSTSoftwarePage = lazy(() => import('./pages/seo/GSTSoftwarePage'));
+const ITRSoftwarePage = lazy(() => import('./pages/seo/ITRSoftwarePage'));
+const CAPracticeManagementPage = lazy(() => import('./pages/seo/CAPracticeManagementPage'));
+const AboutPage = lazy(() => import('./pages/company/AboutPage'));
+const CareersPage = lazy(() => import('./pages/company/CareersPage'));
+const ContactPage = lazy(() => import('./pages/company/ContactPage'));
+const PressPage = lazy(() => import('./pages/company/PressPage'));
 
 
 const LoadingScreen = () => (
@@ -304,6 +312,17 @@ const AppRoutes: React.FC = () => {
           <Route path="files" element={<MyFiles />} />
         </Route>
 
+        {/* SEO Pages */}
+        <Route path="/gst-software-india" element={<GSTSoftwarePage />} />
+        <Route path="/itr-filing-software" element={<ITRSoftwarePage />} />
+        <Route path="/ca-practice-management" element={<CAPracticeManagementPage />} />
+
+        {/* Company Pages */}
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/careers" element={<CareersPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/press" element={<PressPage />} />
+
         {/* Default Route */}
         <Route
           path="/"
@@ -330,6 +349,7 @@ function App() {
         <HelmetProvider>
           <CssBaseline />
           <BrowserRouter>
+            <ScrollToTop />
             <AuthProvider>
               <Toaster position="top-right" />
               <AppRoutes />
