@@ -121,6 +121,8 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 client.driveItrFolderId = folderStructure.itrFolderId;
                 client.driveGstFolderId = folderStructure.gstFolderId;
                 client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                client.driveNoticesFolderId = folderStructure.noticesFolderId;
                 await client.save();
             }
 
@@ -131,9 +133,47 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
                 try {
                     userDocsFolderId = await driveService.ensureFolder('Documents', client.driveFolderId!);
-                } catch (error) {
-                    console.error('Error creating USER_DOCS folder:', error);
-                    return res.status(500).json({ message: 'Failed to create USER_DOCS folder' });
+                } catch (error: any) {
+                    console.error('Error creating Documents folder:', error);
+                    
+                    const isNotFound = error.code === 404 || (error.response && error.response.status === 404) || error.message.includes('File not found');
+                    if (isNotFound) {
+                        try {
+                            console.log('Client folder missing during USER_DOCS upload, repairing...');
+                            const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                            client.driveFolderId = folderStructure.clientFolderId;
+                            client.driveItrFolderId = folderStructure.itrFolderId;
+                            client.driveGstFolderId = folderStructure.gstFolderId;
+                            client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                            client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                            client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                            await client.save();
+                            userDocsFolderId = folderStructure.documentsFolderId;
+                        } catch (repairErr: any) {
+                            // Check for Firm root repair
+                            if (repairErr.response && repairErr.response.status === 404 && req.firm?.googleDriveType === 'app') {
+                                const newRootId = await driveService.ensureFirmStructure(req.firm.firmName);
+                                const FirmModel = (await import('../models/Firm')).Firm;
+                                await FirmModel.findByIdAndUpdate(req.firm._id, { googleDriveRootFolderId: newRootId });
+                                req.firm.googleDriveRootFolderId = newRootId;
+                                driveService.setRootFolder(newRootId);
+                                
+                                const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                                client.driveFolderId = folderStructure.clientFolderId;
+                                client.driveItrFolderId = folderStructure.itrFolderId;
+                                client.driveGstFolderId = folderStructure.gstFolderId;
+                                client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                                client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                                client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                                await client.save();
+                                userDocsFolderId = folderStructure.documentsFolderId;
+                            } else {
+                                return res.status(500).json({ message: 'Failed to repair client folder structure' });
+                            }
+                        }
+                    } else {
+                        return res.status(500).json({ message: 'Failed to create Documents folder' });
+                    }
                 }
 
                 // Upload file directly to USER_DOCS folder
@@ -198,6 +238,12 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 } else if (category === 'ACCOUNTING' && client.driveAccountingFolderId !== checkedCategoryFolderId) {
                     client.driveAccountingFolderId = checkedCategoryFolderId;
                     dbUpdated = true;
+                } else if (category === 'DOCUMENTS' && client.driveDocumentsFolderId !== checkedCategoryFolderId) {
+                    client.driveDocumentsFolderId = checkedCategoryFolderId;
+                    dbUpdated = true;
+                } else if (category === 'NOTICES' && client.driveNoticesFolderId !== checkedCategoryFolderId) {
+                    client.driveNoticesFolderId = checkedCategoryFolderId;
+                    dbUpdated = true;
                 }
 
                 if (dbUpdated) {
@@ -215,6 +261,8 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                     case 'ITR': categoryFolderId = client.driveItrFolderId!; break;
                     case 'GST': categoryFolderId = client.driveGstFolderId!; break;
                     case 'ACCOUNTING': categoryFolderId = client.driveAccountingFolderId!; break;
+                    case 'DOCUMENTS': categoryFolderId = client.driveDocumentsFolderId!; break;
+                    case 'NOTICES': categoryFolderId = client.driveNoticesFolderId!; break;
                     default: return res.status(400).json({ message: 'Invalid category' });
                 }
             }
@@ -250,12 +298,40 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
                     if (!clientFolderExists) {
                         // Recreate ALL structure
-                        const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
-                        client.driveFolderId = folderStructure.clientFolderId;
-                        client.driveItrFolderId = folderStructure.itrFolderId;
-                        client.driveGstFolderId = folderStructure.gstFolderId;
-                        client.driveAccountingFolderId = folderStructure.accountingFolderId;
-                        await client.save();
+                        try {
+                            const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                            client.driveFolderId = folderStructure.clientFolderId;
+                            client.driveItrFolderId = folderStructure.itrFolderId;
+                            client.driveGstFolderId = folderStructure.gstFolderId;
+                            client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                            client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                            client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                            await client.save();
+                        } catch (clientErr: any) {
+                            // If this fails with 404, the FIRM root itself might be missing (app drive only)
+                            if (clientErr.response && clientErr.response.status === 404 && req.firm?.googleDriveType === 'app') {
+                                console.log('Firm root folder missing (app), attempting to repair firm structure...');
+                                const newFirmRootId = await driveService.ensureFirmStructure(req.firm.firmName);
+                                
+                                // Update Firm record with new root ID
+                                const FirmModel = (await import('../models/Firm')).Firm;
+                                await FirmModel.findByIdAndUpdate(req.firm._id, { googleDriveRootFolderId: newFirmRootId });
+                                req.firm.googleDriveRootFolderId = newFirmRootId;
+
+                                // Update service instance root and retry structure creation
+                                driveService.setRootFolder(newFirmRootId);
+                                const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                                client.driveFolderId = folderStructure.clientFolderId;
+                                client.driveItrFolderId = folderStructure.itrFolderId;
+                                client.driveGstFolderId = folderStructure.gstFolderId;
+                                client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                                client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                                client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                                await client.save();
+                            } else {
+                                throw clientErr;
+                            }
+                        }
                     } else {
                         // Recreate CATEGORY folder
                         console.log(`Recreating missing category folder: ${categoryDisplayName}`);
@@ -264,6 +340,8 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                             case 'ITR': client.driveItrFolderId = newCategoryFolderId; break;
                             case 'GST': client.driveGstFolderId = newCategoryFolderId; break;
                             case 'ACCOUNTING': client.driveAccountingFolderId = newCategoryFolderId; break;
+                            case 'DOCUMENTS': client.driveDocumentsFolderId = newCategoryFolderId; break;
+                            case 'NOTICES': client.driveNoticesFolderId = newCategoryFolderId; break;
                         }
                         await client.save();
                     }
@@ -273,6 +351,8 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                         case 'ITR': categoryFolderId = client.driveItrFolderId!; break;
                         case 'GST': categoryFolderId = client.driveGstFolderId!; break;
                         case 'ACCOUNTING': categoryFolderId = client.driveAccountingFolderId!; break;
+                        case 'DOCUMENTS': categoryFolderId = client.driveDocumentsFolderId!; break;
+                        case 'NOTICES': categoryFolderId = client.driveNoticesFolderId!; break;
                     }
                     yearFolderId = await driveService.ensureFolder(yearFolderName, categoryFolderId);
                 } else {

@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IFile extends Document {
     clientId: mongoose.Types.ObjectId;
     year?: string;
-    category: 'ITR' | 'GST' | 'ACCOUNTING' | 'USER_DOCS';
+    category: 'ITR' | 'GST' | 'ACCOUNTING' | 'USER_DOCS' | 'DOCUMENTS' | 'NOTICES';
     month?: string;
     docType?: string;
     fileName: string;
@@ -44,7 +44,7 @@ const fileSchema = new Schema<IFile>({
     },
     category: {
         type: String,
-        enum: ['ITR', 'GST', 'ACCOUNTING', 'USER_DOCS'],
+        enum: ['ITR', 'GST', 'ACCOUNTING', 'USER_DOCS', 'DOCUMENTS', 'NOTICES'],
         required: true
     },
     month: {

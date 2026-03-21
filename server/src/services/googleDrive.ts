@@ -340,7 +340,7 @@ export class GoogleDriveService {
     async createEmployeeFolderStructure(employeeName: string): Promise<string> {
         try {
             // Create or get 'Employees' root folder
-            const employeesRootId = await this.ensureFolder('Employee');
+            const employeesRootId = await this.ensureFolder('Employees');
 
             // Create or get subfolder for the employee
             const employeeFolderId = await this.ensureFolder(employeeName, employeesRootId);
@@ -348,6 +348,33 @@ export class GoogleDriveService {
             return employeeFolderId;
         } catch (error) {
             console.error('Error creating employee folder structure:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Ensure all top-level firm folders exist
+     * MyCAFile -> Firm_Name -> [Clients, Employees, Compliance, Internal Docs, Reports]
+     */
+    async ensureFirmStructure(firmName: string): Promise<string> {
+        try {
+            // 1. Ensure MyCAFile root exists (under the configured root folder ID or absolute root)
+            const globalRootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || 'root';
+            const rootId = await this.ensureFolder('MyCAFile', globalRootId);
+
+            // 2. Ensure Firm folder exists within root
+            const firmFolderId = await this.ensureFolder(firmName, rootId);
+
+            // 3. Ensure sub-categories exist
+            await this.ensureFolder('Clients', firmFolderId);
+            await this.ensureFolder('Employees', firmFolderId);
+            await this.ensureFolder('Compliance', firmFolderId);
+            await this.ensureFolder('Internal Docs', firmFolderId);
+            await this.ensureFolder('Reports', firmFolderId);
+
+            return firmFolderId;
+        } catch (error) {
+            console.error('Error ensuring firm structure:', error);
             throw error;
         }
     }

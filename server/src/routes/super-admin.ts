@@ -211,15 +211,8 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
                     await driveService.ensureFolder('Internal Docs', googleDriveRootFolderId);
                     await driveService.ensureFolder('Reports', googleDriveRootFolderId);
                 } else {
-                    // Default behavior: create folder in app drive
-                    const caFilesRootId = await driveService.ensureFolder('MyCAFile');
-                    googleDriveRootFolderId = await driveService.createFolder(firmName, caFilesRootId);
-
-                    await driveService.ensureFolder('Clients', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Employees', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Compliance', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Internal Docs', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Reports', googleDriveRootFolderId);
+                    // Default behavior: create folder in app drive using standardized structure
+                    googleDriveRootFolderId = await driveService.ensureFirmStructure(firmName);
                 }
             }
         } catch (driveError) {

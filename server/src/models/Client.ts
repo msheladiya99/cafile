@@ -54,6 +54,8 @@ export interface IClient extends Document {
     driveItrFolderId?: string;
     driveGstFolderId?: string;
     driveAccountingFolderId?: string;
+    driveDocumentsFolderId?: string;
+    driveNoticesFolderId?: string;
 
     // Identity & Compliance
     panNumber?: string;
@@ -156,6 +158,12 @@ const clientSchema = new Schema<IClient>({
         type: String
     },
     driveAccountingFolderId: {
+        type: String
+    },
+    driveDocumentsFolderId: {
+        type: String
+    },
+    driveNoticesFolderId: {
         type: String
     },
     panNumber: {
