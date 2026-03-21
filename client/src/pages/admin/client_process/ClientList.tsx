@@ -12,13 +12,15 @@ import {
     TableContainer,
     TableRow,
     TableHead,
+    TablePagination,
     IconButton,
     useMediaQuery,
     useTheme,
     Card,
     CardContent,
     Stack,
-    Divider
+    Divider,
+    Checkbox
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -29,7 +31,7 @@ import {
     LockReset as LockResetIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import { masterService } from '../../../services/masterService';
@@ -43,6 +45,7 @@ export const ClientList: React.FC = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const queryClient = useQueryClient();
 
     const { data: clients = [], isLoading } = useQuery<Client[]>({
         queryKey: ['clients'],
@@ -70,7 +73,18 @@ export const ClientList: React.FC = () => {
     const [filterStatus, setFilterStatus] = React.useState('all');
     const [filterFYear, setFilterFYear] = React.useState('');
 
+    // Pagination State
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [selectedClients, setSelectedClients] = React.useState<string[]>([]);
+
     const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+
+    // Reset page and selection when filters change to avoid empty views
+    React.useEffect(() => {
+        setPage(0);
+        setSelectedClients([]);
+    }, [filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
@@ -119,6 +133,71 @@ export const ClientList: React.FC = () => {
         }
     };
 
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const currentViewIds = filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((n) => n._id);
+            setSelectedClients(currentViewIds);
+            return;
+        }
+        setSelectedClients([]);
+    };
+
+    const handleClick = (_event: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const selectedIndex = selectedClients.indexOf(id);
+        let newSelected: string[] = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selectedClients, id);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selectedClients.slice(1));
+        } else if (selectedIndex === selectedClients.length - 1) {
+            newSelected = newSelected.concat(selectedClients.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selectedClients.slice(0, selectedIndex),
+                selectedClients.slice(selectedIndex + 1),
+            );
+        }
+
+        setSelectedClients(newSelected);
+    };
+
+    const deleteClientMutation = useMutation({
+        mutationFn: adminService.deleteClient,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['clients'] });
+        },
+        onError: (error: unknown) => {
+            console.error('Error deleting client:', error);
+            alert('Failed to delete client');
+        }
+    });
+
+    const handleDeleteClient = (id: string, name: string) => {
+        if (window.confirm(`Are you sure you want to delete the client "${name}"? This action cannot be undone.`)) {
+            deleteClientMutation.mutate(id);
+        }
+    };
+
+    const bulkDeleteMutation = useMutation({
+        mutationFn: adminService.bulkDeleteClients,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['clients'] });
+            setSelectedClients([]);
+            alert(data.message || 'Clients deleted successfully');
+        },
+        onError: (error: unknown) => {
+            console.error('Error during bulk deletion:', error);
+            alert('Failed to delete selected clients');
+        }
+    });
+
+    const handleBulkDelete = () => {
+        if (window.confirm(`Are you absolutely sure you want to delete ${selectedClients.length} selected client(s)? This action cannot be undone.`)) {
+            bulkDeleteMutation.mutate(selectedClients);
+        }
+    };
+
     return (
         <PageContainer>
             {/* Header Section */}
@@ -135,6 +214,19 @@ export const ClientList: React.FC = () => {
                             whiteSpace: 'nowrap'
                         }
                     }}>
+                        {selectedClients.length > 0 && (
+                            <Button 
+                                variant="contained" 
+                                size="small" 
+                                color="error"
+                                onClick={handleBulkDelete}
+                                disabled={bulkDeleteMutation.isPending}
+                                startIcon={<DeleteIcon />}
+                                sx={{ textTransform: 'none', borderRadius: 1.5, fontWeight: 600, boxShadow: 'none' }}
+                            >
+                                Delete Selected ({selectedClients.length})
+                            </Button>
+                        )}
                         <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
                             Add New
                         </Button>
@@ -314,7 +406,7 @@ export const ClientList: React.FC = () => {
                             ) : filteredClients.length === 0 ? (
                                 <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>No clients found.</Box>
                             ) : (
-                                filteredClients.map((client) => (
+                                filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((client) => (
                                     <Card key={client._id} variant="outlined" sx={{ borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}>
                                         <CardContent sx={{ p: 2 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
@@ -391,6 +483,8 @@ export const ClientList: React.FC = () => {
                                                 <IconButton
                                                     size="small"
                                                     sx={{ color: '#ef4444', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
+                                                    onClick={() => handleDeleteClient(client._id, client.name)}
+                                                    disabled={deleteClientMutation.isPending}
                                                 >
                                                     <DeleteIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
@@ -405,6 +499,14 @@ export const ClientList: React.FC = () => {
                             <Table size="small">
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: '#f1f5f9' }}>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                color="primary"
+                                                indeterminate={selectedClients.length > 0 && selectedClients.length < filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length}
+                                                checked={filteredClients.length > 0 && selectedClients.length === filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length}
+                                                onChange={handleSelectAllClick}
+                                            />
+                                        </TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
@@ -415,17 +517,30 @@ export const ClientList: React.FC = () => {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
                                         </TableRow>
                                     ) : filteredClients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} align="center" sx={{ color: 'text.secondary', py: 4 }}>
+                                            <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', py: 4 }}>
                                                 No clients found.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredClients.map((client) => (
-                                            <TableRow key={client._id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}>
+                                        filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((client) => {
+                                            const isItemSelected = selectedClients.indexOf(client._id) !== -1;
+                                            return (
+                                            <TableRow 
+                                                key={client._id} 
+                                                sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}
+                                                selected={isItemSelected}
+                                            >
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        color="primary"
+                                                        checked={isItemSelected}
+                                                        onChange={(event) => handleClick(event, client._id)}
+                                                    />
+                                                </TableCell>
                                                 <TableCell sx={{ fontWeight: 500 }}>
                                                     {client.name}
                                                     {client.username && (
@@ -486,16 +601,33 @@ export const ClientList: React.FC = () => {
                                                         size="small"
                                                         sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
                                                         aria-label="Delete client"
+                                                        onClick={() => handleDeleteClient(client._id, client.name)}
+                                                        disabled={deleteClientMutation.isPending}
                                                     >
                                                         <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>
-                                        ))
+                                        )})
                                     )}
                                 </TableBody>
                             </Table>
                         </TableContainer>
+                    )}
+
+                    {filteredClients.length > 0 && (
+                        <TablePagination
+                            rowsPerPageOptions={[10, 20, 30, 40, 50]}
+                            component="div"
+                            count={filteredClients.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={(_, newPage) => setPage(newPage)}
+                            onRowsPerPageChange={(e) => {
+                                setRowsPerPage(parseInt(e.target.value, 10));
+                                setPage(0);
+                            }}
+                        />
                     )}
                 </Section>
 

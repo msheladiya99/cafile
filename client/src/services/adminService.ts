@@ -9,6 +9,11 @@ export const adminService = {
         return response.data;
     },
 
+    bulkCreateClients: async (data: { clients: Partial<Client>[] }): Promise<{ successful: number, failed: number, errors: string[] }> => {
+        const response = await api.post('/admin/bulk-create-clients', data);
+        return response.data;
+    },
+
     getClients: async (): Promise<Client[]> => {
         const response = await api.get('/admin/clients');
         return response.data;
@@ -89,6 +94,11 @@ export const adminService = {
 
     deleteClient: async (clientId: string): Promise<void> => {
         await api.delete(`/admin/clients/${clientId}`);
+    },
+
+    bulkDeleteClients: async (clientIds: string[]): Promise<{ message: string }> => {
+        const response = await api.post('/admin/clients/bulk-delete', { clientIds });
+        return response.data;
     },
 
     downloadFile: async (fileId: string, fileName: string): Promise<void> => {

@@ -170,6 +170,110 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         res.status(500).json({ message: 'Server error' });
     }
 });
+// Bulk create clients (Admin and Manager only)
+router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { clients } = req.body;
+        if (!Array.isArray(clients) || clients.length === 0) {
+            res.status(400).json({ message: 'No clients provided' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            res.status(400).json({ message: 'Firm context required' });
+            return;
+        }
+
+        const results = {
+            successful: 0,
+            failed: 0,
+            errors: [] as string[]
+        };
+
+        for (let i = 0; i < clients.length; i++) {
+            const clientData = clients[i];
+            try {
+                if (!clientData.name || !clientData.email || !clientData.phone) {
+                    throw new Error(`Row ${i + 1}: Name, email, and phone are required for ${clientData.name || 'Unknown'}`);
+                }
+
+                const existingClient = await Client.findOne({ email: clientData.email, firmId });
+                if (existingClient) {
+                    throw new Error(`Row ${i + 1}: Client with email ${clientData.email} already exists`);
+                }
+
+                if (clientData.panNumber) {
+                     const existingPan = await Client.findOne({ panNumber: clientData.panNumber, firmId });
+                     if (existingPan) {
+                          throw new Error(`Row ${i + 1}: Client with PAN ${clientData.panNumber} already exists`);
+                     }
+                }
+
+                if (clientData.clientCode) {
+                    const existingCode = await Client.findOne({ clientCode: clientData.clientCode, firmId });
+                    if (existingCode) {
+                        throw new Error(`Row ${i + 1}: Client Code ${clientData.clientCode} is already taken`);
+                    }
+                }
+
+                let username = clientData.username;
+                if (username) {
+                    const existingUser = await User.findOne({ username });
+                    if (existingUser) {
+                        throw new Error(`Row ${i + 1}: Username ${username} is already taken`);
+                    }
+                } else {
+                    username = generateUsername(clientData.name);
+                }
+
+                const client = new Client({
+                    firmId,
+                    ...clientData
+                });
+                await client.save();
+
+                const password = generatePassword();
+                const passwordHash = await bcrypt.hash(password, 10);
+
+                const user = new User({
+                    firmId,
+                    username,
+                    passwordHash,
+                    role: 'CLIENT',
+                    clientId: client._id
+                });
+                await user.save();
+
+                // Attempt to generate Google Drive folder
+                try {
+                    const driveService = getDriveService();
+                    await driveService.createClientFolderStructure(client.name);
+                } catch (driveErr) {
+                    console.error('Failed to create drive folders for imported client:', driveErr);
+                }
+
+                // Send welcome email async
+                sendWelcomeEmail({
+                    clientEmail: client.email,
+                    clientName: client.name,
+                    username,
+                    password
+                }).catch(err => console.error('Failed to send welcome email in bulk:', err));
+
+                results.successful++;
+            } catch (err: any) {
+                results.failed++;
+                results.errors.push(err.message || `Row ${i + 1}: Failed to import client ${clientData.name}`);
+            }
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Bulk create clients error:', error);
+        res.status(500).json({ message: 'Server error during bulk import' });
+    }
+});
 
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {
@@ -670,6 +774,45 @@ router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Respon
         res.json({ message: 'Client and all associated data deleted successfully' });
     } catch (error) {
         console.error('Delete client error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Bulk Delete clients (Admin only)
+router.post('/clients/bulk-delete', requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const { clientIds } = req.body;
+        if (!Array.isArray(clientIds) || clientIds.length === 0) {
+            res.status(400).json({ message: 'No clients selected' });
+            return;
+        }
+
+        // Delete users
+        await User.deleteMany({ clientId: { $in: clientIds } });
+
+        // Get all files for these clients
+        const files = await File.find({ clientId: { $in: clientIds } });
+        
+        // Delete physical local files
+        for (const file of files) {
+            if (file.storedIn === 'local' && file.filePath && fs.existsSync(file.filePath)) {
+                try {
+                    fs.unlinkSync(file.filePath);
+                } catch (e) {
+                    console.error(`Failed to delete file ${file.filePath}:`, e);
+                }
+            }
+        }
+
+        // Delete file records
+        await File.deleteMany({ clientId: { $in: clientIds } });
+
+        // Delete client records
+        await Client.deleteMany({ _id: { $in: clientIds } });
+
+        res.json({ message: `${clientIds.length} clients deleted successfully` });
+    } catch (error) {
+        console.error('Bulk delete clients error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

@@ -40,6 +40,7 @@ import { masterService, type ITStatus, type SubMaster } from '../../../services/
 import { adminService } from '../../../services/adminService';
 import { API_URL } from '../../../services/api';
 import type { CreateClientData, User, CreateClientResponse } from '../../../types';
+import { BulkImportModal } from './BulkImportModal';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -222,6 +223,7 @@ export const ClientMaster: React.FC = () => {
     const [tabValue, setTabValue] = useState(0);
     const [itStatusModalOpen, setItStatusModalOpen] = useState(false);
     const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
 
     // Form State
@@ -661,6 +663,10 @@ export const ClientMaster: React.FC = () => {
                             minWidth: { xs: 'fit-content', sm: 'auto' }
                         }
                     }}>
+                        <Button variant="contained" size="small" onClick={() => setBulkImportOpen(true)} 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
+                            Import Excel
+                        </Button>
                         <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} 
                             sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Add IT Status
@@ -1287,6 +1293,15 @@ export const ClientMaster: React.FC = () => {
                 onSave={(data) => subMasterMutation.mutate(data)}
                 isSaving={subMasterMutation.isPending}
                 dataList={subMasters}
+                showSnackbar={showSnackbar}
+            />
+            <BulkImportModal
+                open={bulkImportOpen}
+                onClose={() => setBulkImportOpen(false)}
+                itStatuses={itStatuses}
+                groups={groups}
+                subMasters={subMasters}
+                staffList={staffList}
                 showSnackbar={showSnackbar}
             />
             <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
