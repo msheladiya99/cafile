@@ -31,7 +31,9 @@ import {
     Language as LanguageIcon,
     CloudDone as CloudIcon,
     CheckCircle as CheckCircleIcon,
-    ReceiptLong as ReceiptIcon
+    ReceiptLong as ReceiptIcon,
+    Stars as StarsIcon,
+    LockOutlined as LockOutlinedIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -98,14 +100,16 @@ export const LandingPage: React.FC = () => {
             name: 'CA Rajesh Mehra',
             firm: 'Mehra & Associates, Varachha, Surat',
             comment: "The multi-tenant isolation is revolutionary. Each of our branches operates seamlessly without data overlaps. A must-have for large firms in Surat.",
-            avatar: '/ca-review-1.png',
+            avatar: '/ca-review-1.webp',
+            reviewId: 1,
             rating: 5
         },
         {
             name: 'CA Sneha Patel',
             firm: 'Patel & Co., Vesu, Surat',
             comment: "Managing 1000+ ITR filings used to be a headache. With the automated tracking, our efficiency has spiked by over 60%. Highly recommend!",
-            avatar: '/ca-review-2.png',
+            avatar: '/ca-review-2.webp',
+            reviewId: 2,
             rating: 5
         },
         {
@@ -113,6 +117,7 @@ export const LandingPage: React.FC = () => {
             firm: 'Shah & Partners, Adajan, Surat',
             comment: "The document vault and billing system are game changers. We've moved 100% of our client documentation to My CA File safely.",
             avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit',
+            reviewId: 3,
             rating: 4.5
         }
     ];
@@ -130,7 +135,7 @@ export const LandingPage: React.FC = () => {
                 <meta property="og:url" content="https://www.mycafile.in" />
                 <meta property="og:title" content="My CA File | Premium CA Practice Management Software" />
                 <meta property="og:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
-                <meta property="og:image" content="https://www.mycafile.in/og-image.png" />
+                <meta property="og:image" content="https://www.mycafile.in/og-image.webp" />
 
                 {/* Twitter */}
                 <meta property="twitter:card" content="summary_large_image" />
@@ -381,7 +386,7 @@ export const LandingPage: React.FC = () => {
                                 perspective: '1000px'
                             }}>
                                 <img
-                                    src="/landing-hero-new.png"
+                                    src="/landing-hero-new.webp"
                                     alt="My CA File Dashboard Mockup - CA Practice Management Software"
                                     fetchPriority="high"
                                     loading="eager"
@@ -537,7 +542,7 @@ export const LandingPage: React.FC = () => {
                             }}>
                                 <Box
                                     component="img"
-                                    src="/landing-analytics.png"
+                                    src="/landing-analytics.webp"
                                     alt="Client Compliance Analytics Dashboard - My CA File"
                                     sx={{ width: '100%', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
                                 />
@@ -616,80 +621,216 @@ export const LandingPage: React.FC = () => {
                         </Grid>
                     </Box>
 
-                    {/* Pricing Section */}
-                    <Box id="pricing" sx={{ py: 15 }}>
-                        <Box sx={{ textAlign: 'center', mb: 8 }}>
-                            <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2 }}>
-                                TRANSPARENT PRICING
-                            </Typography>
-                            <Typography variant="h3" sx={{ fontWeight: 1000, color: '#0f172a', mb: 2, letterSpacing: -1, fontSize: { xs: '1.75rem', md: '3rem' } }}>
-                                Simple plans for every firm
-                            </Typography>
-                        </Box>
-                        <Grid container spacing={4} justifyContent="center">
-                            {[
-                                {
-                                    name: 'Professional',
-                                    price: '₹14,999',
-                                    period: 'per year',
-                                    features: ['Multi-Firm Support', '10 Staff Members', 'Unlimited Clients', '50GB Storage', 'Standard Support'],
-                                    recommended: false
-                                },
-                                {
-                                    name: 'Premium',
-                                    price: '₹24,999',
-                                    period: 'per year',
-                                    features: ['Everything in Professional', 'Unlimited Staff Members', 'Custom Subdomain', '250GB Storage', 'Priority 24/7 Support'],
-                                    recommended: true
-                                }
-                            ].map((plan, i) => (
-                                <Grid size={{ xs: 12, md: 5, lg: 4 }} key={i}>
-                                    <Card sx={{
-                                        p: 5,
-                                        borderRadius: '32px',
-                                        height: '100%',
-                                        border: plan.recommended ? '2px solid #6366f1' : '1px solid #e2e8f0',
-                                        boxShadow: plan.recommended ? '0 20px 40px rgba(99, 102, 241, 0.1)' : 'none',
-                                        position: 'relative',
-                                        display: 'flex',
-                                        flexDirection: 'column'
-                                    }}>
-                                        {plan.recommended && (
-                                            <Box sx={{ position: 'absolute', top: 24, right: 24, bgcolor: '#6366f1', color: 'white', px: 2, py: 0.5, borderRadius: 10, fontSize: '0.75rem', fontWeight: 800 }}>
-                                                MOST POPULAR
+                    {/* CA SaaS Subscription Pricing Section */}
+                    <Box id="pricing" sx={{ py: 15, bgcolor: '#fbfbfb', borderRadius: '40px', position: 'relative', overflow: 'hidden' }}>
+                        <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #ffffff, #f7f6f4)', pointerEvents: 'none' }} />
+                        
+                        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+                            <Box sx={{ textAlign: 'center', mb: 10 }}>
+                                <Box sx={{ 
+                                    display: 'inline-flex', 
+                                    flexDirection: 'row', 
+                                    alignItems: 'center', 
+                                    gap: 2, 
+                                    background: 'linear-gradient(135deg, #FF602E 0%, #FF6FB5 100%)', 
+                                    color: 'white', 
+                                    px: 3, 
+                                    py: 1, 
+                                    borderRadius: '12px', 
+                                    mb: 4,
+                                    boxShadow: '0 8px 16px rgba(255, 96, 46, 0.15)'
+                                }}>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <StarsIcon sx={{ fontSize: 18 }} />
+                                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                                            Special Launch Pricing
+                                        </Typography>
+                                    </Stack>
+                                </Box>
+                                
+                                <Typography variant="h2" sx={{ 
+                                    fontWeight: 1000, 
+                                    color: '#0f172a', 
+                                    mb: 2, 
+                                    letterSpacing: -1.5, 
+                                    fontSize: { xs: '2.5rem', md: '3.75rem' },
+                                    lineHeight: 1.1
+                                }}>
+                                    Simple Pricing for Modern CA Firms
+                                </Typography>
+                                
+                                <Typography variant="h6" sx={{ color: '#64748b', maxWidth: '700px', mx: 'auto', fontWeight: 500, lineHeight: 1.6 }}>
+                                    Manage clients, automate compliance, and grow your CA practice with ease.
+                                </Typography>
+                            </Box>
+
+                            <Grid container spacing={4} alignItems="stretch" justifyContent="center">
+                                {[
+                                    {
+                                        name: 'Starter Plan',
+                                        tagline: 'Ideal for newly set up firms',
+                                        price: '299',
+                                        period: 'month',
+                                        features: [
+                                            'Manage up to 50 clients',
+                                            'GST, ITR & Compliance tracking',
+                                            'Automated reminders',
+                                            'Secure client data storage',
+                                            'Email support'
+                                        ],
+                                        cta: 'Start Now',
+                                        recommended: false,
+                                        badge: null
+                                    },
+                                    {
+                                        name: 'Professional Plan',
+                                        tagline: 'Powerful features for growing firms',
+                                        price: '599',
+                                        period: 'month',
+                                        features: [
+                                            'Manage up to 150 clients',
+                                            'GST, ITR, ROC modules',
+                                            'Advanced reports & analytics',
+                                            'Client portal access',
+                                            'Priority 24/7 support'
+                                        ],
+                                        cta: 'Upgrade Now',
+                                        recommended: true,
+                                        badge: 'Most Popular'
+                                    },
+                                    {
+                                        name: 'Enterprise Plan',
+                                        tagline: 'Ultimate automation for large firms',
+                                        price: '999',
+                                        period: 'month',
+                                        features: [
+                                            'Unlimited clients',
+                                            'Full automation suite',
+                                            'Team management & hierarchy',
+                                            'White-label branding',
+                                            'WhatsApp + Call support',
+                                            'Dedicated account manager'
+                                        ],
+                                        cta: 'Get Started',
+                                        recommended: false,
+                                        badge: 'Best Value'
+                                    }
+                                ].map((plan, i) => (
+                                    <Grid size={{ xs: 12, md: 4 }} key={i}>
+                                        <Card sx={{
+                                            p: { xs: 4, md: 5 },
+                                            borderRadius: '32px',
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            transition: 'all 0.4s ease',
+                                            border: plan.recommended ? '2px solid #FF602E' : '1px solid #e2e8f0',
+                                            position: 'relative',
+                                            transform: plan.recommended ? { md: 'scale(1.03)' } : 'none',
+                                            boxShadow: plan.recommended ? '0 30px 60px rgba(0,0,0,0.08)' : '0 10px 30px rgba(0,0,0,0.02)',
+                                            '&:hover': {
+                                                transform: plan.recommended ? { md: 'scale(1.05) translateY(-5px)' } : 'translateY(-5px)',
+                                                boxShadow: '0 40px 80px rgba(0,0,0,0.1)'
+                                            }
+                                        }}>
+                                            {plan.badge && (
+                                                <Box sx={{ 
+                                                    position: 'absolute', 
+                                                    top: -16, 
+                                                    left: '50%', 
+                                                    transform: 'translateX(-50%)', 
+                                                    bgcolor: plan.recommended ? '#FF602E' : '#1e293b', 
+                                                    color: 'white', 
+                                                    px: 3, 
+                                                    py: 0.8, 
+                                                    borderRadius: 10, 
+                                                    fontSize: '0.75rem', 
+                                                    fontWeight: 900,
+                                                    letterSpacing: 1,
+                                                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                                                }}>
+                                                    {plan.badge.toUpperCase()}
+                                                </Box>
+                                            )}
+                                            
+                                            <Box sx={{ mb: 4 }}>
+                                                <Typography variant="h5" sx={{ fontWeight: 1000, color: '#0f172a', mb: 1 }}>{plan.name}</Typography>
+                                                <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 600 }}>{plan.tagline}</Typography>
                                             </Box>
-                                        )}
-                                        <Typography variant="h5" sx={{ fontWeight: 1000, color: '#0f172a', mb: 1 }}>{plan.name}</Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 4 }}>
-                                            <Typography variant="h3" sx={{ fontWeight: 1000, color: '#1e293b' }}>{plan.price}</Typography>
-                                            <Typography variant="body2" sx={{ ml: 1, color: '#64748b' }}>/{plan.period}</Typography>
-                                        </Box>
-                                        <Stack spacing={2} sx={{ mb: 5, flexGrow: 1 }}>
-                                            {plan.features.map((feat, j) => (
-                                                <Stack direction="row" spacing={1.5} alignItems="center" key={j}>
-                                                    <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20 }} />
-                                                    <Typography variant="body2" sx={{ color: '#475569', fontWeight: 500 }}>{feat}</Typography>
-                                                </Stack>
-                                            ))}
-                                        </Stack>
-                                        <Button
-                                            variant={plan.recommended ? 'contained' : 'outlined'}
-                                            fullWidth
-                                            sx={{
-                                                borderRadius: '14px',
-                                                py: 1.5,
-                                                fontWeight: 800,
-                                                textTransform: 'none',
-                                                ...(plan.recommended && { background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' })
-                                            }}
-                                        >
-                                            Get Started
-                                        </Button>
-                                    </Card>
+
+                                            <Box sx={{ mb: 5 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                                                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>₹</Typography>
+                                                    <Typography variant="h2" sx={{ fontWeight: 1000, color: '#1e293b', fontSize: '3.5rem', letterSpacing: -2 }}>
+                                                        {plan.price}
+                                                    </Typography>
+                                                    <Typography variant="body1" sx={{ color: '#94a3b8', fontWeight: 600 }}>/{plan.period}</Typography>
+                                                </Box>
+                                                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 700 }}>
+                                                    Billed monthly
+                                                </Typography>
+                                            </Box>
+
+                                            <Stack spacing={2.2} sx={{ mb: 6, flexGrow: 1 }}>
+                                                {plan.features.map((feat, j) => (
+                                                    <Stack direction="row" spacing={1.5} alignItems="flex-start" key={j}>
+                                                        <CheckCircleIcon sx={{ fontSize: 18, color: plan.recommended ? '#FF602E' : '#22c55e', mt: 0.3 }} />
+                                                        <Typography variant="body2" sx={{ color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>{feat}</Typography>
+                                                    </Stack>
+                                                ))}
+                                            </Stack>
+
+                                            <Button
+                                                fullWidth
+                                                variant="contained"
+                                                onClick={() => navigate('/superadmin')}
+                                                sx={{
+                                                    borderRadius: '16px',
+                                                    py: 2,
+                                                    fontSize: '1rem',
+                                                    fontWeight: 900,
+                                                    textTransform: 'none',
+                                                    background: plan.recommended ? 'linear-gradient(135deg, #FF602E 0%, #E25529 100%)' : '#1e293b',
+                                                    color: 'white',
+                                                    boxShadow: plan.recommended ? '0 10px 30px rgba(255, 96, 46, 0.25)' : 'none',
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        background: plan.recommended ? 'linear-gradient(135deg, #E25529 0%, #FF602E 100%)' : '#000',
+                                                        transform: 'scale(1.02)'
+                                                    }
+                                                }}
+                                            >
+                                                {plan.cta}
+                                            </Button>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+
+                            {/* Trust & Verification Signals */}
+                            <Box sx={{ mt: 10, textAlign: 'center' }}>
+                                <Typography variant="subtitle1" sx={{ color: '#64748b', fontWeight: 700, mb: 4 }}>
+                                    Trusted by 100+ CA firms across India
+                                </Typography>
+                                <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
+                                    {[
+                                        { label: '100% Secure & Confidential', icon: <ShieldOutlined sx={{ fontSize: 20 }} /> },
+                                        { label: 'Built for Indian Tax System', icon: <LanguageIcon sx={{ fontSize: 20 }} /> },
+                                        { label: 'ISO 27001 Certified Data', icon: <LockOutlinedIcon sx={{ fontSize: 20 }} /> }
+                                    ].map((item, i) => (
+                                        <Grid size={{ xs: 12, md: 4 }} key={i}>
+                                            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: '#4b5563', justifyContent: 'center' }}>
+                                                <Box sx={{ color: '#FF602E' }}>{item.icon}</Box>
+                                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{item.label}</Typography>
+                                            </Stack>
+                                        </Grid>
+                                    ))}
                                 </Grid>
-                            ))}
-                        </Grid>
+                            </Box>
+                        </Container>
                     </Box>
+
+
 
                     {/* Stats Section moved below pricing */}
                     <Paper elevation={0} sx={{
