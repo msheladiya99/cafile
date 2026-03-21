@@ -9,6 +9,7 @@ import { isSuperAdminDomain } from './utils/subdomain';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import WhatsAppButton from './components/WhatsAppButton';
 
 // Core layouts and pages - now lazy loaded to reduce initial bundle size
 const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
@@ -63,7 +64,13 @@ const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module 
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
 
-// Super Admin Pages
+// Main Entry Pages - Static imports for SEO and LCP speed
+import { LandingPage } from './pages/LandingPage';
+import GSTSoftwarePage from './pages/seo/GSTSoftwarePage';
+import ITRSoftwarePage from './pages/seo/ITRSoftwarePage';
+import CAPracticeManagementPage from './pages/seo/CAPracticeManagementPage';
+
+// Super Admin & Company Pages - Still lazy loaded for better chunk splitting
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
 const FirmManagement = lazy(() => import('./pages/super-admin/FirmManagement'));
 const CreateFirm = lazy(() => import('./pages/super-admin/CreateFirm'));
@@ -73,10 +80,6 @@ const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
 const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
-const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
-const GSTSoftwarePage = lazy(() => import('./pages/seo/GSTSoftwarePage'));
-const ITRSoftwarePage = lazy(() => import('./pages/seo/ITRSoftwarePage'));
-const CAPracticeManagementPage = lazy(() => import('./pages/seo/CAPracticeManagementPage'));
 const AboutPage = lazy(() => import('./pages/company/AboutPage'));
 const CareersPage = lazy(() => import('./pages/company/CareersPage'));
 const ContactPage = lazy(() => import('./pages/company/ContactPage'));
@@ -350,6 +353,7 @@ function App() {
           <CssBaseline />
           <BrowserRouter>
             <ScrollToTop />
+            <WhatsAppButton />
             <AuthProvider>
               <Toaster position="top-right" />
               <AppRoutes />

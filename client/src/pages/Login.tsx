@@ -242,7 +242,7 @@ export const Login: React.FC = () => {
                         <Box mb={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                                 {firm?.logo ? (
-                                    <Box component="img" src={firm.logo} sx={{ height: 32, width: 'auto', mr: 1 }} />
+                                    <Box component="img" src={firm.logo} alt={`${firm.firmName} Logo`} sx={{ height: 32, width: 'auto', mr: 1 }} />
                                 ) : (
                                     <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
                                         <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />

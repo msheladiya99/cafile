@@ -8,7 +8,15 @@ export const SiteNavbar: React.FC = () => {
     const navigate = useNavigate();
     return (
         <Box sx={{ py: 2, px: { xs: 2, md: 4 }, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, bgcolor: 'white', zIndex: 100 }}>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
+            <Stack
+                direction="row"
+                spacing={1.5}
+                alignItems="center"
+                sx={{ cursor: 'pointer' }}
+                onClick={() => navigate('/')}
+                role="button"
+                aria-label="My CA File - Go to homepage"
+            >
                 <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px', display: 'flex' }}>
                     <ShieldOutlined sx={{ color: 'white', fontSize: 22 }} />
                 </Box>
@@ -33,7 +41,15 @@ export const SiteFooter: React.FC = () => {
             <Container maxWidth="lg">
                 <Grid container spacing={6}>
                     <Grid size={{ xs: 12, md: 4 }}>
-                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2, cursor: 'pointer' }} onClick={() => navigate('/')}>
+                        <Stack
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
+                            sx={{ mb: 2, cursor: 'pointer' }}
+                            onClick={() => navigate('/')}
+                            role="button"
+                            aria-label="My CA File - Go to homepage"
+                        >
                             <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px', display: 'flex' }}>
                                 <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
                             </Box>

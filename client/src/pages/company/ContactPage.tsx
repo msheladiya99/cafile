@@ -72,7 +72,7 @@ const ContactPage: React.FC = () => {
                                     </Box>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight={800} color="#1e293b">WhatsApp Support</Typography>
-                                        <Typography variant="body2" color="#16a34a" sx={{ fontWeight: 600 }}>+91 98765 43210</Typography>
+                                        <Typography variant="body2" color="#16a34a" sx={{ fontWeight: 600 }}>+91 95379 94439</Typography>
                                     </Box>
                                 </Stack>
                             </Card>

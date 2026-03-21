@@ -29,12 +29,14 @@ export const FAQAccordion: React.FC<FAQAccordionProps> = ({ faqs }) => {
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon sx={{ color: '#6366f1' }} />}
                         sx={{ px: { xs: 3, md: 4 }, py: 1 }}
+                        id={`faq-header-${index}`}
+                        aria-controls={`faq-content-${index}`}
                     >
                         <Typography variant="h6" sx={{ color: '#1e293b', fontWeight: 800, fontSize: { xs: '1rem', md: '1.1rem' } }}>
                             {faq.q}
                         </Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ px: { xs: 3, md: 4 }, pb: 3, pt: 0 }}>
+                    <AccordionDetails id={`faq-content-${index}`} sx={{ px: { xs: 3, md: 4 }, pb: 3, pt: 0 }}>
                         <Typography variant="body1" sx={{ color: '#64748b', lineHeight: 1.8, fontSize: { xs: '0.9rem', md: '1rem' } }}>
                             {faq.a}
                         </Typography>

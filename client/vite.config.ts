@@ -13,7 +13,10 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Letting Vite handle chunks automatically is often best for tree-shaking
+        manualChunks: {
+          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          'vendor-utils': ['react-router-dom', 'framer-motion', 'react-helmet-async'],
+        },
       },
     },
     chunkSizeWarningLimit: 600,

@@ -338,6 +338,7 @@ export const AdminLayout: React.FC = () => {
                         <Box
                             component="img"
                             src={logoUrl}
+                            alt={`${companyName} Logo`}
                             sx={{
                                 height: 32,
                                 width: 'auto',

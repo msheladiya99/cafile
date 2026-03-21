@@ -148,7 +148,15 @@ export const LandingPage: React.FC = () => {
             }}>
                 <Container maxWidth="lg">
                     <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
-                        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ cursor: 'pointer' }} onClick={() => window.scrollTo(0, 0)}>
+                        <Stack
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
+                            sx={{ cursor: 'pointer' }}
+                            onClick={() => window.scrollTo(0, 0)}
+                            role="button"
+                            aria-label="Home - Scroll to top"
+                        >
                             <Box sx={{
                                 background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
                                 p: 0.8,
@@ -199,7 +207,7 @@ export const LandingPage: React.FC = () => {
                         )}
 
                         {isMobile && (
-                            <IconButton color="inherit" onClick={toggleMobileMenu(true)} sx={{ color: '#1e1b4b' }}>
+                            <IconButton color="inherit" onClick={toggleMobileMenu(true)} sx={{ color: '#1e1b4b' }} aria-label="open mobile menu">
                                 <MenuIcon />
                             </IconButton>
                         )}
@@ -372,10 +380,12 @@ export const LandingPage: React.FC = () => {
                                 maxWidth: '1000px',
                                 perspective: '1000px'
                             }}>
-                                <Box
-                                    component="img"
+                                <img
                                     src="/landing-hero-new.png"
-                                    sx={{
+                                    alt="My CA File Dashboard Mockup - CA Practice Management Software"
+                                    fetchPriority="high"
+                                    loading="eager"
+                                    style={{
                                         width: '100%',
                                         height: 'auto',
                                         borderRadius: '24px',
@@ -528,6 +538,7 @@ export const LandingPage: React.FC = () => {
                                 <Box
                                     component="img"
                                     src="/landing-analytics.png"
+                                    alt="Client Compliance Analytics Dashboard - My CA File"
                                     sx={{ width: '100%', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
                                 />
                                 <Box sx={{
@@ -580,7 +591,7 @@ export const LandingPage: React.FC = () => {
                                         textAlign: 'left'
                                     }}>
                                         <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
-                                            <Avatar src={test.avatar} sx={{ width: 56, height: 56, border: '2px solid #6366f1' }} />
+                                            <Avatar src={test.avatar} alt={`${test.name} - ${test.firm}`} sx={{ width: 56, height: 56, border: '2px solid #6366f1' }} />
                                             <Box>
                                                 <Typography variant="subtitle1" sx={{
                                                     fontWeight: 800,

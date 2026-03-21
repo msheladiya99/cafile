@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 
 const team = [
-    { name: 'Maulik Sheladiya', role: 'Founder & CEO', bio: 'Built My CA File after seeing CA firms waste hours on spreadsheets and WhatsApp groups.', avatar: 'M' },
+    { name: 'Meet Sheladiya', role: 'Founder & CEO', bio: 'Built My CA File after seeing CA firms waste hours on spreadsheets and WhatsApp groups.', avatar: 'M' },
     { name: 'Engineering Team', role: 'Core Platform', bio: 'Our full-stack team ensures the platform is fast, secure, and always improving.', avatar: 'E' },
     { name: 'Customer Success', role: 'Support Team', bio: 'Dedicated to helping CA firms onboard and get maximum value from the platform.', avatar: 'C' },
 ];
@@ -122,7 +122,7 @@ const AboutPage: React.FC = () => {
                     {team.map((member, i) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
                             <Card sx={{ p: 4, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', textAlign: 'center' }}>
-                                <Avatar sx={{ width: 72, height: 72, mx: 'auto', mb: 2, background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', fontSize: '1.5rem', fontWeight: 800 }}>{member.avatar}</Avatar>
+                                <Avatar alt={member.name} sx={{ width: 72, height: 72, mx: 'auto', mb: 2, background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', fontSize: '1.5rem', fontWeight: 800 }}>{member.avatar}</Avatar>
                                 <Typography variant="h6" fontWeight={800} color="#1e293b">{member.name}</Typography>
                                 <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 700, display: 'block', mb: 1.5 }}>{member.role}</Typography>
                                 <Typography variant="body2" color="#64748b" lineHeight={1.7}>{member.bio}</Typography>

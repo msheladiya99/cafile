@@ -764,7 +764,7 @@ const PartnersTab: React.FC<{
                         <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: 1, textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
                             {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
-                                <Box component="img" src={curr.signatureImageUrl} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
+                                <Box component="img" src={curr.signatureImageUrl} alt={`Partner signature - ${curr.name}`} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
                             ) : <Camera size={24} color="#ccc" />}
                             <Button component="label" size="small" variant="outlined" sx={{ textTransform: 'none', py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
                                 {curr.signatureImageUrl ? 'Change' : 'Upload'}
@@ -1454,7 +1454,7 @@ export const FirmMasterPage: React.FC = () => {
                                     </Grid>
                                     <Grid size={5} sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
                                         <Typography fontSize="0.75rem" fontWeight={600} mb={1}>For {form.firmName}</Typography>
-                                        {form.signatureImageUrl && <Box component="img" src={form.signatureImageUrl} sx={{ height: 60, width: 'auto', mb: 1 }} />}
+                                        {form.signatureImageUrl && <Box component="img" src={form.signatureImageUrl} alt={`Authorized Signature for ${form.firmName}`} sx={{ height: 60, width: 'auto', mb: 1 }} />}
                                         <Typography fontSize="0.75rem" fontWeight={800}>Authorized Signatory</Typography>
                                     </Grid>
                                 </Grid>
