@@ -41,7 +41,7 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
             subdomain = '';
         } else {
             // Check for known base domains
-            const bases = ['mycafile.in', 'cacloud.in', 'vercel.app', 'onrender.com', 'localhost'];
+            const bases = ['mycafile.in', 'vercel.app', 'onrender.com', 'localhost'];
             let foundBase = '';
             for (const b of bases) {
                 if (hostname.endsWith(b)) {
@@ -80,7 +80,6 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         subdomain === 'superadmin' ||
         subdomain === 'super-admin' ||
         subdomain === 'localhost' ||
-        subdomain === 'cacloud' ||
         subdomain === 'mycafile'
     ) {
         return next();

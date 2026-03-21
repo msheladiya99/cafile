@@ -46,7 +46,6 @@ const allowedOrigins = [
     process.env.CLIENT_URL,
     // Regex to match subdomains and main domains for our production and staging URLs
     /^https?:\/\/([^/]+\.)?mycafile\.in$/,
-    /^https?:\/\/([^/]+\.)?cacloud\.in$/,
     /^https?:\/\/([^/]+\.)?vercel\.app$/,
     // Support local subdomains
     /^https?:\/\/([^/]+\.)?localhost(:\d+)?$/,

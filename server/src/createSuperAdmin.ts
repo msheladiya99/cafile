@@ -46,7 +46,7 @@ const createSuperAdmin = async () => {
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log(`Username: ${username}`);
         console.log(`Password: ${password}`);
-        console.log('Access: cacloud.in/login');
+        console.log('Access: mycafile.in/login');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         await mongoose.connection.close();

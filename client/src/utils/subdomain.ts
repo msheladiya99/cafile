@@ -24,9 +24,9 @@ export const getSubdomain = () => {
         return parts.length > (isBranchPreview ? 3 : 2) ? parts[0] : '';
     }
 
-    // Assuming domain is something like abc.mycafile.in or abc.cacloud.in
+    // Assuming domain is something like abc.mycafile.in
     // If it has at least one dot (parts.length >= 2) and ends with our production domains
-    const isProdDomain = hostname.endsWith('.mycafile.in') || hostname.endsWith('.cacloud.in');
+    const isProdDomain = hostname.endsWith('.mycafile.in');
 
     if (isProdDomain && parts.length >= 3) {
         const subdomain = parts[0].toLowerCase();
@@ -44,8 +44,6 @@ export const isSuperAdminDomain = () => {
     return (
         hostname === 'mycafile.in' ||
         hostname === 'www.mycafile.in' ||
-        hostname === 'cacloud.in' ||
-        hostname === 'www.cacloud.in' ||
         hostname === 'localhost' ||
         (hostname.endsWith('.localhost') && !subdomain) ||
         (hostname.endsWith('.vercel.app') && !subdomain)

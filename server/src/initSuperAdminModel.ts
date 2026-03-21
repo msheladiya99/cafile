@@ -15,7 +15,7 @@ const populateSuperAdmin = async () => {
 
         const { SuperAdmin } = await import('./models/SuperAdmin');
 
-        const email = 'superadmin@cacloud.in';
+        const email = 'superadmin@mycafile.in';
         const password = 'superpassword123';
 
         const existing = await SuperAdmin.findOne({ email });
