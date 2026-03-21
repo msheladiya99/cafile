@@ -217,13 +217,13 @@ export const LandingPage: React.FC = () => {
                         ))}
                         <Divider sx={{ my: 2 }} />
                         <ListItem disablePadding>
-                            <ListItemButton onClick={() => navigate('/login')} sx={{ borderRadius: '12px', mb: 1, bgcolor: '#f3f4f6' }}>
+                            <ListItemButton onClick={() => navigate('/superadmin')} sx={{ borderRadius: '12px', mb: 1, bgcolor: '#f3f4f6' }}>
                                 <ListItemText primary="Log In" primaryTypographyProps={{ fontWeight: 800, color: '#1e1b4b' }} />
                             </ListItemButton>
                         </ListItem>
                         <ListItem disablePadding>
                             <ListItemButton
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/superadmin')}
                                 sx={{
                                     borderRadius: '12px',
                                     background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
@@ -311,7 +311,7 @@ export const LandingPage: React.FC = () => {
                                 <Button
                                     size={isMobile ? "medium" : "large"}
                                     variant="contained"
-                                    onClick={() => navigate('/login')}
+                                    onClick={() => navigate('/superadmin')}
                                     sx={{
                                         px: { xs: 3, md: 5 },
                                         py: { xs: 1.5, md: 2 },
@@ -711,7 +711,7 @@ export const LandingPage: React.FC = () => {
                         <Button
                             size={isMobile ? "medium" : "large"}
                             variant="contained"
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate('/superadmin')}
                             sx={{
                                 px: { xs: 5, md: 10 },
                                 py: { xs: 1.5, md: 2.5 },
