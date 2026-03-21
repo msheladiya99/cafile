@@ -11,6 +11,7 @@ import { ActivityLog } from '../models/ActivityLog';
 import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import { sendFileUploadEmail, sendWelcomeEmail, sendPasswordChangeEmail } from '../services/emailService';
+import { Firm } from '../models/Firm';
 import { getDriveService } from '../services/googleDrive';
 import fs from 'fs';
 import path from 'path';
@@ -138,16 +139,40 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         // Create Google Drive folder structure immediately
         try {
             const driveService = getDriveService();
-            const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
-            client.driveFolderId = folderStructure.clientFolderId;
-            client.driveItrFolderId = folderStructure.itrFolderId;
-            client.driveGstFolderId = folderStructure.gstFolderId;
-            client.driveAccountingFolderId = folderStructure.accountingFolderId;
-            client.driveDocumentsFolderId = folderStructure.documentsFolderId;
-            client.driveNoticesFolderId = folderStructure.noticesFolderId;
-            await client.save();
-        } catch (driveErr) {
-            console.error('Failed to create drive folders for new client:', driveErr);
+            try {
+                const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                client.driveFolderId = folderStructure.clientFolderId;
+                client.driveItrFolderId = folderStructure.itrFolderId;
+                client.driveGstFolderId = folderStructure.gstFolderId;
+                client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                await client.save();
+            } catch (driveErr: any) {
+                // Handle Firm root repair
+                const firmDoc = await Firm.findById(req.firmId);
+                if (driveErr.response?.status === 404 && firmDoc?.googleDriveType === 'app') {
+                    console.log('Firm root missing during client creation, repairing...');
+                    const newFirmRootId = await driveService.ensureFirmStructure(firmDoc.firmName);
+                    
+                    firmDoc.googleDriveRootFolderId = newFirmRootId;
+                    await firmDoc.save();
+                    
+                    driveService.setRootFolder(newFirmRootId);
+                    const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                    client.driveFolderId = folderStructure.clientFolderId;
+                    client.driveItrFolderId = folderStructure.itrFolderId;
+                    client.driveGstFolderId = folderStructure.gstFolderId;
+                    client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                    client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                    client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                    await client.save();
+                } else {
+                    throw driveErr;
+                }
+            }
+        } catch (finalErr) {
+            console.error('Failed to create drive folders for new client:', finalErr);
         }
 
         // Generate credentials
@@ -263,16 +288,38 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                 // Create Google Drive folder structure
                 try {
                     const driveService = getDriveService();
-                    const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
-                    client.driveFolderId = folderStructure.clientFolderId;
-                    client.driveItrFolderId = folderStructure.itrFolderId;
-                    client.driveGstFolderId = folderStructure.gstFolderId;
-                    client.driveAccountingFolderId = folderStructure.accountingFolderId;
-                    client.driveDocumentsFolderId = folderStructure.documentsFolderId;
-                    client.driveNoticesFolderId = folderStructure.noticesFolderId;
-                    await client.save();
-                } catch (driveErr) {
-                    console.error('Failed to create drive folders for imported client:', driveErr);
+                    try {
+                        const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                        client.driveFolderId = folderStructure.clientFolderId;
+                        client.driveItrFolderId = folderStructure.itrFolderId;
+                        client.driveGstFolderId = folderStructure.gstFolderId;
+                        client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                        client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                        client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                        await client.save();
+                    } catch (driveErr: any) {
+                        // Handle Firm root repair
+                        const firmDoc = await Firm.findById(req.firmId);
+                        if (driveErr.response?.status === 404 && firmDoc?.googleDriveType === 'app') {
+                            const newFirmRootId = await driveService.ensureFirmStructure(firmDoc.firmName);
+                            firmDoc.googleDriveRootFolderId = newFirmRootId;
+                            await firmDoc.save();
+                            
+                            driveService.setRootFolder(newFirmRootId);
+                            const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                            client.driveFolderId = folderStructure.clientFolderId;
+                            client.driveItrFolderId = folderStructure.itrFolderId;
+                            client.driveGstFolderId = folderStructure.gstFolderId;
+                            client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                            client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                            client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                            await client.save();
+                        } else {
+                            throw driveErr;
+                        }
+                    }
+                } catch (finalErr) {
+                    console.error('Failed to create drive folders for imported client:', finalErr);
                 }
 
                 // Send welcome email async

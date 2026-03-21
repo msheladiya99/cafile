@@ -116,14 +116,42 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
             // Create client folder structure if not exists
             if (!client.driveFolderId) {
-                const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
-                client.driveFolderId = folderStructure.clientFolderId;
-                client.driveItrFolderId = folderStructure.itrFolderId;
-                client.driveGstFolderId = folderStructure.gstFolderId;
-                client.driveAccountingFolderId = folderStructure.accountingFolderId;
-                client.driveDocumentsFolderId = folderStructure.documentsFolderId;
-                client.driveNoticesFolderId = folderStructure.noticesFolderId;
-                await client.save();
+                try {
+                    const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                    client.driveFolderId = folderStructure.clientFolderId;
+                    client.driveItrFolderId = folderStructure.itrFolderId;
+                    client.driveGstFolderId = folderStructure.gstFolderId;
+                    client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                    client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                    client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                    await client.save();
+                } catch (driveErr: any) {
+                    console.error('Initial client folder creation failed:', driveErr);
+                    
+                    // If this fails with 404 and it's an app drive, repair the firm structure
+                    if (driveErr.response && driveErr.response.status === 404 && req.firm?.googleDriveType === 'app') {
+                        console.log('Firm root folder missing during initial client setup, repairing firm structure...');
+                        const newFirmRootId = await driveService.ensureFirmStructure(req.firm.firmName);
+                        
+                        // Update Firm record
+                        const FirmModel = (await import('../models/Firm')).Firm;
+                        await FirmModel.findByIdAndUpdate(req.firm._id, { googleDriveRootFolderId: newFirmRootId });
+                        req.firm.googleDriveRootFolderId = newFirmRootId;
+                        
+                        // Update service and retry
+                        driveService.setRootFolder(newFirmRootId);
+                        const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
+                        client.driveFolderId = folderStructure.clientFolderId;
+                        client.driveItrFolderId = folderStructure.itrFolderId;
+                        client.driveGstFolderId = folderStructure.gstFolderId;
+                        client.driveAccountingFolderId = folderStructure.accountingFolderId;
+                        client.driveDocumentsFolderId = folderStructure.documentsFolderId;
+                        client.driveNoticesFolderId = folderStructure.noticesFolderId;
+                        await client.save();
+                    } else {
+                        throw driveErr;
+                    }
+                }
             }
 
             // For USER_DOCS, upload directly to client root folder without year organization
