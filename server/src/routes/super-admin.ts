@@ -8,6 +8,7 @@ import { Task } from '../models/Task';
 import Invoice from '../models/Invoice';
 import { File } from '../models/File';
 import { SuperAdmin } from '../models/SuperAdmin';
+import { ActivityLog } from '../models/ActivityLog';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
 import mongoose from 'mongoose';
@@ -35,6 +36,15 @@ router.post('/login', async (req, res: Response) => {
             process.env.JWT_SECRET!,
             { expiresIn: '1d' }
         );
+
+        // Log login activity
+        await ActivityLog.create({
+            userId: admin._id,
+            action: 'LOGIN',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            details: 'Super Admin logged in successfully'
+        });
 
         res.json({
             token,
@@ -439,6 +449,36 @@ router.get('/system-health', authenticate, requireSuperAdmin, async (req, res: R
         });
     } catch (error) {
         console.error('System health error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Security Logs
+router.get('/security-logs', async (req, res: Response) => {
+    try {
+        const logs = await ActivityLog.find({})
+        .sort({ timestamp: -1 })
+        .limit(100)
+        .populate('userId', 'name email username')
+        .populate('firmId', 'firmName subdomain')
+        .lean();
+
+        console.log(`FETCHED_SECURITY_LOGS: count=${logs.length}`);
+        if(logs.length > 0) console.log('Sample Log Action:', logs[0].action);
+
+        const formattedLogs = logs.map((log: any) => ({
+            id: log._id,
+            user: log.userId?.name || log.userId?.email || log.userId?.username || 'Unknown',
+            firm: log.firmId ? `${log.firmId.firmName} (${log.firmId.subdomain})` : 'PORTAL',
+            ip: log.ipAddress || 'Unknown',
+            status: log.action === 'LOGIN' ? 'Success' : (log.action === 'LOGIN_FAILURE' ? 'Failed' : log.action),
+            details: log.details,
+            date: log.timestamp
+        }));
+
+        res.json(formattedLogs);
+    } catch (error) {
+        console.error('Get security logs error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

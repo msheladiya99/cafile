@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
@@ -47,6 +48,15 @@ router.post('/login', async (req, res: Response) => {
         // This ensures mycafile.in/login is only accessible to users with firmId: null (Super Admins).
 
         if (!user) {
+            // Log failed login attempt (Unknown User)
+            await ActivityLog.create({
+                userId: new mongoose.Types.ObjectId(), // Placeholder for unknown user
+                firmId: req.firmId,
+                action: 'LOGIN_FAILURE',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+                details: `Failed login attempt: Unknown username/email: ${normalizedUsername}`
+            });
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
@@ -54,6 +64,15 @@ router.post('/login', async (req, res: Response) => {
         // Verify password
         const isValidPassword = await bcrypt.compare(password, user.passwordHash);
         if (!isValidPassword) {
+            // Log failed login attempt (Wrong Password)
+            await ActivityLog.create({
+                userId: user._id,
+                firmId: user.firmId,
+                action: 'LOGIN_FAILURE',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+                details: 'Failed login attempt: Incorrect password'
+            });
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }

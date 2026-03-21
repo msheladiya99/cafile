@@ -1,14 +1,34 @@
 import React from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, CircularProgress } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../services/api';
 
-const mockLogs = [
-    { id: 1, user: 'admin@demo.com', firm: 'Demo Firm (demo)', ip: '192.168.1.1', status: 'Success', date: new Date().toISOString() },
-    { id: 2, user: 'superadmin', firm: 'PORTAL', ip: '10.0.0.5', status: 'Success', date: new Date(Date.now() - 3600000).toISOString() },
-    { id: 3, user: 'unknown@fake.com', firm: 'ABC (abc)', ip: '8.8.8.8', status: 'Failed', date: new Date(Date.now() - 7200000).toISOString() },
-    { id: 4, user: 'staff@patel.com', firm: 'Patel & Co (patel)', ip: '192.168.1.4', status: 'Success', date: new Date(Date.now() - 86400000).toISOString() },
-];
+interface SecurityLog {
+    id: string;
+    user: string;
+    firm: string;
+    ip: string;
+    status: string;
+    date: string;
+    details: string;
+}
 
 const Security: React.FC = () => {
+    const { data: logs, isLoading } = useQuery<SecurityLog[]>({
+        queryKey: ['security-logs'],
+        queryFn: async () => {
+            const res = await api.get('/super-admin/security-logs');
+            return res.data;
+        },
+        staleTime: 5000,
+    });
+
+    if (isLoading) {
+        return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
+    }
+
+    const failedCount = logs?.filter(l => l.status === 'Failed').length || 0;
+
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 800, mb: 4 }}>Platform Security Logs</Typography>
@@ -27,27 +47,73 @@ const Security: React.FC = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {mockLogs.map((log) => (
-                                <TableRow key={log.id} hover>
-                                    <TableCell>{new Date(log.date).toLocaleString()}</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>{log.user}</TableCell>
-                                    <TableCell>{log.firm}</TableCell>
-                                    <TableCell sx={{ fontFamily: 'monospace' }}>{log.ip}</TableCell>
-                                    <TableCell>
-                                        <Chip label={log.status} color={log.status === 'Success' ? 'success' : 'error'} size="small" sx={{ fontWeight: 700 }} />
+                            {logs && logs.length > 0 ? (
+                                logs.map((log) => (
+                                    <TableRow key={log.id} hover>
+                                        <TableCell>{new Date(log.date).toLocaleString('en-IN')}</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>
+                                            {log.user}
+                                            {log.status === 'Failed' && (
+                                                <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 400 }}>
+                                                    {log.details}
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{log.firm}</TableCell>
+                                        <TableCell sx={{ fontFamily: 'monospace' }}>{log.ip}</TableCell>
+                                        <TableCell>
+                                            <Chip 
+                                                label={log.status} 
+                                                color={log.status === 'Success' ? 'success' : 'error'} 
+                                                size="small" 
+                                                sx={{ fontWeight: 700 }} 
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                                        No security logs found
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Paper>
 
             <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Failed Login Attempts</Typography>
-                <Typography color="text.secondary">
-                    You have 1 recent failed attempt. System will automatically temporarily block IPs after 5 consecutive failures.
-                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>Recent Failed Login Attempts</Typography>
+                {failedCount > 0 ? (
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead sx={{ bgcolor: '#fff5f5' }}>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 700, color: '#c53030' }}>Time</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, color: '#c53030' }}>User/Identifier</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, color: '#c53030' }}>IP address</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {logs && logs.filter(l => l.status === 'Failed').slice(0, 10).map((log) => (
+                                    <TableRow key={log.id}>
+                                        <TableCell>{new Date(log.date).toLocaleString('en-IN')}</TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{log.user}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{log.details}</Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ fontFamily: 'monospace' }}>{log.ip}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                ) : (
+                    <Typography color="text.secondary">
+                        Great! No recent failed login attempts detected. System automatically blocks suspicious IPs after 5 failures.
+                    </Typography>
+                )}
             </Paper>
         </Box>
     );

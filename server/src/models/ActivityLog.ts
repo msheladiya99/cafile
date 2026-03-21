@@ -25,7 +25,7 @@ const activityLogSchema = new Schema<IActivityLog>({
     action: {
         type: String,
         required: true,
-        enum: ['LOGIN', 'LOGOUT', 'PASSWORD_CHANGE', 'PROFILE_UPDATE', 'FILE_UPLOAD', 'FILE_DOWNLOAD', 'FILE_DELETE']
+        enum: ['LOGIN', 'LOGIN_FAILURE', 'LOGOUT', 'PASSWORD_CHANGE', 'PROFILE_UPDATE', 'FILE_UPLOAD', 'FILE_DOWNLOAD', 'FILE_DELETE']
     },
     ipAddress: {
         type: String
