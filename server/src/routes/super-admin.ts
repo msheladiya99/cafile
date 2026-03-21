@@ -172,7 +172,7 @@ router.get('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Respo
 
 router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType, maxAdmins } = req.body;
+        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType, maxAdmins, googleDriveType, googleDriveRootFolderId: customFolderId } = req.body;
         let { subdomain } = req.body;
 
         // Auto-generate subdomain if not provided
@@ -189,16 +189,45 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             counter++;
         }
 
-        let googleDriveRootFolderId = '';
+        let googleDriveRootFolderId = customFolderId || '';
         try {
             const driveService = getDriveService();
             if (driveService) {
-                // Requirement 6: Root folder CAFILES, firm inside it
-                const caFilesRootId = await driveService.ensureFolder('CAFILES');
-                googleDriveRootFolderId = await driveService.createFolder(firmName, caFilesRootId);
+                if (googleDriveType === 'personal' && customFolderId) {
+                    // 1. Validate the personal folder is accessible first
+                    try {
+                        await driveService.getFileMetadata(customFolderId);
+                    } catch (e: any) {
+                        return res.status(400).json({ 
+                            message: `Google Drive Folder not found or inaccessible: ${customFolderId}. Please ensure you have shared it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor'.` 
+                        });
+                    }
+
+                    // 2. Use provided folder and ensure subfolders
+                    googleDriveRootFolderId = customFolderId;
+                    await driveService.ensureFolder('Clients', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Employees', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Compliance', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Internal Docs', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Reports', googleDriveRootFolderId);
+                } else {
+                    // Default behavior: create folder in app drive
+                    const caFilesRootId = await driveService.ensureFolder('MyCAFile');
+                    googleDriveRootFolderId = await driveService.createFolder(firmName, caFilesRootId);
+
+                    await driveService.ensureFolder('Clients', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Employees', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Compliance', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Internal Docs', googleDriveRootFolderId);
+                    await driveService.ensureFolder('Reports', googleDriveRootFolderId);
+                }
             }
         } catch (driveError) {
-            console.warn('Skipping Google Drive folder creation:', (driveError as Error).message);
+            console.error('Critical Google Drive error during firm creation:', driveError);
+            // If it's a personal drive error, we already handled it above.
+            // For other unexpected drive errors, we might want to warn or fail depending on how critical drive is.
+            // Since this is a file-heavy app, failing is probably safer.
+            return res.status(500).json({ message: 'Google Drive initialization failed. Please contact support.', error: (driveError as Error).message });
         }
 
         const firm = await Firm.create({
@@ -209,6 +238,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             status: 'active',
             mobile: mobileNumber,
             googleDriveRootFolderId,
+            googleDriveType: googleDriveType || 'app',
             maxAdmins: Number(maxAdmins) || 5
         });
 
@@ -258,8 +288,55 @@ router.post('/firms/:id/reset-password', authenticate, requireSuperAdmin, async 
 // Suspend/Activate/Update firm
 router.patch('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        if (req.body.plan) req.body.plan = req.body.plan.toLowerCase();
-        const firm = await Firm.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { googleDriveRootFolderId, googleDriveType } = req.body;
+        let updates = { ...req.body };
+
+        if (updates.plan) updates.plan = updates.plan.toLowerCase();
+
+        // Validation if drive settings are changing
+        if (googleDriveRootFolderId !== undefined || googleDriveType !== undefined) {
+            const currentFirm = await Firm.findById(req.params.id);
+            if (!currentFirm) return res.status(404).json({ message: 'Firm not found' });
+
+            const targetDriveType = googleDriveType || currentFirm.googleDriveType;
+            let targetRootId = googleDriveRootFolderId !== undefined ? googleDriveRootFolderId : currentFirm.googleDriveRootFolderId;
+
+            if (targetDriveType === 'personal' && targetRootId) {
+                try {
+                    const driveService = getDriveService();
+                    await driveService.getFileMetadata(targetRootId);
+                    
+                    // Also ensure basic folders exist if possible
+                    await driveService.ensureFolder('Clients', targetRootId);
+                    await driveService.ensureFolder('Employees', targetRootId);
+                } catch (e: any) {
+                    return res.status(400).json({ 
+                        message: `Google Drive Folder not found or inaccessible: ${targetRootId}. Please share it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor' before saving.` 
+                    });
+                }
+            } else if (targetDriveType === 'app' && currentFirm.googleDriveType === 'personal') {
+                try {
+                    const driveService = getDriveService();
+                    const caFilesRootId = await driveService.ensureFolder('MyCAFile');
+                    targetRootId = await driveService.createFolder(currentFirm.firmName, caFilesRootId);
+                    
+                    await driveService.ensureFolder('Clients', targetRootId);
+                    await driveService.ensureFolder('Employees', targetRootId);
+                    await driveService.ensureFolder('Compliance', targetRootId);
+                    await driveService.ensureFolder('Internal Docs', targetRootId);
+                    await driveService.ensureFolder('Reports', targetRootId);
+
+                    updates.googleDriveRootFolderId = targetRootId;
+                } catch (e: any) {
+                    return res.status(500).json({ message: 'Failed to initialize Application Drive folder' });
+                }
+            } else if (targetDriveType === 'app' && targetRootId) {
+                // If it's already an app drive and they try to pass a static ID, ignore the custom ID
+                delete updates.googleDriveRootFolderId;
+            }
+        }
+
+        const firm = await Firm.findByIdAndUpdate(req.params.id, updates, { new: true });
         if (!firm) return res.status(404).json({ message: 'Firm not found' });
         res.json(firm);
     } catch (error) {

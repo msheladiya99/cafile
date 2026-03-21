@@ -19,7 +19,9 @@ const CreateFirm: React.FC = () => {
         adminPassword: '',
         mobileNumber: '',
         planType: 'Trial',
-        maxAdmins: 5
+        maxAdmins: 5,
+        googleDriveType: 'app' as 'app' | 'personal',
+        googleDriveRootFolderId: ''
     });
 
     const createMutation = useMutation({
@@ -40,6 +42,10 @@ const CreateFirm: React.FC = () => {
         setError('');
         if (!formData.firmName || !formData.subdomain || !formData.adminEmail || !formData.adminPassword || !formData.mobileNumber) {
             setError('Please fill in all required fields.');
+            return;
+        }
+        if (formData.googleDriveType === 'personal' && !formData.googleDriveRootFolderId) {
+            setError('Please provide a Google Drive Folder ID for personal storage.');
             return;
         }
         createMutation.mutate(formData);
@@ -101,6 +107,33 @@ const CreateFirm: React.FC = () => {
                                 ))}
                             </TextField>
                         </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth select label="Data Storage Type"
+                                value={formData.googleDriveType} onChange={e => setFormData({ ...formData, googleDriveType: e.target.value as 'app' | 'personal' })}>
+                                <MenuItem value="app">Application Drive (Default)</MenuItem>
+                                <MenuItem value="personal">Personal Google Drive</MenuItem>
+                            </TextField>
+                        </Grid>
+
+                        {formData.googleDriveType === 'personal' && (
+                            <>
+                                <Grid size={{ xs: 12 }}>
+                                    <Alert severity="info" sx={{ mb: 2 }}>
+                                        <strong>Configuration Required:</strong> Please share your Google Drive folder with 
+                                        <code style={{ background: '#eee', padding: '2px 5px', margin: '0 5px', borderRadius: 3 }}>
+                                            drive-bot@ca-office-portal-486705.iam.gserviceaccount.com
+                                        </code> 
+                                        and grant <strong>'Editor'</strong> access before proceeding.
+                                    </Alert>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 12 }}>
+                                    <TextField fullWidth label="Personal Google Drive Folder ID" variant="outlined"
+                                        value={formData.googleDriveRootFolderId} onChange={e => setFormData({ ...formData, googleDriveRootFolderId: e.target.value })}
+                                        helperText="Paste the ID of the folder from your browser URL." required />
+                                </Grid>
+                            </>
+                        )}
 
                         <Grid size={{ xs: 12 }}><Typography variant="h6" sx={{ mt: 2, fontWeight: 700 }}>Security</Typography></Grid>
 

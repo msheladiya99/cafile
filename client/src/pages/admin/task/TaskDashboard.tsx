@@ -310,7 +310,7 @@ export const TaskDashboard: React.FC = () => {
                                         paddingAngle={4} dataKey="value">
                                         {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                                     </Pie>
-                                    <RechartsTooltip formatter={(v: number) => [`${v} tasks`, '']} />
+                                    <RechartsTooltip formatter={(v: any) => [`${v} tasks`, '']} />
                                     <Legend verticalAlign="bottom" height={36} />
                                 </PieChart>
                             </ResponsiveContainer>

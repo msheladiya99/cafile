@@ -282,26 +282,38 @@ export class GoogleDriveService {
      * Create client folder structure
      * Returns the client's root folder ID
      */
-    async createClientFolderStructure(clientName: string): Promise<{
+    async createClientFolderStructure(clientName: string, panNumber?: string): Promise<{
         clientFolderId: string;
         itrFolderId: string;
         gstFolderId: string;
         accountingFolderId: string;
+        documentsFolderId: string;
+        noticesFolderId: string;
     }> {
         try {
-            // Create or get main client folder
-            const clientFolderId = await this.ensureFolder(clientName);
+            // Create or get 'Clients' root folder to keep the firm's root clean
+            const clientsRootId = await this.ensureFolder('Clients');
+
+            // Format client folder name: "Name" or "Name (PAN)"
+            const folderName = panNumber ? `${clientName} (${panNumber})` : clientName;
+
+            // Create or get main client folder safely inside 'Clients'
+            const clientFolderId = await this.ensureFolder(folderName, clientsRootId);
 
             // Create or get category folders
-            const itrFolderId = await this.ensureFolder('ITR', clientFolderId);
+            const itrFolderId = await this.ensureFolder('Income Tax', clientFolderId);
             const gstFolderId = await this.ensureFolder('GST', clientFolderId);
-            const accountingFolderId = await this.ensureFolder('ACCOUNTING', clientFolderId);
+            const accountingFolderId = await this.ensureFolder('Audit', clientFolderId);
+            const documentsFolderId = await this.ensureFolder('Documents', clientFolderId);
+            const noticesFolderId = await this.ensureFolder('Notices', clientFolderId);
 
             return {
                 clientFolderId,
                 itrFolderId,
                 gstFolderId,
                 accountingFolderId,
+                documentsFolderId,
+                noticesFolderId,
             };
         } catch (error) {
             console.error('Error creating client folder structure:', error);
@@ -390,24 +402,22 @@ export const getDriveService = (): GoogleDriveService => {
 };
 
 export const getTenantDriveService = (rootFolderId?: string): GoogleDriveService => {
-    const service = getDriveService();
-    if (rootFolderId) {
-        // Return a proxy or a cloned instance to avoid shared state issues if concurrent
-        // For simplicity here, since it's a small app, we can just return a "firm-aware" object
-        // but better to just return the same service and have methods accept parentId.
-        // Actually, the methods already accept parentFolderId.
-        // The only issue is many methods use `this.rootFolderId` as default.
-
-        // Let's just create a new wrapper instance for the firm
-        const config = {
-            clientEmail: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-            privateKey: process.env.GOOGLE_DRIVE_PRIVATE_KEY,
-            clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
-            refreshToken: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
-            rootFolderId: rootFolderId
-        };
-        return new GoogleDriveService(config);
+    if (!rootFolderId) {
+        if (!driveServiceInstance) {
+            return initializeDriveService();
+        }
+        return driveServiceInstance;
     }
-    return service;
+
+    // Return a new instance using the same credentials but a different rootFolderId
+    const config = {
+        clientEmail: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+        privateKey: process.env.GOOGLE_DRIVE_PRIVATE_KEY,
+        clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
+        rootFolderId: rootFolderId
+    };
+
+    return new GoogleDriveService(config);
 };

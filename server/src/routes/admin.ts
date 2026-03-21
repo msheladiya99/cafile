@@ -248,7 +248,7 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                 // Attempt to generate Google Drive folder
                 try {
                     const driveService = getDriveService();
-                    await driveService.createClientFolderStructure(client.name);
+                    await driveService.createClientFolderStructure(client.name, client.panNumber);
                 } catch (driveErr) {
                     console.error('Failed to create drive folders for imported client:', driveErr);
                 }
@@ -404,10 +404,7 @@ router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STA
         const driveService = getDriveService();
 
         // 1. Get/Create Client Home folder
-        const { clientFolderId } = await driveService.createClientFolderStructure(client.name);
-
-        // 2. Ensure "Documents" folder exists inside client's home
-        const documentsFolderId = await driveService.ensureFolder('Documents', clientFolderId);
+        const { documentsFolderId } = await driveService.createClientFolderStructure(client.name, client.panNumber);
 
         // 3. Upload file to Documents folder
         const fileBuffer = fs.readFileSync(req.file.path);

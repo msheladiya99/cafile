@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Paper, Grid, Button, CircularProgress, Chip, TextField, MenuItem, Divider, Alert } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import api from '../../services/api';
 
 const FirmDetails: React.FC = () => {
@@ -10,7 +11,13 @@ const FirmDetails: React.FC = () => {
     const queryClient = useQueryClient();
 
     const [editMode, setEditMode] = useState(false);
-    const [formData, setFormData] = useState({ plan: '', status: '', maxAdmins: 5 });
+    const [formData, setFormData] = useState({ 
+        plan: '', 
+        status: '', 
+        maxAdmins: 5,
+        googleDriveType: 'app' as 'app' | 'personal',
+        googleDriveRootFolderId: ''
+    });
     const [resetPassword, setResetPassword] = useState('');
     const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
@@ -23,7 +30,7 @@ const FirmDetails: React.FC = () => {
     });
 
     const updateFirmMutation = useMutation({
-        mutationFn: async (updatedData: { plan: string; status: string; maxAdmins: number }) => {
+        mutationFn: async (updatedData: { plan: string; status: string; maxAdmins: number; googleDriveType: string; googleDriveRootFolderId: string }) => {
             return api.patch(`/super-admin/firms/${id}`, updatedData);
         },
         onSuccess: () => {
@@ -41,7 +48,7 @@ const FirmDetails: React.FC = () => {
             setResetPassword('');
             setTimeout(() => setResetStatus(null), 3000);
         },
-        onError: (err: any) => {
+        onError: (err: AxiosError<{ message: string }>) => {
             setResetStatus({ type: 'error', msg: err.response?.data?.message || 'Reset failed' });
         }
     });
@@ -63,7 +70,9 @@ const FirmDetails: React.FC = () => {
             setFormData({
                 plan: firm.plan.toLowerCase(),
                 status: firm.status.toLowerCase(),
-                maxAdmins: firm.maxAdmins || 5
+                maxAdmins: firm.maxAdmins || 5,
+                googleDriveType: firm.googleDriveType || 'app',
+                googleDriveRootFolderId: firm.googleDriveRootFolderId || ''
             });
             setEditMode(true);
         } else {
@@ -98,6 +107,7 @@ const FirmDetails: React.FC = () => {
                                 <Typography variant="h6" sx={{ fontWeight: 600 }}>{firm.firmName}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography color="text.secondary" variant="body2">Portal URL</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1976d2', fontFamily: 'monospace' }}>
                                     {firm.subdomain}.mycafile.in
                                 </Typography>
@@ -156,6 +166,44 @@ const FirmDetails: React.FC = () => {
                                     </Box>
                                 )}
                             </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                {editMode ? (
+                                    <TextField fullWidth select label="Data Storage Type" value={formData.googleDriveType} onChange={e => setFormData({ ...formData, googleDriveType: e.target.value as 'app' | 'personal' })}>
+                                        <MenuItem value="app">Application Drive</MenuItem>
+                                        <MenuItem value="personal">Personal Drive</MenuItem>
+                                    </TextField>
+                                ) : (
+                                    <Box>
+                                        <Typography color="text.secondary" variant="body2" sx={{ mb: 1 }}>Storage Type</Typography>
+                                        <Chip label={firm.googleDriveType === 'personal' ? 'Personal Drive' : 'App Drive'} color="info" variant="outlined" sx={{ fontWeight: 700 }} />
+                                    </Box>
+                                )}
+                            </Grid>
+
+                            {formData.googleDriveType === 'personal' && (
+                                <Grid size={{ xs: 12 }}>
+                                    {editMode ? (
+                                        <>
+                                            <Alert severity="info" sx={{ mb: 2 }}>
+                                                Share folder with: <code>drive-bot@ca-office-portal-486705.iam.gserviceaccount.com</code>
+                                            </Alert>
+                                            <TextField 
+                                                fullWidth 
+                                                label="Google Drive Folder ID" 
+                                                value={formData.googleDriveRootFolderId} 
+                                                onChange={e => setFormData({ ...formData, googleDriveRootFolderId: e.target.value })}
+                                                helperText="The ID from the URL of your personal Google Drive folder"
+                                            />
+                                        </>
+                                    ) : (
+                                        <Box>
+                                            <Typography color="text.secondary" variant="body2">Drive Folder ID</Typography>
+                                            <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{firm.googleDriveRootFolderId || 'Not Configured'}</Typography>
+                                        </Box>
+                                    )}
+                                </Grid>
+                            )}
                         </Grid>
                     </Paper>
                 </Grid>

@@ -116,7 +116,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
             // Create client folder structure if not exists
             if (!client.driveFolderId) {
-                const folderStructure = await driveService.createClientFolderStructure(client.name);
+                const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
                 client.driveFolderId = folderStructure.clientFolderId;
                 client.driveItrFolderId = folderStructure.itrFolderId;
                 client.driveGstFolderId = folderStructure.gstFolderId;
@@ -130,7 +130,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 let userDocsFolderId: string | undefined;
 
                 try {
-                    userDocsFolderId = await driveService.ensureFolder('USER_DOCS', client.driveFolderId!);
+                    userDocsFolderId = await driveService.ensureFolder('Documents', client.driveFolderId!);
                 } catch (error) {
                     console.error('Error creating USER_DOCS folder:', error);
                     return res.status(500).json({ message: 'Failed to create USER_DOCS folder' });
@@ -172,8 +172,20 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
             // Proactively ensure the category folder exists. 
             // If the user manually deleted the "ITR" folder, this will recreate it and update the DB immediately.
+            const getCategoryDisplayName = (cat: string) => {
+                switch (cat) {
+                    case 'ITR': return 'Income Tax';
+                    case 'GST': return 'GST';
+                    case 'ACCOUNTING': return 'Audit';
+                    case 'DOCUMENTS': return 'Documents';
+                    case 'NOTICES': return 'Notices';
+                    default: return cat;
+                }
+            };
+            const categoryDisplayName = getCategoryDisplayName(category);
+
             try {
-                const checkedCategoryFolderId = await driveService.ensureFolder(category, client.driveFolderId!);
+                const checkedCategoryFolderId = await driveService.ensureFolder(categoryDisplayName, client.driveFolderId!);
 
                 // Update client record if the folder ID has changed (e.g. it was recreated)
                 let dbUpdated = false;
@@ -238,7 +250,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
 
                     if (!clientFolderExists) {
                         // Recreate ALL structure
-                        const folderStructure = await driveService.createClientFolderStructure(client.name);
+                        const folderStructure = await driveService.createClientFolderStructure(client.name, client.panNumber);
                         client.driveFolderId = folderStructure.clientFolderId;
                         client.driveItrFolderId = folderStructure.itrFolderId;
                         client.driveGstFolderId = folderStructure.gstFolderId;
@@ -246,8 +258,8 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                         await client.save();
                     } else {
                         // Recreate CATEGORY folder
-                        console.log(`Recreating missing category folder: ${category}`);
-                        const newCategoryFolderId = await driveService.ensureFolder(category, clientFolderId!);
+                        console.log(`Recreating missing category folder: ${categoryDisplayName}`);
+                        const newCategoryFolderId = await driveService.ensureFolder(categoryDisplayName, clientFolderId!);
                         switch (category) {
                             case 'ITR': client.driveItrFolderId = newCategoryFolderId; break;
                             case 'GST': client.driveGstFolderId = newCategoryFolderId; break;
@@ -327,10 +339,16 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 driveLink: driveFile.webViewLink,
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Google Drive upload error:', error);
+            
+            const isNotFound = error.code === 404 || (error.response && error.response.status === 404) || error.message?.includes('File not found');
+            const message = isNotFound 
+                ? 'Google Drive folder not found or inaccessible. Please ensure your folder ID is correct and shared with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an \'Editor\'.'
+                : 'Failed to upload to Google Drive. Please check your credentials and storage quota.';
+
             return res.status(500).json({
-                message: 'Failed to upload to Google Drive. Please check your credentials and storage quota.',
+                message,
                 error: error instanceof Error ? error.message : 'Unknown error'
             });
         }

@@ -9,6 +9,7 @@ export interface IFirm extends Document {
     mobile?: string;
     logo?: string;
     googleDriveRootFolderId?: string;
+    googleDriveType: 'app' | 'personal';
     maxAdmins: number;
     createdAt: Date;
     updatedAt: Date;
@@ -47,6 +48,11 @@ const firmSchema = new Schema<IFirm>(
         mobile: String,
         logo: String,
         googleDriveRootFolderId: String,
+        googleDriveType: {
+            type: String,
+            enum: ['app', 'personal'],
+            default: 'app'
+        },
         maxAdmins: {
             type: Number,
             default: 5,
