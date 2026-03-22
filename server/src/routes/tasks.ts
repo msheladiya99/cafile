@@ -460,7 +460,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
 // Get single task by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const task = await Task.findById(req.params.id)
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId })
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
@@ -498,7 +498,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
     try {
         const { status } = req.body;
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -608,7 +608,7 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
 router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
     try {
         const { action } = req.params; // 'start' or 'stop'
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -697,7 +697,7 @@ router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
 router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
     try {
         const { progressPercentage } = req.body;
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -741,7 +741,7 @@ router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
 router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
     try {
         const { text } = req.body;
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -782,7 +782,7 @@ router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
 router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) => {
     try {
         const { completed } = req.body;
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -831,7 +831,7 @@ router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) =
 router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
         const updates = req.body;
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -873,14 +873,14 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
 // Delete task (Admin/Manager only)
 router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
             return;
         }
 
-        await Task.findByIdAndDelete(req.params.id);
+        await Task.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
 
         res.json({ message: 'Task deleted successfully' });
     } catch (error) {

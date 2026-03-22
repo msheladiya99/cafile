@@ -114,7 +114,7 @@ router.get('/client/:clientId', authMiddleware, async (req: Request, res: Respon
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        const reminders = await Reminder.find({ clientId })
+        const reminders = await Reminder.find({ clientId, firmId: (req as any).firmId })
             .sort({ dueDate: 1 });
 
         res.json(reminders);
@@ -146,6 +146,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
             priority,
             notifyBefore: notifyBefore || 7,
             createdBy: (req as any).user.userId,
+            firmId: (req as any).firmId,
         });
 
         await reminder.save();
@@ -164,8 +165,8 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
         const { id } = req.params;
         const updates = req.body;
 
-        const reminder = await Reminder.findByIdAndUpdate(
-            id,
+        const reminder = await Reminder.findOneAndUpdate(
+            { _id: id, firmId: (req as any).firmId },
             updates,
             { new: true }
         ).populate('clientId', 'name email');
@@ -186,8 +187,8 @@ router.patch('/:id/complete', authMiddleware, async (req: Request, res: Response
     try {
         const { id } = req.params;
 
-        const reminder = await Reminder.findByIdAndUpdate(
-            id,
+        const reminder = await Reminder.findOneAndUpdate(
+            { _id: id, firmId: (req as any).firmId },
             { status: 'COMPLETED' },
             { new: true }
         ).populate('clientId', 'name email');
@@ -208,7 +209,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const reminder = await Reminder.findByIdAndDelete(id);
+        const reminder = await Reminder.findOneAndDelete({ _id: id, firmId: (req as any).firmId });
 
         if (!reminder) {
             return res.status(404).json({ message: 'Reminder not found' });
@@ -227,10 +228,16 @@ router.post('/send-notifications', authMiddleware, async (req: Request, res: Res
         const today = new Date();
 
         // Find reminders that need notification
-        const reminders = await Reminder.find({
+        const query: any = {
             status: 'PENDING',
             notificationSent: false,
-        }).populate('clientId', 'name email');
+        };
+        // If not super admin root execution, scope to firm
+        if ((req as any).firmId !== 'ROOT' && (req as any).firmId) {
+            query.firmId = (req as any).firmId;
+        }
+
+        const reminders = await Reminder.find(query).populate('clientId', 'name email');
 
         let sentCount = 0;
 

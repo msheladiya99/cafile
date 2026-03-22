@@ -46,11 +46,20 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
         // Check if firm is active (if it's a firm user)
         if (decoded.firmId && decoded.role !== 'SUPER_ADMIN') {
-            const { Firm } = require('../models/Firm');
-            const firm = await Firm.findById(decoded.firmId);
-            if (!firm || firm.status !== 'active') {
-                res.status(403).json({ message: 'Access denied. This workspace is suspended or inactive.' });
-                return;
+            // Re-use firm object from tenantMiddleware if it perfectly matches the user's firmId
+            if ((req as any).firm && (req as any).firmId === decoded.firmId) {
+                if ((req as any).firm.status !== 'active') {
+                    res.status(403).json({ message: 'Access denied. This workspace is suspended or inactive.' });
+                    return;
+                }
+            } else {
+                // Fallback db lookup if firm wasn't loaded by tenant middleware
+                const { Firm } = require('../models/Firm');
+                const firm = await Firm.findById(decoded.firmId).lean();
+                if (!firm || firm.status !== 'active') {
+                    res.status(403).json({ message: 'Access denied. This workspace is suspended or inactive.' });
+                    return;
+                }
             }
         }
 

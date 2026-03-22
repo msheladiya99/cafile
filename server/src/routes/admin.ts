@@ -421,7 +421,7 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
 // Get single client
 router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const client = await Client.findById(req.params.id)
+        const client = await Client.findOne({ _id: req.params.id, firmId: req.firmId })
             .populate('groupName', 'groupName')
             .populate('itStatus', 'name')
             .lean();
@@ -476,8 +476,8 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
         if (updates.incorporationDateFrom === '') updates.incorporationDateFrom = null;
         if (updates.incorporationDateTo === '') updates.incorporationDateTo = null;
 
-        const client = await Client.findByIdAndUpdate(
-            id,
+        const client = await Client.findOneAndUpdate(
+            { _id: id, firmId },
             { $set: updates },
             { new: true, runValidators: true }
         );
@@ -503,7 +503,7 @@ router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STA
         }
 
         const { id } = req.params;
-        const client = await Client.findById(id);
+        const client = await Client.findOne({ _id: id, firmId: req.firmId });
 
         if (!client) {
             fs.unlinkSync(req.file.path);
@@ -579,7 +579,7 @@ router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.
         }
 
         // Verify client exists
-        const client = await Client.findById(clientId);
+        const client = await Client.findOne({ _id: clientId, firmId: req.firmId });
         if (!client) {
             fs.unlinkSync(req.file.path);
             res.status(404).json({ message: 'Client not found' });
@@ -595,7 +595,8 @@ router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.
             originalFileName: req.file.originalname,
             filePath: req.file.path,
             fileSize: req.file.size,
-            uploadedBy: req.user!.userId
+            uploadedBy: req.user!.userId,
+            firmId: req.firmId || req.user?.firmId
         });
         await file.save();
 
@@ -651,8 +652,8 @@ router.patch('/files/:fileId', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const file = await File.findByIdAndUpdate(
-            fileId,
+        const file = await File.findOneAndUpdate(
+            { _id: fileId, firmId: req.firmId },
             { fileName },
             { new: true }
         );
@@ -674,7 +675,7 @@ router.delete('/files/:fileId', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asy
     try {
         const { fileId } = req.params;
 
-        const file = await File.findById(fileId);
+        const file = await File.findOne({ _id: fileId, firmId: req.firmId });
         if (!file) {
             res.status(404).json({ message: 'File not found' });
             return;
@@ -686,7 +687,7 @@ router.delete('/files/:fileId', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asy
         }
 
         // Delete database record
-        await File.findByIdAndDelete(fileId);
+        await File.findOneAndDelete({ _id: fileId, firmId: req.firmId });
 
         res.json({ message: 'File deleted successfully' });
     } catch (error) {
@@ -713,7 +714,7 @@ router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
     try {
         const { fileId } = req.params;
 
-        const file = await File.findById(fileId);
+        const file = await File.findOne({ _id: fileId, firmId: req.firmId });
         if (!file) {
             res.status(404).json({ message: 'File not found' });
             return;
@@ -781,7 +782,7 @@ router.post('/clients/:clientId/send-credentials', requireRoles(['ADMIN', 'MANAG
             return res.status(400).json({ message: 'Password is required to send credentials email' });
         }
 
-        const client = await Client.findById(clientId);
+        const client = await Client.findOne({ _id: clientId, firmId: req.firmId });
         if (!client) return res.status(404).json({ message: 'Client not found' });
 
         const user = await User.findOne({ clientId, role: 'CLIENT' });
@@ -812,7 +813,7 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
             return;
         }
 
-        const client = await Client.findById(clientId);
+        const client = await Client.findOne({ _id: clientId, firmId: req.firmId });
         if (!client) {
             res.status(404).json({ message: 'Client not found' });
             return;
@@ -850,7 +851,7 @@ router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Respon
     try {
         const { id } = req.params;
 
-        const client = await Client.findById(id);
+        const client = await Client.findOne({ _id: id, firmId: req.firmId });
         if (!client) {
             res.status(404).json({ message: 'Client not found' });
             return;
@@ -877,7 +878,7 @@ router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Respon
         await File.deleteMany({ clientId: id });
 
         // Delete client record
-        await Client.findByIdAndDelete(id);
+        await Client.findOneAndDelete({ _id: id, firmId: req.firmId });
 
         res.json({ message: 'Client and all associated data deleted successfully' });
     } catch (error) {
