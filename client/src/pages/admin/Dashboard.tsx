@@ -25,7 +25,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PieChartIcon from '@mui/icons-material/PieChart';
-import { reminderService } from '../../services/reminderService';
+
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -58,20 +58,20 @@ export const AdminDashboard: React.FC = () => {
     });
     const [newTask, setNewTask] = useState('');
 
-    const { data: clientCount = 0, isLoading: isLoadingClients } = useQuery({
-        queryKey: ['clients-count'],
+    const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+        queryKey: ['admin-dashboard-stats'],
         queryFn: async () => {
-            const res = await import('../../services/api').then(m => m.default.get('/admin/clients/count'));
-            return res.data.count as number;
+            const api = await import('../../services/api').then(m => m.default);
+            const res = await api.get('/admin/dashboard');
+            return res.data;
         },
         staleTime: 2 * 60 * 1000, // 2 minutes
     });
 
-    const { data: reminders = [], isLoading: isLoadingReminders } = useQuery({
-        queryKey: ['upcoming-reminders'],
-        queryFn: reminderService.getUpcomingReminders,
-        staleTime: 60000, // 1 minute
-    });
+    const clientCount = dashboardData?.clientCount || 0;
+    const reminders = dashboardData?.reminders || [];
+    const isLoadingClients = isDashboardLoading;
+    const isLoadingReminders = isDashboardLoading;
 
 
 
