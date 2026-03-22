@@ -21,6 +21,7 @@ import {
     GroupsOutlined as CommunityIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 interface AccountMenuProps {
     anchorEl: HTMLElement | null;
@@ -157,35 +158,35 @@ const AccountMenu: React.FC<AccountMenuProps> = ({
             </Box>
 
             <Stack spacing={0.5}>
-                <MenuItem onClick={() => navigate(getProfilePath())} sx={{ borderRadius: '12px', py: 1 }}>
+                <MenuItem onClick={() => { onClose(); navigate(getProfilePath()); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>
                         <PersonIcon fontSize="small" />
                     </ListItemIcon>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>User Profile</Typography>
                 </MenuItem>
                 
-                <MenuItem sx={{ borderRadius: '12px', py: 1 }}>
+                <MenuItem onClick={() => { onClose(); toast.success('Integrations coming soon!'); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>
                         <IntegrationsIcon fontSize="small" />
                     </ListItemIcon>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>Integrations</Typography>
                 </MenuItem>
                 
-                <MenuItem onClick={() => navigate(getProfilePath())} sx={{ borderRadius: '12px', py: 1 }}>
+                <MenuItem onClick={() => { onClose(); navigate(getProfilePath()); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>
                         <SettingsIcon fontSize="small" />
                     </ListItemIcon>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>Settings</Typography>
                 </MenuItem>
 
-                <MenuItem sx={{ borderRadius: '12px', py: 1 }}>
+                <MenuItem onClick={() => { onClose(); toast.success('Community feature coming soon!'); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>
                         <CommunityIcon fontSize="small" />
                     </ListItemIcon>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>Community</Typography>
                 </MenuItem>
 
-                <MenuItem sx={{ borderRadius: '12px', py: 1 }}>
+                <MenuItem onClick={() => { onClose(); navigate('/contact'); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>
                         <HelpIcon fontSize="small" />
                     </ListItemIcon>
