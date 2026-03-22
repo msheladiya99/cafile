@@ -6,8 +6,6 @@ import {
     Toolbar,
     Typography,
     IconButton,
-    Menu,
-    MenuItem,
     Avatar,
     Tooltip,
     Tabs,
@@ -24,7 +22,6 @@ import {
     useTheme
 } from '@mui/material';
 import {
-    Logout as LogoutIcon,
     Search as SearchIcon,
     ChatBubbleOutline as ChatIcon,
     Menu as MenuIcon,
@@ -36,17 +33,14 @@ import {
     VpnKey as VpnKeyIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import AccountMenu from '../components/common/AccountMenu';
 
-const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
+
 
 export const SuperAdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { logout, remainingTime } = useAuth();
+    const { user, logout, remainingTime } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -77,10 +71,7 @@ export const SuperAdminLayout: React.FC = () => {
         setMobileOpen(false);
     };
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+
 
     return (
         <Box sx={{ bgcolor: '#eef2ff', minHeight: '100vh', pb: 10 }}>
@@ -162,26 +153,14 @@ export const SuperAdminLayout: React.FC = () => {
                             </Tooltip>
                         </Box>
 
-                        <Menu
+                        <AccountMenu
                             anchorEl={anchorEl}
                             open={Boolean(anchorEl)}
                             onClose={() => setAnchorEl(null)}
-                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                            PaperProps={{
-                                elevation: 0,
-                                sx: { mt: 1.5, minWidth: 200, borderRadius: '20px', filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.08))', overflow: 'visible' }
-                            }}
-                        >
-                            <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #f1f5f9' }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Super Admin</Typography>
-                                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>admin@mycafile.in</Typography>
-                            </Box>
-                            <MenuItem onClick={handleLogout} sx={{ color: 'error.main', mx: 1, borderRadius: '12px', my: 1 }}>
-                                <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
-                                <Typography variant="body2" sx={{ fontWeight: 800 }}>Logout</Typography>
-                            </MenuItem>
-                        </Menu>
+                            user={user}
+                            logout={logout}
+                            remainingTime={remainingTime}
+                        />
                     </Toolbar>
                 </Container>
             </AppBar>
@@ -215,7 +194,9 @@ export const SuperAdminLayout: React.FC = () => {
                 </List>
                 <Box sx={{ mt: 'auto', p: 2, bgcolor: '#f8fafc', borderRadius: '16px' }}>
                     <Typography variant="caption" sx={{ fontWeight: 800, color: '#94a3b8', display: 'block', mb: 1 }}>SESSION TIME</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 900, fontFamily: 'monospace', color: '#6366f1' }}>{formatTime(remainingTime)}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 900, fontFamily: 'monospace', color: '#6366f1' }}>
+                        {Math.floor(remainingTime / 60)}:{((remainingTime % 60)).toString().padStart(2, '0')}
+                    </Typography>
                 </Box>
             </Drawer>
 
@@ -247,7 +228,7 @@ export const SuperAdminLayout: React.FC = () => {
                             }}>
                                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', animation: 'pulse 2s infinite' }} />
                                 <Typography variant="caption" sx={{ fontWeight: 900, color: '#475569', letterSpacing: 1.5 }}>
-                                    SECURE SESSION: {formatTime(remainingTime)}
+                                    SECURE SESSION: {Math.floor(remainingTime / 60)}:{((remainingTime % 60)).toString().padStart(2, '0')}
                                 </Typography>
                             </Box>
                         </Box>

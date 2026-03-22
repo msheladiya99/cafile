@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import type { User } from '../types';
+import { useNavigate } from 'react-router-dom';
+import SessionExpiredModal from '../components/common/SessionExpiredModal';
 
 interface AuthContextType {
     user: User | null;
@@ -23,6 +25,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
     const [token, setToken] = useState<string | null>(() => authService.getStoredToken());
+    const [showExpiredModal, setShowExpiredModal] = useState(false);
+    const navigate = useNavigate();
 
     // Initialize remaining time from storage or default to 30 mins
     const [remainingTime, setRemainingTime] = useState<number>(() => {
@@ -63,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     logout();
-                    alert('Your 30-minute session has expired.');
+                    setShowExpiredModal(true);
                     setRemainingTime(0);
                 } else {
                     setRemainingTime(timeLeft);
@@ -95,7 +99,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         remainingTime,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+            <SessionExpiredModal 
+                open={showExpiredModal} 
+                onClose={() => setShowExpiredModal(false)}
+                onLogin={() => {
+                    setShowExpiredModal(false);
+                    navigate('/login');
+                }}
+                onHome={() => {
+                    setShowExpiredModal(false);
+                    navigate('/');
+                }}
+            />
+        </AuthContext.Provider>
+    );
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

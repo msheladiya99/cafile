@@ -6,14 +6,11 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
@@ -23,13 +20,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import UploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
-import LogoutIcon from '@mui/icons-material/Logout';
 import AccountBalance from '@mui/icons-material/AccountBalance';
 import ReminderIcon from '@mui/icons-material/NotificationsActive';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import MenuIcon from '@mui/icons-material/Menu';
 import ReportsIcon from '@mui/icons-material/Assessment';
-import SettingsIcon from '@mui/icons-material/Settings';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -40,14 +35,9 @@ import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
 import firmService from '../services/firmService';
 import { useQuery } from '@tanstack/react-query';
+import AccountMenu from '../components/common/AccountMenu';
 
 const drawerWidth = 240;
-
-const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
 
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -173,11 +163,6 @@ export const AdminLayout: React.FC = () => {
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
-    };
-
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
     };
 
     const handleMenuItemClick = (path: string) => {
@@ -382,84 +367,14 @@ export const AdminLayout: React.FC = () => {
                             </Avatar>
                         </IconButton>
                     </Tooltip>
-                    <Menu
+                    <AccountMenu
                         anchorEl={anchorEl}
-                        id="account-menu"
                         open={anchorEl !== null}
                         onClose={() => setAnchorEl(null)}
-                        onClick={() => setAnchorEl(null)}
-                        PaperProps={{
-                            elevation: 0,
-                            sx: {
-                                overflow: 'visible',
-                                filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.1))',
-                                mt: 1.5,
-                                width: 240,
-                                borderRadius: 3,
-                                border: '1px solid rgba(0,0,0,0.08)',
-                                '&:before': {
-                                    content: '""',
-                                    display: 'block',
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 14,
-                                    width: 10,
-                                    height: 10,
-                                    bgcolor: 'background.paper',
-                                    transform: 'translateY(-50%) rotate(45deg)',
-                                    zIndex: 0,
-                                    borderLeft: '1px solid rgba(0,0,0,0.08)',
-                                    borderTop: '1px solid rgba(0,0,0,0.08)',
-                                },
-                            },
-                        }}
-                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                    >
-                        {/* Simplified Clean Header */}
-                        <Box sx={{ px: 2.5, py: 2 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                <Box sx={{ minWidth: 0 }}>
-                                    <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: 'text.primary' }}>
-                                        {user?.name || user?.username}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
-                                        {user?.role}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{
-                                    ml: 1,
-                                    px: 1,
-                                    py: 0.4,
-                                    borderRadius: 1.5,
-                                    bgcolor: remainingTime < 300 ? 'rgba(211, 47, 47, 0.08)' : 'rgba(102, 126, 234, 0.08)',
-                                    color: remainingTime < 300 ? 'error.main' : 'primary.main',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}>
-                                    <Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                                        {formatTime(remainingTime)}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-
-                        <Divider sx={{ opacity: 0.6 }} />
-
-                        <MenuItem onClick={() => { setAnchorEl(null); navigate('/admin/profile'); }} sx={{ py: 1.2, my: 0.5, mx: 1, borderRadius: 2 }}>
-                            <ListItemIcon>
-                                <SettingsIcon fontSize="small" />
-                            </ListItemIcon>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>Settings</Typography>
-                        </MenuItem>
-
-                        <MenuItem onClick={handleLogout} sx={{ py: 1.2, mb: 0.5, mx: 1, borderRadius: 2, color: 'error.main' }}>
-                            <ListItemIcon sx={{ color: 'error.main' }}>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            <Typography variant="body2" sx={{ fontWeight: 700 }}>Logout</Typography>
-                        </MenuItem>
-                    </Menu>
+                        user={user}
+                        logout={logout}
+                        remainingTime={remainingTime}
+                    />
                 </Toolbar>
             </AppBar>
 

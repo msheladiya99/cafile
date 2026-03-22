@@ -23,15 +23,25 @@ export const tenantPlugin = (schema: Schema) => {
 
     schema.pre(queryMethods as any, function (this: Query<any, any>) {
         const firmId = getFirmId();
-        const filter = this.getFilter();
+        const filter = this.getFilter() || {};
 
-        // Skip if firmId is already set or if explicitly excluded by ID search
-        if (filter.hasOwnProperty('firmId') || filter.hasOwnProperty('_id')) {
+        // Skip if firmId is already set or if explicitly searching by ID (findById)
+        // We use a more robust check here as mongoose filters can be complex
+        if (
+            'firmId' in filter || 
+            '_id' in filter || 
+            (filter as any).$and?.some((cond: any) => 'firmId' in cond || '_id' in cond)
+        ) {
             return;
         }
 
         if (firmId) {
-            this.where({ firmId });
+            if (firmId === 'ROOT') {
+                // Root records have firmId: null
+                this.where({ firmId: null });
+            } else {
+                this.where({ firmId });
+            }
         } else {
             // SECURITY: Blocking queries if context is missing for isolated models
             console.warn(`[TenantPlugin] Security block: Missing firmId for model ${this.model.modelName}.`);
@@ -42,8 +52,8 @@ export const tenantPlugin = (schema: Schema) => {
     schema.pre('aggregate', function (this: Aggregate<any>) {
         const firmId = getFirmId();
         if (firmId) {
-            // Unshift match to the beginning of the pipeline
-            this.pipeline().unshift({ $match: { firmId: new Types.ObjectId(firmId) } });
+            const matchValue = firmId === 'ROOT' ? null : new Types.ObjectId(firmId);
+            this.pipeline().unshift({ $match: { firmId: matchValue } });
         } else {
             console.warn(`[TenantPlugin] Security block: Missing firmId for aggregate.`);
             this.pipeline().unshift({ $match: { _id: null } });
@@ -54,7 +64,11 @@ export const tenantPlugin = (schema: Schema) => {
     schema.pre('validate', function (this: any) {
         const firmId = getFirmId();
         if (firmId && !this.firmId) {
-            this.firmId = new Types.ObjectId(firmId);
+            if (firmId === 'ROOT') {
+                this.firmId = null;
+            } else {
+                this.firmId = new Types.ObjectId(firmId);
+            }
         }
     });
 };

@@ -146,6 +146,7 @@ const AppRoutes: React.FC = () => {
           <Route path="analytics" element={<Analytics />} />
           <Route path="system-health" element={<SystemHealth />} />
           <Route path="security" element={<SecurityLogs />} />
+          <Route path="profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 

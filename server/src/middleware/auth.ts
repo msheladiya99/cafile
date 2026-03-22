@@ -59,6 +59,15 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             ...decoded
         };
 
+        // If it's a Super Admin, we run in a special 'ROOT' context to allow 
+        // access to global records (where firmId is null)
+        if (decoded.role === 'SUPER_ADMIN') {
+            requestContext.run({ firmId: 'ROOT' }, () => {
+                next();
+            });
+            return;
+        }
+
         // If tenantMiddleware didn't set firmId (e.g. main domain login),
         // but the user belongs to a firm, set it now to ensure isolation.
         if (!req.firmId && decoded.firmId) {

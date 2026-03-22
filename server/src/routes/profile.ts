@@ -11,9 +11,26 @@ const router = express.Router();
 // Get current user profile
 router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findById(req.user!.userId)
+        let user: any = await User.findById(req.user!.userId)
             .select('-passwordHash')
             .populate('clientId', 'name email phone');
+
+        // Fallback for SuperAdmin model if not found in User collection
+        if (!user && req.user!.role === 'SUPER_ADMIN') {
+            const { SuperAdmin } = require('../models/SuperAdmin');
+            const admin = await SuperAdmin.findById(req.user!.userId).select('-passwordHash');
+            if (admin) {
+                // Map to a common format
+                user = {
+                    _id: admin._id,
+                    username: admin.email, // Use email as username for SuperAdmin model
+                    email: admin.email,
+                    name: admin.name,
+                    role: 'SUPER_ADMIN',
+                    createdAt: admin.createdAt
+                };
+            }
+        }
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -32,7 +49,36 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
         const { name, email, phone, username } = req.body;
         const userId = req.user!.userId;
 
-        const user = await User.findById(userId);
+        let user = await User.findById(userId);
+        
+        // Handle SuperAdmin model update if not found in User collection
+        if (!user && req.user!.role === 'SUPER_ADMIN') {
+            const { SuperAdmin } = require('../models/SuperAdmin');
+            const admin = await SuperAdmin.findById(userId);
+            if (admin) {
+                if (name) admin.name = name;
+                if (email) admin.email = email;
+                await admin.save();
+
+                await ActivityLog.create({
+                    userId: admin._id,
+                    action: 'PROFILE_UPDATE',
+                    ipAddress: req.ip,
+                    userAgent: req.get('user-agent'),
+                    details: 'Super Admin profile information updated'
+                });
+
+                return res.json({
+                    message: 'Profile updated successfully',
+                    user: {
+                        name: admin.name,
+                        email: admin.email,
+                        username: admin.email
+                    }
+                });
+            }
+        }
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -110,7 +156,49 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
             return res.status(400).json({ message: 'New password must be at least 6 characters' });
         }
 
-        const user = await User.findById(userId);
+        let user = await User.findById(userId);
+
+        // Fallback for SuperAdmin model
+        if (!user && req.user!.role === 'SUPER_ADMIN') {
+            const { SuperAdmin } = require('../models/SuperAdmin');
+            const admin = await SuperAdmin.findById(userId);
+            if (admin) {
+                // Verify current password
+                const isValidPassword = await bcrypt.compare(currentPassword, admin.passwordHash);
+                if (!isValidPassword) {
+                    return res.status(401).json({ message: 'Current password is incorrect' });
+                }
+
+                // Hash new password
+                const salt = await bcrypt.genSalt(10);
+                const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+                admin.passwordHash = newPasswordHash;
+                await admin.save();
+
+                // Log activity
+                await ActivityLog.create({
+                    userId: admin._id,
+                    action: 'PASSWORD_CHANGE',
+                    ipAddress: req.ip,
+                    userAgent: req.get('user-agent'),
+                    details: 'Super Admin password changed successfully'
+                });
+
+                // Send email
+                if (admin.email) {
+                    sendPasswordChangeEmail({
+                        userEmail: admin.email,
+                        userName: admin.name,
+                        username: admin.email,
+                        newPassword: newPassword
+                    }).catch(err => console.error('Background email error:', err));
+                }
+
+                return res.json({ message: 'Password changed successfully' });
+            }
+        }
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
