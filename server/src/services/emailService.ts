@@ -9,11 +9,17 @@ const createTransporter = () => {
     }
 
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 465,
+        secure: process.env.SMTP_PORT === '587' ? false : true, // true for 465, false for other ports
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD,
         },
+        // TLS settings to help with strict cloud environments
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 };
 
