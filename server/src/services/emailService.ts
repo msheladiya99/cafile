@@ -12,18 +12,28 @@ const createTransporter = () => {
         console.warn('Email not configured. Set EMAIL_USER and EMAIL_PASSWORD in .env');
         return null;
     }
+    const host = process.env.SMTP_HOST || 'smtp.googlemail.com';
+    const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+    console.log(`Initializing SMTP transport: ${host}:${port} (secure: ${port === 465})`);
 
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
-        secure: process.env.SMTP_PORT === '465' ? true : false, // Render often drops 465, so 587 (STARTTLS) is a much safer default
+        host: host,
+        port: port,
+        secure: process.env.SMTP_PORT === '465',
+        requireTLS: process.env.SMTP_PORT !== '465', // Crucial for 587
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD,
         },
+        // Aggressive timeout settings for cloud hosting
+        connectionTimeout: 20000, // 20 seconds
+        greetingTimeout: 20000,
+        socketTimeout: 30000,
         // TLS settings to help with strict cloud environments
         tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            // Explicitly tell Node to negotiate TLS even if it thinks it's not needed
+            minVersion: 'TLSv1.2'
         }
     });
 };
