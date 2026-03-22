@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://www.mycafile.in/sitemap.xml
+Sitemap: https://mycafile.in/sitemap.xml

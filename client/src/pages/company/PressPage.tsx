@@ -50,7 +50,7 @@ const PressPage: React.FC = () => {
             <Helmet>
                 <title>Press & Media | My CA File - CA SaaS Startup India</title>
                 <meta name="description" content="My CA File press room. Read our latest news, download brand assets, and get in touch with the media team. India's leading CA practice management SaaS." />
-                <link rel="canonical" href="https://www.mycafile.in/press" />
+                <link rel="canonical" href="https://mycafile.in/press" />
             </Helmet>
 
             <SiteNavbar />

@@ -128,18 +128,18 @@ export const LandingPage: React.FC = () => {
                 <title>My CA File | Best CA Practice Management Software for Indian Firms</title>
                 <meta name="description" content="Ultimate office portal for Chartered Accountants in India. Manage ITR, GST, Audits, Billing and Clients with a secure, multi-tenant SaaS platform built for professional CA firms." />
                 <meta name="keywords" content="CA Practice Management Software, GST Software for CA, ITR Filing Tool for CA India, CA Firm Office Management, My CA File Surat, Accountant Portal India, SaaS for CA" />
-                <link rel="canonical" href="https://www.mycafile.in" />
+                <link rel="canonical" href="https://mycafile.in" />
                 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://www.mycafile.in" />
+                <meta property="og:url" content="https://mycafile.in" />
                 <meta property="og:title" content="My CA File | Premium CA Practice Management Software" />
                 <meta property="og:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
-                <meta property="og:image" content="https://www.mycafile.in/og-image.webp" />
+                <meta property="og:image" content="https://mycafile.in/og-image.webp" />
 
                 {/* Twitter */}
                 <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:url" content="https://www.mycafile.in" />
+                <meta property="twitter:url" content="https://mycafile.in" />
                 <meta property="twitter:title" content="My CA File | Premium CA Practice Management Software" />
                 <meta property="twitter:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
             </Helmet>

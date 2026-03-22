@@ -25,7 +25,7 @@ const ContactPage: React.FC = () => {
             <Helmet>
                 <title>Contact Us | My CA File - CA Practice Management Software</title>
                 <meta name="description" content="Contact the My CA File team. Get a demo, ask a question, or start your free trial. We respond within 24 hours." />
-                <link rel="canonical" href="https://www.mycafile.in/contact" />
+                <link rel="canonical" href="https://mycafile.in/contact" />
             </Helmet>
 
             <SiteNavbar />

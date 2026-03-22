@@ -48,13 +48,13 @@ export const CAPracticeManagementPage: React.FC = () => {
                 <title>CA Practice Management Software India | My CA File</title>
                 <meta name="description" content="Best CA practice management software in India. Manage clients, compliance, billing, documents, and team tasks for your CA firm. Trusted by 500+ firms. Free 14-day trial." />
                 <meta name="keywords" content="CA practice management software, CA office management software India, practice management for chartered accountants, best CA software India, CA firm management tool" />
-                <link rel="canonical" href="https://www.mycafile.in/ca-practice-management" />
+                <link rel="canonical" href="https://mycafile.in/ca-practice-management" />
                 
                 <meta property="og:type" content="article" />
                 <meta property="og:title" content="CA Practice Management Software India | My CA File" />
                 <meta property="og:description" content="The #1 practice management software for CA firms in India. Clients, compliance, billing, and team — all in one place." />
-                <meta property="og:url" content="https://www.mycafile.in/ca-practice-management" />
-                <meta property="og:image" content="https://www.mycafile.in/og-practice.png" />
+                <meta property="og:url" content="https://mycafile.in/ca-practice-management" />
+                <meta property="og:image" content="https://mycafile.in/og-practice.png" />
                 
                 <meta property="twitter:card" content="summary_large_image" />
                 <meta property="twitter:title" content="CA Practice Management Software India | My CA File" />

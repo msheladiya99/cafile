@@ -61,7 +61,7 @@ const CareersPage: React.FC = () => {
             <Helmet>
                 <title>Careers at My CA File | Jobs in CA SaaS Startup India</title>
                 <meta name="description" content="Join My CA File — India's leading CA practice management SaaS. We're hiring engineers, designers, and growth specialists. Remote-first, equity, and fast growth." />
-                <link rel="canonical" href="https://www.mycafile.in/careers" />
+                <link rel="canonical" href="https://mycafile.in/careers" />
             </Helmet>
 
             <SiteNavbar />

@@ -30,13 +30,13 @@ const AboutPage: React.FC = () => {
             <Helmet>
                 <title>About Us | My CA File - CA Practice Management Software</title>
                 <meta name="description" content="Learn about My CA File — the leading CA office management software built for Chartered Accountants in India. Our mission, team, and story." />
-                <link rel="canonical" href="https://www.mycafile.in/about" />
+                <link rel="canonical" href="https://mycafile.in/about" />
                 
                 <meta property="og:type" content="article" />
                 <meta property="og:title" content="About My CA File | Our Mission & Story" />
                 <meta property="og:description" content="Modernizing CA practices across India with secure, automated practice management. Meet the team and learn our story." />
-                <meta property="og:url" content="https://www.mycafile.in/about" />
-                <meta property="og:image" content="https://www.mycafile.in/og-about.png" />
+                <meta property="og:url" content="https://mycafile.in/about" />
+                <meta property="og:image" content="https://mycafile.in/og-about.png" />
             </Helmet>
 
             <SiteNavbar />
