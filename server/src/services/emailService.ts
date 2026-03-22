@@ -1,4 +1,9 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Critical fix for Render/Node 18+: forces IPv4 instead of IPv6 for DNS resolution
+// Render's network cannot route outgoing IPv6 which causes silent connection timeouts on smtp.gmail.com
+dns.setDefaultResultOrder('ipv4first');
 
 // Email configuration
 const createTransporter = () => {
@@ -10,8 +15,8 @@ const createTransporter = () => {
 
     return nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 465,
-        secure: process.env.SMTP_PORT === '587' ? false : true, // true for 465, false for other ports
+        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+        secure: process.env.SMTP_PORT === '465' ? true : false, // Render often drops 465, so 587 (STARTTLS) is a much safer default
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASSWORD,

@@ -20,7 +20,12 @@ import {
     CardContent,
     Stack,
     Divider,
-    Checkbox
+    Checkbox,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -39,6 +44,7 @@ import type { Client } from '../../../types';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import type { ITStatus } from '../../../services/masterService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../../components/common/UIComponents';
+import toast from 'react-hot-toast';
 
 
 export const ClientList: React.FC = () => {
@@ -77,6 +83,16 @@ export const ClientList: React.FC = () => {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [selectedClients, setSelectedClients] = React.useState<string[]>([]);
+
+    // Confirmation Dialog State
+    const [confirmDialog, setConfirmDialog] = React.useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
     const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
 
@@ -122,15 +138,21 @@ export const ClientList: React.FC = () => {
     }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
 
     const handleResetPassword = async (clientId: string) => {
-        if (window.confirm('Are you sure you want to reset this client\'s password and send them an email?')) {
-            try {
-                const result = await adminService.resetClientPassword(clientId);
-                alert(`Password Reset Successful!\n\nNew Password: ${result.password}\n\nAn email has also been sent to the client.`);
-            } catch (error) {
-                console.error('Reset password error:', error);
-                alert('Failed to reset password. Please try again.');
+        setConfirmDialog({
+            open: true,
+            title: 'Reset Password',
+            content: "Are you sure you want to reset this client's password and send them an email?",
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    const result = await adminService.resetClientPassword(clientId);
+                    toast.success(`Password Reset Successful! New Password: ${result.password}. An email has also been sent to the client.`, { duration: 6000 });
+                } catch (error) {
+                    console.error('Reset password error:', error);
+                    toast.error('Failed to reset password. Please try again.');
+                }
             }
-        }
+        });
     };
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,17 +188,24 @@ export const ClientList: React.FC = () => {
         mutationFn: adminService.deleteClient,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['clients'] });
+            toast.success('Client deleted successfully');
         },
         onError: (error: unknown) => {
             console.error('Error deleting client:', error);
-            alert('Failed to delete client');
+            toast.error('Failed to delete client');
         }
     });
 
     const handleDeleteClient = (id: string, name: string) => {
-        if (window.confirm(`Are you sure you want to delete the client "${name}"? This action cannot be undone.`)) {
-            deleteClientMutation.mutate(id);
-        }
+        setConfirmDialog({
+            open: true,
+            title: 'Delete Client',
+            content: `Are you sure you want to delete the client "${name}"? This action cannot be undone.`,
+            onConfirm: () => {
+                closeConfirm();
+                deleteClientMutation.mutate(id);
+            }
+        });
     };
 
     const bulkDeleteMutation = useMutation({
@@ -184,18 +213,24 @@ export const ClientList: React.FC = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clients'] });
             setSelectedClients([]);
-            alert(data.message || 'Clients deleted successfully');
+            toast.success(data.message || 'Clients deleted successfully');
         },
         onError: (error: unknown) => {
             console.error('Error during bulk deletion:', error);
-            alert('Failed to delete selected clients');
+            toast.error('Failed to delete selected clients');
         }
     });
 
     const handleBulkDelete = () => {
-        if (window.confirm(`Are you absolutely sure you want to delete ${selectedClients.length} selected client(s)? This action cannot be undone.`)) {
-            bulkDeleteMutation.mutate(selectedClients);
-        }
+        setConfirmDialog({
+            open: true,
+            title: 'Delete Multiple Clients',
+            content: `Are you absolutely sure you want to delete ${selectedClients.length} selected client(s)? This action cannot be undone.`,
+            onConfirm: () => {
+                closeConfirm();
+                bulkDeleteMutation.mutate(selectedClients);
+            }
+        });
     };
 
     return (
@@ -632,6 +667,26 @@ export const ClientList: React.FC = () => {
                 </Section>
 
             </ContentContainer>
+
+            {/* Global Confirmation Dialog for actions */}
+            <Dialog 
+                open={confirmDialog.open} 
+                onClose={closeConfirm}
+                PaperProps={{
+                    sx: { borderRadius: 2, minWidth: { xs: 300, sm: 400 } }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>{confirmDialog.title}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{confirmDialog.content}</DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={closeConfirm} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
+                    <Button onClick={confirmDialog.onConfirm} variant="contained" color="error" sx={{ fontWeight: 600, boxShadow: 'none' }}>
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </PageContainer>
     );
 };
