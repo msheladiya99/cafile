@@ -29,34 +29,37 @@ router.post('/login', async (req, res: Response) => {
         };
 
         // 1. First, check if it's a global user (SUPER_ADMIN)
-        let user = await User.findOne({ ...query, firmId: null });
+        //    If on a firm subdomain, also resolve firm-scoped user in PARALLEL
+        let user;
+        if (req.firmId) {
+            // Run both lookups concurrently and pick the right one
+            const [globalUser, firmUser] = await Promise.all([
+                User.findOne({ ...query, firmId: null }).select('+passwordHash').lean(),
+                User.findOne({ ...query, firmId: req.firmId }).select('+passwordHash').lean()
+            ]);
+            user = globalUser || firmUser;
 
-        // 2. If not found, and we are on a firm subdomain, look for user in that firm
-        if (!user && req.firmId) {
-            user = await User.findOne({ ...query, firmId: req.firmId });
-
-            // Critical check: If user belongs to a firm, we MUST verify the firm is active
-            if (user && req.firm) {
+            // Critical check: If user belongs to a firm, verify the firm is active
+            if (user && !globalUser && req.firm) {
                 if (req.firm.status !== 'active') {
                     res.status(403).json({ message: 'Firm account is suspended. Please contact support.' });
                     return;
                 }
             }
+        } else {
+            user = await User.findOne({ ...query, firmId: null }).select('+passwordHash').lean();
         }
 
-        // 3. Removed global fallback to enforce that firm users must login via their specific subdomains.
-        // This ensures mycafile.in/login is only accessible to users with firmId: null (Super Admins).
-
         if (!user) {
-            // Log failed login attempt (Unknown User)
-            await ActivityLog.create({
-                userId: new mongoose.Types.ObjectId(), // Placeholder for unknown user
+            // Log failed login attempt (fire-and-forget)
+            ActivityLog.create({
+                userId: new mongoose.Types.ObjectId(),
                 firmId: req.firmId,
                 action: 'LOGIN_FAILURE',
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
                 details: `Failed login attempt: Unknown username/email: ${normalizedUsername}`
-            });
+            }).catch(() => {});
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
@@ -64,32 +67,18 @@ router.post('/login', async (req, res: Response) => {
         // Verify password
         const isValidPassword = await bcrypt.compare(password, user.passwordHash);
         if (!isValidPassword) {
-            // Log failed login attempt (Wrong Password)
-            await ActivityLog.create({
+            // Log failed login attempt (fire-and-forget)
+            ActivityLog.create({
                 userId: user._id,
                 firmId: user.firmId,
                 action: 'LOGIN_FAILURE',
                 ipAddress: req.ip,
                 userAgent: req.get('user-agent'),
                 details: 'Failed login attempt: Incorrect password'
-            });
+            }).catch(() => {});
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
-
-        // Update last login time
-        user.lastLogin = new Date();
-        await user.save();
-
-        // Log login activity
-        await ActivityLog.create({
-            userId: user._id,
-            firmId: user.firmId,
-            action: 'LOGIN',
-            ipAddress: req.ip,
-            userAgent: req.get('user-agent'),
-            details: 'User logged in successfully'
-        });
 
         // Generate JWT token
         const token = jwt.sign(
@@ -104,14 +93,21 @@ router.post('/login', async (req, res: Response) => {
             { expiresIn: '7d' }
         );
 
-        // Get user name and details
-        let name = user.name || user.username;
-        if (user.clientId && !user.name) {
-            const client = await Client.findById(user.clientId);
-            if (client) {
-                name = client.name;
-            }
-        }
+        // Run lastLogin update, activity log, and client name fetch all in PARALLEL
+        const [, , clientDoc] = await Promise.all([
+            User.updateOne({ _id: user._id }, { lastLogin: new Date() }),
+            ActivityLog.create({
+                userId: user._id,
+                firmId: user.firmId,
+                action: 'LOGIN',
+                ipAddress: req.ip,
+                userAgent: req.get('user-agent'),
+                details: 'User logged in successfully'
+            }),
+            user.clientId ? Client.findById(user.clientId).select('name').lean() : Promise.resolve(null)
+        ]);
+
+        const name = clientDoc?.name || user.name || user.username;
 
         res.json({
             token,

@@ -94,7 +94,14 @@ const LoadingScreen = () => (
 );
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1, staleTime: 30000, gcTime: 1000 * 60 * 5 } },
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 2 * 60 * 1000,    // 2 min: serve cached data without re-fetching
+      gcTime: 10 * 60 * 1000,      // 10 min: keep unused data in memory
+    }
+  },
 });
 
 const theme = createTheme({

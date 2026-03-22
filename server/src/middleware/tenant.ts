@@ -2,6 +2,27 @@ import { Request, Response, NextFunction } from 'express';
 import { Firm } from '../models/Firm';
 import { requestContext } from '../utils/context';
 
+// ── In-memory firm cache to avoid a DB hit on every request ──────────────────
+const FIRM_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in ms
+interface CachedFirm { firm: any; expiresAt: number; }
+const firmCache = new Map<string, CachedFirm>();
+
+// Evict a firm from cache (call after firm status changes)
+export const evictFirmCache = (subdomain: string) => firmCache.delete(subdomain);
+
+async function getFirmBySubdomain(subdomain: string) {
+    const cached = firmCache.get(subdomain);
+    if (cached && Date.now() < cached.expiresAt) {
+        return cached.firm;
+    }
+    const firm = await Firm.findOne({ subdomain, status: 'active' }).lean();
+    if (firm) {
+        firmCache.set(subdomain, { firm, expiresAt: Date.now() + FIRM_CACHE_TTL });
+    }
+    return firm;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Extend Express Request type
 declare global {
     namespace Express {
@@ -64,7 +85,10 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
         }
     }
 
-    console.log('🔍 Tenant Subdomain:', subdomain || 'ROOT/NONE', 'Host:', host);
+    // Only log in development for debugging
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('🔍 Tenant Subdomain:', subdomain || 'ROOT/NONE', 'Host:', host);
+    }
 
     // Skip middleware for:
     // 1. Super admin base path
@@ -86,8 +110,8 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     }
 
     try {
-        // 3. Find firm in database
-        const firm = await Firm.findOne({ subdomain, status: 'active' });
+        // 3. Find firm in database (uses in-memory cache, 5-min TTL)
+        const firm = await getFirmBySubdomain(subdomain);
 
         if (!firm) {
             console.log('❌ Firm not found for subdomain:', subdomain);

@@ -14,8 +14,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'vendor-utils': ['react-router-dom', 'framer-motion', 'react-helmet-async'],
+          // Split MUI core and icons separately — icons alone are ~2MB
+          'vendor-mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
+          'vendor-mui-icons': ['@mui/icons-material'],
+          // Router and helmet are needed on first paint
+          'vendor-router': ['react-router-dom', 'react-helmet-async'],
+          // Data fetching libraries
+          'vendor-query': ['@tanstack/react-query', 'axios'],
+          // Animation library (not needed on login)
+          'vendor-motion': ['framer-motion'],
+          // PDF viewer loaded only on file pages
+          'vendor-pdf': ['pdfjs-dist'],
         },
       },
     },
@@ -26,3 +35,4 @@ export default defineConfig({
     drop: ['console', 'debugger'],
   },
 })
+

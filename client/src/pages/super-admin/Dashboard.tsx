@@ -153,7 +153,7 @@ const SuperAdminDashboard: React.FC = () => {
 
             <Grid container spacing={5}>
                 {/* Invoicing Style Table */}
-                <Grid xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                         <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Recent Registrations</Typography>
                         <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -209,7 +209,7 @@ const SuperAdminDashboard: React.FC = () => {
                 </Grid>
 
                 {/* Right Column Charts */}
-                <Grid xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                         <Typography variant="h5" sx={{ fontWeight: 900, color: '#111' }}>Analytics</Typography>
                     </Box>
@@ -262,7 +262,7 @@ const SuperAdminDashboard: React.FC = () => {
                         "Setting up automated subscriptions",
                         "Understanding system health metrics"
                     ].map((guide, i) => (
-                        <Grid xs={12} md={4} key={i}>
+                        <Grid size={{ xs: 12, md: 4 }} key={i}>
                             <Box sx={{ 
                                 bgcolor: '#fff', 
                                 p: 3, 

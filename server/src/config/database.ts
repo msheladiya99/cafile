@@ -9,7 +9,11 @@ export const connectDB = async (): Promise<void> => {
     try {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ca-office';
 
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(mongoUri, {
+            maxPoolSize: 10,           // Allow up to 10 concurrent DB connections
+            serverSelectionTimeoutMS: 5000, // Fail fast if DB is unreachable
+            socketTimeoutMS: 45000,    // Close sockets after 45s of inactivity
+        });
 
         console.log('✅ MongoDB connected successfully');
     } catch (error) {

@@ -41,6 +41,7 @@ router.get('/upcoming', authMiddleware, async (req: Request, res: Response) => {
 
         const user = (req as any).user;
         const query: any = {
+            firmId: (req as any).firmId,  // ← FIXED: scope to current firm
             dueDate: { $gte: today, $lte: next30Days },
             status: 'PENDING',
         };
@@ -51,7 +52,8 @@ router.get('/upcoming', authMiddleware, async (req: Request, res: Response) => {
 
         const reminders = await Reminder.find(query)
             .populate('clientId', 'name email')
-            .sort({ dueDate: 1 });
+            .sort({ dueDate: 1 })
+            .limit(50);  // never return unbounded results
 
         res.json(reminders);
     } catch (error) {
@@ -59,6 +61,7 @@ router.get('/upcoming', authMiddleware, async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // Get overdue reminders
 router.get('/overdue', authMiddleware, async (req: Request, res: Response) => {

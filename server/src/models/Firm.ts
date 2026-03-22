@@ -63,4 +63,8 @@ const firmSchema = new Schema<IFirm>(
     { timestamps: true }
 );
 
+// Index for tenant middleware lookups (subdomain + status is the most frequent query)
+firmSchema.index({ subdomain: 1, status: 1 });
+
 export const Firm = mongoose.model<IFirm>('Firm', firmSchema);
+

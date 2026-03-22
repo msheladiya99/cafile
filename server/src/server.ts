@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
@@ -33,6 +34,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(helmet());
+app.use(compression()); // Gzip/brotli compress all responses
 
 // Update CORS to allow any subdomain of the main site
 const allowedOrigins = [

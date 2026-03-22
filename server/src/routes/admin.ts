@@ -372,6 +372,18 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
     }
 });
 
+// Get client count only (lightweight endpoint for dashboards)
+router.get('/clients/count', async (req: AuthRequest, res: Response) => {
+    try {
+        const count = await Client.countDocuments({ firmId: req.firmId });
+        res.set('Cache-Control', 'private, max-age=60'); // cache for 1 min
+        res.json({ count });
+    } catch (error) {
+        console.error('Get client count error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
@@ -397,12 +409,14 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
             username: usernameMap[client._id.toString()] || ''
         }));
 
+        res.set('Cache-Control', 'private, max-age=30'); // cache for 30s
         res.json(clientsWithUsername);
     } catch (error) {
         console.error('Get clients error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // Get single client
 router.get('/clients/:id', async (req: AuthRequest, res: Response) => {

@@ -79,5 +79,7 @@ const ReminderSchema: Schema = new Schema(
 // Index for efficient queries
 ReminderSchema.index({ clientId: 1, dueDate: 1 });
 ReminderSchema.index({ status: 1, dueDate: 1 });
+// Compound index for /upcoming and /overdue endpoints (firmId + status + dueDate)
+ReminderSchema.index({ firmId: 1, status: 1, dueDate: 1 });
 
 export default mongoose.model<IReminder>('Reminder', ReminderSchema);

@@ -25,7 +25,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PieChartIcon from '@mui/icons-material/PieChart';
-import { adminService } from '../../services/adminService';
 import { reminderService } from '../../services/reminderService';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -59,10 +58,13 @@ export const AdminDashboard: React.FC = () => {
     });
     const [newTask, setNewTask] = useState('');
 
-    const { data: clients = [], isLoading: isLoadingClients } = useQuery({
-        queryKey: ['clients'],
-        queryFn: adminService.getClients,
-        staleTime: 60000, // 1 minute
+    const { data: clientCount = 0, isLoading: isLoadingClients } = useQuery({
+        queryKey: ['clients-count'],
+        queryFn: async () => {
+            const res = await import('../../services/api').then(m => m.default.get('/admin/clients/count'));
+            return res.data.count as number;
+        },
+        staleTime: 2 * 60 * 1000, // 2 minutes
     });
 
     const { data: reminders = [], isLoading: isLoadingReminders } = useQuery({
@@ -159,7 +161,7 @@ export const AdminDashboard: React.FC = () => {
                             {isLoadingClients ? (
                                 <Skeleton width={60} height={40} />
                             ) : (
-                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44' }}>{clients.length}</Typography>
+                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44' }}>{clientCount}</Typography>
                             )}
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: 56, height: 56 }}>

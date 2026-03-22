@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, Alert, Button, Stack, CardContent } from '@mui/material';
+import { Box, Typography, Grid, Card, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, Alert, Button, Stack } from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     CheckCircle as CheckCircleIcon,
@@ -243,22 +243,22 @@ const Subscriptions: React.FC = () => {
                 </DialogTitle>
                 <DialogContent>
                      <Grid container spacing={3} sx={{ mt: 1 }}>
-                         <Grid xs={12}>
+                         <Grid size={{ xs: 12 }}>
                               <TextField fullWidth label="Display Name" value={formData.displayName || ''} onChange={e => setFormData({ ...formData, displayName: e.target.value })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
-                         <Grid xs={12}>
+                         <Grid size={{ xs: 12 }}>
                               <TextField fullWidth label="Price Display (e.g. ₹999/mo)" value={formData.price || ''} onChange={e => setFormData({ ...formData, price: e.target.value })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
-                         <Grid xs={12} sm={6}>
+                         <Grid size={{ xs: 12, sm: 6 }}>
                               <TextField fullWidth type="number" label="Staff Limit" value={formData.staffLimit || ''} onChange={e => setFormData({ ...formData, staffLimit: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
-                         <Grid xs={12} sm={6}>
+                         <Grid size={{ xs: 12, sm: 6 }}>
                               <TextField fullWidth type="number" label="Client Limit" value={formData.clientLimit || ''} onChange={e => setFormData({ ...formData, clientLimit: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
-                         <Grid xs={12} sm={6}>
+                         <Grid size={{ xs: 12, sm: 6 }}>
                               <TextField fullWidth type="number" label="Storage Limit (GB)" value={formData.storageGB || ''} onChange={e => setFormData({ ...formData, storageGB: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
-                         <Grid xs={12} sm={6}>
+                         <Grid size={{ xs: 12, sm: 6 }}>
                               <TextField fullWidth label="Task Limit" value={formData.tasks || ''} onChange={e => setFormData({ ...formData, tasks: e.target.value })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
                          </Grid>
                      </Grid>
