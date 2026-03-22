@@ -457,10 +457,14 @@ router.get('/system-health', authenticate, requireSuperAdmin, async (req, res: R
 // Security Logs
 router.get('/security-logs', async (req, res: Response) => {
     try {
-        const logs = await ActivityLog.find({})
+        const logs = await ActivityLog.find({ _id: { $exists: true } })
         .sort({ timestamp: -1 })
         .limit(100)
-        .populate('userId', 'name email username')
+        .populate({
+            path: 'userId',
+            select: 'name email username',
+            model: 'User'
+        })
         .populate('firmId', 'firmName subdomain')
         .lean();
 
