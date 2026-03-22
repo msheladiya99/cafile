@@ -47,15 +47,14 @@ router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
     try {
         const { fileId } = req.params;
 
-        const file = await File.findById(fileId);
+        const file = await File.findOne({ 
+            _id: fileId, 
+            clientId: req.user!.clientId,
+            firmId: (req as any).firmId 
+        });
+        
         if (!file) {
             res.status(404).json({ message: 'File not found' });
-            return;
-        }
-
-        // Verify client owns this file
-        if (file.clientId.toString() !== req.user!.clientId) {
-            res.status(403).json({ message: 'Access denied' });
             return;
         }
 

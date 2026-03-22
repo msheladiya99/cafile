@@ -40,7 +40,7 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
             return;
         }
 
-        const taskMaster = await TaskMaster.findById(taskMasterId);
+        const taskMaster = await TaskMaster.findOne({ _id: taskMasterId, firmId: req.firmId });
         if (!taskMaster) {
             res.status(404).json({ message: 'Task Master not found' });
             return;
@@ -142,7 +142,7 @@ router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
             res.status(404).json({ message: 'Applicability record not found' });
             return;
         }
-        await TaskApplicability.findByIdAndDelete(req.params.id);
+        await TaskApplicability.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         res.json({ message: 'Task applicability removed successfully' });
     } catch (error) {
         console.error('Remove applicability error:', error);

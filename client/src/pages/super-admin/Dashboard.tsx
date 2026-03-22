@@ -5,7 +5,7 @@ import {
     Box,
     Card,
     CardContent,
-    CircularProgress,
+    Skeleton,
     Stack
 } from '@mui/material';
 import {
@@ -91,10 +91,6 @@ const SuperAdminDashboard: React.FC = () => {
         staleTime: 0,
     });
 
-    if (isLoading) {
-        return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
-    }
-
     interface DashboardResponse {
         widgets: Record<string, number | string>;
         charts: {
@@ -107,10 +103,10 @@ const SuperAdminDashboard: React.FC = () => {
     const { widgets = {}, charts = {}, recentFirms = [] } = (data as DashboardResponse) || {};
 
     const stats = [
-        { title: 'Registered Firms', value: widgets.totalFirms, subtitle: 'firms.overview', color: '#c7d2fe' },
-        { title: 'Platform Clients', value: widgets.totalClients, subtitle: 'clients.list', color: '#1e293b' },
-        { title: 'System Revenue', value: `₹${widgets.totalRevenue}`, subtitle: 'revenue.reports', color: '#fecaca' },
-        { title: 'Platform Health', value: 'Active', subtitle: 'health.check', color: '#4f46e5' },
+        { title: 'Registered Firms', value: isLoading ? <Skeleton width={40} /> : widgets.totalFirms || 0, subtitle: 'firms.overview', color: '#c7d2fe' },
+        { title: 'Platform Clients', value: isLoading ? <Skeleton width={40} /> : widgets.totalClients || 0, subtitle: 'clients.list', color: '#1e293b' },
+        { title: 'System Revenue', value: isLoading ? <Skeleton width={60} /> : `₹${widgets.totalRevenue || 0}`, subtitle: 'revenue.reports', color: '#fecaca' },
+        { title: 'Platform Health', value: isLoading ? <Skeleton width={40} /> : 'Active', subtitle: 'health.check', color: '#4f46e5' },
     ];
 
     const COLORS = ['#6366f1', '#fb7185', '#fbbf24', '#2dd4bf'];

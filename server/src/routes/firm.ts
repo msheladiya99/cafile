@@ -269,7 +269,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
 // DELETE a firm document
 router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const doc = await FirmDocument.findById(req.params.id);
+        const doc = await FirmDocument.findOne({ _id: req.params.id, firmId: req.firmId });
         if (!doc) {
             res.status(404).json({ message: 'Document not found' });
             return;
@@ -285,7 +285,7 @@ router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Resp
             }
         }
 
-        await FirmDocument.findByIdAndDelete(req.params.id);
+        await FirmDocument.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         res.json({ message: 'Document deleted' });
     } catch (error) {
         console.error('Delete firm document error:', error);
@@ -356,7 +356,7 @@ router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: 
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
-        await MultiFirm.findByIdAndUpdate(req.params.id, { logoUrl: url });
+        await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId: req.firmId }, { logoUrl: url });
         res.json({ logoUrl: url });
     } catch (error) {
         console.error('Multi firm logo error:', error);
@@ -375,7 +375,7 @@ router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: 
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
-        await MultiFirm.findByIdAndUpdate(req.params.id, { signImageUrl: url });
+        await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId: req.firmId }, { signImageUrl: url });
         res.json({ signImageUrl: url });
     } catch (error) {
         console.error('Multi firm sign error:', error);
@@ -417,7 +417,7 @@ router.put('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => 
 });
 
 router.delete('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
-    try { await TaxDetail.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
+    try { await TaxDetail.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' }); }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
@@ -458,7 +458,7 @@ router.put('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response
 });
 
 router.delete('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
-    try { await Currency.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
+    try { await Currency.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' }); }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 

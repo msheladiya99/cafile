@@ -70,6 +70,7 @@ router.get('/overdue', authMiddleware, async (req: Request, res: Response) => {
 
         const user = (req as any).user;
         const query: any = {
+            firmId: (req as any).firmId,
             dueDate: { $lt: today },
             status: 'PENDING',
         };
@@ -82,12 +83,8 @@ router.get('/overdue', authMiddleware, async (req: Request, res: Response) => {
             .populate('clientId', 'name email')
             .sort({ dueDate: 1 });
 
-        // Update status to OVERDUE (skip for client view or handle globally? 
-        // Better to allow update if we want them to see it as overdue)
-        // But updateMany might affect other clients if not scoped?
-        // Wait, updateMany filter needs to be scoped too!
-
-        const updateFilter: any = { dueDate: { $lt: today }, status: 'PENDING' };
+        // Update status to OVERDUE for this firm's reminders
+        const updateFilter: any = { firmId: (req as any).firmId, dueDate: { $lt: today }, status: 'PENDING' };
         if (user.role === 'CLIENT') {
             updateFilter.clientId = user.clientId;
         }

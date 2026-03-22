@@ -11,7 +11,7 @@ const router = express.Router();
 // Get current user profile
 router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        let user: any = await User.findById(req.user!.userId)
+        let user: any = await User.findOne({ _id: req.user!.userId, firmId: (req as any).firmId })
             .select('-passwordHash')
             .populate('clientId', 'name email phone');
 
@@ -49,7 +49,7 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
         const { name, email, phone, username } = req.body;
         const userId = req.user!.userId;
 
-        let user = await User.findById(userId);
+        let user = await User.findOne({ _id: userId, firmId: (req as any).firmId });
         
         // Handle SuperAdmin model update if not found in User collection
         if (!user && req.user!.role === 'SUPER_ADMIN') {
@@ -95,7 +95,7 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
         // 2. Handle Role-Specific Updates
         if (user.role === 'CLIENT' && user.clientId) {
             // Update Client model for clients
-            const client = await Client.findById(user.clientId);
+            const client = await Client.findOne({ _id: user.clientId, firmId: (req as any).firmId });
             if (client) {
                 if (email && email !== client.email) {
                     const existingClient = await Client.findOne({ email, _id: { $ne: client._id } });
@@ -156,7 +156,7 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
             return res.status(400).json({ message: 'New password must be at least 6 characters' });
         }
 
-        let user = await User.findById(userId);
+        let user = await User.findOne({ _id: userId, firmId: (req as any).firmId });
 
         // Fallback for SuperAdmin model
         if (!user && req.user!.role === 'SUPER_ADMIN') {
@@ -232,7 +232,7 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
 
             // For CLIENT role, get email from Client model
             if (user.role === 'CLIENT' && user.clientId) {
-                const client = await Client.findById(user.clientId);
+                const client = await Client.findOne({ _id: user.clientId, firmId: (req as any).firmId });
                 if (client) {
                     userEmail = client.email;
                     userName = client.name;

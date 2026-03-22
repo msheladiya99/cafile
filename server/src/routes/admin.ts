@@ -15,6 +15,7 @@ import { Firm } from '../models/Firm';
 import { getDriveService } from '../services/googleDrive';
 import fs from 'fs';
 import path from 'path';
+import Reminder from '../models/Reminder';
 
 const router = Router();
 
@@ -383,6 +384,36 @@ router.get('/clients/count', async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// Single optimized Dashboard endpoint: returns multiple stats in parallel
+router.get('/dashboard', async (req: AuthRequest, res: Response) => {
+    try {
+        const today = new Date();
+        const next30Days = new Date();
+        next30Days.setDate(today.getDate() + 30);
+
+        const [clientCount, upcomingReminders] = await Promise.all([
+            Client.countDocuments({ firmId: req.firmId }),
+            Reminder.find({
+                firmId: req.firmId,
+                dueDate: { $gte: today, $lte: next30Days },
+                status: 'PENDING'
+            })
+            .sort({ dueDate: 1 })
+            .limit(10)
+            .lean()
+        ]);
+
+        res.json({
+            clientCount,
+            reminders: upcomingReminders
+        });
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {

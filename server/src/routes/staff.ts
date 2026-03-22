@@ -257,7 +257,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get staff member by id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const staff = await User.findById(req.params.id).select('-passwordHash').lean();
+        const staff = await User.findOne({ _id: req.params.id, firmId: req.firmId }).select('-passwordHash').lean();
         if (!staff) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -272,7 +272,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // Reset staff password
 router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -334,7 +334,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -421,7 +421,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 // Delete staff member
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -438,7 +438,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        await User.findByIdAndDelete(req.params.id);
+        await User.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         res.json({ message: 'Staff member deleted successfully' });
     } catch (error) {
         console.error('Delete staff error:', error);

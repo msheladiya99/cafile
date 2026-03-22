@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
         const { employee, date, inTime, outTime, description } = req.body;
 
         const newAttendance = new Attendance({
+            firmId: (req as any).firmId,
             employee,
             date,
             inTime,
@@ -36,7 +37,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const { employee, startDate, endDate } = req.query;
-        const filter: any = {};
+        const filter: any = { firmId: (req as any).firmId };
 
         if (employee) {
             filter.employee = employee;
@@ -78,6 +79,7 @@ router.get('/form108', async (req, res) => {
         const endDate = new Date(yearNum, 11, 31, 23, 59, 59); // Dec 31
 
         const records = await Attendance.find({
+            firmId: (req as any).firmId,
             employee,
             date: { $gte: startDate, $lte: endDate }
         }).sort({ date: 1 });
@@ -130,8 +132,8 @@ router.put('/:id', async (req, res) => {
     try {
         const { employee, date, inTime, outTime, description } = req.body;
 
-        const updated = await Attendance.findByIdAndUpdate(
-            req.params.id,
+        const updated = await Attendance.findOneAndUpdate(
+            { _id: req.params.id, firmId: (req as any).firmId },
             { employee, date, inTime, outTime, description },
             { new: true }
         ).populate('employee', 'firstName lastName name');
@@ -148,7 +150,7 @@ router.put('/:id', async (req, res) => {
 // Delete attendance
 router.delete('/:id', async (req, res) => {
     try {
-        const deletedAttendance = await Attendance.findByIdAndDelete(req.params.id);
+        const deletedAttendance = await Attendance.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
         if (!deletedAttendance) {
             return res.status(404).json({ message: 'Attendance record not found' });
         }

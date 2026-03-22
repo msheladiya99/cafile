@@ -94,7 +94,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
         }
 
         // Verify client exists
-        const client = await Client.findById(clientId);
+        const client = await Client.findOne({ _id: clientId, firmId: (req as any).firmId });
         if (!client) {
             return res.status(404).json({ message: 'Client not found' });
         }
@@ -473,7 +473,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
  */
 router.get('/:id/download', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -519,7 +519,7 @@ router.get('/:id/download', authenticate, checkFileAccess, async (req: AuthReque
  */
 router.get('/:id/preview', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -653,7 +653,7 @@ router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequ
  */
 router.delete('/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -698,7 +698,7 @@ router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STA
             return res.status(400).json({ message: 'No files selected' });
         }
 
-        const files = await File.find({ _id: { $in: fileIds } });
+        const files = await File.find({ _id: { $in: fileIds }, firmId: (req as any).firmId });
 
         if (files.length === 0) {
             return res.status(404).json({ message: 'No files found' });
@@ -791,7 +791,7 @@ router.get('/client/:clientId', authenticate, checkFileAccess, async (req: AuthR
  */
 router.post('/:id/share', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -824,7 +824,7 @@ router.post('/:id/share', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF
  */
 router.patch('/:id/star', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -855,7 +855,7 @@ router.patch('/:id/star', authenticate, async (req: AuthRequest, res: Response) 
  */
 router.patch('/:id/archive', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -887,7 +887,7 @@ router.patch('/:id/tags', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF
             return res.status(400).json({ message: 'Tags must be an array' });
         }
 
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -915,7 +915,7 @@ router.patch('/:id/notes', authenticate, async (req: AuthRequest, res: Response)
     try {
         const { notes } = req.body;
 
-        const file = await File.findById(req.params.id);
+        const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });

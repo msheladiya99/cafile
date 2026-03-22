@@ -32,7 +32,10 @@ router.post('/services', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
 // Update service
 router.put('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const service = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const service = await Service.findOneAndUpdate(
+            { _id: req.params.id, firmId: (req as any).firmId }, 
+            req.body, { new: true }
+        );
         if (!service) return res.status(404).json({ message: 'Service not found' });
         res.json(service);
     } catch (error) {
@@ -43,7 +46,7 @@ router.put('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 // Delete service
 router.delete('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const service = await Service.findByIdAndDelete(req.params.id);
+        const service = await Service.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
         if (!service) return res.status(404).json({ message: 'Service not found' });
         res.json({ message: 'Service deleted' });
     } catch (error) {
@@ -95,7 +98,14 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
 // Get single invoice
 router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
     try {
-        const invoice = await Invoice.findById(req.params.id)
+        const query: any = { _id: req.params.id };
+        if (req.user.role === 'CLIENT') {
+            query.clientId = req.user.clientId;
+        } else {
+            query.firmId = (req as any).firmId;
+        }
+        
+        const invoice = await Invoice.findOne(query)
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName email')
             .populate('firmId');
@@ -152,7 +162,7 @@ router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
 // Add payment to invoice
 router.post('/invoices/:id/payments', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const invoice = await Invoice.findById(req.params.id);
+        const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         invoice.payments.push(req.body);
@@ -166,7 +176,7 @@ router.post('/invoices/:id/payments', authMiddleware, requireRoles(['ADMIN', 'MA
 // Delete payment from invoice
 router.delete('/invoices/:id/payments/:paymentId', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const invoice = await Invoice.findById(req.params.id);
+        const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Remove payment
@@ -185,7 +195,7 @@ router.delete('/invoices/:id/payments/:paymentId', authMiddleware, requireRoles(
 // Update invoice (Admin only)
 router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const invoice = await Invoice.findById(req.params.id);
+        const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Update fields
@@ -219,7 +229,10 @@ router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 router.patch('/invoices/:id/status', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
         const { status } = req.body;
-        const invoice = await Invoice.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        const invoice = await Invoice.findOneAndUpdate(
+            { _id: req.params.id, firmId: (req as any).firmId }, 
+            { status }, { new: true }
+        );
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
         res.json(invoice);
     } catch (error) {
@@ -230,7 +243,7 @@ router.patch('/invoices/:id/status', authMiddleware, requireRoles(['ADMIN', 'MAN
 // Delete invoice (Admin only)
 router.delete('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const invoice = await Invoice.findByIdAndDelete(req.params.id);
+        const invoice = await Invoice.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
         res.json({ message: 'Invoice deleted' });
     } catch (error) {
