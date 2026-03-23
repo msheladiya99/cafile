@@ -44,278 +44,291 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     const padding = 15;
 
     // --- Colors (Premium Palette) ---
-    // Change to purple theme if template2
-    const primaryColor: [number, number, number] = invoiceTemplate === 'template2' ? [102, 126, 234] : [30, 58, 138];
-    const secondaryColor: [number, number, number] = [100, 116, 139]; // Slate Grey
-    const borderColor: [number, number, number] = [226, 232, 240]; // Light Border
-
-    // --- Header Section ---
-    // Top Bar
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, pageWidth, 6, 'F');
-
-    // Branding
-    doc.setFontSize(24);
-    doc.setTextColor(30, 41, 59); // Dark text
-    doc.setFont('helvetica', 'bold');
-    doc.text(companyName, padding, 30);
-
-    doc.setFontSize(10);
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFont('helvetica', 'normal');
-
-    // Wrap long address text to multiple lines
-    const maxAddressWidth = pageWidth - (padding * 2) - 60; // Leave space for right side content
-    const addressLines = doc.splitTextToSize(companyAddress, maxAddressWidth);
-    let currentY = 36;
-    addressLines.forEach((line: string) => {
-        doc.text(line, padding, currentY);
-        currentY += 5; // Line spacing
-    });
-
-    doc.text(`${companyEmail} | ${companyPhone}`, padding, currentY);
-
-    // Invoice Title & Status
-    doc.setFontSize(36);
-    doc.setTextColor(226, 232, 240); // Very light grey watermark-like
-    doc.setFont('helvetica', 'bold');
-    doc.text(invoiceTemplate === 'template2' ? 'TAX INVOICE' : 'INVOICE', pageWidth - padding, 35, { align: 'right' });
-
-    // Status Badge
-    let statusColor: [number, number, number] = [100, 116, 139]; // Default Grey
-    if (invoice.status === 'PAID') statusColor = [34, 197, 94]; // Green
-    if (invoice.status === 'PENDING') statusColor = [234, 179, 8]; // Amber
-    if (invoice.status === 'PARTIAL') statusColor = [59, 130, 246]; // Blue
-    if (invoice.status === 'CANCELLED') statusColor = [239, 68, 68]; // Red
-
-    const badgeWidth = 40;
-    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.roundedRect(pageWidth - padding - badgeWidth, 45, badgeWidth, 8, 2, 2, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text(invoice.status, pageWidth - padding - (badgeWidth / 2), 50.5, { align: 'center' });
-
-    // --- Divider ---
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
-    doc.line(padding, 60, pageWidth - padding, 60);
-
-    // --- Details Grid ---
-    let yPos = 75;
-
-    // Left: Bill To
-    doc.setFontSize(10);
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BILL TO', padding, yPos);
-
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59); // Darker
-    doc.setFont('helvetica', 'normal');
-    yPos += 7;
-
-    const isGroupBilling = invoice.billingType === 'CLIENT_GROUP';
-    const billedEntity = isGroupBilling ? invoice.clientGroupId : invoice.clientId;
-
-    const clientName = typeof billedEntity === 'object' && billedEntity ? (billedEntity.groupName || billedEntity.name || billedEntity.username || 'Valued Client') : 'Valued Client';
-    const clientAddress = typeof billedEntity === 'object' && billedEntity ? (billedEntity.address || '') : '';
-    const clientEmail = typeof billedEntity === 'object' && billedEntity ? (billedEntity.email || '') : '';
-
-    let clientsText = '';
-    if (isGroupBilling && typeof billedEntity === 'object' && billedEntity && billedEntity._id) {
-        try {
-            const { adminService } = await import('../services/adminService');
-            const allClients = await adminService.getClients();
-            const groupClients = allClients.filter(c => {
-                if (!c.groupName) return false;
-                if (typeof c.groupName === 'string') return c.groupName === billedEntity._id;
-                return c.groupName._id === billedEntity._id;
-            });
-            if (groupClients.length > 0) {
-                clientsText = `Associated Clients: ${groupClients.map(c => c.name).join(', ')}`;
-            }
-        } catch (e) {
-            console.error('Failed to fetch group clients', e);
+    const getPrimaryColor = (): [number, number, number] => {
+        switch (invoiceTemplate) {
+            case 'template2': return [102, 126, 234]; // Purple
+            case 'template3': return [15, 23, 42];   // Midnight Blue-Black
+            case 'template4': return [67, 56, 202];  // Royal Indigo
+            default: return [30, 58, 138];          // Standard Blue
         }
-    }
+    };
+    const primaryColor = getPrimaryColor();
+    const secondaryColor: [number, number, number] = [100, 116, 139]; 
+    const borderColor: [number, number, number] = [226, 232, 240]; 
+    const accentColor: [number, number, number] = invoiceTemplate === 'template4' ? [180, 83, 9] : primaryColor; 
 
-    doc.setFont('helvetica', 'bold');
-    doc.text(clientName + (isGroupBilling ? ' (Group)' : ''), padding, yPos);
-    yPos += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    // --- Template 3 Layout: Midnight Sidebar ---
+    if (invoiceTemplate === 'template3') {
+        const sidebarWidth = 65;
+        // Sidebar background
+        doc.setFillColor(15, 23, 42); // Midnight
+        doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
 
-    if (isGroupBilling && clientsText) {
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        const lines = doc.splitTextToSize(clientsText, 80);
-        doc.text(lines, padding, yPos);
-        yPos += (lines.length * 5);
-        doc.setTextColor(30, 41, 59); // reset color
-    }
+        // Sidebar Branding
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text(companyName, 10, 30);
 
-    if (clientAddress) {
-        const addressLines = doc.splitTextToSize(clientAddress, 80);
-        doc.text(addressLines, padding, yPos);
-        yPos += (addressLines.length * 5);
-    }
-    if (clientEmail) {
-        doc.text(clientEmail, padding, yPos);
-    }
-
-    // Right: Invoice Info
-    yPos = 75;
-    const rightColX = pageWidth / 2 + 20;
-
-    const drawDetail = (label: string, value: string, y: number) => {
         doc.setFontSize(9);
-        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-        doc.setFont('helvetica', 'bold');
-        doc.text(label.toUpperCase(), rightColX, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225); // Light slate text
+        const sidebarTextWidth = sidebarWidth - 20;
+        const addressLines = doc.splitTextToSize(companyAddress, sidebarTextWidth);
+        let currentY = 40;
+        addressLines.forEach((line: string) => {
+            doc.text(line, 10, currentY);
+            currentY += 5;
+        });
+        doc.text(companyEmail, 10, currentY + 5);
+        doc.text(companyPhone, 10, currentY + 10);
 
-        doc.setFontSize(10);
-        doc.setTextColor(30, 41, 59);
-        doc.text(value, pageWidth - padding, y, { align: 'right' });
-    };
-
-    drawDetail('Invoice Number', invoice.invoiceNumber, yPos);
-    drawDetail('Issue Date', format(new Date(invoice.issueDate), 'dd MMM yyyy'), yPos + 8);
-    drawDetail('Due Date', format(new Date(invoice.dueDate), 'dd MMM yyyy'), yPos + 16);
-    drawDetail('Total Amount', `INR ${invoice.totalAmount.toLocaleString()}`, yPos + 24);
-
-    // --- Item Tables ---
-    yPos += 35; // Space before table
-
-    const tableColumn = ["Item Description", "Qty", "Rate", "Amount"];
-    const tableRows = invoice.items.map(item => [
-        { content: item.name + (item.description ? `\n${item.description}` : ''), styles: { minCellHeight: 10 } },
-        item.quantity,
-        `INR ${item.unitPrice.toLocaleString()}`,
-        `INR ${item.amount.toLocaleString()}`
-    ]);
-
-    autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: yPos,
-        theme: 'plain', // Clean look
-        headStyles: {
-            fillColor: [248, 250, 252], // Very light grey header
-            textColor: secondaryColor,
-            fontSize: 9,
-            fontStyle: 'bold',
-            halign: 'left',
-            cellPadding: 4
-        },
-        columnStyles: {
-            0: { cellWidth: 'auto', valign: 'middle' },
-            1: { cellWidth: 20, halign: 'center', valign: 'middle' },
-            2: { cellWidth: 30, halign: 'right', valign: 'middle' },
-            3: { cellWidth: 30, halign: 'right', valign: 'middle', fontStyle: 'bold' }
-        },
-        styles: {
-            fontSize: 10,
-            cellPadding: 5,
-            textColor: [51, 65, 85], // Slate 700
-            lineColor: borderColor,
-            lineWidth: 0.1
-        },
-        alternateRowStyles: {
-            fillColor: [255, 255, 255]
-        },
-        margin: { left: padding, right: padding },
-        didParseCell: (data) => {
-            // Add border bottom to rows
-            if (data.section === 'body') {
-                data.cell.styles.lineWidth = { bottom: 0.1 };
-                data.cell.styles.lineColor = borderColor;
-            }
-        }
-    });
-
-    // --- Totals Box ---
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    const boxWidth = 90;
-    const boxX = pageWidth - padding - boxWidth;
-
-    // Background for totals
-    doc.setFillColor(248, 250, 252); // Slate 50
-    doc.roundedRect(boxX, finalY, boxWidth, 45, 2, 2, 'F');
-    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
-    doc.roundedRect(boxX, finalY, boxWidth, 45, 2, 2, 'S');
-
-    let totalY = finalY + 10;
-    const marginR = pageWidth - padding - 5;
-    const labelX = boxX + 5;
-
-    // Helper for rows
-    const drawTotalRow = (label: string, value: string, isTotal = false) => {
-        doc.setFontSize(isTotal ? 12 : 10);
-        doc.setTextColor(isTotal ? primaryColor[0] : secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-        if (isTotal) doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-
-        doc.setFont('helvetica', isTotal ? 'bold' : 'normal');
-        doc.text(label, labelX, totalY);
-        doc.text(value, marginR, totalY, { align: 'right' });
-        totalY += isTotal ? 10 : 7;
-    };
-
-    drawTotalRow('Subtotal', `INR ${invoice.subtotal.toLocaleString()}`);
-    drawTotalRow('Tax (18%)', `INR ${invoice.tax.toLocaleString()}`);
-
-    // Line separator
-    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
-    doc.line(labelX, totalY - 5, marginR, totalY - 5);
-
-    drawTotalRow('Total Amount', `INR ${invoice.totalAmount.toLocaleString()}`, true);
-
-    // Amount Due Highlight
-    if (invoice.balanceAmount > 0) {
-        doc.setTextColor(239, 68, 68); // Red
+        // Sidebar Bottom Info
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Balance Due:', labelX, totalY);
-        doc.text(`INR ${invoice.balanceAmount.toLocaleString()}`, marginR, totalY, { align: 'right' });
+        doc.setTextColor(255, 255, 255);
+        doc.text('INVOICE TO:', 10, 100);
+
+        const mainStartX = sidebarWidth + 10;
+        
+        // Header in main area
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(36);
+        doc.text('INVOICE', mainStartX, 30);
+
+        // Status
+        let statusColor: [number, number, number] = [100, 116, 139];
+        if (invoice.status === 'PAID') statusColor = [34, 197, 94];
+        if (invoice.status === 'PENDING') statusColor = [234, 179, 8];
+        const badgeWidth = 35;
+        doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.roundedRect(mainStartX, 35, badgeWidth, 6, 1, 1, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.text(invoice.status, mainStartX + (badgeWidth/2), 39, { align: 'center' });
+
+        // Invoice Meta
+        const metaY = 75;
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('NUMBER', mainStartX, metaY);
+        doc.text('DATE', mainStartX + 40, metaY);
+        doc.text('DUE DATE', mainStartX + 80, metaY);
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(invoice.invoiceNumber, mainStartX, metaY + 6);
+        doc.text(format(new Date(invoice.issueDate), 'dd MMM yyyy'), mainStartX + 40, metaY + 6);
+        doc.text(format(new Date(invoice.dueDate), 'dd MMM yyyy'), mainStartX + 80, metaY + 6);
+
+        // Client Info (drawn in main area)
+        const isGroupBilling = invoice.billingType === 'CLIENT_GROUP';
+        const billedEntity = isGroupBilling ? invoice.clientGroupId : invoice.clientId;
+        const clientName = typeof billedEntity === 'object' && billedEntity ? (billedEntity.groupName || billedEntity.name || billedEntity.username || 'Valued Client') : 'Valued Client';
+        const clientAddress = typeof billedEntity === 'object' && billedEntity ? (billedEntity.address || '') : '';
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(clientName, mainStartX, 107);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        const cadLines = doc.splitTextToSize(clientAddress, 80);
+        doc.text(cadLines, mainStartX, 112);
+
+        // Table and Totals
+        let yPos = 135;
+        const tableColumn = ["Item Description", "Qty", "Rate", "Amount"];
+        const tableRows = invoice.items.map(item => [
+            { content: item.name + (item.description ? `\n${item.description}` : ''), styles: { minCellHeight: 10 } },
+            item.quantity,
+            `INR ${item.unitPrice.toLocaleString()}`,
+            `INR ${item.amount.toLocaleString()}`
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn], body: tableRows, startY: yPos, theme: 'plain',
+            headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontSize: 9, fontStyle: 'bold', halign: 'left' },
+            styles: { fontSize: 9, cellPadding: 4, textColor: [51, 65, 85], lineColor: [226, 232, 240], lineWidth: 0.1 },
+            margin: { left: mainStartX, right: padding }
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        const boxX = mainStartX + 40;
+        const boxWidth = pageWidth - padding - boxX;
+        
+        doc.setFillColor(248, 250, 252);
+        doc.rect(boxX, finalY, boxWidth, 40, 'F');
+        
+        let ty = finalY + 8;
+        const drawR = (l: string, v: string, bold = false) => {
+            doc.setFontSize(bold ? 11 : 9);
+            doc.setTextColor(bold ? 15 : 100, bold ? 23 : 116, bold ? 42 : 139);
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.text(l, boxX + 5, ty);
+            doc.text(v, pageWidth - padding - 5, ty, { align: 'right' });
+            ty += 7;
+        };
+        drawR('Subtotal', `INR ${invoice.subtotal.toLocaleString()}`);
+        drawR('Tax (18%)', `INR ${invoice.tax.toLocaleString()}`);
+        doc.setDrawColor(226, 232, 240);
+        doc.line(boxX + 5, ty - 3, pageWidth - padding - 5, ty - 3);
+        drawR('Total Amount', `INR ${invoice.totalAmount.toLocaleString()}`, true);
+        if(invoice.balanceAmount > 0) drawR('Balance Due', `INR ${invoice.balanceAmount.toLocaleString()}`, true);
+
     } else {
-        doc.setTextColor(34, 197, 94); // Green
-        doc.setFontSize(10);
+        // --- Template 1, 2, 4 Logic ---
+        // Header Section
+        if (invoiceTemplate === 'template4') {
+            doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+            doc.rect(0, 0, pageWidth, 2, 'F');
+            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.rect(0, 2, pageWidth, 5, 'F');
+        } else {
+            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.rect(0, 0, pageWidth, 6, 'F');
+        }
+
+        // Branding
+        doc.setFontSize(24);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont('helvetica', 'bold');
-        doc.text('Fully Paid', marginR, totalY, { align: 'right' });
+        doc.text(companyName, padding, 30);
+
+        doc.setFontSize(10);
+        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+        doc.setFont('helvetica', 'normal');
+
+        const addressLines = doc.splitTextToSize(companyAddress, pageWidth - (padding * 2) - 80);
+        let currentY = 36;
+        addressLines.forEach((line: string) => {
+            doc.text(line, padding, currentY);
+            currentY += 5;
+        });
+        doc.text(`${companyEmail} | ${companyPhone}`, padding, currentY);
+
+        // Title
+        const titleText = (invoiceTemplate === 'template2' || invoiceTemplate === 'template4') ? 'TAX INVOICE' : 'INVOICE';
+        doc.setFontSize(36);
+        doc.setTextColor(226, 232, 240);
+        doc.setFont('helvetica', 'bold');
+        doc.text(titleText, pageWidth - padding, 35, { align: 'right' });
+
+        // Status Badge
+        let statusColor: [number, number, number] = [100, 116, 139];
+        if (invoice.status === 'PAID') statusColor = [34, 197, 94];
+        if (invoice.status === 'PENDING') statusColor = [234, 179, 8];
+        if (invoice.status === 'PARTIAL') statusColor = [59, 130, 246];
+
+        const badgeWidth = 40;
+        doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.roundedRect(pageWidth - padding - badgeWidth, 45, badgeWidth, 8, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.text(invoice.status, pageWidth - padding - (badgeWidth / 2), 50.5, { align: 'center' });
+
+        // Divider
+        doc.setLineWidth(invoiceTemplate === 'template4' ? 1 : 0.5);
+        doc.setDrawColor(invoiceTemplate === 'template4' ? accentColor[0] : borderColor[0], 
+                         invoiceTemplate === 'template4' ? accentColor[1] : borderColor[1], 
+                         invoiceTemplate === 'template4' ? accentColor[2] : borderColor[2]);
+        doc.line(padding, 60, pageWidth - padding, 60);
+
+        // Details
+        let yPos = 75;
+        doc.setFontSize(10);
+        doc.setTextColor(invoiceTemplate === 'template4' ? accentColor[0] : secondaryColor[0], 
+                         invoiceTemplate === 'template4' ? accentColor[1] : secondaryColor[1], 
+                         invoiceTemplate === 'template4' ? accentColor[2] : secondaryColor[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('BILL TO', padding, yPos);
+
+        const isGroupBilling = invoice.billingType === 'CLIENT_GROUP';
+        const billedEntity = isGroupBilling ? invoice.clientGroupId : invoice.clientId;
+        const clientName = typeof billedEntity === 'object' && billedEntity ? (billedEntity.groupName || billedEntity.name || billedEntity.username || 'Valued Client') : 'Valued Client';
+        const clientAddress = typeof billedEntity === 'object' && billedEntity ? (billedEntity.address || '') : '';
+
+        doc.setFontSize(12);
+        doc.setTextColor(30, 41, 59);
+        doc.text(clientName, padding, yPos + 7);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(doc.splitTextToSize(clientAddress, 80), padding, yPos + 12);
+
+        // Right Info
+        const rightX = pageWidth / 2 + 20;
+        const drawD = (l: string, v: string, y: number) => {
+            doc.setFontSize(9);
+            doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+            doc.setFont('helvetica', 'bold');
+            doc.text(l, rightX, y);
+            doc.setFontSize(10);
+            doc.setTextColor(30, 41, 59);
+            doc.text(v, pageWidth - padding, y, { align: 'right' });
+        };
+        drawD('INVOICE NO', invoice.invoiceNumber, yPos);
+        drawD('DATE', format(new Date(invoice.issueDate), 'dd MMM yyyy'), yPos + 8);
+        drawD('DUE DATE', format(new Date(invoice.dueDate), 'dd MMM yyyy'), yPos + 16);
+
+        // Table
+        yPos = 110;
+        const tableColumn = ["Item Description", "Qty", "Rate", "Amount"];
+        const tableRows = invoice.items.map(item => [item.name, item.quantity, item.unitPrice.toLocaleString(), item.amount.toLocaleString()]);
+
+        autoTable(doc, {
+            head: [tableColumn], body: tableRows, startY: yPos, theme: 'plain',
+            headStyles: { 
+                fillColor: invoiceTemplate === 'template4' ? [255, 251, 235] : [248, 250, 252], 
+                textColor: invoiceTemplate === 'template4' ? accentColor : secondaryColor,
+                fontStyle: 'bold'
+            },
+            styles: { fontSize: 10, cellPadding: 5, textColor: [51, 65, 85], lineColor: borderColor, lineWidth: 0.1 },
+            margin: { left: padding, right: padding }
+        });
+
+        // Totals Box
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+        const boxWidth = 90;
+        const boxX = pageWidth - padding - boxWidth;
+        doc.setFillColor(invoiceTemplate === 'template4' ? 255 : 248, invoiceTemplate === 'template4' ? 251 : 250, invoiceTemplate === 'template4' ? 235 : 252); 
+        doc.roundedRect(boxX, finalY, boxWidth, 40, 2, 2, 'F');
+        doc.setDrawColor(invoiceTemplate === 'template4' ? accentColor[0] : borderColor[0], 
+                         invoiceTemplate === 'template4' ? accentColor[1] : borderColor[1], 
+                         invoiceTemplate === 'template4' ? accentColor[2] : borderColor[2]);
+        doc.roundedRect(boxX, finalY, boxWidth, 40, 2, 2, 'S');
+
+        let ty = finalY + 10;
+        const drawRow = (l: string, v: string, bold = false) => {
+            doc.setFontSize(bold ? 11 : 9);
+            doc.setTextColor(bold ? primaryColor[0] : secondaryColor[0], bold ? primaryColor[1] : secondaryColor[1], bold ? primaryColor[2] : secondaryColor[2]);
+            doc.text(l, boxX + 5, ty);
+            doc.text(v, pageWidth - padding - 5, ty, { align: 'right' });
+            ty += bold ? 10 : 7;
+        };
+        drawRow('Subtotal', `INR ${invoice.subtotal.toLocaleString()}`);
+        drawRow('Tax (18%)', `INR ${invoice.tax.toLocaleString()}`);
+        drawRow('Grand Total', `INR ${invoice.totalAmount.toLocaleString()}`, true);
     }
 
-    // --- Footer / Terms ---
-    const bottomY = pageHeight - 40;
-
-    doc.setFontSize(10);
+    // --- Common Footer ---
+    const bottomY = pageHeight - 35;
+    doc.setFontSize(9);
     doc.setTextColor(30, 41, 59);
     doc.setFont('helvetica', 'bold');
     doc.text('Terms & Conditions', padding, bottomY);
-
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     doc.setFont('helvetica', 'normal');
+    doc.text(doc.splitTextToSize(invoiceTerms, 120), padding, bottomY+5);
 
-    // Split lines for invoice terms
-    const splitTerms = doc.splitTextToSize(invoiceTerms, pageWidth - 80);
-    let termY = bottomY + 5;
-    splitTerms.forEach((line: string) => {
-        doc.text(line, padding, termY);
-        termY += 5;
-    });
-
-    // Auth Signatory
     doc.setFontSize(10);
     doc.setTextColor(30, 41, 59);
     doc.setFont('helvetica', 'bold');
     doc.text('Authorized Signatory', pageWidth - padding, bottomY, { align: 'right' });
-
     doc.setDrawColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.line(pageWidth - padding - 40, bottomY + 15, pageWidth - padding, bottomY + 15);
+    doc.line(pageWidth - padding - 40, bottomY + 10, pageWidth - padding, bottomY + 10);
 
-    // Bottom Bar
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, pageHeight - 4, pageWidth, 4, 'F');
-
-    // Save
     doc.save(`Invoice_${invoice.invoiceNumber}.pdf`);
 };

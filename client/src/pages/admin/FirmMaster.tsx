@@ -1175,7 +1175,9 @@ export const FirmMasterPage: React.FC = () => {
                         }}>
                                 {[
                                     { id: 'template1', name: 'Classic Professional', desc: 'Detailed, formal layout' },
-                                    { id: 'template2', name: 'Modern Minimalist', desc: 'Clean, sleek design' }
+                                    { id: 'template2', name: 'Modern Minimalist', desc: 'Clean, sleek design' },
+                                    { id: 'template3', name: 'Midnight Minimalist', desc: 'Bold, slate-themed layout' },
+                                    { id: 'template4', name: 'Royal Gold', desc: 'Elegant indigo & gold accents' }
                                 ].map((t) => (
                                     <Box
                                         key={t.id}
@@ -1212,7 +1214,16 @@ export const FirmMasterPage: React.FC = () => {
                                                 </Box>
 
                                                 <Box sx={{ mt: 'auto', borderTop: '2px solid #f1f5f9', pt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <Box sx={{ width: '50%', height: 15, bgcolor: t.id === 'template1' ? '#cbd5e1' : '#667eea', borderRadius: 1, opacity: 0.8 }} />
+                                                    <Box sx={{ 
+                                                        width: '50%', 
+                                                        height: 15, 
+                                                        bgcolor: t.id === 'template2' ? '#667eea' : 
+                                                                 t.id === 'template3' ? '#1e293b' : 
+                                                                 t.id === 'template4' ? '#4338ca' : '#cbd5e1', 
+                                                        borderRadius: 1, 
+                                                        opacity: 0.8,
+                                                        border: t.id === 'template4' ? '1px solid #b45309' : 'none'
+                                                    }} />
                                                 </Box>
                                             </Box>
 
@@ -1236,7 +1247,11 @@ export const FirmMasterPage: React.FC = () => {
                                             )}
                                         </Box>
                                         <Box sx={{ p: 2, bgcolor: form.invoiceTemplate === t.id ? '#f5f7ff' : 'white', borderTop: '1px solid #eef2f6', textAlign: 'center' }}>
-                                            <Typography variant="subtitle2" fontWeight={800} color={form.invoiceTemplate === t.id ? '#667eea' : '#1e293b'} sx={{ fontSize: '0.85rem' }}>{t.name}</Typography>
+                                            <Typography variant="subtitle2" fontWeight={800} color={
+                                                form.invoiceTemplate === 'template2' ? '#667eea' : 
+                                                form.invoiceTemplate === 'template3' ? '#1e293b' : 
+                                                form.invoiceTemplate === 'template4' ? '#4338ca' : '#1e293b'
+                                            } sx={{ fontSize: '0.85rem' }}>{t.name}</Typography>
                                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>{t.desc}</Typography>
                                         </Box>
                                     </Box>
@@ -1431,9 +1446,20 @@ export const FirmMasterPage: React.FC = () => {
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}><Typography fontSize="0.8rem">CGST @ 9%</Typography><Typography fontSize="0.8rem" fontWeight={600}>₹ 2,700.00</Typography></Box>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}><Typography fontSize="0.8rem">SGST @ 9%</Typography><Typography fontSize="0.8rem" fontWeight={600}>₹ 2,700.00</Typography></Box>
                                         <Divider sx={{ mb: 1.5 }} />
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: '#f8fafc', p: 1, borderRadius: 1 }}>
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            justifyContent: 'space-between', 
+                                            bgcolor: '#f8fafc', 
+                                            p: 1, 
+                                            borderRadius: 1,
+                                            borderLeft: previewModal.template === 'template4' ? '4px solid #b45309' : 'none'
+                                        }}>
                                             <Typography fontWeight={800} fontSize="0.95rem">GRAND TOTAL</Typography>
-                                            <Typography fontWeight={900} fontSize="0.95rem" color={previewModal.template === 'template2' ? '#667eea' : '#1e293b'}>₹ 35,400.00</Typography>
+                                            <Typography fontWeight={900} fontSize="0.95rem" color={
+                                                previewModal.template === 'template2' ? '#667eea' : 
+                                                previewModal.template === 'template3' ? '#475569' : 
+                                                previewModal.template === 'template4' ? '#b45309' : '#1e293b'
+                                            }>₹ 35,400.00</Typography>
                                         </Box>
                                     </Box>
                                 </Box>
