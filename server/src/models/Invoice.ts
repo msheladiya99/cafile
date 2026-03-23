@@ -22,7 +22,8 @@ export interface IInvoice extends Document {
     billingType: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
     clientId?: mongoose.Types.ObjectId;
     clientGroupId?: mongoose.Types.ObjectId;
-    firmId?: mongoose.Types.ObjectId;
+    firmId: mongoose.Types.ObjectId; // Strict tenant ID
+    multiFirmId?: mongoose.Types.ObjectId; // Optional branch/branding selection
     items: IInvoiceItem[];
     subtotal: number;
     tax: number;
@@ -86,6 +87,12 @@ const InvoiceSchema: Schema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'Firm',
             required: true,
+            index: true
+        },
+        multiFirmId: {
+            type: Schema.Types.ObjectId,
+            ref: 'MultiFirm',
+            required: false,
             index: true
         },
         items: [InvoiceItemSchema],

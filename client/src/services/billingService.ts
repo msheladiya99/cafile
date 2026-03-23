@@ -33,7 +33,8 @@ export interface Invoice {
     billingType: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
     clientId?: any; // Populated client object
     clientGroupId?: any; // Populated client group object
-    firmId?: any; // Populated multi-firm object
+    firmId?: any; // Tenant ID
+    multiFirmId?: any; // Populated branch/branding object
     items: InvoiceItem[];
     subtotal: number;
     tax: number;

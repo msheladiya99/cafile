@@ -15,9 +15,9 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
     let invoiceTerms = '1. Payment is due within 15 days of invoice date.\n2. Please include invoice number in payment reference.\n3. This is a computer generated invoice.';
 
     try {
-        if (invoice.firmId) {
-            // Use multi-firm details
-            const mf = invoice.firmId as any;
+        if (invoice.multiFirmId && typeof invoice.multiFirmId === 'object') {
+            // Use multi-firm branding details
+            const mf = invoice.multiFirmId;
             companyName = mf.firmName || companyName;
             companyAddress = mf.address || companyAddress;
             companyEmail = mf.email || companyEmail;
@@ -25,7 +25,7 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
             if (mf.invoiceTemplate) invoiceTemplate = mf.invoiceTemplate;
             if (mf.invoiceTerms) invoiceTerms = mf.invoiceTerms;
         } else {
-            // Use FirmMaster as primary
+            // Use Primary FirmMaster as branding source
             const firmData = await firmService.getFirm();
             companyName = firmData.firmName || companyName;
             companyAddress = firmData.address || companyAddress;

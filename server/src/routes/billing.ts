@@ -87,7 +87,7 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
         const invoices = await Invoice.find(query)
             .populate('clientId', 'name email')
             .populate('clientGroupId', 'groupName email')
-            .populate('firmId', 'firmName logoUrl address email mobile phoneL invoiceTemplate invoiceTerms gstin panNumber')
+            .populate('multiFirmId', 'firmName logoUrl address email mobile phoneL invoiceTemplate invoiceTerms gstin panNumber')
             .sort({ createdAt: -1 });
         res.json(invoices);
     } catch (error) {
@@ -108,7 +108,7 @@ router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
         const invoice = await Invoice.findOne(query)
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName email')
-            .populate('firmId');
+            .populate('multiFirmId');
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Security check for clients
@@ -145,10 +145,16 @@ router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
 
         req.body.createdBy = req.user.userId;
 
-        // Clean up empty strings to avoid Object ID CastErrors
-        if (req.body.clientId === '') delete req.body.clientId;
-        if (req.body.clientGroupId === '') delete req.body.clientGroupId;
-        if (req.body.firmId === '') delete req.body.firmId;
+        // Separate Tenant Isolation (firmId) from Branding Selection (multiFirmId)
+        const tenantId = req.firmId || req.user?.firmId;
+        if (req.body.firmId && req.body.firmId !== tenantId.toString()) {
+            req.body.multiFirmId = req.body.firmId;
+        } else {
+            req.body.multiFirmId = undefined;
+        }
+
+        // Always use the real tenant ID for firmId to ensure isolation works
+        req.body.firmId = tenantId;
 
         const invoice = new Invoice(req.body);
         await invoice.save();
@@ -202,7 +208,17 @@ router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
         if (req.body.billingType) invoice.billingType = req.body.billingType;
         if (req.body.clientId !== undefined) invoice.clientId = req.body.clientId || undefined;
         if (req.body.clientGroupId !== undefined) invoice.clientGroupId = req.body.clientGroupId || undefined;
-        if (req.body.firmId !== undefined) invoice.firmId = req.body.firmId || undefined;
+        
+        // Update Branding selection (multiFirmId) - do NOT update isolation firmId
+        if (req.body.firmId !== undefined) {
+            const tenantId = (req as any).firmId?.toString();
+            if (req.body.firmId && req.body.firmId !== tenantId) {
+                invoice.multiFirmId = req.body.firmId;
+            } else {
+                invoice.multiFirmId = undefined;
+            }
+        }
+        
         if (req.body.invoiceNumber) invoice.invoiceNumber = req.body.invoiceNumber;
         if (req.body.dueDate) invoice.dueDate = req.body.dueDate;
         if (req.body.issueDate) invoice.issueDate = req.body.issueDate;
