@@ -118,7 +118,7 @@ router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthReques
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
-        const folderId = await driveService.ensureFolder('firm assets');
+        const folderId = await driveService.ensureFolder('firm document');
 
         const uploadResult = await driveService.uploadFile(
             fileBuffer,
@@ -154,7 +154,7 @@ router.post('/stamp', requireAdmin, upload.single('stamp'), async (req: AuthRequ
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
-        const folderId = await driveService.ensureFolder('firm assets');
+        const folderId = await driveService.ensureFolder('firm document');
 
         const uploadResult = await driveService.uploadFile(
             fileBuffer,
@@ -190,7 +190,7 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: AuthRequ
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
-        const folderId = await driveService.ensureFolder('firm assets');
+        const folderId = await driveService.ensureFolder('firm document');
 
         const uploadResult = await driveService.uploadFile(
             fileBuffer,
@@ -248,7 +248,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
             const driveService = getDriveService();
             const fileBuffer = fs.readFileSync(req.file.path);
 
-            // Create or get the "firm document" folder directly inside the firm's root folder
+            // Ensure firm document folder exists
             const folderId = await driveService.ensureFolder('firm document');
 
             const uploadResult = await driveService.uploadFile(
@@ -359,7 +359,7 @@ router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: 
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getDriveService();
         const buf = fs.readFileSync(req.file.path);
-        const folderId = await driveService.ensureFolder('firm assets');
+        const folderId = await driveService.ensureFolder('firm document');
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
@@ -378,7 +378,7 @@ router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: 
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getDriveService();
         const buf = fs.readFileSync(req.file.path);
-        const folderId = await driveService.ensureFolder('firm assets');
+        const folderId = await driveService.ensureFolder('firm document');
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
         fs.unlinkSync(req.file.path);
         const url = `https://drive.google.com/uc?export=view&id=${result.fileId}`;
