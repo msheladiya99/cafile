@@ -129,7 +129,7 @@ router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthReques
         fs.unlinkSync(req.file.path);
 
         const firmId = req.firmId || req.user?.firmId;
-        const directLink = `https://drive.google.com/uc?export=view&id=${uploadResult.fileId}`;
+        const directLink = `https://lh3.googleusercontent.com/d/${uploadResult.fileId}`;
         let firm = await FirmMaster.findOne({ firmId });
         if (!firm) firm = await FirmMaster.create({ firmId, firmName: req.firm?.firmName || 'My CA Firm' });
         firm.logoUrl = directLink;
