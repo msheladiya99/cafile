@@ -81,7 +81,14 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         // but the user belongs to a firm, set it now to ensure isolation.
         if (!req.firmId && decoded.firmId) {
             req.firmId = decoded.firmId;
-            requestContext.run({ firmId: req.firmId }, () => {
+            // Also carry the rootFolderId so drive uploads go to the correct firm folder
+            const rootFolderId = (req as any).firm?.googleDriveRootFolderId
+                ?? (await (async () => {
+                    const { Firm } = require('../models/Firm');
+                    const f = await Firm.findById(decoded.firmId).select('googleDriveRootFolderId').lean();
+                    return f?.googleDriveRootFolderId;
+                })());
+            requestContext.run({ firmId: req.firmId, rootFolderId }, () => {
                 next();
             });
             return;
