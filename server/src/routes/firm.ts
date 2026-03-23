@@ -232,6 +232,13 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
             return;
         }
 
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+            res.status(400).json({ message: 'Firm context missing' });
+            return;
+        }
+
         let fileUrl = '';
         let fileId = '';
         let fileName = '';
@@ -241,7 +248,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
             const driveService = getDriveService();
             const fileBuffer = fs.readFileSync(req.file.path);
 
-            // Ensure the folder "firm document" exists and get its ID
+            // Create or get the "firm document" folder directly inside the firm's root folder
             const folderId = await driveService.ensureFolder('firm document');
 
             const uploadResult = await driveService.uploadFile(
@@ -257,7 +264,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
             fileSize = req.file.size;
         }
 
-        const doc = await FirmDocument.create({ documentName, documentNumber, description, fileUrl, fileId, fileName, fileSize });
+        const doc = await FirmDocument.create({ firmId, documentName, documentNumber, description, fileUrl, fileId, fileName, fileSize });
         res.json(doc);
     } catch (error) {
         console.error('Add firm document error:', error);

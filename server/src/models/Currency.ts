@@ -26,4 +26,6 @@ const CurrencySchema = new Schema<ICurrency>(
     { timestamps: true }
 );
 
+CurrencySchema.index({ firmId: 1, currencyCode: 1 }, { unique: true });
+
 export const Currency = mongoose.model<ICurrency>('Currency', CurrencySchema);
