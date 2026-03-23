@@ -5,7 +5,7 @@ import { FirmDocument } from '../models/FirmDocument';
 import { MultiFirm } from '../models/MultiFirm';
 import { TaxDetail } from '../models/TaxDetail';
 import { Currency } from '../models/Currency';
-import { getDriveService } from '../services/googleDrive';
+import { getDriveService, getTenantDriveService } from '../services/googleDrive';
 import { upload, uploadAny } from '../middleware/upload';
 import mongoose from 'mongoose';
 import fs from 'fs';
@@ -114,7 +114,7 @@ router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthReques
             res.status(400).json({ message: 'No file uploaded' });
             return;
         }
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
@@ -150,7 +150,7 @@ router.post('/stamp', requireAdmin, upload.single('stamp'), async (req: AuthRequ
             res.status(400).json({ message: 'No file uploaded' });
             return;
         }
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
@@ -186,7 +186,7 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: AuthRequ
             res.status(400).json({ message: 'No file uploaded' });
             return;
         }
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const fileBuffer = fs.readFileSync(req.file.path);
 
         // Use a dedicated folder for branding assets
@@ -245,7 +245,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
         let fileSize = 0;
 
         if (req.file) {
-            const driveService = getDriveService();
+            const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
             const fileBuffer = fs.readFileSync(req.file.path);
 
             // Ensure firm document folder exists
@@ -357,7 +357,7 @@ router.delete('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response
 router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: AuthRequest, res: Response) => {
     try {
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const buf = fs.readFileSync(req.file.path);
         const folderId = await driveService.ensureFolder('firm document');
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
@@ -376,7 +376,7 @@ router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: 
 router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: AuthRequest, res: Response) => {
     try {
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
-        const driveService = getDriveService();
+        const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const buf = fs.readFileSync(req.file.path);
         const folderId = await driveService.ensureFolder('firm document');
         const result = await driveService.uploadFile(buf, req.file.originalname, req.file.mimetype, folderId);
