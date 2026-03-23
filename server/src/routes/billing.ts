@@ -156,6 +156,11 @@ router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
         // Always use the real tenant ID for firmId to ensure isolation works
         req.body.firmId = tenantId;
 
+        // Clean up empty ObjectIDs to prevent validation errors
+        if (req.body.clientId === '') delete req.body.clientId;
+        if (req.body.clientGroupId === '') delete req.body.clientGroupId;
+        if (req.body.multiFirmId === '') delete req.body.multiFirmId;
+
         const invoice = new Invoice(req.body);
         await invoice.save();
         res.status(201).json(invoice);
