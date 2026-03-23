@@ -3,20 +3,19 @@ import type { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
-    Button,
     TextField,
     Typography,
-    Paper,
     Alert,
     CircularProgress,
     InputAdornment,
-    IconButton,
+    Checkbox,
+    FormControlLabel,
+    Link,
     Stack
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import ShieldOutlined from '@mui/icons-material/ShieldOutlined';
+import Person from '@mui/icons-material/Person';
+import Lock from '@mui/icons-material/Lock';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { adminService } from '../services/adminService';
@@ -40,17 +39,9 @@ export const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('Signing in...');
-    const [showPassword, setShowPassword] = useState(false);
     const [firm, setFirm] = useState<{ firmName: string; logo?: string; status: string } | null>(null);
-    const [checkingFirm, setCheckingFirm] = useState(!!subdomain);
 
     React.useEffect(() => {
-        // If we are on the main domain and not in a firm workspace, redirect to superadmin login
-        if (!subdomain && !loading) {
-            // Note: We only redirect if they actually reached this page on the main domain
-            // and aren't already authenticated (HomePath logic handles auth'd users)
-        }
-
         if (subdomain) {
             api.get('/firm/public')
                 .then(res => {
@@ -62,10 +53,9 @@ export const Login: React.FC = () => {
                 .catch(err => {
                     console.error('Firm check failed:', err);
                     setError('This firm does not exist. Please check the URL.');
-                })
-                .finally(() => setCheckingFirm(false));
+                });
         }
-    }, [subdomain, loading]);
+    }, [subdomain]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,7 +71,6 @@ export const Login: React.FC = () => {
             const data = await authService.login({ username, password });
             login(data.token, data.user);
 
-            // Clear cache and prefetch data for a smooth transition
             queryClient.clear();
 
             const prefetchPromises: Promise<unknown>[] = [];
@@ -108,10 +97,8 @@ export const Login: React.FC = () => {
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-reminders'], queryFn: clientService.getReminders }));
             }
 
-            // Artificial delay for loading experience (600ms for snappier feel)
             const delayPromise = new Promise(resolve => setTimeout(resolve, 600));
 
-            // Pre-load the component code to speed up rendering
             const preloadComponent = () => {
                 if (data.user.role === 'SUPER_ADMIN') {
                     import('../pages/super-admin/Dashboard');
@@ -140,7 +127,7 @@ export const Login: React.FC = () => {
             }
         } catch (err: unknown) {
             console.error('Login error:', err);
-            const axiosError = err as AxiosError<{ message: string }>; // Typed cast for axios errors
+            const axiosError = err as AxiosError<{ message: string }>;
             const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Login failed. Please check your credentials.';
             setError(errorMessage);
         } finally {
@@ -153,140 +140,181 @@ export const Login: React.FC = () => {
             height: '100vh',
             width: '100vw',
             display: 'flex',
-            bgcolor: '#f8faff',
+            alignItems: 'center',
+            justifyContent: 'center',
             overflow: 'hidden',
-            position: 'relative'
+            position: 'relative',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
+            '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                zIndex: 1
+            }
         }}>
             <Helmet>
-                <title>Login | MyCAFile - CA Office Portal</title>
+                <title>Secure Login | MyCAFile - Chartered Accountant Office Management Portal</title>
                 <link rel="canonical" href="https://www.mycafile.in/login" />
-                <meta name="description" content="Access your MyCAFile workspace. Secure practice management for Chartered Accountants and tax professionals." />
+                <meta name="description" content="Access your secure MyCAFile workspace. Comprehensive practice management, taxation, and client portal for Chartered Accountants and tax professionals in India." />
+                <meta name="keywords" content="CA Office Portal, MyCAFile Login, Practice Management for CAs, Chartered Accountant Software, Tax Professional Login, Secure Client Portal" />
+                
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://www.mycafile.in/login" />
+                <meta property="og:title" content="Secure Login | MyCAFile - CA Office Portal" />
+                <meta property="og:description" content="Secure access to your professional CA workspace. Manage clients, tasks, and reminders efficiently." />
+                <meta property="og:image" content="https://www.mycafile.in/og-image.jpg" />
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content="https://www.mycafile.in/login" />
+                <meta property="twitter:title" content="Secure Login | MyCAFile" />
+                <meta property="twitter:description" content="Secure access to your professional CA workspace." />
             </Helmet>
 
-            {/* Left Panel - Illustration (Hidden on Mobile) */}
-            <Box
-                component={motion.div}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1 }}
-                sx={{
-                    width: { md: '55%' },
-                    display: { xs: 'none', md: 'flex' },
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 4,
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
-            >
-                <Box
-                    component="img"
-                    src="/login-illustration.webp"
-                    alt="My CA File - CA Office Management Software Illustration"
-                    sx={{
-                        maxWidth: '90%',
-                        maxHeight: '80vh',
-                        objectFit: 'contain',
-                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.08))',
-                        borderRadius: 12,
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        zIndex: 2
+            {/* Blurred Background Shapes with Animation - Light Mode Pastels */}
+            <Box sx={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '100%',
+                height: '100%',
+                zIndex: 0,
+            }}>
+                <motion.div
+                    animate={{
+                        x: [0, 80, 0],
+                        y: [0, -40, 0],
+                        scale: [1, 1.1, 1],
                     }}
+                    transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{ position: 'absolute', top: '10%', left: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, #fbcfe8 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.6 }}
                 />
-                {/* Decorative Elements */}
-                <Box sx={{
-                    position: 'absolute',
-                    width: '600px',
-                    height: '600px',
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
-                    zIndex: 1,
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)'
-                }} />
+                <motion.div
+                    animate={{
+                        x: [0, -60, 0],
+                        y: [0, 100, 0],
+                        scale: [1.1, 1, 1.1],
+                    }}
+                    transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{ position: 'absolute', bottom: '10%', right: '15%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, #dbeafe 0%, transparent 70%)', filter: 'blur(100px)', opacity: 0.6 }}
+                />
+                <motion.div
+                    animate={{
+                        x: [0, 40, -40, 0],
+                        y: [0, 40, 40, 0],
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{ position: 'absolute', top: '35%', left: '35%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, #f3e8ff 0%, transparent 70%)', filter: 'blur(90px)', opacity: 0.5 }}
+                />
             </Box>
 
-            {/* Right Panel - Login Card */}
-            <Box
-                sx={{
-                    flex: 1,
-                    width: { xs: '100%', md: '45%' },
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: { xs: 2, sm: 3 },
-                    zIndex: 3
-                }}
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                style={{ zIndex: 10, width: '100%', maxWidth: 440, padding: '20px' }}
             >
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.6 }}
-                    style={{ width: '100%', maxWidth: 500 }}
-                >
-                    <Paper
-                        elevation={0}
+                <Box sx={{ position: 'relative', textAlign: 'center' }}>
+                    {/* Top Avatar */}
+                    <Box
                         sx={{
-                            p: { xs: 3, sm: 4 },
-                            width: '100%',
-                            maxWidth: 480,
-                            borderRadius: 8,
+                            position: 'absolute',
+                            top: -65,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 130,
+                            height: 130,
                             bgcolor: 'white',
-                            boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
-                            textAlign: 'center',
+                            borderRadius: '50%',
                             display: 'flex',
-                            flexDirection: 'column'
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid rgba(0, 0, 0, 0.05)',
+                            zIndex: 2,
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
                         }}
                     >
-                        <Box mb={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                {firm?.logo ? (
-                                    <Box component="img" src={firm.logo} alt={`${firm.firmName} Logo`} sx={{ height: 32, width: 'auto', mr: 1 }} />
-                                ) : (
-                                    <Box sx={{ bgcolor: subdomain ? '#1e3a5f' : '#667eea', p: 0.6, borderRadius: 1.2, display: 'flex' }}>
-                                        <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
-                                    </Box>
-                                )}
-                                <Typography variant="h6" component="h2" fontWeight="800" color="#312e81" sx={{ letterSpacing: -0.5 }}>
-                                    {firm?.firmName || (subdomain ? `${subdomain.toUpperCase()} PORTAL` : 'MY CA FILE')}
-                                </Typography>
-                            </Box>
+                        <Person sx={{ fontSize: 70, color: '#1e293b', opacity: 0.8 }} />
+                    </Box>
 
-                            <Typography variant="h2" component="h1" fontWeight="900" sx={{ mb: 1, color: '#1e1b4b', fontSize: { xs: '2rem', sm: '2.5rem', md: '2.75rem' }, letterSpacing: -1, lineHeight: 1.1 }}>
-                                {subdomain ? 'Firm Login' : 'Admin Login'}
+                    {/* Login Card */}
+                    <Box
+                        sx={{
+                            pt: 11,
+                            pb: 5,
+                            px: 5,
+                            borderRadius: 10,
+                            bgcolor: 'rgba(255, 255, 255, 0.7)',
+                            backdropFilter: 'blur(30px)',
+                            WebkitBackdropFilter: 'blur(30px)',
+                            border: '1px solid rgba(255, 255, 255, 0.8)',
+                            boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
+                            color: '#1e293b'
+                        }}
+                    >
+                        {/* Firm/Workspace Info */}
+                        <Box mb={4} sx={{ textAlign: 'center' }}>
+                            <Typography variant="body2" component="p" sx={{ letterSpacing: 2, opacity: 0.5, fontSize: '0.85rem', textTransform: 'uppercase', mb: 0.5 }}>
+                                Workspace
                             </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                                {checkingFirm ? 'Searching for workspace...' : (subdomain ? `Sign in to ${firm?.firmName || subdomain} workspace` : 'Sign in to management panel')}
+                            <Typography 
+                                variant="h5" 
+                                component="h1" 
+                                fontWeight="800" 
+                                sx={{ 
+                                    letterSpacing: -0.5, 
+                                    color: '#1e1b4b',
+                                    fontSize: '1.5rem' // Ensure consistent visual size
+                                }}
+                            >
+                                {firm?.firmName || (subdomain ? subdomain.toUpperCase() : 'MY CA FILE')}
                             </Typography>
                         </Box>
 
                         {error && (
-                            <Alert severity="error" sx={{ mb: 3, borderRadius: 4, bgcolor: '#fef2f2' }}>
+                            <Alert severity="error" sx={{ mb: 4, borderRadius: 2, bgcolor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
                                 {error}
                             </Alert>
                         )}
 
-                        <Box component="form" onSubmit={handleSubmit} sx={{ opacity: checkingFirm ? 0.5 : 1, pointerEvents: checkingFirm ? 'none' : 'auto' }}>
-                            {checkingFirm && <CircularProgress size={20} sx={{ mb: 2 }} />}
+                        <Box component="form" onSubmit={handleSubmit} noValidate>
                             <Stack spacing={2.5}>
                                 <TextField
                                     fullWidth
-                                    placeholder="Email address"
-                                    name="username"
-                                    autoComplete="username"
+                                    placeholder="Email ID"
+                                    variant="standard"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     disabled={loading}
+                                    inputProps={{
+                                        'aria-label': 'Email ID',
+                                    }}
                                     InputProps={{
+                                        disableUnderline: true,
+                                        startAdornment: (
+                                            <InputAdornment position="start" sx={{ m: 0 }}>
+                                                <Box sx={{ bgcolor: '#f1f5f9', p: 1.8, mr: 0, display: 'flex', alignSelf: 'stretch', alignItems: 'center' }}>
+                                                    <Person fontSize="small" sx={{ color: '#64748b' }} />
+                                                </Box>
+                                            </InputAdornment>
+                                        ),
                                         sx: {
-                                            borderRadius: 4,
-                                            height: 56,
-                                            bgcolor: '#f9fafb',
-                                            '& fieldset': { borderColor: '#e5e7eb' },
-                                            '&:hover fieldset': { borderColor: '#667eea' },
-                                            '&.Mui-focused fieldset': { borderColor: '#667eea' },
-                                            transition: 'all 0.2s'
+                                            bgcolor: 'rgba(248, 250, 252, 0.8)',
+                                            color: '#1e293b',
+                                            height: 54,
+                                            paddingLeft: 0,
+                                            overflow: 'hidden',
+                                            fontSize: '1rem',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: 2,
+                                            '& input': { px: 2 },
+                                            '& input::placeholder': { color: '#94a3b8', opacity: 1 },
                                         }
                                     }}
                                 />
@@ -294,101 +322,122 @@ export const Login: React.FC = () => {
                                 <TextField
                                     fullWidth
                                     placeholder="Password"
-                                    name="password"
-                                    autoComplete="current-password"
-                                    type={showPassword ? 'text' : 'password'}
+                                    variant="standard"
+                                    type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
+                                    inputProps={{
+                                        'aria-label': 'Password',
+                                    }}
                                     InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                </IconButton>
+                                        disableUnderline: true,
+                                        startAdornment: (
+                                            <InputAdornment position="start" sx={{ m: 0 }}>
+                                                <Box sx={{ bgcolor: '#f1f5f9', p: 1.8, mr: 0, display: 'flex', alignSelf: 'stretch', alignItems: 'center' }}>
+                                                    <Lock fontSize="small" sx={{ color: '#64748b' }} />
+                                                </Box>
                                             </InputAdornment>
                                         ),
                                         sx: {
-                                            borderRadius: 4,
-                                            height: 56,
-                                            bgcolor: '#f9fafb',
-                                            '& fieldset': { borderColor: '#e5e7eb' },
-                                            '&:hover fieldset': { borderColor: '#667eea' },
-                                            '&.Mui-focused fieldset': { borderColor: '#667eea' },
-                                            transition: 'all 0.2s'
+                                            bgcolor: 'rgba(248, 250, 252, 0.8)',
+                                            color: '#1e293b',
+                                            height: 54,
+                                            paddingLeft: 0,
+                                            overflow: 'hidden',
+                                            fontSize: '1rem',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: 2,
+                                            '& input': { px: 2 },
+                                            '& input::placeholder': { color: '#94a3b8', opacity: 1 },
                                         }
                                     }}
                                 />
 
-                                <Button
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                    <FormControlLabel
+                                        control={<Checkbox size="small" sx={{ color: '#cbd5e1', '&.Mui-checked': { color: '#6366f1' } }} />}
+                                        label={<Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.8rem' }}>Remember me</Typography>}
+                                    />
+                                    <Link href="#" sx={{ color: '#6366f1', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
+                                        Forgot Password?
+                                    </Link>
+                                </Box>
+                            </Stack>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: -4 }}>
+                                <Box
+                                    component="button"
                                     type="submit"
-                                    fullWidth
-                                    variant="contained"
                                     disabled={loading}
-                                    disableElevation
-                                     sx={{
-                                        py: 2,
-                                        mt: 2,
-                                        borderRadius: 4,
-                                        fontSize: '1rem',
-                                        fontWeight: 800,
-                                        textTransform: 'none',
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        color: 'white',
+                                    sx={{
+                                        border: 'none',
+                                        outline: 'none',
+                                        width: 180,
+                                        height: 52,
+                                        bgcolor: loading ? '#4f46e5' : '#6366f1',
+                                        borderRadius: '0 0 26px 26px',
+                                        boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
+                                        cursor: loading ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.3s ease',
+                                        zIndex: 100,
+                                        position: 'relative',
                                         '&:hover': {
-                                            background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                                            transform: 'scale(1.02)'
-                                        },
-                                        transition: 'all 0.2s',
-                                        flexDirection: 'column',
-                                        gap: 1
+                                            bgcolor: '#4f46e5',
+                                            transform: loading ? 'none' : 'translateY(3px)',
+                                        }
                                     }}
                                 >
                                     {loading ? (
-                                        <Stack direction="row" spacing={2} alignItems="center">
-                                            <CircularProgress size={20} color="inherit" />
-                                            <Typography variant="body2" fontWeight={700}>{loadingMessage}</Typography>
-                                        </Stack>
-                                    ) : 'Sign In'}
-                                </Button>
-
-                                <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.75rem', mt: 2, px: 2, display: 'block' }}>
-                                    By signing in, you agree to our <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Terms of Service</span> and <span style={{ color: '#667eea', fontWeight: 700, cursor: 'pointer' }}>Privacy Policy</span>.
-                                </Typography>
-
-                                <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Forgot your details? <span style={{ color: '#667eea', fontWeight: 800, cursor: 'pointer' }}>Contact Admin</span>
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 1 }}>
-                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
-                                            About Portal
+                                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                                    ) : (
+                                        <Typography
+                                            sx={{ 
+                                                color: '#ffffff', 
+                                                fontSize: '1rem', 
+                                                fontWeight: 900, 
+                                                letterSpacing: '2px',
+                                                textTransform: 'uppercase',
+                                            }}
+                                        >
+                                            LOGIN
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
-                                            Security
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: '#667eea', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
-                                            Help Center
-                                        </Typography>
-                                    </Box>
+                                    )}
                                 </Box>
-
-                                {/* SEO Hidden Content - Helps Google understand site features */}
-                                <Box sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', pointerEvents: 'none' }}>
-                                    <h3>Features of CA Office Portal</h3>
-                                    <ul>
-                                        <li>Multi-firm management for Chartered Accountants</li>
-                                        <li>Secure document storage and ITR/GST filing tracking</li>
-                                        <li>Client ledger management and automated billing</li>
-                                        <li>Employee task scheduling and performance analytics</li>
-                                        <li>Real-time reminders and notifications</li>
-                                    </ul>
-                                </Box>
-                            </Stack>
+                            </Box>
                         </Box>
-                    </Paper>
-                </motion.div>
+                    </Box>
+
+                    {/* Shadow effect - Closely tucked behind the main button */}
+                    <Box sx={{ 
+                        mx: 'auto', 
+                        width: '45%', 
+                        height: 30, 
+                        bgcolor: 'rgba(99, 102, 241, 0.08)', 
+                        borderRadius: '0 0 30px 30px',
+                        border: '1px solid rgba(99, 102, 241, 0.1)',
+                        borderTop: 'none',
+                        mt: -1,
+                        zIndex: -1,
+                    }} />
+                </Box>
+
+                {loading && (
+                    <Typography variant="body2" align="center" sx={{ mt: 10, color: '#64748b', opacity: 0.8, fontWeight: 500 }}>
+                        {loadingMessage}
+                    </Typography>
+                )}
+            </motion.div>
+
+            {/* SEO Text Footer (Transparent) */}
+            <Box sx={{ position: 'fixed', bottom: 10, width: '100%', textAlign: 'center', opacity: 0.5, zIndex: 0 }}>
+                <Typography variant="caption" sx={{ color: '#64748b' }}>
+                    &copy; {new Date().getFullYear()} MyCAFile - Secure CA Office Management Portal
+                </Typography>
             </Box>
-        </Box >
+        </Box>
     );
 };
