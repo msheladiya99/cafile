@@ -87,7 +87,7 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
         const invoices = await Invoice.find(query)
             .populate('clientId', 'name email')
             .populate('clientGroupId', 'groupName email')
-            .populate('firmId', 'firmName logoUrl')
+            .populate('firmId', 'firmName logoUrl address email mobile phoneL invoiceTemplate invoiceTerms gstin panNumber')
             .sort({ createdAt: -1 });
         res.json(invoices);
     } catch (error) {
