@@ -126,10 +126,16 @@ const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to={getHomePath()} replace /> : <Login />} />
+        <Route path="/login" element={
+          isAuthenticated
+            ? <Navigate to={getHomePath()} replace />
+            : isSuperAdminDomain()
+              ? <Navigate to="/superadmin" replace />
+              : <Login />
+        } />
         
-        {/* Support both underscore and hyphen for Super Admin base routes */}
-        <Route path="/superadmin" element={<SuperAdminLogin />} />
+        {/* Super Admin login — only accessible on main domain; firm subdomains redirected to their own login */}
+        <Route path="/superadmin" element={isSuperAdminDomain() ? <SuperAdminLogin /> : <Navigate to="/login" replace />} />
         
         {/* Redirect underscored super_admin to hyphenated super-admin */}
         <Route path="/super_admin" element={<Navigate to="/super-admin" replace />} />

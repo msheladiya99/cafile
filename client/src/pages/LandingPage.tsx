@@ -1,981 +1,719 @@
-import React from 'react';
-import {
-    Box,
-    Button,
-    Container,
-    Typography,
-    Stack,
-    Card,
-    useTheme,
-    useMediaQuery,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Paper,
-    Divider,
-    TextField,
-    Avatar,
-    Rating,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText
-} from '@mui/material';
-import Grid from '@mui/material/Grid';
-import {
-    Menu as MenuIcon,
-    ShieldOutlined,
-    Speed as SpeedIcon,
-    Groups as GroupsIcon,
-    Language as LanguageIcon,
-    CloudDone as CloudIcon,
-    CheckCircle as CheckCircleIcon,
-    ReceiptLong as ReceiptIcon,
-    Stars as StarsIcon,
-    LockOutlined as LockOutlinedIcon
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import React, { useState } from 'react';
 
-const MotionBox = motion(Box);
+// ─── Icons (inline SVGs) ────────────────────────────────────────────────────
+const FileIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+const UsersIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+const ShieldIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const BellIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+const LogInIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" />
+  </svg>
+);
+const CheckSquareIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  </svg>
+);
+const SmartphoneIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
+  </svg>
+);
+const ClockIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+const ZapIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+const UserCheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" />
+  </svg>
+);
+const ShieldCheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
+  </svg>
+);
+const CheckIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+const XCircleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+  </svg>
+);
+const CheckCircleIcon = ({ color = 'currentColor' }: { color?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+const StarIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+const ChevronDownIcon = ({ open }: { open: boolean }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+const UserPlusIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+    <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
+  </svg>
+);
+const UploadIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" />
+    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+  </svg>
+);
+const ClipboardCheckIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+    <rect x="9" y="3" width="6" height="4" rx="1" ry="1" /><path d="m9 14 2 2 4-4" />
+  </svg>
+);
+const SparklesIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    <path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" />
+  </svg>
+);
+const PlayCircleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
+  </svg>
+);
+const ArrowRightIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+  </svg>
+);
+const MailIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+  </svg>
+);
+const PhoneIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+  </svg>
+);
 
-export const LandingPage: React.FC = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const navigate = useNavigate();
-    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const features = [
+  { icon: <UsersIcon />, title: 'Client Management', desc: 'Track all clients, contacts, and work status in one beautiful dashboard.' },
+  { icon: <ShieldIcon />, title: 'Secure Documents', desc: 'Encrypted cloud storage for all client documents with easy access.' },
+  { icon: <BellIcon />, title: 'GST & IT Tracking', desc: 'Never miss a filing deadline with automated reminders and alerts.' },
+  { icon: <LogInIcon />, title: 'Client Portal', desc: 'Let clients upload documents and check their status themselves.' },
+  { icon: <CheckSquareIcon />, title: 'Task Tracking', desc: 'Assign tasks to team members and track progress in real-time.' },
+  { icon: <SmartphoneIcon />, title: 'Mobile Friendly', desc: "Access your firm's data from any device, anywhere, anytime." },
+];
 
-    const toggleMobileMenu = (open: boolean) => () => {
-        setMobileMenuOpen(open);
-    };
+const benefits = [
+  { icon: <ClockIcon />, title: 'Save time daily', desc: 'Automate repetitive tasks and focus on billable work that grows your practice.' },
+  { icon: <ZapIcon />, title: 'Reduce errors', desc: 'Systematic workflows eliminate manual mistakes and missed deadlines.' },
+  { icon: <UserCheckIcon />, title: 'Better client management', desc: 'Every client detail, document, and interaction at your fingertips.' },
+  { icon: <ShieldCheckIcon />, title: 'Secure data', desc: "Enterprise-grade encryption keeps your clients' sensitive data safe." },
+];
 
-    const navItems = [
-        { name: 'Solutions', id: 'solutions' },
-        { name: 'Features', id: 'features' },
-        { name: 'Testimonials', id: 'testimonials' },
-        { name: 'Pricing', id: 'pricing' }
-    ];
+const testimonials = [
+  { quote: 'This software simplified our office work completely. We can now track 100+ clients without chaos.', name: 'CA Rajesh Agarwal', firm: 'Agarwal & Associates' },
+  { quote: 'MyCAFile saved us hours every week. The client portal alone is worth the subscription.', name: 'CA Priya Mehta', firm: 'Mehta Tax Consultants' },
+  { quote: 'Finally, a tool built for Indian CA firms. No more juggling between WhatsApp and spreadsheets.', name: 'CA Suresh Patel', firm: 'Patel & Partners' },
+];
 
-    const scrollToSection = (id: string) => {
-        const element = document.getElementById(id);
-        if (element) {
-            const offset = 80;
-            const bodyRect = document.body.getBoundingClientRect().top;
-            const elementRect = element.getBoundingClientRect().top;
-            const elementPosition = elementRect - bodyRect;
-            const offsetPosition = elementPosition - offset;
+const faqs = [
+  { q: 'Is my data secure?', a: 'Absolutely. We use industry-standard AES-256 encryption and your data is stored on secure cloud servers in India.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. There are no lock-in contracts. You can cancel or downgrade anytime.' },
+  { q: 'Do you provide support?', a: 'Yes! We offer email and chat support for all plans.' },
+  { q: 'Is it mobile friendly?', a: 'Yes, MyCAFile works beautifully on all devices — desktop, tablet, and mobile.' },
+];
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-        }
-    };
+const firms = ['Agarwal & Co.', 'Mehta Associates', 'Sharma Tax Pros', 'Patel & Partners', 'Gupta CA Firm', 'Singh Consultants'];
 
-    const solutions = [
-        {
-            title: 'Manage Multiple Firms',
-            desc: 'Isolated data environments for every branch or sister concern under one master login.',
-            icon: <GroupsIcon sx={{ fontSize: 32, color: '#6366f1' }} />,
-            bgColor: '#f5f3ff'
-        },
-        {
-            title: 'Automated Compliance',
-            desc: 'Real-time tracking for ITR, GST, and Audit deadlines with intelligent reminders.',
-            icon: <SpeedIcon sx={{ fontSize: 32, color: '#ec4899' }} />,
-            bgColor: '#fdf2f8'
-        },
-        {
-            title: 'White-Labeled Experience',
-            desc: 'Custom subdomains and branding for your CA practice to impress your clients.',
-            icon: <LanguageIcon sx={{ fontSize: 32, color: '#0ea5e9' }} />,
-            bgColor: '#f0f9ff'
-        }
-    ];
-
-    const testimonials = [
-        {
-            name: 'CA Rajesh Mehra',
-            firm: 'Mehra & Associates, Varachha, Surat',
-            comment: "The multi-tenant isolation is revolutionary. Each of our branches operates seamlessly without data overlaps. A must-have for large firms in Surat.",
-            avatar: '/ca-review-1.webp',
-            reviewId: 1,
-            rating: 5
-        },
-        {
-            name: 'CA Sneha Patel',
-            firm: 'Patel & Co., Vesu, Surat',
-            comment: "Managing 1000+ ITR filings used to be a headache. With the automated tracking, our efficiency has spiked by over 60%. Highly recommend!",
-            avatar: '/ca-review-2.webp',
-            reviewId: 2,
-            rating: 5
-        },
-        {
-            name: 'CA Amit Shah',
-            firm: 'Shah & Partners, Adajan, Surat',
-            comment: "The document vault and billing system are game changers. We've moved 100% of our client documentation to My CA File safely.",
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit',
-            reviewId: 3,
-            rating: 4.5
-        }
-    ];
-
-    return (
-        <Box sx={{ bgcolor: '#fff', minHeight: '100vh', overflowX: 'hidden' }}>
-            <Helmet>
-                <title>My CA File | Best CA Practice Management Software for Indian Firms</title>
-                <meta name="description" content="Ultimate office portal for Chartered Accountants in India. Manage ITR, GST, Audits, Billing and Clients with a secure, multi-tenant SaaS platform built for professional CA firms." />
-                <meta name="keywords" content="CA Practice Management Software, GST Software for CA, ITR Filing Tool for CA India, CA Firm Office Management, My CA File Surat, Accountant Portal India, SaaS for CA" />
-                <link rel="canonical" href="https://mycafile.in" />
-                
-                {/* Open Graph / Facebook */}
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://mycafile.in" />
-                <meta property="og:title" content="My CA File | Premium CA Practice Management Software" />
-                <meta property="og:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
-                <meta property="og:image" content="https://mycafile.in/og-image.webp" />
-
-                {/* Twitter */}
-                <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:url" content="https://mycafile.in" />
-                <meta property="twitter:title" content="My CA File | Premium CA Practice Management Software" />
-                <meta property="twitter:description" content="Scale your CA firm with My CA File. Manage clients, compliance, and team workflows in one secure platform." />
-            </Helmet>
-
-            {/* Premium Blurred Navbar */}
-            <AppBar position="fixed" elevation={0} sx={{
-                bgcolor: 'rgba(255,255,255,0.7)',
-                backdropFilter: 'blur(20px)',
-                borderBottom: '1px solid rgba(0,0,0,0.05)',
-                transition: 'all 0.3s ease'
-            }}>
-                <Container maxWidth="lg">
-                    <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
-                        <Stack
-                            direction="row"
-                            spacing={1.5}
-                            alignItems="center"
-                            sx={{ cursor: 'pointer' }}
-                            onClick={() => window.scrollTo(0, 0)}
-                            role="button"
-                            aria-label="Home - Scroll to top"
-                        >
-                            <Box sx={{
-                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                p: 0.8,
-                                borderRadius: '12px',
-                                display: 'flex'
-                            }}>
-                                <ShieldOutlined sx={{ color: 'white', fontSize: 26 }} />
-                            </Box>
-                            <Typography variant="h5" fontWeight={1000} color="#1e1b4b" sx={{ letterSpacing: -1.5, display: { xs: 'none', sm: 'block' } }}>
-                                My CA File
-                            </Typography>
-                        </Stack>
-
-                        {!isMobile && (
-                            <Stack direction="row" spacing={4} alignItems="center">
-                                {navItems.map((item) => (
-                                    <Typography key={item.name} variant="body2" fontWeight={700} onClick={() => scrollToSection(item.id)} sx={{
-                                        cursor: 'pointer',
-                                        color: '#4b5563',
-                                        '&:hover': { color: '#6366f1' },
-                                        transition: 'color 0.2s'
-                                    }}>
-                                        {item.name}
-                                    </Typography>
-                                ))}
-                                <Button
-                                    variant="text"
-                                    onClick={() => navigate('/superadmin')}
-                                    sx={{ color: '#1e1b4b', fontWeight: 800, textTransform: 'none' }}
-                                >
-                                    Log In
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    onClick={() => navigate('/superadmin')}
-                                    sx={{
-                                        borderRadius: '12px',
-                                        px: 3,
-                                        fontWeight: 800,
-                                        textTransform: 'none',
-                                        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                        boxShadow: '0 8px 20px rgba(99, 102, 241, 0.2)'
-                                    }}
-                                >
-                                    Try it Free
-                                </Button>
-                            </Stack>
-                        )}
-
-                        {isMobile && (
-                            <IconButton color="inherit" onClick={toggleMobileMenu(true)} sx={{ color: '#1e1b4b' }} aria-label="open mobile menu">
-                                <MenuIcon />
-                            </IconButton>
-                        )}
-                    </Toolbar>
-                </Container>
-
-                {/* Mobile Drawer */}
-                <Drawer
-                    anchor="right"
-                    open={mobileMenuOpen}
-                    onClose={toggleMobileMenu(false)}
-                    PaperProps={{
-                        sx: { width: '280px', p: 2 }
-                    }}
-                >
-                    <Box sx={{ mb: 4, mt: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight={1000} color="#1e1b4b">
-                            My CA File
-                        </Typography>
-                    </Box>
-                    <List>
-                        {navItems.map((item) => (
-                            <ListItem key={item.name} disablePadding>
-                                <ListItemButton onClick={() => { scrollToSection(item.id); setMobileMenuOpen(false); }} sx={{ borderRadius: '12px', mb: 1 }}>
-                                    <ListItemText primary={item.name} primaryTypographyProps={{ fontWeight: 700, color: '#4b5563' }} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                        <Divider sx={{ my: 2 }} />
-                        <ListItem disablePadding>
-                            <ListItemButton onClick={() => navigate('/superadmin')} sx={{ borderRadius: '12px', mb: 1, bgcolor: '#f3f4f6' }}>
-                                <ListItemText primary="Log In" primaryTypographyProps={{ fontWeight: 800, color: '#1e1b4b' }} />
-                            </ListItemButton>
-                        </ListItem>
-                        <ListItem disablePadding>
-                            <ListItemButton
-                                onClick={() => navigate('/superadmin')}
-                                sx={{
-                                    borderRadius: '12px',
-                                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                    color: 'white'
-                                }}
-                            >
-                                <ListItemText primary="Try it Free" primaryTypographyProps={{ fontWeight: 800 }} />
-                            </ListItemButton>
-                        </ListItem>
-                    </List>
-                </Drawer>
-            </AppBar>
-
-            {/* Background Blobs for Aesthetic */}
-            <Box sx={{ position: 'relative', pt: 15, overflow: 'hidden' }}>
-                <Box sx={{
-                    position: 'absolute',
-                    top: -200,
-                    right: -200,
-                    width: 600,
-                    height: 600,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
-                    zIndex: -1
-                }} />
-                <Box sx={{
-                    position: 'absolute',
-                    top: 200,
-                    left: -300,
-                    width: 800,
-                    height: 800,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.05) 0%, transparent 70%)',
-                    zIndex: -1
-                }} />
-
-                <Container maxWidth="lg">
-                    {/* Hero Section */}
-                    <Box sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8 }}
-                        >
-                            <Typography variant="overline" sx={{
-                                color: '#6366f1',
-                                fontWeight: 900,
-                                letterSpacing: 3,
-                                bgcolor: '#f5f3ff',
-                                px: 2,
-                                py: 0.5,
-                                borderRadius: 10,
-                                mb: 3,
-                                display: 'inline-block'
-                            }}>
-                                OVER 500+ FIRMS TRUSTED
-                            </Typography>
-                            <Typography variant="h1" sx={{
-                                fontSize: { xs: '2.2rem', md: '4.5rem' },
-                                fontWeight: 1000,
-                                color: '#0f172a',
-                                lineHeight: { xs: 1.2, md: 1.1 },
-                                mb: 3,
-                                letterSpacing: { xs: -1, md: -2.5 }
-                            }}>
-                                Best CA practice <br />
-                                <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    management
-                                </span> software for Indian CA firms
-                            </Typography>
-                            <Typography variant="h5" sx={{
-                                color: '#64748b',
-                                maxWidth: '700px',
-                                mx: 'auto',
-                                mb: 6,
-                                px: { xs: 2, sm: 0 },
-                                fontSize: { xs: '0.95rem', md: '1.5rem' },
-                                lineHeight: 1.6,
-                                fontWeight: 500
-                            }}>
-                                The world's simplest and fastest platform for CA firms. Manage ITR, GST, Billing, and Team Collaboration in one unified dashboard.
-                            </Typography>
-
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" sx={{ mb: 10, px: { xs: 4, sm: 0 } }}>
-                                <Button
-                                    size={isMobile ? "medium" : "large"}
-                                    variant="contained"
-                                    onClick={() => navigate('/superadmin')}
-                                    sx={{
-                                        px: { xs: 3, md: 5 },
-                                        py: { xs: 1.5, md: 2 },
-                                        borderRadius: '16px',
-                                        fontSize: { xs: '0.95rem', md: '1.1rem' },
-                                        fontWeight: 1000,
-                                        textTransform: 'none',
-                                        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                        boxShadow: '0 20px 40px rgba(99, 102, 241, 0.25)',
-                                        '&:hover': { transform: 'translateY(-2px)', transition: 'all 0.2s' }
-                                    }}
-                                >
-                                    Get Started Free
-                                </Button>
-                                <Button
-                                    size={isMobile ? "medium" : "large"}
-                                    variant="outlined"
-                                    sx={{
-                                        px: { xs: 3, md: 5 },
-                                        py: { xs: 1.5, md: 2 },
-                                        borderRadius: '16px',
-                                        fontSize: { xs: '0.95rem', md: '1.1rem' },
-                                        fontWeight: 1000,
-                                        textTransform: 'none',
-                                        borderColor: '#e2e8f0',
-                                        color: '#1e293b',
-                                        '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' }
-                                    }}
-                                >
-                                    Watch Video
-                                </Button>
-                            </Stack>
-                        </motion.div>
-
-                        {/* Large Hero Image Mockup */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 1, delay: 0.2 }}
-                            style={{ position: 'relative' }}
-                        >
-                            <Box sx={{
-                                position: 'relative',
-                                mx: 'auto',
-                                maxWidth: '1000px',
-                                perspective: '1000px'
-                            }}>
-                                <img
-                                    src="/landing-hero-new.webp"
-                                    alt="My CA File Dashboard Mockup - CA Practice Management Software"
-                                    fetchPriority="high"
-                                    loading="eager"
-                                    style={{
-                                        width: '100%',
-                                        height: 'auto',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 50px 100px -20px rgba(15, 23, 42, 0.15)',
-                                        border: '1px solid rgba(255,255,255,0.8)',
-                                        zIndex: 2,
-                                        position: 'relative'
-                                    }}
-                                />
-                                {/* Decorative elements behind image */}
-                                <Box sx={{
-                                    position: 'absolute',
-                                    bottom: -30,
-                                    left: '10%',
-                                    width: '80%',
-                                    height: '40px',
-                                    bgcolor: 'rgba(99, 102, 241, 0.3)',
-                                    filter: 'blur(50px)',
-                                    zIndex: 1
-                                }} />
-                            </Box>
-                        </motion.div>
-                    </Box>
-
-                    {/* Solutions Grid */}
-                    <Box id="solutions" sx={{ py: { xs: 10, md: 15 } }}>
-                        <Box sx={{ textAlign: 'center', mb: 8 }}>
-                            <Typography variant="h3" sx={{
-                                fontWeight: 1000,
-                                color: '#0f172a',
-                                mb: 2,
-                                letterSpacing: -1,
-                                fontSize: { xs: '1.75rem', md: '3rem' }
-                            }}>
-                                Solution made for you
-                            </Typography>
-                            <Typography variant="body1" sx={{
-                                color: '#64748b',
-                                fontSize: { xs: '0.9rem', md: '1.1rem' },
-                                maxWidth: 600,
-                                mx: 'auto',
-                                px: { xs: 2, sm: 0 }
-                            }}>
-                                Our innovative solution is specifically designed to streamline your CA practice workflow, boost efficiency, and eliminate distractions.
-                            </Typography>
-                        </Box>
-
-                        <Grid container spacing={4}>
-                            {solutions.map((sol, index) => (
-                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                                    <MotionBox
-                                        whileHover={{ y: -10 }}
-                                        transition={{ type: 'spring', stiffness: 300 }}
-                                        sx={{
-                                            p: { xs: 3, md: 4 },
-                                            height: '100%',
-                                            borderRadius: '24px',
-                                            bgcolor: sol.bgColor,
-                                            border: '1px solid rgba(0,0,0,0.02)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: 2
-                                        }}
-                                    >
-                                        <Box sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: 64,
-                                            height: 64,
-                                            borderRadius: '16px',
-                                            bgcolor: 'white',
-                                            boxShadow: '0 10px 20px rgba(0,0,0,0.03)'
-                                        }}>
-                                            {sol.icon}
-                                        </Box>
-                                        <Typography variant="h5" sx={{
-                                            fontWeight: 1000,
-                                            color: '#1e293b',
-                                            fontSize: { xs: '1.25rem', md: '1.5rem' }
-                                        }}>
-                                            {sol.title}
-                                        </Typography>
-                                        <Typography variant="body1" sx={{
-                                            color: '#475569',
-                                            lineHeight: 1.7,
-                                            fontSize: { xs: '0.875rem', md: '1rem' }
-                                        }}>
-                                            {sol.desc}
-                                        </Typography>
-                                    </MotionBox>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-
-                    {/* Detailed Feature 1 */}
-                    <Grid id="features" container spacing={{ xs: 6, md: 8 }} alignItems="center" sx={{ py: 10 }}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2 }}>
-                                DATA FOCUS
-                            </Typography>
-                            <Typography variant="h2" sx={{
-                                fontWeight: 1000,
-                                color: '#0f172a',
-                                mb: 3,
-                                mt: 1,
-                                letterSpacing: { xs: -1, md: -2 },
-                                lineHeight: { xs: 1.2, md: 1.1 },
-                                fontSize: { xs: '1.8rem', md: '3.75rem' }
-                            }}>
-                                Analyze your data <br /> with powerful tools
-                            </Typography>
-                            <Typography variant="body1" sx={{
-                                color: '#64748b',
-                                fontSize: { xs: '0.9rem', md: '1.2rem' },
-                                mb: 4,
-                                lineHeight: 1.7
-                            }}>
-                                Track client compliance health across all firms in real-time. Our advanced dashboard provides insights that help you stay ahead of regulatory deadlines.
-                            </Typography>
-                            <Stack spacing={2.5}>
-                                {
-                                    [
-                                        { text: 'Dynamic Compliance Tracker', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> },
-                                        { text: 'Automated Billing & Reporting', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> },
-                                        { text: 'Secure PDF Generation', icon: <CheckCircleIcon sx={{ color: '#6366f1' }} /> }
-                                    ].map((item, i) => (
-                                        <Stack direction="row" spacing={1.5} alignItems="center" key={i}>
-                                            {item.icon}
-                                            <Typography variant="body1" sx={{
-                                                fontWeight: 700,
-                                                color: '#1e293b',
-                                                fontSize: { xs: '0.9rem', md: '1rem' }
-                                            }}>{item.text}</Typography>
-                                        </Stack>
-                                    ))
-                                }
-                            </Stack>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Box sx={{
-                                p: 2,
-                                bgcolor: '#f8fafc',
-                                borderRadius: '32px',
-                                position: 'relative',
-                                display: 'flex',
-                                justifyContent: 'center'
-                            }}>
-                                <Box
-                                    component="img"
-                                    src="/landing-analytics.webp"
-                                    alt="Client Compliance Analytics Dashboard - My CA File"
-                                    sx={{ width: '100%', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
-                                />
-                                <Box sx={{
-                                    position: 'absolute',
-                                    top: -40,
-                                    right: -20,
-                                    bgcolor: 'white',
-                                    p: 3,
-                                    borderRadius: '24px',
-                                    boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
-                                    display: { xs: 'none', lg: 'block' }
-                                }}>
-                                    <Stack spacing={1}>
-                                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>EFFICIENCY BOOST</Typography>
-                                        <Typography variant="h4" sx={{ color: '#22c55e', fontWeight: 1000 }}>+84%</Typography>
-                                    </Stack>
-                                </Box>
-                            </Box>
-                        </Grid>
-                    </Grid>
-
-                    {/* Testimonials */}
-                    <Box id="testimonials" sx={{ py: 15, textAlign: 'center' }}>
-                        <Typography variant="overline" sx={{ color: '#6366f1', fontWeight: 900, letterSpacing: 2, fontSize: '0.75rem' }}>
-                            CLIENT STORIES
-                        </Typography>
-                        <Typography variant="h3" sx={{
-                            fontWeight: 1000,
-                            color: '#0f172a',
-                            mb: { xs: 4, md: 8 },
-                            letterSpacing: -1,
-                            fontSize: { xs: '1.75rem', md: '3rem' }
-                        }}>
-                            Trusted by Surat's Leading CA Firms
-                        </Typography>
-
-                        <Grid container spacing={4}>
-                            {testimonials.map((test, index) => (
-                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                                    <Card sx={{
-                                        borderRadius: '24px',
-                                        p: { xs: 3, md: 4 },
-                                        height: '100%',
-                                        border: '1px solid rgba(0,0,0,0.05)',
-                                        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-                                        '&:hover': { boxShadow: '0 20px 40px rgba(0,0,0,0.08)', transform: 'translateY(-5px)' },
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        textAlign: 'left'
-                                    }}>
-                                        <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
-                                            <Avatar src={test.avatar} alt={`${test.name} - ${test.firm}`} sx={{ width: 56, height: 56, border: '2px solid #6366f1' }} />
-                                            <Box>
-                                                <Typography variant="subtitle1" sx={{
-                                                    fontWeight: 800,
-                                                    color: '#1e293b',
-                                                    fontSize: { xs: '0.9rem', md: '1rem' }
-                                                }}>{test.name}</Typography>
-                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>{test.firm}</Typography>
-                                            </Box>
-                                        </Stack>
-                                        <Rating value={test.rating} precision={0.5} readOnly sx={{ color: '#f59e0b', mb: 2 }} />
-                                        <Typography variant="body1" sx={{
-                                            color: '#475569',
-                                            fontStyle: 'italic',
-                                            lineHeight: 1.7,
-                                            fontSize: { xs: '0.85rem', md: '1rem' }
-                                        }}>
-                                            "{test.comment}"
-                                        </Typography>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-
-                    {/* CA SaaS Subscription Pricing Section */}
-                    <Box id="pricing" sx={{ py: 15, bgcolor: '#fbfbfb', borderRadius: '40px', position: 'relative', overflow: 'hidden' }}>
-                        <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #ffffff, #f7f6f4)', pointerEvents: 'none' }} />
-                        
-                        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-                            <Box sx={{ textAlign: 'center', mb: 10 }}>
-                                <Box sx={{ 
-                                    display: 'inline-flex', 
-                                    flexDirection: 'row', 
-                                    alignItems: 'center', 
-                                    gap: 2, 
-                                    background: 'linear-gradient(135deg, #FF602E 0%, #FF6FB5 100%)', 
-                                    color: 'white', 
-                                    px: 3, 
-                                    py: 1, 
-                                    borderRadius: '12px', 
-                                    mb: 4,
-                                    boxShadow: '0 8px 16px rgba(255, 96, 46, 0.15)'
-                                }}>
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                        <StarsIcon sx={{ fontSize: 18 }} />
-                                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                                            Special Launch Pricing
-                                        </Typography>
-                                    </Stack>
-                                </Box>
-                                
-                                <Typography variant="h2" sx={{ 
-                                    fontWeight: 1000, 
-                                    color: '#0f172a', 
-                                    mb: 2, 
-                                    letterSpacing: -1.5, 
-                                    fontSize: { xs: '2.5rem', md: '3.75rem' },
-                                    lineHeight: 1.1
-                                }}>
-                                    Simple Pricing for Modern CA Firms
-                                </Typography>
-                                
-                                <Typography variant="h6" sx={{ color: '#64748b', maxWidth: '700px', mx: 'auto', fontWeight: 500, lineHeight: 1.6 }}>
-                                    Manage clients, automate compliance, and grow your CA practice with ease.
-                                </Typography>
-                            </Box>
-
-                            <Grid container spacing={4} alignItems="stretch" justifyContent="center">
-                                {[
-                                    {
-                                        name: 'Starter Plan',
-                                        tagline: 'Ideal for newly set up firms',
-                                        price: '299',
-                                        period: 'month',
-                                        features: [
-                                            'Manage up to 50 clients',
-                                            'GST, ITR & Compliance tracking',
-                                            'Automated reminders',
-                                            'Secure client data storage',
-                                            'Email support'
-                                        ],
-                                        cta: 'Start Now',
-                                        recommended: false,
-                                        badge: null
-                                    },
-                                    {
-                                        name: 'Professional Plan',
-                                        tagline: 'Powerful features for growing firms',
-                                        price: '599',
-                                        period: 'month',
-                                        features: [
-                                            'Manage up to 150 clients',
-                                            'GST, ITR, ROC modules',
-                                            'Advanced reports & analytics',
-                                            'Client portal access',
-                                            'Priority 24/7 support'
-                                        ],
-                                        cta: 'Upgrade Now',
-                                        recommended: true,
-                                        badge: 'Most Popular'
-                                    },
-                                    {
-                                        name: 'Enterprise Plan',
-                                        tagline: 'Ultimate automation for large firms',
-                                        price: '999',
-                                        period: 'month',
-                                        features: [
-                                            'Unlimited clients',
-                                            'Full automation suite',
-                                            'Team management & hierarchy',
-                                            'White-label branding',
-                                            'WhatsApp + Call support',
-                                            'Dedicated account manager'
-                                        ],
-                                        cta: 'Get Started',
-                                        recommended: false,
-                                        badge: 'Best Value'
-                                    }
-                                ].map((plan, i) => {
-                                    const isMiddle = i === 1;
-                                    const bgConfig = isMiddle 
-                                        ? 'linear-gradient(135deg, #e0e8ff 0%, #d4ddf6 100%)' 
-                                        : '#f3f4f6';
-                                    const btnClass = '#111';
-                                    const textColor = '#000';
-
-                                    return (
-                                        <Grid size={{ xs: 12, md: 4 }} key={i}>
-                                            <Card sx={{ 
-                                                height: '100%', 
-                                                borderRadius: '32px', 
-                                                border: '1px solid #e5e7eb',
-                                                bgcolor: '#ffffff',
-                                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.05)', 
-                                                display: 'flex', 
-                                                flexDirection: 'column',
-                                                p: 1.5,
-                                                position: 'relative',
-                                                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                                                '&:hover': {
-                                                    transform: 'translateY(-10px)',
-                                                    boxShadow: '0 30px 60px -15px rgba(0,0,0,0.1)'
-                                                }
-                                            }}>
-                                                {/* Top colored box */}
-                                                <Box sx={{ 
-                                                    background: bgConfig, 
-                                                    borderRadius: '24px', 
-                                                    p: 3, 
-                                                    pb: 4,
-                                                    mb: 1
-                                                }}>
-                                                    <Box sx={{ display: 'inline-block', bgcolor: '#fff', px: 2, py: 0.5, borderRadius: '12px', mb: 3 }}>
-                                                        <Typography variant="caption" sx={{ fontWeight: 900, color: '#000', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                                            {plan.name}
-                                                        </Typography>
-                                                    </Box>
-                                                    
-                                                    <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 0.5 }}>
-                                                        <Typography sx={{ fontWeight: 900, color: textColor, fontSize: '1.8rem' }}>₹</Typography>
-                                                        <Typography sx={{ color: textColor, fontWeight: 900, fontSize: '3.5rem', lineHeight: 1, letterSpacing: '-2px' }}>
-                                                            {plan.price}
-                                                        </Typography>
-                                                        <Typography sx={{ color: '#4b5563', fontWeight: 700, fontSize: '1.2rem' }}>
-                                                            /{plan.period}
-                                                        </Typography>
-                                                    </Box>
-
-                                                    <Typography sx={{ color: '#4b5563', fontWeight: 600, fontSize: '0.9rem', mb: 3 }}>
-                                                        {plan.tagline}
-                                                    </Typography>
-
-                                                    <Button 
-                                                        fullWidth
-                                                        variant="contained"
-                                                        onClick={() => navigate('/superadmin')}
-                                                        sx={{ 
-                                                            bgcolor: btnClass,
-                                                            color: '#fff',
-                                                            py: 1.8,
-                                                            borderRadius: '20px',
-                                                            fontWeight: 800,
-                                                            textTransform: 'none',
-                                                            fontSize: '1rem',
-                                                            boxShadow: '0 8px 16px rgba(0,0,0,0.15)',
-                                                            '&:hover': {
-                                                                bgcolor: '#000',
-                                                                boxShadow: '0 12px 24px rgba(0,0,0,0.25)',
-                                                            }
-                                                        }}
-                                                    >
-                                                        {plan.cta}
-                                                    </Button>
-                                                </Box>
-
-                                                {/* Bottom features list */}
-                                                <Box sx={{ p: 3, pt: 1, flexGrow: 1 }}>
-                                                    <Stack spacing={2.5}>
-                                                        {plan.features.map((feat, j) => (
-                                                            <Stack direction="row" spacing={1.5} alignItems="flex-start" key={j}>
-                                                                <CheckCircleIcon sx={{ fontSize: 18, color: '#9ca3af', mt: 0.3 }} />
-                                                                <Typography sx={{ color: '#111', fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.4 }}>
-                                                                    {feat}
-                                                                </Typography>
-                                                            </Stack>
-                                                        ))}
-                                                    </Stack>
-                                                </Box>
-                                            </Card>
-                                        </Grid>
-                                    );
-                                })}
-                            </Grid>
-
-                            {/* Trust & Verification Signals */}
-                            <Box sx={{ mt: 10, textAlign: 'center' }}>
-                                <Typography variant="subtitle1" sx={{ color: '#64748b', fontWeight: 700, mb: 4 }}>
-                                    Trusted by 100+ CA firms across India
-                                </Typography>
-                                <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
-                                    {[
-                                        { label: '100% Secure & Confidential', icon: <ShieldOutlined sx={{ fontSize: 20 }} /> },
-                                        { label: 'Built for Indian Tax System', icon: <LanguageIcon sx={{ fontSize: 20 }} /> },
-                                        { label: 'ISO 27001 Certified Data', icon: <LockOutlinedIcon sx={{ fontSize: 20 }} /> }
-                                    ].map((item, i) => (
-                                        <Grid size={{ xs: 12, md: 4 }} key={i}>
-                                            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: '#4b5563', justifyContent: 'center' }}>
-                                                <Box sx={{ color: '#FF602E' }}>{item.icon}</Box>
-                                                <Typography variant="body2" sx={{ fontWeight: 800 }}>{item.label}</Typography>
-                                            </Stack>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        </Container>
-                    </Box>
-
-
-
-                    {/* Stats Section moved below pricing */}
-                    <Paper elevation={0} sx={{
-                        py: 8,
-                        px: 4,
-                        borderRadius: '40px',
-                        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                        color: 'white',
-                        textAlign: 'center',
-                        mb: 15,
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}>
-                        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.1, backgroundImage: 'radial-gradient(#fff 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-
-                        <Grid container spacing={4} sx={{ position: 'relative' }}>
-                            {[
-                                { label: 'Active Firms', val: '500+', icon: <GroupsIcon sx={{ fontSize: 40 }} /> },
-                                { label: 'Files Managed', val: '1M+', icon: <CloudIcon sx={{ fontSize: 40 }} /> },
-                                { label: 'Invoices Paid', val: '₹40Cr+', icon: <ReceiptIcon sx={{ fontSize: 40 }} /> },
-                                { label: 'Uptime', val: '99.9%', icon: <SpeedIcon sx={{ fontSize: 40 }} /> }
-                            ].map((stat, i) => (
-                                <Grid size={{ xs: 6, md: 3 }} key={i}>
-                                    <Box sx={{ mb: 2, color: '#6366f1' }}>{stat.icon}</Box>
-                                    <Typography variant="h4" sx={{ fontWeight: 1000, mb: 1 }}>{stat.val}</Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.6, fontWeight: 700 }}>{stat.label}</Typography>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Paper>
-
-                    {/* Final CTA */}
-                    <Box sx={{ py: 10, textAlign: 'center', mb: 10 }}>
-                        <Typography variant="h2" sx={{
-                            fontWeight: 1000,
-                            color: '#0f172a',
-                            mb: 4,
-                            letterSpacing: -2,
-                            fontSize: { xs: '1.8rem', md: '3.75rem' }
-                        }}>
-                            Ready to scale your <br /> practice?
-                        </Typography>
-                        <Button
-                            size={isMobile ? "medium" : "large"}
-                            variant="contained"
-                            onClick={() => navigate('/superadmin')}
-                            sx={{
-                                px: { xs: 5, md: 10 },
-                                py: { xs: 1.5, md: 2.5 },
-                                borderRadius: '20px',
-                                fontSize: { xs: '1rem', md: '1.2rem' },
-                                fontWeight: 1000,
-                                textTransform: 'none',
-                                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                                boxShadow: '0 20px 50px rgba(99, 102, 241, 0.3)',
-                            }}
-                        >
-                            Get Started Now
-                        </Button>
-                        <Typography variant="body2" sx={{
-                            mt: 3,
-                            color: '#64748b',
-                            fontWeight: 600,
-                            fontSize: { xs: '0.75rem', md: '0.875rem' }
-                        }}>
-                            No credit card required • 14-day free trial • Cancel anytime
-                        </Typography>
-                    </Box>
-                </Container>
-            </Box>
-
-            {/* Footer */}
-            <Box sx={{ py: 10, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-                <Container maxWidth="lg">
-                    <Grid container spacing={6}>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-                                <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px' }}>
-                                    <ShieldOutlined sx={{ color: 'white', fontSize: 24 }} />
-                                </Box>
-                                <Typography variant="h6" fontWeight={1000} color="#1e1b4b">
-                                    My CA File
-                                </Typography>
-                            </Stack>
-                            <Typography variant="body2" sx={{ color: '#64748b', maxWidth: 300, lineHeight: 1.8, mb: 4 }}>
-                                The ultimate practice management software for Chartered Accountants in India. High security, multi-tenant, and purpose-built.
-                            </Typography>
-                            <Stack direction="row" spacing={2}>
-                                {['LinkedIn', 'Twitter', 'YouTube'].map(social => (
-                                    <Typography key={social} variant="caption" sx={{ fontWeight: 800, cursor: 'pointer', color: '#1e293b' }}>{social}</Typography>
-                                ))}
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={{ xs: 6, md: 2 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Solutions</Typography>
-                            <Stack spacing={2}>
-                                <Typography variant="body2" onClick={() => navigate('/gst-software-india')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>GST Software</Typography>
-                                <Typography variant="body2" onClick={() => navigate('/itr-filing-software')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>ITR Software</Typography>
-                                <Typography variant="body2" onClick={() => navigate('/ca-practice-management')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Practice Management</Typography>
-                                <Typography variant="body2" sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Security</Typography>
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={{ xs: 6, md: 2 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Company</Typography>
-                            <Stack spacing={2}>
-                                <Typography variant="body2" onClick={() => navigate('/about')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>About</Typography>
-                                <Typography variant="body2" onClick={() => navigate('/careers')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Careers</Typography>
-                                <Typography variant="body2" onClick={() => navigate('/contact')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Contact</Typography>
-                                <Typography variant="body2" onClick={() => navigate('/press')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Press</Typography>
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Newsletter</Typography>
-                            <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>Get the latest updates on tax compliance and software features.</Typography>
-                            <Stack direction="row" spacing={1}>
-                                <TextField
-                                    placeholder="Enter your email"
-                                    size="small"
-                                    fullWidth
-                                    variant="outlined"
-                                    sx={{ bgcolor: 'white', '& fieldset': { borderRadius: '12px' } }}
-                                />
-                                <Button variant="contained" sx={{ px: 3, borderRadius: '12px', bgcolor: '#1e293b', fontWeight: 800 }}>Join</Button>
-                            </Stack>
-                        </Grid>
-                    </Grid>
-                    <Divider sx={{ my: 8, borderColor: '#e2e8f0' }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                        <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>
-                            © 2026 My CA File. All rights reserved. Created for Chartered Accountants in Surat, Gujarat.
-                        </Typography>
-                        <Stack direction="row" spacing={4}>
-                            <Typography variant="caption" sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Privacy Policy</Typography>
-                            <Typography variant="caption" sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Terms of Service</Typography>
-                        </Stack>
-                    </Box>
-                </Container>
-            </Box>
-        </Box>
-    );
+// ─── Sub-components ──────────────────────────────────────────────────────────
+const FAQItem = ({ q, a }: { q: string; a: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, background: '#fff', marginBottom: 12, overflow: 'hidden' }}>
+      <button onClick={() => setOpen(!open)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 16, fontWeight: 500, color: '#111827' }}>
+        {q}
+        <ChevronDownIcon open={open} />
+      </button>
+      {open && <div style={{ padding: '0 24px 20px', color: '#6b7280', lineHeight: 1.6, fontSize: 15 }}>{a}</div>}
+    </div>
+  );
 };
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export const LandingPage = () => {
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", color: '#111827', background: '#fff', overflowX: 'hidden' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .lp-btn-primary { background: linear-gradient(135deg, #7c3aed, #9333ea); color: #fff; border: none; border-radius: 50px; padding: 14px 28px; font-size: 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity 0.2s, transform 0.2s; }
+        .lp-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .lp-btn-secondary { background: #fff; color: #111827; border: 1.5px solid #d1d5db; border-radius: 50px; padding: 14px 28px; font-size: 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.2s, transform 0.2s; }
+        .lp-btn-secondary:hover { border-color: #7c3aed; transform: translateY(-1px); }
+        .lp-feature-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; transition: box-shadow 0.2s, transform 0.2s; }
+        .lp-feature-card:hover { box-shadow: 0 8px 30px rgba(124,58,237,0.12); transform: translateY(-3px); }
+        .lp-benefit-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px 28px; display: flex; gap: 16px; align-items: flex-start; transition: box-shadow 0.2s; }
+        .lp-benefit-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .lp-nav-link { background: none; border: none; cursor: pointer; font-size: 15px; color: #374151; font-weight: 500; padding: 6px 4px; transition: color 0.2s; }
+        .lp-nav-link:hover { color: #7c3aed; }
+        .lp-section-label { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #7c3aed; margin-bottom: 12px; }
+        .lp-section-title { font-size: clamp(32px, 5vw, 48px); font-weight: 800; line-height: 1.15; color: #111827; }
+        .lp-section-sub { font-size: 18px; color: #6b7280; line-height: 1.6; max-width: 560px; margin: 16px auto 0; }
+        .lp-gradient-text { background: linear-gradient(135deg, #7c3aed, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .lp-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(124,58,237,0.08); border: 1.5px solid rgba(124,58,237,0.2); color: #7c3aed; border-radius: 50px; padding: 8px 20px; font-size: 14px; font-weight: 600; }
+        .lp-stat { text-align: center; }
+        .lp-stat-num { font-size: 36px; font-weight: 800; color: #111827; }
+        .lp-stat-label { font-size: 14px; color: #9ca3af; margin-top: 4px; }
+        .lp-check { display: inline-flex; align-items: center; gap: 10px; color: #6b7280; font-size: 14px; font-weight: 500; }
+        .lp-step-num { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #7c3aed, #9333ea); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; }
+        .lp-testimonial-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; }
+        .lp-pricing-free { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 20px; padding: 36px 32px; }
+        .lp-pricing-popular { background: linear-gradient(160deg, #5b21b6, #7c3aed, #9333ea); color: #fff; border-radius: 20px; padding: 36px 32px; position: relative; transform: scale(1.05); box-shadow: 0 20px 60px rgba(124,58,237,0.35); }
+        .lp-pricing-pro { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 20px; padding: 36px 32px; }
+        .lp-popular-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #f59e0b, #fbbf24); color: #fff; border-radius: 50px; padding: 6px 20px; font-size: 13px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .lp-pricing-btn-outline { width: 100%; border: 2px solid #d1d5db; border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: #fff; color: #111827; transition: border-color 0.2s; }
+        .lp-pricing-btn-outline:hover { border-color: #7c3aed; }
+        .lp-pricing-btn-white { width: 100%; border: none; border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: #fff; color: #7c3aed; transition: opacity 0.2s; }
+        .lp-pricing-btn-white:hover { opacity: 0.9; }
+        nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-bottom: none; }
+        .lp-footer-link { color: #9ca3af; font-size: 14px; background: none; border: none; cursor: pointer; padding: 2px 0; transition: color 0.2s; }
+        .lp-footer-link:hover { color: #7c3aed; }
+        @media (max-width: 768px) {
+          .lp-grid-3 { grid-template-columns: 1fr !important; }
+          .lp-grid-2 { grid-template-columns: 1fr !important; }
+          .lp-hero-btns { flex-direction: column !important; align-items: center !important; }
+          .lp-pricing-grid { grid-template-columns: 1fr !important; }
+          .lp-pricing-popular { transform: scale(1) !important; }
+          .lp-step-grid { grid-template-columns: 1fr !important; }
+          .lp-firms { flex-wrap: wrap !important; }
+        }
+      `}</style>
+
+      {/* ── NAV ─────────────────────────────────────────── */}
+      <nav>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 22, color: '#7c3aed', letterSpacing: '-0.5px' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <FileIcon />
+            </div>
+            MyCAFile
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+            <button className="lp-nav-link" onClick={() => scrollTo('features')}>Features</button>
+            <button className="lp-nav-link" onClick={() => scrollTo('pricing')}>Pricing</button>
+            <button className="lp-nav-link" onClick={() => scrollTo('faq')}>FAQ</button>
+            <button
+              style={{ background: 'none', border: '1.5px solid #d1d5db', borderRadius: 50, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151', transition: 'border-color 0.2s, color 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#7c3aed'; (e.currentTarget as HTMLButtonElement).style.color = '#7c3aed'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLButtonElement).style.color = '#374151'; }}
+              onClick={() => window.location.href = '/superadmin'}
+            >Login</button>
+            <button className="lp-btn-primary" style={{ padding: '10px 24px', fontSize: 14, transform: 'none', boxShadow: 'none' }} onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── HERO ────────────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: '#fff', minHeight: '92vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '100px 24px' }}>
+        {/* Decorative central blob */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 800, height: 800, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%)', filter: 'blur(30px)', transform: 'translateY(-5%)' }} />
+        </div>
+
+        <div style={{ maxWidth: 1024, position: 'relative', zIndex: 1 }}>
+          {/* Badge */}
+          <div style={{ marginBottom: 28 }}>
+            <span className="lp-tag" style={{ fontSize: 13, padding: '8px 22px', letterSpacing: 0.2 }}>
+              <SparklesIcon /> Built for Indian CA Firms
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1 style={{ fontSize: 'clamp(38px, 6vw, 72px)', fontWeight: 900, lineHeight: 1.08, color: '#111827', marginBottom: 28, letterSpacing: '-0.5px' }}>
+            Manage Clients, Docs &<br />
+            GST in{' '}
+            <span className="lp-gradient-text">One System</span>
+          </h1>
+
+          {/* Sub-heading */}
+          <p style={{ fontSize: 19, color: '#4b5563', lineHeight: 1.75, maxWidth: 580, margin: '0 auto 40px' }}>
+            Stop using WhatsApp, Excel &amp; Google Drive. MyCAFile helps CA firms work{' '}
+            <strong style={{ color: '#111827', fontWeight: 700 }}>faster, safer &amp; smarter</strong>.
+          </p>
+
+          {/* CTAs */}
+          <div className="lp-hero-btns" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 44 }}>
+            <button
+              className="lp-btn-primary"
+              style={{ padding: '16px 36px', fontSize: 16, boxShadow: '0 8px 30px rgba(124,58,237,0.30)' }}
+              onClick={() => window.location.href = '/contact'}
+            >
+              Start Free Trial <ArrowRightIcon />
+            </button>
+            <button
+              className="lp-btn-secondary"
+              style={{ padding: '16px 32px', fontSize: 16 }}
+              onClick={() => window.location.href = '/contact'}
+            >
+              <PlayCircleIcon /> Book Demo
+            </button>
+          </div>
+
+          {/* Trust indicators */}
+          <div style={{ display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <span className="lp-check" style={{ fontSize: 13, color: '#6b7280' }}>✓ No credit card required</span>
+            <span className="lp-check" style={{ fontSize: 13, color: '#6b7280' }}>✓ Free forever plan</span>
+            <span className="lp-check" style={{ fontSize: 13, color: '#6b7280' }}><span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#9ca3af', textTransform: 'uppercase' }}>IN</span> Made for India</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TRUSTED BY ──────────────────────────────────── */}
+      <section style={{ background: '#f9fafb', padding: '40px 24px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 24 }}>TRUSTED BY 50+ CA FIRMS ACROSS INDIA</p>
+          <div className="lp-firms" style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'center' }}>
+            {firms.map(f => <span key={f} style={{ color: '#6b7280', fontSize: 16, fontWeight: 600 }}>{f}</span>)}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PROBLEM ─────────────────────────────────────── */}
+      <section style={{ padding: '96px 24px', background: '#f9fafb' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p className="lp-section-label" style={{ color: '#ef4444' }}>THE PROBLEM</p>
+            <h2 className="lp-section-title">Still managing your firm<br />like this?</h2>
+          </div>
+          <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {[
+              'Documents scattered across WhatsApp & Google Drive',
+              'No proper client tracking — everything in Excel',
+              'Missed GST & IT deadlines costing penalties',
+              'Manual work everywhere — zero automation',
+            ].map(item => (
+              <div key={item} style={{ background: '#fff', border: '1.5px solid #fee2e2', borderRadius: 14, padding: '22px 24px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <span style={{ color: '#ef4444', flexShrink: 0, marginTop: 2 }}><XCircleIcon /></span>
+                <span style={{ color: '#374151', fontSize: 15, fontWeight: 500 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOLUTION ────────────────────────────────────── */}
+      <section style={{ padding: '96px 24px', background: 'linear-gradient(160deg, #ede9fe 0%, #e0e7ff 100%)' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p className="lp-section-label">THE SOLUTION</p>
+            <h2 className="lp-section-title">MyCAFile <span className="lp-gradient-text">solves all of this</span></h2>
+          </div>
+          <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid #e5e7eb', borderRadius: 20, padding: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                <span style={{ color: '#ef4444' }}><XCircleIcon /></span>
+                <span style={{ fontWeight: 700, fontSize: 18, color: '#ef4444' }}>Before</span>
+              </div>
+              {['Files lost in WhatsApp groups', 'Excel-based client tracking', 'Missed compliance deadlines', 'No client self-service'].map(i => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                  <span style={{ color: '#fca5a5' }}><XCircleIcon /></span>
+                  <span style={{ color: '#6b7280', fontSize: 15 }}>{i}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid #c4b5fd', borderRadius: 20, padding: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                <CheckCircleIcon color="#7c3aed" />
+                <span style={{ fontWeight: 700, fontSize: 18, color: '#7c3aed' }}>After — with MyCAFile</span>
+              </div>
+              {['Organized secure document storage', 'Smart client management dashboard', 'Automated deadline tracking & alerts', 'Client login portal for documents'].map(i => (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                  <CheckCircleIcon color="#7c3aed" />
+                  <span style={{ color: '#374151', fontSize: 15 }}>{i}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ────────────────────────────────────── */}
+      <section id="features" style={{ padding: '96px 24px', background: '#f9fafb' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <p className="lp-section-label">FEATURES</p>
+            <h2 className="lp-section-title">Everything your CA firm needs</h2>
+            <p className="lp-section-sub">Powerful features designed specifically for chartered accountants and tax consultants in India.</p>
+          </div>
+          <div className="lp-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+            {features.map(f => (
+              <div key={f.title} className="lp-feature-card">
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(147,51,234,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed', marginBottom: 20 }}>
+                  {f.icon}
+                </div>
+                <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 10, color: '#111827' }}>{f.title}</h3>
+                <p style={{ color: '#6b7280', lineHeight: 1.6, fontSize: 15 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ────────────────────────────────── */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: '100px 24px', background: 'linear-gradient(160deg, #ede9fe 0%, #e0e7ff 100%)' }}>
+        {/* Subtle bg overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.07) 0%, transparent 65%)', zIndex: 0, pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          {/* Section label */}
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#7c3aed', marginBottom: 12 }}>How it works</p>
+          <h2 className="lp-section-title" style={{ marginBottom: 72 }}>Get started in 3 easy steps</h2>
+
+          {/* Steps grid */}
+          <div className="lp-step-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 40 }}>
+            {[
+              { num: 1, icon: <UserPlusIcon />, title: 'Add Clients', desc: 'Onboard your clients with basic details in seconds.' },
+              { num: 2, icon: <UploadIcon />, title: 'Upload Documents', desc: 'Store all GST, IT, and compliance documents securely.' },
+              { num: 3, icon: <ClipboardCheckIcon />, title: 'Track & Comply', desc: 'Monitor deadlines, tasks, and filing status effortlessly.' },
+            ].map((s, i, arr) => (
+              <div key={s.num} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+                {/* Connector line (hidden on mobile via lp-step-grid media query) */}
+                {i < arr.length - 1 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 32,
+                    left: '62%',
+                    width: '76%',
+                    height: 2,
+                    background: 'linear-gradient(to right, rgba(124,58,237,0.35), transparent)',
+                    zIndex: 0
+                  }} />
+                )}
+
+                {/* Step number bubble */}
+                <div style={{
+                  position: 'relative', zIndex: 1,
+                  width: 64, height: 64, borderRadius: 18,
+                  background: 'linear-gradient(135deg, #7c3aed, #9333ea)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 8px 24px rgba(124,58,237,0.30)',
+                  color: '#fff', fontSize: 22, fontWeight: 900,
+                  margin: '0 auto'
+                }}>
+                  {s.num}
+                </div>
+
+                {/* Icon */}
+                <div style={{ color: '#7c3aed', marginTop: 4 }}>{s.icon}</div>
+
+                {/* Text */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <h3 style={{ fontWeight: 700, fontSize: 18, color: '#111827' }}>{s.title}</h3>
+                  <p style={{ color: '#6b7280', lineHeight: 1.65, fontSize: 14, maxWidth: 220, margin: '0 auto' }}>{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRODUCT PREVIEW / DASHBOARD ─────────────────── */}
+      <section style={{ padding: '96px 24px', background: '#f9fafb' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p className="lp-section-label">PRODUCT PREVIEW</p>
+            <h2 className="lp-section-title">Simple & powerful dashboard</h2>
+          </div>
+          {/* Mock browser window */}
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.10)' }}>
+            <div style={{ background: '#f3f4f6', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }} />
+              <div style={{ flex: 1, background: '#e5e7eb', borderRadius: 8, padding: '5px 14px', fontSize: 13, color: '#9ca3af', marginLeft: 8 }}>mycafile.in</div>
+            </div>
+            <div style={{ background: '#fff', padding: 32 }}>
+              {/* Stats Row */}
+              <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 32 }}>
+                {[{ n: '124', l: 'Active Clients' }, { n: '1,847', l: 'Documents' }, { n: '312', l: 'Filings Done' }, { n: '98%', l: 'Compliance' }].map(s => (
+                  <div key={s.l} style={{ background: '#f9fafb', borderRadius: 12, padding: '20px 16px', textAlign: 'center', border: '1px solid #e5e7eb' }}>
+                    <div style={{ fontSize: 30, fontWeight: 800, color: '#111827' }}>{s.n}</div>
+                    <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Tasks */}
+              <div style={{ fontWeight: 600, fontSize: 15, color: '#374151', marginBottom: 16 }}>Recent Tasks</div>
+              {[
+                { task: 'GSTR-1 Filing — Due 11 Jul', badge: 'Urgent', badgeColor: '#ef4444' },
+                { task: 'IT Return — Ravi Sharma', badge: 'In Progress', badgeColor: '#3b82f6' },
+                { task: 'GST Audit — Patel Enterprises', badge: 'Pending', badgeColor: '#9ca3af' },
+              ].map(t => (
+                <div key={t.task} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', border: '1px solid #f3f4f6', borderRadius: 10, marginBottom: 10, background: '#fafafa' }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{t.task}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, background: t.badgeColor, color: '#fff', borderRadius: 30, padding: '4px 12px' }}>{t.badge}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BENEFITS ────────────────────────────────────── */}
+      <section style={{ padding: '96px 24px', background: 'linear-gradient(160deg, #ede9fe 0%, #e0e7ff 100%)' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p className="lp-section-label">BENEFITS</p>
+            <h2 className="lp-section-title">Why CA Firms Choose MyCAFile</h2>
+          </div>
+          <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {benefits.map(b => (
+              <div key={b.title} className="lp-benefit-card">
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#7c3aed,#9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                  {b.icon}
+                </div>
+                <div>
+                  <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>{b.title}</h3>
+                  <p style={{ color: '#6b7280', lineHeight: 1.6, fontSize: 15 }}>{b.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ────────────────────────────────── */}
+      <section style={{ padding: '96px 24px', background: '#f9fafb' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p className="lp-section-label">TESTIMONIALS</p>
+            <h2 className="lp-section-title">Loved by CA professionals</h2>
+          </div>
+          <div className="lp-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+            {testimonials.map(t => (
+              <div key={t.name} className="lp-testimonial-card">
+                <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+                  {[1, 2, 3, 4, 5].map(i => <StarIcon key={i} />)}
+                </div>
+                <p style={{ color: '#374151', lineHeight: 1.7, fontSize: 15, marginBottom: 24, fontStyle: 'italic' }}>"{t.quote}"</p>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{t.name}</div>
+                  <div style={{ color: '#9ca3af', fontSize: 13, marginTop: 2 }}>{t.firm}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ─────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: '112px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 1024, margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', maxWidth: 672, margin: '0 auto 64px' }}>
+            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#7c3aed', marginBottom: 16 }}>Pricing</p>
+            <h2 className="lp-section-title" style={{ marginBottom: 16 }}>Simple, transparent pricing</h2>
+            <p style={{ fontSize: 18, color: '#6b7280' }}>
+              🔥 <strong style={{ color: '#111827', fontWeight: 600 }}>Limited offer</strong> for first 50 users
+            </p>
+          </div>
+
+          <div className="lp-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'flex-start' }}>
+            {/* Free */}
+            <div style={{ background: '#fff', border: '1px solid rgba(229,231,235,0.6)', borderRadius: 24, padding: 32, position: 'relative' }}>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#111827', marginBottom: 4 }}>Free</h3>
+                <p style={{ color: '#6b7280', fontSize: 14 }}>Get started with the basics</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 800, color: '#111827' }}>₹0</span>
+                <span style={{ color: '#6b7280', fontSize: 14 }}> forever</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {['10 clients', 'Basic document storage', 'Email support'].map(f => (
+                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#7c3aed' }}>
+                      <CheckIcon size={12} />
+                    </div>
+                    <span style={{ fontSize: 14, color: '#374151' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="lp-pricing-btn-outline" onClick={() => window.location.href = '/login'}>Get Started Free</button>
+            </div>
+
+            {/* Starter - Popular */}
+            <div style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', borderRadius: 24, padding: 32, position: 'relative', transform: 'scale(1.04)', zIndex: 10, boxShadow: '0 20px 60px rgba(124,58,237,0.3)' }}>
+              <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: '#f59e0b', color: '#fff', borderRadius: 50, padding: '4px 16px', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                <SparklesIcon /> Most Popular
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 4 }}>Starter</h3>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>Perfect for growing firms</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
+                <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>₹2,999</span>
+                <span style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>₹999</span>
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}> /year</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {['100 clients', 'Unlimited documents', 'GST & IT tracking', 'Client portal', 'Priority support'].map(f => (
+                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+                      <CheckIcon size={12} />
+                    </div>
+                    <span style={{ fontSize: 14, color: '#fff' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="lp-pricing-btn-white" onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
+            </div>
+
+            {/* Pro */}
+            <div style={{ background: '#fff', border: '1px solid rgba(229,231,235,0.6)', borderRadius: 24, padding: 32, position: 'relative' }}>
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#111827', marginBottom: 4 }}>Pro</h3>
+                <p style={{ color: '#6b7280', fontSize: 14 }}>For large practices</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
+                <span style={{ fontSize: 36, fontWeight: 800, color: '#111827' }}>₹2,499</span>
+                <span style={{ color: '#6b7280', fontSize: 14 }}>/year</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                {['Unlimited clients', 'Unlimited documents', 'All features', 'Team management', 'Dedicated support', 'Custom branding'].map(f => (
+                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#7c3aed' }}>
+                      <CheckIcon size={12} />
+                    </div>
+                    <span style={{ fontSize: 14, color: '#374151' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="lp-pricing-btn-outline" onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ─────────────────────────────────────────── */}
+      <section id="faq" style={{ padding: '96px 24px', background: '#f9fafb' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p className="lp-section-label">FAQ</p>
+            <h2 className="lp-section-title">Frequently asked questions</h2>
+          </div>
+          {faqs.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
+        </div>
+      </section>
+
+      {/* ── CTA BANNER ──────────────────────────────────── */}
+      <section style={{ background: 'linear-gradient(135deg, #4338ca 0%, #7c3aed 50%, #9333ea 100%)', padding: '96px 24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(32px,5vw,52px)', fontWeight: 900, color: '#fff', marginBottom: 20 }}>Ready to simplify your CA work?</h2>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 18, marginBottom: 36 }}>Join 50+ CA firms already using MyCAFile to save time and grow their practice.</p>
+          <button className="lp-btn-secondary" style={{ fontSize: 16, padding: '16px 36px' }} onClick={() => window.location.href = '/contact'}>Start Free Trial <ArrowRightIcon /></button>
+        </div>
+      </section>
+
+      {/* ── FOOTER ──────────────────────────────────────── */}
+      <footer style={{ background: '#111827', color: '#9ca3af', padding: '60px 24px 32px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 16 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <FileIcon />
+                </div>
+                MyCAFile
+              </div>
+              <p style={{ fontSize: 14, lineHeight: 1.7, maxWidth: 280 }}>Practice management software built for Indian CA firms. Simple, secure, and smart.</p>
+            </div>
+            <div>
+              <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Product</h4>
+              {[
+                { label: 'Features', action: () => scrollTo('features') },
+                { label: 'Pricing', action: () => scrollTo('pricing') },
+                { label: 'FAQ', action: () => scrollTo('faq') },
+                { label: 'Login', action: () => window.location.href = '/login' },
+              ].map(l => (
+                <div key={l.label} style={{ marginBottom: 10 }}>
+                  <button className="lp-footer-link" onClick={l.action}>{l.label}</button>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Company</h4>
+              {[
+                { label: 'About', href: '/about' },
+                { label: 'Careers', href: '/careers' },
+                { label: 'Contact', href: '/contact' },
+                { label: 'Press', href: '/press' },
+              ].map(l => (
+                <div key={l.label} style={{ marginBottom: 10 }}>
+                  <button className="lp-footer-link" onClick={() => window.location.href = l.href}>{l.label}</button>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Contact</h4>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+                <MailIcon /><span style={{ fontSize: 14 }}>support@mycafile.com</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <PhoneIcon /><span style={{ fontSize: 14 }}>+91 9537994439</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid #1f2937', paddingTop: 24, textAlign: 'center', fontSize: 14 }}>
+            Copyright © 2024 MyCAFile. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default LandingPage;
