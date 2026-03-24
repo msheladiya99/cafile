@@ -700,7 +700,7 @@ export const LandingPage = () => {
             <div>
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Contact</h4>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
-                <MailIcon /><span style={{ fontSize: 14 }}>support@mycafile.com</span>
+                <MailIcon /><span style={{ fontSize: 14 }}>support@mycafile.in</span>
               </div>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <PhoneIcon /><span style={{ fontSize: 14 }}>+91 9537994439</span>
