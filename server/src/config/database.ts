@@ -11,13 +11,14 @@ export const connectDB = async (): Promise<void> => {
 
         await mongoose.connect(mongoUri, {
             maxPoolSize: 10,           // Allow up to 10 concurrent DB connections
-            serverSelectionTimeoutMS: 5000, // Fail fast if DB is unreachable
+            serverSelectionTimeoutMS: 30000, // Wait longer for primary selection (common for Atlas/slow networks)
             socketTimeoutMS: 45000,    // Close sockets after 45s of inactivity
         });
 
         console.log('✅ MongoDB connected successfully');
     } catch (error) {
         console.error('❌ MongoDB connection error:', error);
+        console.error('TIP: Check if your current IP Address is whitelisted in MongoDB Atlas.');
         process.exit(1);
     }
 };

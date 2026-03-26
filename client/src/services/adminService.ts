@@ -48,6 +48,9 @@ export const adminService = {
         });
         return response.data;
     },
+    deleteProfileImage: async (clientId: string): Promise<void> => {
+        await api.delete(`/admin/clients/${clientId}/profile-image`);
+    },
 
     getClientFiles: async (clientId: string, year?: string, category?: string): Promise<FileData[]> => {
         const params = new URLSearchParams();

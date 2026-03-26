@@ -9,6 +9,7 @@ export interface ClientGroup {
     email: string;
     mobileNumber: string;
     gstin?: string;
+    firmId?: string;
 }
 
 export const clientGroupService = {
@@ -19,6 +20,16 @@ export const clientGroupService = {
 
     getGroups: async () => {
         const response = await api.get('/admin/client-groups');
+        return response.data;
+    },
+
+    deleteGroup: async (id: string) => {
+        const response = await api.delete(`/admin/client-groups/${id}`);
+        return response.data;
+    },
+
+    updateGroup: async (id: string, data: Partial<ClientGroup>) => {
+        const response = await api.patch(`/admin/client-groups/${id}`, data);
         return response.data;
     },
 };

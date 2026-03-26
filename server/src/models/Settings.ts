@@ -15,6 +15,15 @@ export interface ISettings extends Document {
         field6: string;
         field7: string;
     };
+    clientExtraFields?: {
+        field1: string;
+        field2: string;
+        field3: string;
+        field4: string;
+        field5: string;
+        field6: string;
+        field7: string;
+    };
     updatedAt: Date;
     firmId: mongoose.Types.ObjectId;
 }
@@ -33,6 +42,15 @@ const SettingsSchema = new Schema({
     phone: { type: String, default: '' },
     logoUrl: { type: String },
     employeeExtraFields: {
+        field1: { type: String, default: 'Field 1' },
+        field2: { type: String, default: 'Field 2' },
+        field3: { type: String, default: 'Field 3' },
+        field4: { type: String, default: 'Field 4' },
+        field5: { type: String, default: 'Field 5' },
+        field6: { type: String, default: 'Field 6' },
+        field7: { type: String, default: 'Field 7' }
+    },
+    clientExtraFields: {
         field1: { type: String, default: 'Field 1' },
         field2: { type: String, default: 'Field 2' },
         field3: { type: String, default: 'Field 3' },

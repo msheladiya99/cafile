@@ -584,6 +584,43 @@ router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STA
 });
 
 
+// Delete Profile Image for client
+router.delete('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const client = await Client.findOne({ _id: id, firmId: req.firmId });
+
+        if (!client) {
+            res.status(404).json({ message: 'Client not found' });
+            return;
+        }
+
+        if (client.profileImageUrl) {
+            // Attempt to delete from Drive if we can extract ID
+            try {
+                const driveService = getDriveService();
+                // Extract ID from https://drive.google.com/uc?export=view&id=ID
+                const url = new URL(client.profileImageUrl);
+                const fileId = url.searchParams.get('id');
+                if (fileId) {
+                    await driveService.deleteFile(fileId);
+                }
+            } catch (err) {
+                console.error('Failed to delete profile image from drive:', err);
+                // Continue anyway to clear DB
+            }
+        }
+
+        client.profileImageUrl = undefined;
+        await client.save();
+
+        res.json({ message: 'Profile image removed successfully' });
+    } catch (error) {
+        console.error('Remove profile image error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Upload file for client
 router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
@@ -1117,6 +1154,62 @@ router.get('/client-groups', authenticate, async (req: AuthRequest, res: Respons
     }
 });
 
+// Delete Client Group (Admin and Manager only)
+router.delete('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const firmId = req.firmId || req.user?.firmId;
+
+        const group = await ClientGroup.findOne({ _id: id, firmId });
+        if (!group) {
+            res.status(404).json({ message: 'Group not found' });
+            return;
+        }
+
+        // Check if group is being used by any clients
+        const clientCount = await Client.countDocuments({ groupName: id });
+        if (clientCount > 0) {
+            res.status(400).json({ message: `Cannot delete group: ${clientCount} clients belong to this group.` });
+            return;
+        }
+
+        await ClientGroup.findOneAndDelete({ _id: id, firmId });
+        res.json({ message: 'Group deleted successfully' });
+    } catch (error) {
+        console.error('Delete client group error:', error);
+        res.status(500).json({ message: 'Server error during client group deletion' });
+    }
+});
+
+// Update Client Group (Admin, Manager, and Staff)
+router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const firmId = req.firmId || req.user?.firmId;
+
+        // Prevent updating firmId
+        delete updates.firmId;
+        delete updates._id;
+
+        const group = await ClientGroup.findOneAndUpdate(
+            { _id: id, firmId },
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+
+        if (!group) {
+            res.status(404).json({ message: 'Group not found' });
+            return;
+        }
+
+        res.json(group);
+    } catch (error) {
+        console.error('Update client group error:', error);
+        res.status(500).json({ message: 'Server error during client group update' });
+    }
+});
+
 router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, status } = req.body;
@@ -1152,7 +1245,43 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
     }
 });
 
-router.get('/it-status', async (req: AuthRequest, res: Response) => {
+// Update IT Status
+router.patch('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, description, status } = req.body;
+        const firmId = req.firmId || req.user?.firmId;
+
+        const item = await ITStatus.findOneAndUpdate(
+            { _id: id, firmId },
+            { $set: { name, description, status } },
+            { new: true }
+        );
+
+        if (!item) return res.status(404).json({ message: 'IT Status not found' });
+        res.json(item);
+    } catch (error) {
+        console.error('Update IT Status error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete IT Status
+router.delete('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const firmId = req.firmId || req.user?.firmId;
+
+        const item = await ITStatus.findOneAndDelete({ _id: id, firmId });
+        if (!item) return res.status(404).json({ message: 'IT Status not found' });
+        res.json({ message: 'IT Status deleted successfully' });
+    } catch (error) {
+        console.error('Delete IT Status error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/it-status', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
@@ -1208,7 +1337,43 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
     }
 });
 
-router.get('/sub-master', async (req: AuthRequest, res: Response) => {
+// Update Sub Master
+router.patch('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, description, status } = req.body;
+        const firmId = req.firmId || req.user?.firmId;
+
+        const item = await SubMaster.findOneAndUpdate(
+            { _id: id, firmId },
+            { $set: { name, description, status } },
+            { new: true }
+        );
+
+        if (!item) return res.status(404).json({ message: 'Sub Master not found' });
+        res.json(item);
+    } catch (error) {
+        console.error('Update Sub Master error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete Sub Master
+router.delete('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const firmId = req.firmId || req.user?.firmId;
+
+        const item = await SubMaster.findOneAndDelete({ _id: id, firmId });
+        if (!item) return res.status(404).json({ message: 'Sub Master not found' });
+        res.json({ message: 'Sub Master deleted successfully' });
+    } catch (error) {
+        console.error('Delete Sub Master error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/sub-master', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });

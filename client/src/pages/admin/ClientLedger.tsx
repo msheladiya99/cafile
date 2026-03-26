@@ -43,6 +43,8 @@ import { useQuery } from '@tanstack/react-query';
 import { billingService } from '../../services/billingService';
 import type { Client, User } from '../../types';
 import { adminService } from '../../services/adminService';
+import { clientGroupService, type ClientGroup } from '../../services/clientGroupService';
+import firmService, { type IMultiFirmData } from '../../services/firmService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../components/common/UIComponents';
 
 interface ClientLedgerRecord {
@@ -86,8 +88,20 @@ export const ClientLedger: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
     const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
     const [selectedStaff, setSelectedStaff] = useState<string>('');
+    const [selectedGroup, setSelectedGroup] = useState<string>('');
+    const [selectedFirm, setSelectedFirm] = useState<string>('');
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+    const [selectedMonth, setSelectedMonth] = useState<string>('');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+
+    const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
+    const months = [
+        { value: '1', label: 'January' }, { value: '2', label: 'February' }, { value: '3', label: 'March' },
+        { value: '4', label: 'April' }, { value: '5', label: 'May' }, { value: '6', label: 'June' },
+        { value: '7', label: 'July' }, { value: '8', label: 'August' }, { value: '9', label: 'September' },
+        { value: '10', label: 'October' }, { value: '11', label: 'November' }, { value: '12', label: 'December' }
+    ];
 
     // Fetch clients
     const { data: clients = [] } = useQuery<Client[]>({
@@ -101,14 +115,30 @@ export const ClientLedger: React.FC = () => {
         queryFn: adminService.getStaffUsers,
     });
 
+    // Fetch groups
+    const { data: groups = [] } = useQuery<ClientGroup[]>({
+        queryKey: ['clientGroups'],
+        queryFn: clientGroupService.getGroups,
+    });
+
+    // Fetch firm brands
+    const { data: firms = [] } = useQuery<IMultiFirmData[]>({
+        queryKey: ['multiFirms'],
+        queryFn: firmService.getMultiFirms,
+    });
+
     // Fetch client ledger
     const { data: ledgerData, isLoading, error } = useQuery({
-        queryKey: ['clientLedger', selectedClient, selectedStaff, startDate, endDate],
+        queryKey: ['clientLedger', selectedClient, selectedStaff, startDate, endDate, selectedGroup, selectedFirm, selectedYear, selectedMonth],
         queryFn: () => billingService.getClientLedger({
             clientId: selectedClient || undefined,
             staffId: selectedStaff || undefined,
             startDate: startDate || undefined,
             endDate: endDate || undefined,
+            groupId: selectedGroup || undefined,
+            firmId: selectedFirm || undefined,
+            year: selectedYear || undefined,
+            month: selectedMonth || undefined,
         }),
     });
 
@@ -205,10 +235,72 @@ export const ClientLedger: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
+                            <FilterRow label="Group Name" inputId="group-select">
+                                <Select
+                                    id="group-select"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={selectedGroup}
+                                    onChange={(e) => setSelectedGroup(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: selectedGroup ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Group Name' }}
+                                >
+                                    <MenuItem value="">Choose a Group...</MenuItem>
+                                    {groups.map(group => (
+                                        <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FilterRow>
+                            <FilterRow label="Firm Name" inputId="firm-select">
+                                <Select
+                                    id="firm-select"
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={selectedFirm}
+                                    onChange={(e) => setSelectedFirm(e.target.value)}
+                                    sx={{ borderRadius: 1.5, color: selectedFirm ? 'inherit' : 'text.secondary' }}
+                                    inputProps={{ 'aria-label': 'Firm Name' }}
+                                >
+                                    <MenuItem value="">Choose a Firm...</MenuItem>
+                                    {firms.map(firm => (
+                                        <MenuItem key={firm._id} value={firm._id}>{firm.firmName}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FilterRow>
                         </Box>
 
                         {/* Right Column */}
                         <Box sx={{ flex: 1 }}>
+                            <FilterRow label="Year / Month">
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(e.target.value)}
+                                        sx={{ borderRadius: 1.5 }}
+                                    >
+                                        {years.map(year => (
+                                            <MenuItem key={year} value={year}>{year}</MenuItem>
+                                        ))}
+                                    </Select>
+                                    <Select
+                                        fullWidth
+                                        size="small"
+                                        displayEmpty
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(e.target.value)}
+                                        sx={{ borderRadius: 1.5, color: selectedMonth ? 'inherit' : 'text.secondary' }}
+                                    >
+                                        <MenuItem value="">Full Year</MenuItem>
+                                        {months.map(month => (
+                                            <MenuItem key={month.value} value={month.value}>{month.label}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            </FilterRow>
                             <FilterRow label="Period">
                                 <Box sx={{ display: 'flex', gap: 2 }}>
                                     <TextField
@@ -240,6 +332,10 @@ export const ClientLedger: React.FC = () => {
                                     onClick={() => {
                                         setSelectedStaff('');
                                         setSelectedClient('');
+                                        setSelectedGroup('');
+                                        setSelectedFirm('');
+                                        setSelectedYear(new Date().getFullYear().toString());
+                                        setSelectedMonth('');
                                         setStartDate('');
                                         setEndDate('');
                                     }}

@@ -14,10 +14,18 @@ import {
     CircularProgress,
     Snackbar,
     Alert,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
-    FormatListBulleted as FormatListBulletedIcon
+    FormatListBulleted as FormatListBulletedIcon,
+    Delete as DeleteIcon,
+    Edit as EditIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
@@ -36,6 +44,9 @@ export const AddGroupList: React.FC = () => {
         gstin: ''
     });
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
         message: '',
@@ -45,6 +56,14 @@ export const AddGroupList: React.FC = () => {
     const showSnackbar = (message: string, severity: 'success' | 'info' | 'error' = 'success') => {
         setSnackbar({ open: true, message, severity });
     };
+
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        groupId: '',
+        groupName: ''
+    });
+
+    const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
     const queryClient = useQueryClient();
 
@@ -66,6 +85,33 @@ export const AddGroupList: React.FC = () => {
         }
     });
 
+    const updateGroupMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Partial<ClientGroup> }) => clientGroupService.updateGroup(id, data),
+        onSuccess: () => {
+            showSnackbar('Group updated successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['clientGroups'] });
+            handleCancel();
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+            showSnackbar(error.response?.data?.message || 'Failed to update group', 'error');
+        }
+    });
+
+    const deleteGroupMutation = useMutation({
+        mutationFn: clientGroupService.deleteGroup,
+        onSuccess: () => {
+            showSnackbar('Group deleted successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['clientGroups'] });
+            closeConfirm();
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+            showSnackbar(error.response?.data?.message || 'Failed to delete group', 'error');
+            closeConfirm();
+        }
+    });
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -80,7 +126,26 @@ export const AddGroupList: React.FC = () => {
             showSnackbar('Please fill all required fields', 'error');
             return;
         }
-        createGroupMutation.mutate(formData);
+        
+        if (isEditing && editingId) {
+            updateGroupMutation.mutate({ id: editingId, data: formData });
+        } else {
+            createGroupMutation.mutate(formData);
+        }
+    };
+
+    const handleEditClick = (group: ClientGroup) => {
+        setFormData({
+            groupName: group.groupName,
+            address: group.address || '',
+            description: group.description || '',
+            status: group.status,
+            email: group.email,
+            mobileNumber: group.mobileNumber,
+            gstin: group.gstin || ''
+        });
+        setIsEditing(true);
+        setEditingId(group._id || null);
     };
 
     const handleCancel = () => {
@@ -93,6 +158,22 @@ export const AddGroupList: React.FC = () => {
             mobileNumber: '',
             gstin: ''
         });
+        setIsEditing(false);
+        setEditingId(null);
+    };
+
+    const handleDeleteClick = (id: string, name: string) => {
+        setConfirmDialog({
+            open: true,
+            groupId: id,
+            groupName: name
+        });
+    };
+
+    const handleConfirmDelete = () => {
+        if (confirmDialog.groupId) {
+            deleteGroupMutation.mutate(confirmDialog.groupId);
+        }
     };
 
     return (
@@ -102,11 +183,11 @@ export const AddGroupList: React.FC = () => {
                 title="Client Groups"
                 actions={
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button variant="contained" size="small" onClick={handleSave} disabled={createGroupMutation.isPending} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
-                            {createGroupMutation.isPending ? 'Saving...' : 'Save Group'}
+                        <Button variant="contained" size="small" onClick={handleSave} disabled={createGroupMutation.isPending || updateGroupMutation.isPending} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                            {createGroupMutation.isPending || updateGroupMutation.isPending ? 'Saving...' : (isEditing ? 'Update Group' : 'Save Group')}
                         </Button>
                         <Button variant="contained" size="small" onClick={handleCancel} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
-                            Clear Form
+                            {isEditing ? 'Cancel Edit' : 'Clear Form'}
                         </Button>
                     </Box>
                 }
@@ -119,7 +200,7 @@ export const AddGroupList: React.FC = () => {
 
                     {/* Add Group Form */}
                     <Box sx={{ flex: 1 }}>
-                        <Section title="Add New Group" icon={<AddCircleOutlineIcon />}>
+                        <Section title={isEditing ? "Edit Group" : "Add New Group"} icon={<AddCircleOutlineIcon />}>
                             <FormRow label="Group Name" required>
                                 <TextField
                                     name="groupName"
@@ -210,6 +291,7 @@ export const AddGroupList: React.FC = () => {
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>Email</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Mobile</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -237,6 +319,25 @@ export const AddGroupList: React.FC = () => {
                                                             </Typography>
                                                         </Box>
                                                     </TableCell>
+                                                    <TableCell align="right">
+                                                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                sx={{ color: 'primary.main' }}
+                                                                onClick={() => handleEditClick(g)}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                color="error"
+                                                                onClick={() => handleDeleteClick(g._id!, g.groupName)}
+                                                                disabled={deleteGroupMutation.isPending}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                    </TableCell>
                                                 </TableRow>
                                             ))
                                         )}
@@ -259,6 +360,27 @@ export const AddGroupList: React.FC = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            <Dialog
+                open={confirmDialog.open}
+                onClose={closeConfirm}
+                PaperProps={{
+                    sx: { borderRadius: 2, minWidth: { xs: 300, sm: 400 } }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Group</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete the group "{confirmDialog.groupName}"? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={closeConfirm} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ fontWeight: 600, boxShadow: 'none' }} disabled={deleteGroupMutation.isPending}>
+                        {deleteGroupMutation.isPending ? 'Deleting...' : 'Confirm'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </PageContainer>
     );
 };

@@ -326,25 +326,51 @@ router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Re
 // Get client-wise ledger (Complete financial history)
 router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
-        const { clientId, startDate, endDate, staffId } = req.query;
+        const { clientId, startDate, endDate, staffId, groupId, year, month } = req.query;
 
         // Build date filter
         const dateFilter: any = {};
         if (startDate) {
-            dateFilter.createdAt = { $gte: new Date(startDate as string) };
+            dateFilter.issueDate = { $gte: new Date(startDate as string) };
         }
         if (endDate) {
-            dateFilter.createdAt = { ...dateFilter.createdAt, $lte: new Date(endDate as string) };
+            const end = new Date(endDate as string);
+            end.setHours(23, 59, 59, 999);
+            dateFilter.issueDate = { ...dateFilter.issueDate, $lte: end };
+        }
+        
+        // Year and Month filters for issueDate
+        if (year || month) {
+            const yearVal = year ? parseInt(year as string) : new Date().getFullYear();
+            if (month) {
+                const monthVal = parseInt(month as string) - 1; // 0-indexed
+                const start = new Date(yearVal, monthVal, 1);
+                const end = new Date(yearVal, monthVal + 1, 0, 23, 59, 59, 999);
+                dateFilter.issueDate = { 
+                    $gte: start, 
+                    $lte: end 
+                };
+            } else {
+                const start = new Date(yearVal, 0, 1);
+                const end = new Date(yearVal, 11, 31, 23, 59, 59, 999);
+                dateFilter.issueDate = { 
+                    $gte: start, 
+                    $lte: end 
+                };
+            }
         }
 
         // Get all clients or specific client
-        const clientFilter: any = {};
+        const clientFilter: any = { firmId: (req as any).firmId };
         if (clientId) {
             clientFilter._id = clientId;
         }
+        if (groupId) {
+            clientFilter.groupName = groupId;
+        }
 
         const Client = mongoose.model('Client');
-        const clients = await Client.find({ ...clientFilter, firmId: (req as any).firmId }).select('name email phone address').lean();
+        const clients = await Client.find(clientFilter).select('name email phone address').lean();
 
         // Get ledger for each client
         let clientLedgers = await Promise.all(
@@ -357,6 +383,11 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                 // Filter by staff if provided
                 if (staffId) {
                     invoiceFilter.createdBy = staffId;
+                }
+                
+                // Filter by specific firm brand if provided
+                if (req.query.firmId) {
+                    invoiceFilter.multiFirmId = req.query.firmId;
                 }
 
                 const invoices = await Invoice.find(invoiceFilter)

@@ -69,14 +69,20 @@ export const ClientContactDetail: React.FC = () => {
             // Search Text Filter
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
-                const primaryMatch = filterSearchType === 'name' && client.name.toLowerCase().includes(searchLower);
-
-                // Also check if any of the multiple contacts match the name
-                const contactMatch = client.multipleContacts?.some(contact => {
-                    return filterSearchType === 'name' && contact.name.toLowerCase().includes(searchLower);
-                });
-
-                if (!primaryMatch && !contactMatch) return false;
+                
+                if (filterSearchType === 'name') {
+                    const primaryMatch = client.name.toLowerCase().includes(searchLower);
+                    const contactMatch = client.multipleContacts?.some(contact => 
+                        contact.name.toLowerCase().includes(searchLower)
+                    );
+                    if (!primaryMatch && !contactMatch) return false;
+                } else if (filterSearchType === 'mobile') {
+                    const primaryMatch = client.phone?.includes(filterSearchText);
+                    const contactMatch = client.multipleContacts?.some(contact => 
+                        contact.mobile?.includes(filterSearchText)
+                    );
+                    if (!primaryMatch && !contactMatch) return false;
+                }
             }
 
             return true;
@@ -164,6 +170,7 @@ export const ClientContactDetail: React.FC = () => {
                                         inputProps={{ 'aria-label': 'Search Category' }}
                                     >
                                         <MenuItem value="name">By Contact Name</MenuItem>
+                                        <MenuItem value="mobile">By Contact Number</MenuItem>
                                     </Select>
                                     <TextField
                                         id="filter-search-text"

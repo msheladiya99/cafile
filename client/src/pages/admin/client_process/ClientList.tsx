@@ -268,9 +268,6 @@ export const ClientList: React.FC = () => {
                         <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
                             List
                         </Button>
-                        <Button variant="contained" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
-                            Field Master
-                        </Button>
                     </Box>
                 }
             />

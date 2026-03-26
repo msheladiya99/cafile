@@ -27,6 +27,7 @@ import {
     ContactMail as ContactMailIcon,
     AddBox as AddBoxIcon,
     PhotoCamera as PhotoCameraIcon,
+    Edit as EditIcon,
 } from '@mui/icons-material';
 import { AxiosError } from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
@@ -123,25 +124,44 @@ interface MasterModalProps {
     onClose: () => void;
     title: string;
     itemName: string;
-    onSave: (data: { name: string; description: string; status: boolean }) => void;
+    onSave: (data: { name: string; description: string; status: boolean }, id?: string) => void;
+    onDelete: (id: string) => void;
     isSaving: boolean;
-    dataList: { _id?: string; name: string; status?: boolean }[];
+    dataList: any[];
     showSnackbar: (message: string, severity?: 'success' | 'error') => void;
 }
 
-const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataList, showSnackbar }: MasterModalProps) => {
+const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSaving, dataList, showSnackbar }: MasterModalProps) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState(true);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     const handleSave = () => {
         if (!name.trim()) {
             showSnackbar('Name is required', 'error');
             return;
         }
-        onSave({ name, description, status });
+        onSave({ name, description, status }, editingId || undefined);
         setName('');
         setDescription('');
         setStatus(true);
+        setEditingId(null);
+    };
+
+    const handleEdit = (item: { _id?: string; name: string; description?: string; status?: boolean }) => {
+        setName(item.name);
+        setDescription(item.description || '');
+        setStatus(item.status !== false);
+        setEditingId(item._id || null);
+    };
+
+    const handleCancel = () => {
+        setName('');
+        setDescription('');
+        setStatus(true);
+        setEditingId(null);
+        onClose();
     };
 
     return (
@@ -177,9 +197,9 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataLis
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                         <Button variant="contained" onClick={handleSave} disabled={isSaving} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {isSaving ? 'Saving...' : editingId ? 'Update' : 'Save'}
                         </Button>
-                        <Button variant="contained" onClick={onClose} disabled={isSaving} sx={{ bgcolor: '#fb7165', '&:hover': { bgcolor: '#eb6155' }, px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, boxShadow: 'none', fontWeight: 600 }}>
+                        <Button variant="contained" onClick={handleCancel} disabled={isSaving} sx={{ bgcolor: '#fb7165', '&:hover': { bgcolor: '#eb6155' }, px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, boxShadow: 'none', fontWeight: 600 }}>
                             Cancel
                         </Button>
                     </Box>
@@ -197,9 +217,19 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, isSaving, dataLis
                     ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: '200px', overflowY: 'auto' }}>
                             {dataList.map(item => (
-                                <Box key={item._id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" fontWeight="500">{item.name}</Typography>
-                                    <Typography variant="caption" sx={{ color: item.status ? 'success.main' : 'error.main', fontWeight: 600 }}>{item.status ? 'Active' : 'Inactive'}</Typography>
+                                <Box key={item._id} sx={{ p: 1.2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box>
+                                        <Typography variant="body2" fontWeight="600" color="text.primary">{item.name}</Typography>
+                                        <Typography variant="caption" sx={{ color: item.status ? 'success.main' : 'error.main', fontWeight: 600 }}>{item.status ? 'Active' : 'Inactive'}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                        <IconButton size="small" onClick={() => handleEdit(item)} sx={{ color: 'primary.main', bgcolor: 'rgba(102, 126, 234, 0.1)', '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' } }}>
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton size="small" onClick={() => item._id && onDelete(item._id)} sx={{ color: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.1)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 </Box>
                             ))}
                         </Box>
@@ -225,6 +255,8 @@ export const ClientMaster: React.FC = () => {
     const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
     const [bulkImportOpen, setBulkImportOpen] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
+    const [shouldRemoveProfileImage, setShouldRemoveProfileImage] = useState(false);
+    const [pendingLegalFiles, setPendingLegalFiles] = useState<{ file: File, fileName: string }[]>([]);
 
     // Form State
     const [formData, setFormData] = useState<CreateClientData>({
@@ -280,6 +312,45 @@ export const ClientMaster: React.FC = () => {
         status: true
     });
 
+    const [isEditingContact, setIsEditingContact] = useState(false);
+    const [editingContactIndex, setEditingContactIndex] = useState<number | null>(null);
+
+    const handleCancelContactForm = () => {
+        setContactForm({
+            name: '',
+            designation: '',
+            mobile: '',
+            email: '',
+            description: '',
+            status: true
+        });
+        setIsEditingContact(false);
+        setEditingContactIndex(null);
+    };
+
+    const handleEditContact = (index: number) => {
+        const contact = formData.multipleContacts?.[index];
+        if (contact) {
+            setContactForm({ ...contact });
+            setIsEditingContact(true);
+            setEditingContactIndex(index);
+        }
+    };
+
+    const handleDeleteContact = (index: number) => {
+        if (window.confirm('Are you sure you want to remove this contact?')) {
+            setFormData(prev => ({
+                ...prev,
+                multipleContacts: prev.multipleContacts?.filter((_, i) => i !== index)
+            }));
+            showSnackbar('Contact removed. Client must be saved to apply changes.', 'info');
+            
+            if (isEditingContact && editingContactIndex === index) {
+                handleCancelContactForm();
+            }
+        }
+    };
+
     const handleContactFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setContactForm(prev => ({ ...prev, [name]: value }));
@@ -290,20 +361,25 @@ export const ClientMaster: React.FC = () => {
             showSnackbar('Name, Designation, Mobile and Email are required', 'error');
             return;
         }
-        setFormData(prev => ({
-            ...prev,
-            multipleContacts: [...(prev.multipleContacts || []), contactForm]
-        }));
-        setContactForm({
-            name: '',
-            designation: '',
-            mobile: '',
-            email: '',
-            description: '',
-            status: true
-        });
-        showSnackbar('Contact added temporarily. Client must be saved.', 'info');
+
+        if (isEditingContact && editingContactIndex !== null) {
+            // Update existing contact
+            const updatedContacts = [...(formData.multipleContacts || [])];
+            updatedContacts[editingContactIndex] = contactForm;
+            setFormData(prev => ({ ...prev, multipleContacts: updatedContacts }));
+            showSnackbar('Contact updated temporarily. Client must be saved.', 'info');
+        } else {
+            // Add new contact
+            setFormData(prev => ({
+                ...prev,
+                multipleContacts: [...(prev.multipleContacts || []), contactForm]
+            }));
+            showSnackbar('Contact added temporarily. Client must be saved.', 'info');
+        }
+
+        handleCancelContactForm();
     };
+
 
     // Edit Client Data Fetching
     const { data: clientToEdit } = useQuery({
@@ -357,19 +433,56 @@ export const ClientMaster: React.FC = () => {
                 multipleContacts: clientToEdit.multipleContacts || [],
                 legalDocuments: clientToEdit.legalDocuments || [],
             });
+        } else if (!id) {
+            // Reset to blank form when NO id is present
+            setFormData({
+                name: '',
+                clientCode: '',
+                groupName: '',
+                itStatus: '',
+                masterType: '',
+                subMaster: '',
+                birthDate: '',
+                address: '',
+                country: '',
+                state: '',
+                city: '',
+                postalCode: '',
+                phone: '',
+                email: '',
+                currency: '',
+                panNumber: '',
+                gstNumber: '',
+                aadharNumber: '',
+                incorporationDateFrom: '',
+                incorporationDateTo: '',
+                licenceNo: '',
+                licenceAuthority: '',
+                trnNo: '',
+                description: '',
+                supportEmployee: '',
+                status: true,
+                financialYear: 'april-march',
+                altAddress: '',
+                altPhoneM: '',
+                altPhoneL: '',
+                altFax: '',
+                extraField1: '',
+                extraField2: '',
+                extraField3: '',
+                extraField4: '',
+                extraField5: '',
+                extraField6: '',
+                extraField7: '',
+                multipleContacts: [],
+                legalDocuments: [],
+                profileImageUrl: ''
+            });
+            setProfileImage(null);
+            setShouldRemoveProfileImage(false);
         }
-    }, [clientToEdit]);
+    }, [clientToEdit, id]);
 
-    const handleCancelContactForm = () => {
-        setContactForm({
-            name: '',
-            designation: '',
-            mobile: '',
-            email: '',
-            description: '',
-            status: true
-        });
-    };
 
     // Legal Document Form State
     const [legalForm, setLegalForm] = useState<{
@@ -381,8 +494,6 @@ export const ClientMaster: React.FC = () => {
         description: '',
         file: null
     });
-
-    const [pendingLegalFiles, setPendingLegalFiles] = useState<{ fileName: string; file: File }[]>([]);
 
     const handleLegalFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -511,28 +622,53 @@ export const ClientMaster: React.FC = () => {
         queryFn: adminService.getStaffUsers
     });
 
-    // Mutations
+    // Mutations for IT Status
     const itStatusMutation = useMutation({
-        mutationFn: masterService.createITStatus,
-        onSuccess: () => {
-            showSnackbar('IT Status created successfully', 'success');
+        mutationFn: ({ data, id }: { data: ITStatus; id?: string }) => 
+            id ? masterService.updateITStatus(id, data) : masterService.createITStatus(data),
+        onSuccess: (_, variables) => {
+            showSnackbar(`IT Status ${variables.id ? 'updated' : 'created'} successfully`, 'success');
             queryClient.invalidateQueries({ queryKey: ['itStatus'] });
             setItStatusModalOpen(false);
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to create IT Status', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to save IT Status', 'error');
         }
     });
 
-    const subMasterMutation = useMutation({
-        mutationFn: masterService.createSubMaster,
+    const deleteItStatusMutation = useMutation({
+        mutationFn: masterService.deleteITStatus,
         onSuccess: () => {
-            showSnackbar('Sub Master created successfully', 'success');
+            showSnackbar('IT Status deleted successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['itStatus'] });
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            showSnackbar(err.response?.data?.message || 'Failed to delete IT Status', 'error');
+        }
+    });
+
+    // Mutations for Sub Master
+    const subMasterMutation = useMutation({
+        mutationFn: ({ data, id }: { data: SubMaster; id?: string }) => 
+            id ? masterService.updateSubMaster(id, data) : masterService.createSubMaster(data),
+        onSuccess: (_, variables) => {
+            showSnackbar(`Sub Master ${variables.id ? 'updated' : 'created'} successfully`, 'success');
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
             setSubMasterModalOpen(false);
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to create Sub Master', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to save Sub Master', 'error');
+        }
+    });
+
+    const deleteSubMasterMutation = useMutation({
+        mutationFn: masterService.deleteSubMaster,
+        onSuccess: () => {
+            showSnackbar('Sub Master deleted successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['subMaster'] });
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            showSnackbar(err.response?.data?.message || 'Failed to delete Sub Master', 'error');
         }
     });
 
@@ -575,6 +711,10 @@ export const ClientMaster: React.FC = () => {
         mutationFn: (data: Partial<CreateClientData>) => adminService.updateClient(id!, data),
         onSuccess: async () => {
             try {
+                if (shouldRemoveProfileImage && id) {
+                    await adminService.deleteProfileImage(id);
+                }
+
                 if (profileImage && id) {
                     await adminService.uploadProfileImage(id, profileImage);
                 }
@@ -671,17 +811,13 @@ export const ClientMaster: React.FC = () => {
                             sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Add IT Status
                         </Button>
-                        <Button variant="contained" size="small" 
+                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')}
                             sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             Add New
                         </Button>
                         <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} 
                             sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
                             List
-                        </Button>
-                        <Button variant="contained" size="small" 
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
-                            Field Master
                         </Button>
                     </Box>
                 </Box>
@@ -952,27 +1088,51 @@ export const ClientMaster: React.FC = () => {
                         <Box sx={{ flex: 10 }}>
                             <Section title="Profile Image" icon={<ImageIcon />}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
-                                    <Box sx={{ width: 150, height: 150, border: '2px dashed #ccc', borderRadius: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
+                                    <Box sx={{ width: { xs: '100%', sm: 130 }, height: 110, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
                                         {profileImage ? (
-                                            <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                         ) : formData?.profileImageUrl && clientToEdit?._id ? (
-                                            <img src={`${API_URL}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                            <img src={`${API_URL}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
                                         ) : (
-                                            <PhotoCameraIcon sx={{ fontSize: 40, color: '#ccc' }} />
+                                            <PhotoCameraIcon sx={{ fontSize: 32, color: '#ccc' }} />
+                                        )}
+                                        
+                                        {(profileImage || formData.profileImageUrl) && (
+                                            <IconButton 
+                                                size="small" 
+                                                onClick={() => {
+                                                    setProfileImage(null);
+                                                    setFormData(prev => ({ ...prev, profileImageUrl: '' }));
+                                                    setShouldRemoveProfileImage(true);
+                                                }}
+                                                sx={{ 
+                                                    position: 'absolute', 
+                                                    top: 2, 
+                                                    right: 2, 
+                                                    bgcolor: 'rgba(255, 255, 255, 0.7)', 
+                                                    padding: 0.5,
+                                                    '&:hover': { bgcolor: 'white' },
+                                                    zIndex: 2
+                                                }}
+                                                title="Remove Image"
+                                            >
+                                                <CloseIcon sx={{ fontSize: 16, color: '#d32f2f' }} />
+                                            </IconButton>
                                         )}
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%', maxWidth: 300 }}>
-                                        <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
+                                        <Button component="label" size="small"
+                                            sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, textTransform: 'none', px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap', fontWeight: 600 }}>
                                             Choose File
                                             <input type="file" hidden accept="image/jpeg, image/png" onChange={(e) => setProfileImage(e.target.files?.[0] || null)} />
                                         </Button>
-                                        <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {profileImage ? profileImage.name : (formData?.profileImageUrl ? 'Image already set' : 'No file chosen')}
+                                        <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {profileImage ? profileImage.name : formData.profileImageUrl ? 'Image already set' : 'No file chosen'}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, fontSize: '0.75rem' }}>
-                                        <strong style={{ marginRight: '4px' }}>NOTE!</strong> JPEG or PNG Image Format only
-                                    </Typography>
+                                    <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: 1, fontSize: '0.72rem', width: '100%' }}>
+                                        <strong>NOTE!</strong> JPEG or PNG Image Format only
+                                    </Box>
                                 </Box>
                             </Section>
 
@@ -1097,10 +1257,10 @@ export const ClientMaster: React.FC = () => {
 
                                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
                                     <Button variant="contained" onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
-                                        Save
+                                        {isEditingContact ? 'Update' : 'Save'}
                                     </Button>
                                     <Button variant="contained" onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
-                                        Cancel
+                                        {isEditingContact ? 'Cancel Edit' : 'Cancel'}
                                     </Button>
                                 </Box>
                             </Box>
@@ -1124,7 +1284,25 @@ export const ClientMaster: React.FC = () => {
                                                     <Typography variant="body2" color="text.secondary">{contact.mobile} | {contact.email}</Typography>
                                                     {contact.description && <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>{contact.description}</Typography>}
                                                 </Box>
-                                                <Typography variant="caption" sx={{ bgcolor: contact.status ? '#e8f5e9' : '#ffebee', color: contact.status ? 'success.main' : 'error.main', px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600 }}>{contact.status ? 'Active' : 'Inactive'}</Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                    <Typography variant="caption" sx={{ bgcolor: contact.status ? '#e8f5e9' : '#ffebee', color: contact.status ? 'success.main' : 'error.main', px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600 }}>{contact.status ? 'Active' : 'Inactive'}</Typography>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'primary.main', bgcolor: 'rgba(25, 118, 210, 0.04)', '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' } }}
+                                                        onClick={() => handleEditContact(index)}
+                                                        title="Edit Contact"
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: 'error.main', bgcolor: 'rgba(211, 47, 47, 0.04)', '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' } }}
+                                                        onClick={() => handleDeleteContact(index)}
+                                                        title="Delete Contact"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
                                             </Box>
                                         ))}
                                     </Box>
@@ -1280,7 +1458,8 @@ export const ClientMaster: React.FC = () => {
                 onClose={() => setItStatusModalOpen(false)}
                 title="IT Status"
                 itemName="It Status"
-                onSave={(data) => itStatusMutation.mutate(data)}
+                onSave={(data, id) => itStatusMutation.mutate({ data, id })}
+                onDelete={(id) => deleteItStatusMutation.mutate(id)}
                 isSaving={itStatusMutation.isPending}
                 dataList={itStatuses}
                 showSnackbar={showSnackbar}
@@ -1290,7 +1469,8 @@ export const ClientMaster: React.FC = () => {
                 onClose={() => setSubMasterModalOpen(false)}
                 title="Sub Master"
                 itemName="Sub Master"
-                onSave={(data) => subMasterMutation.mutate(data)}
+                onSave={(data, id) => subMasterMutation.mutate({ data, id })}
+                onDelete={(id) => deleteSubMasterMutation.mutate(id)}
                 isSaving={subMasterMutation.isPending}
                 dataList={subMasters}
                 showSnackbar={showSnackbar}

@@ -137,6 +137,10 @@ export const billingService = {
         staffId?: string;
         startDate?: string;
         endDate?: string;
+        groupId?: string;
+        firmId?: string;
+        year?: string;
+        month?: string;
     }): Promise<any> => {
         const params = new URLSearchParams();
         if (filters) {

@@ -224,6 +224,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                     driveFileId: driveFile.fileId,
                     driveWebViewLink: driveFile.webViewLink,
                     storedIn: 'drive',
+                    firmId: req.firmId
                 });
 
                 await fileRecord.save();
@@ -437,6 +438,7 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
                 driveFileId: driveFile.fileId,
                 driveWebViewLink: driveFile.webViewLink,
                 storedIn: 'drive',
+                firmId: req.firmId
             });
 
             await fileRecord.save();
