@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 // ─── Icons (inline SVGs) ────────────────────────────────────────────────────
 const FileIcon = () => (
@@ -186,6 +187,16 @@ export const LandingPage = () => {
 
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", color: '#111827', background: '#fff', overflowX: 'hidden' }}>
+      <Helmet>
+        <title>My CA File - CA Office Management Software for Chartered Accountants</title>
+        <meta name="description" content="My CA File is the leading CA office management software in India. Manage clients, documents, employee tasks, and GST/ITR compliance in one secure platform." />
+        <link rel="canonical" href="https://mycafile.in/" />
+        <meta property="og:url" content="https://mycafile.in/" />
+        <meta property="og:title" content="My CA File - CA Office Management Software for Chartered Accountants" />
+        <meta property="og:description" content="Streamline your CA practice. Manage clients, staff, and compliance tasks efficiently with My CA File." />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }

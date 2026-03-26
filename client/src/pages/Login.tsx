@@ -157,23 +157,10 @@ export const Login: React.FC = () => {
             }
         }}>
             <Helmet>
-                <title>Secure Login | MyCAFile - Chartered Accountant Office Management Portal</title>
-                <link rel="canonical" href="https://www.mycafile.in/login" />
-                <meta name="description" content="Access your secure MyCAFile workspace. Comprehensive practice management, taxation, and client portal for Chartered Accountants and tax professionals in India." />
-                <meta name="keywords" content="CA Office Portal, MyCAFile Login, Practice Management for CAs, Chartered Accountant Software, Tax Professional Login, Secure Client Portal" />
-                
-                {/* Open Graph / Facebook */}
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://www.mycafile.in/login" />
-                <meta property="og:title" content="Secure Login | MyCAFile - CA Office Portal" />
-                <meta property="og:description" content="Secure access to your professional CA workspace. Manage clients, tasks, and reminders efficiently." />
-                <meta property="og:image" content="https://www.mycafile.in/og-image.jpg" />
-
-                {/* Twitter */}
-                <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:url" content="https://www.mycafile.in/login" />
-                <meta property="twitter:title" content="Secure Login | MyCAFile" />
-                <meta property="twitter:description" content="Secure access to your professional CA workspace." />
+                <title>Login | My CA File - CA Office Management Portal</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://mycafile.in/login" />
+                <meta name="description" content="Login to your My CA File workspace. Secure access for CA firms, staff, and clients." />
             </Helmet>
 
             {/* Blurred Background Shapes with Animation - Light Mode Pastels */}
