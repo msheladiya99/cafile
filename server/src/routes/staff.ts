@@ -46,18 +46,18 @@ router.post('/upload-document', upload.single('file'), async (req: AuthRequest, 
 
         const driveService = getTenantDriveService(rootFolderId);
 
-        // Create/ensure folder: [FirmRoot] > Employees > EmployeeName
+        // Create/ensure folder: [FirmRoot] > Employees > EmployeeName > Documents
         console.log('Ensuring folder structure: [FirmRoot] > Employees >', employeeName);
-        const folderId = await driveService.createEmployeeFolderStructure(employeeName || 'Unknown Employee');
-        console.log('Employee Folder ID:', folderId);
+        const { documentFolderId } = await driveService.createEmployeeFolderStructure(employeeName || 'Unknown Employee');
+        console.log('Employee Document Folder ID:', documentFolderId);
 
-        // Upload file into employee folder
+        // Upload file into documents folder
         console.log('Uploading to Drive...');
         const driveFile = await driveService.uploadFile(
             uploadedFile.buffer,
             uploadedFile.originalname,
             uploadedFile.mimetype,
-            folderId
+            documentFolderId
         );
         console.log('Upload success. File ID:', driveFile.fileId, '| Link:', driveFile.webViewLink);
 
@@ -465,18 +465,18 @@ router.post('/:id/profile-image', upload.single('profileImage'), async (req: Aut
         const driveService = getTenantDriveService(rootFolderId);
         const employeeName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Employee';
 
-        // Create/ensure folder: [FirmRoot] > Employees > EmployeeName
+        // Create/ensure folders: [FirmRoot] > Employees > EmployeeName > [Documents, Profile]
         console.log('Ensuring folder: [FirmRoot] > Employees >', employeeName);
-        const folderId = await driveService.createEmployeeFolderStructure(employeeName);
+        const { profileFolderId } = await driveService.createEmployeeFolderStructure(employeeName);
 
-        // Upload profile image with a fixed name so re-uploads overwrite
+        // Upload profile image with a fixed name into profile folder
         const ext = uploadedFile.originalname.split('.').pop();
         const fileName = `profile_${user._id}.${ext}`;
         const driveFile = await driveService.uploadFile(
             uploadedFile.buffer,
             fileName,
             uploadedFile.mimetype,
-            folderId
+            profileFolderId
         );
         console.log('Profile image uploaded. File ID:', driveFile.fileId);
 

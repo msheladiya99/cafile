@@ -337,7 +337,7 @@ export class GoogleDriveService {
      * Create employee folder structure
      * Returns the employee's folder ID
      */
-    async createEmployeeFolderStructure(employeeName: string): Promise<string> {
+    async createEmployeeFolderStructure(employeeName: string): Promise<{ documentFolderId: string; profileFolderId: string }> {
         try {
             // Create or get 'Employees' root folder
             const employeesRootId = await this.ensureFolder('Employees');
@@ -345,7 +345,11 @@ export class GoogleDriveService {
             // Create or get subfolder for the employee
             const employeeFolderId = await this.ensureFolder(employeeName, employeesRootId);
 
-            return employeeFolderId;
+            // Create or get subfolders
+            const documentFolderId = await this.ensureFolder('Documents', employeeFolderId);
+            const profileFolderId = await this.ensureFolder('Profile', employeeFolderId);
+
+            return { documentFolderId, profileFolderId };
         } catch (error) {
             console.error('Error creating employee folder structure:', error);
             throw error;
