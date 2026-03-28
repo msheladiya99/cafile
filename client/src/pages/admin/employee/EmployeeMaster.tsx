@@ -552,9 +552,9 @@ export const EmployeeMaster: React.FC = () => {
             // New employee: create first, then upload profile image with returned id
             try {
                 const response = await staffService.createStaff(payload);
-                if (profileImageFile && response?.user?.id) {
+                if (profileImageFile && response?.user?._id) {
                     try {
-                        await staffService.uploadProfileImage(String((response.user as any)._id || response.user.id), profileImageFile);
+                        await staffService.uploadProfileImage(String(response.user._id), profileImageFile);
                     } catch (imgError) {
                         console.error('Profile image upload failed after creation:', imgError);
                     }

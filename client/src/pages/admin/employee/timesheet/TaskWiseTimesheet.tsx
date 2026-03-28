@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon, Clear as ClearIcon,
-    AccessTime as TimeIcon, Search as SearchIcon,
+    Search as SearchIcon,
     CheckCircle as CheckIcon, HourglassEmpty as PendingIcon,
     Business as BusinessIcon
 } from '@mui/icons-material';
@@ -27,7 +27,6 @@ const statusColor: Record<string, string> = {
     ON_HOLD: '#6b7280', REJECTED: '#dc2626', PENDING_FROM_CLIENT: '#f97316',
     PENDING_FROM_DEPARTMENT: '#e879f9'
 };
-const priorityColor: Record<string, string> = { LOW: '#22c55e', MEDIUM: '#f59e0b', HIGH: '#ef4444', URGENT: '#dc2626' };
 
 interface FilterState {
     groupName: string; clientName: string; task: string; frequency: string;

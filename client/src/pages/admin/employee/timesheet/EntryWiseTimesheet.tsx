@@ -11,7 +11,6 @@ import {
     AccessTime as TimeIcon,
     Search as SearchIcon,
     Timer as TimerIcon,
-    Person as PersonIcon,
     Business as BusinessIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';

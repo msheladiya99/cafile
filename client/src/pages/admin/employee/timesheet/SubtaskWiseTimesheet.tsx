@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon, Clear as ClearIcon,
-    AccessTime as TimeIcon, Search as SearchIcon,
+    Search as SearchIcon,
     ExpandMore as ExpandMoreIcon, AccountTree as SubtaskIcon,
     Business as BusinessIcon
 } from '@mui/icons-material';
