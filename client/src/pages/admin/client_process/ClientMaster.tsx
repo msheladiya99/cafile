@@ -393,10 +393,10 @@ export const ClientMaster: React.FC = () => {
             setFormData({
                 name: clientToEdit.name || '',
                 clientCode: clientToEdit.clientCode || '',
-                groupName: (typeof clientToEdit.groupName === 'object' ? clientToEdit.groupName._id : clientToEdit.groupName) || '',
-                itStatus: (typeof clientToEdit.itStatus === 'object' ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
+                groupName: (typeof clientToEdit.groupName === 'object' && clientToEdit.groupName !== null ? clientToEdit.groupName._id : clientToEdit.groupName) || '',
+                itStatus: (typeof clientToEdit.itStatus === 'object' && clientToEdit.itStatus !== null ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
                 masterType: clientToEdit.masterType || '',
-                subMaster: (typeof clientToEdit.subMaster === 'object' ? clientToEdit.subMaster._id : clientToEdit.subMaster) || '',
+                subMaster: (typeof clientToEdit.subMaster === 'object' && clientToEdit.subMaster !== null ? clientToEdit.subMaster._id : clientToEdit.subMaster) || '',
                 birthDate: clientToEdit.birthDate ? clientToEdit.birthDate.split('T')[0] : '',
                 address: clientToEdit.address || '',
                 country: clientToEdit.country || '',
