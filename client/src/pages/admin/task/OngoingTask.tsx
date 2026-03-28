@@ -72,7 +72,7 @@ export const OngoingTask: React.FC = () => {
     const [clientName, setClientName] = useState('');
     const [selectedTask, setSelectedTask] = useState('');
     const [frequency, setFrequency] = useState('');
-    const [year, setYear] = useState(new Date().getFullYear().toString());
+    const [year, setYear] = useState('');
     const [status, setStatus] = useState('');
     const [employee, setEmployee] = useState('');
     const [search, setSearch] = useState('');
