@@ -260,6 +260,8 @@ export const EmployeeMaster: React.FC = () => {
     const [editingDocumentId, setEditingDocumentId] = useState<string | number | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
     const [documentForm, setDocumentForm] = useState<EmployeeDocument>({
         documentType: '',
         date: new Date().toISOString().split('T')[0],
@@ -307,6 +309,13 @@ export const EmployeeMaster: React.FC = () => {
                 confirmPassword: ''
             }));
 
+            // Load existing profile image preview
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((staffData as any).profileImageUrl) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setProfileImagePreview((staffData as any).profileImageUrl);
+            }
+
             // Only set documents if they actually exist and changed
             if (staffData.documents && staffData.documents.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -319,6 +328,8 @@ export const EmployeeMaster: React.FC = () => {
         } else if (!isEditMode) {
             setFormData(initialFormData);
             setDocuments([]);
+            setProfileImageFile(null);
+            setProfileImagePreview(null);
             setTabValue(0);
         }
     }, [staffData, isEditMode]);
@@ -505,7 +516,7 @@ export const EmployeeMaster: React.FC = () => {
         }
     };
 
-    const handleSaveEmployee = () => {
+    const handleSaveEmployee = async () => {
         // Basic validation for the first tab
         const requiredFields = ['firstName', 'lastName', 'address', 'country', 'state', 'city', 'email'];
         const missingFields = requiredFields.filter(f => !formData[f as keyof typeof formData]);
@@ -525,7 +536,37 @@ export const EmployeeMaster: React.FC = () => {
             documents
         };
 
-        saveMutation.mutate(payload);
+        if (isEditMode) {
+            // Edit mode: upload profile image first (if chosen), then save
+            if (profileImageFile) {
+                try {
+                    await staffService.uploadProfileImage(id!, profileImageFile);
+                } catch (error) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    showSnackbar((error as any)?.response?.data?.message || 'Error uploading profile image to Drive', 'error');
+                    return;
+                }
+            }
+            saveMutation.mutate(payload);
+        } else {
+            // New employee: create first, then upload profile image with returned id
+            try {
+                const response = await staffService.createStaff(payload);
+                if (profileImageFile && response?.user?.id) {
+                    try {
+                        await staffService.uploadProfileImage(String((response.user as any)._id || response.user.id), profileImageFile);
+                    } catch (imgError) {
+                        console.error('Profile image upload failed after creation:', imgError);
+                    }
+                }
+                queryClient.invalidateQueries({ queryKey: ['staff'] });
+                showSnackbar('Employee data saved successfully!', 'success');
+                navigate('/admin/employee/list');
+            } catch (error: Error | unknown) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                showSnackbar((error as any)?.response?.data?.message || 'Error saving employee', 'error');
+            }
+        }
     };
 
     return (
@@ -713,15 +754,37 @@ export const EmployeeMaster: React.FC = () => {
                             <Section title="Profile Image" icon={<ImageIcon />}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                                     <Box sx={{ width: 150, height: 150, border: '1px solid #e2e8f0', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
-                                        <PhotoCameraIcon sx={{ color: '#cbd5e1', fontSize: 40 }} />
+                                        {profileImagePreview ? (
+                                            <img
+                                                src={profileImagePreview}
+                                                alt="Profile"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        ) : (
+                                            <PhotoCameraIcon sx={{ color: '#cbd5e1', fontSize: 40 }} />
+                                        )}
                                     </Box>
                                     <Box sx={{ width: '100%' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden' }}>
                                             <Button component="label" size="small" sx={{ bgcolor: '#f1f5f9', color: '#333', borderRadius: 0, textTransform: 'none', px: 2, borderRight: '1px solid #ccc', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                                                 Choose File
-                                                <input type="file" hidden accept="image/jpeg,image/png" />
+                                                <input
+                                                    type="file"
+                                                    hidden
+                                                    accept="image/jpeg,image/png"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0] || null;
+                                                        setProfileImageFile(file);
+                                                        if (file) {
+                                                            setProfileImagePreview(URL.createObjectURL(file));
+                                                        }
+                                                    }}
+                                                />
                                             </Button>
-                                            <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', flex: 1 }}>No file chosen</Typography>
+                                            <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', flex: 1 }}>
+                                                {profileImageFile ? profileImageFile.name : 'No file chosen'}
+                                            </Typography>
                                         </Box>
                                         <Typography variant="caption" sx={{ mt: 1, bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, display: 'inline-block' }}>
                                             <strong style={{ marginRight: '4px' }}>NOTE!</strong> JPEG or PNG Image Format only

@@ -4,6 +4,8 @@ import { User } from '../models/User';
 import { AuthRequest, authenticate, requireRoles } from '../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
 import Invoice from '../models/Invoice';
+import { MultiFirm } from '../models/MultiFirm';
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -102,7 +104,7 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager } = req.query;
+        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager, year } = req.query;
 
         const filter: any = { firmId: req.firmId };
 
@@ -155,6 +157,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         if (overdue === 'true') {
             filter.targetDate = { $lt: new Date() };
             filter.status = { $nin: ['DONE', 'CANCELLED'] };
+        }
+        if (year) {
+            filter.year = year;
         }
 
         const tasks = await Task.find(filter)
@@ -457,6 +462,206 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
     }
 });
 
+// ============================================
+// TIMESHEET — Entry / Task / Subtask wise
+// ============================================
+router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const {
+            clientGroupId, clientId, taskMasterId, frequency,
+            assignedTo, reportingManager,
+            year, status,
+            dateFrom, dateTo,
+            view // 'entry' | 'task' | 'subtask'
+        } = req.query;
+
+        // Build base filter
+        const filter: any = { firmId: req.firmId };
+
+        // Role isolation — staff only see their own data
+        if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {
+            filter.$or = [
+                { assignedTo: req.user!.userId },
+                { reportingManager: req.user!.userId }
+            ];
+        } else {
+            if (assignedTo) filter.assignedTo = assignedTo;
+            if (reportingManager) filter.reportingManager = reportingManager;
+        }
+
+        if (clientGroupId) filter.clientGroupId = clientGroupId;
+        if (clientId) filter.clientId = clientId;
+        if (taskMasterId) filter.taskMasterId = taskMasterId;
+        if (frequency) filter.frequency = frequency;
+        if (status) filter.status = status;
+
+        // Date filter on timeEntries.startTime (for entry-wise) or createdAt (general)
+        const entryDateFilter: any = {};
+        if (dateFrom) {
+            const df = new Date(dateFrom as string);
+            if (!isNaN(df.getTime())) entryDateFilter.$gte = df;
+        }
+        if (dateTo) {
+            const dt = new Date(dateTo as string);
+            if (!isNaN(dt.getTime())) {
+                dt.setHours(23, 59, 59, 999);
+                entryDateFilter.$lte = dt;
+            }
+        }
+
+        // Year filter: map e.g. "2025-2026" to Apr 2025 – Mar 2026
+        if (year) {
+            const parts = (year as string).split('-');
+            if (parts.length === 2) {
+                const startYr = parseInt(parts[0]);
+                const endYr = parseInt(parts[1]);
+                if (!isNaN(startYr) && !isNaN(endYr)) {
+                    filter.createdAt = {
+                        $gte: new Date(`${startYr}-04-01`),
+                        $lte: new Date(`${endYr}-03-31T23:59:59.999Z`)
+                    };
+                }
+            }
+        }
+
+        const tasks = await Task.find(filter)
+            .populate('assignedTo', 'name username email role')
+            .populate('clientId', 'name email phone')
+            .populate('clientGroupId', 'groupName')
+            .populate('taskMasterId', 'taskName frequency')
+            .populate('reportingManager', 'name username email')
+            .populate('createdBy', 'name username')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const now = new Date();
+
+        if (view === 'entry') {
+            // ── Entry Wise: one row per time-entry ──
+            const rows: any[] = [];
+            for (const task of tasks) {
+                const entries: any[] = (task.timeEntries || []);
+                const filtered = Object.keys(entryDateFilter).length > 0
+                    ? entries.filter(e => {
+                        const st = new Date(e.startTime);
+                        if (entryDateFilter.$gte && st < entryDateFilter.$gte) return false;
+                        if (entryDateFilter.$lte && st > entryDateFilter.$lte) return false;
+                        return true;
+                    })
+                    : entries;
+
+                for (const entry of filtered) {
+                    rows.push({
+                        entryId: entry._id,
+                        taskId: task._id,
+                        taskTitle: task.title,
+                        taskStatus: task.status,
+                        taskPriority: task.priority,
+                        client: task.clientId,
+                        clientGroup: task.clientGroupId,
+                        assignedTo: task.assignedTo,
+                        frequency: task.frequency,
+                        startTime: entry.startTime,
+                        endTime: entry.endTime,
+                        durationMinutes: entry.duration || 0,
+                        targetDate: task.targetDate,
+                        isOverdue: task.status !== 'DONE' && task.status !== 'CANCELLED' && task.targetDate && new Date(task.targetDate) < now,
+                        estimatedHours: task.estimatedHours,
+                        createdAt: task.createdAt
+                    });
+                }
+                // Also include tasks with NO entries but actualTimeSpent > 0 (manually set)
+                if (filtered.length === 0 && (task.actualTimeSpent || 0) > 0) {
+                    rows.push({
+                        taskId: task._id,
+                        taskTitle: task.title,
+                        taskStatus: task.status,
+                        taskPriority: task.priority,
+                        client: task.clientId,
+                        clientGroup: task.clientGroupId,
+                        assignedTo: task.assignedTo,
+                        frequency: task.frequency,
+                        startTime: task.startDate || task.createdAt,
+                        endTime: task.completedAt,
+                        durationMinutes: task.actualTimeSpent || 0,
+                        targetDate: task.targetDate,
+                        isOverdue: task.status !== 'DONE' && task.status !== 'CANCELLED' && task.targetDate && new Date(task.targetDate) < now,
+                        estimatedHours: task.estimatedHours,
+                        createdAt: task.createdAt
+                    });
+                }
+            }
+            rows.sort((a, b) => new Date(b.startTime || b.createdAt).getTime() - new Date(a.startTime || a.createdAt).getTime());
+            return res.json({ view: 'entry', rows, total: rows.length });
+        }
+
+        // ── Task Wise & Subtask Wise: one row per task ──
+        const rows = tasks.map(task => {
+            const totalMinutes = (task.actualTimeSpent || 0);
+            // If timer is running, add live elapsed
+            const liveMinutes = task.currentTimerStart
+                ? Math.floor((now.getTime() - new Date(task.currentTimerStart).getTime()) / 60000)
+                : 0;
+            const totalWithLive = totalMinutes + liveMinutes;
+
+            return {
+                taskId: task._id,
+                taskTitle: task.title,
+                description: task.description,
+                taskStatus: task.status,
+                taskPriority: task.priority,
+                category: task.category,
+                client: task.clientId,
+                clientGroup: task.clientGroupId,
+                taskMaster: task.taskMasterId,
+                assignedTo: task.assignedTo,
+                reportingManager: task.reportingManager,
+                createdBy: task.createdBy,
+                frequency: task.frequency,
+                estimatedHours: task.estimatedHours || 0,
+                actualMinutes: totalMinutes,
+                liveMinutes,
+                totalMinutes: totalWithLive,
+                totalHours: Math.round((totalWithLive / 60) * 100) / 100,
+                efficiency: task.estimatedHours && totalWithLive > 0
+                    ? Math.round(((task.estimatedHours * 60) / totalWithLive) * 100)
+                    : null,
+                timerRunning: !!task.currentTimerStart,
+                progressPercentage: task.progressPercentage || 0,
+                revisionCount: task.revisionCount || 0,
+                timeEntriesCount: (task.timeEntries || []).length,
+                targetDate: task.targetDate,
+                startDate: task.startDate,
+                completedAt: task.completedAt,
+                isOverdue: task.status !== 'DONE' && task.status !== 'CANCELLED' && task.targetDate && new Date(task.targetDate) < now,
+                billingAmount: task.billingAmount || 0,
+                checklist: task.checklist || [],
+                tags: task.tags || [],
+                createdAt: task.createdAt,
+                updatedAt: task.updatedAt
+            };
+        });
+
+        // Summary totals
+        const summary = {
+            totalTasks: rows.length,
+            totalEstimatedHours: Math.round(rows.reduce((s, r) => s + r.estimatedHours, 0) * 100) / 100,
+            totalActualHours: Math.round(rows.reduce((s, r) => s + r.totalHours, 0) * 100) / 100,
+            totalMinutes: rows.reduce((s, r) => s + r.totalMinutes, 0),
+            byStatus: rows.reduce((acc: any, r) => {
+                acc[r.taskStatus] = (acc[r.taskStatus] || 0) + 1;
+                return acc;
+            }, {})
+        };
+
+        res.json({ view: view || 'task', rows, summary, total: rows.length });
+
+    } catch (error) {
+        console.error('Timesheet error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get single task by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
@@ -511,6 +716,14 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
             return;
         }
 
+        // Role-based status guard: only ADMIN/MANAGER can approve, mark done, cancel, or reject
+        const isAdminOrManager = ['ADMIN', 'MANAGER'].includes(req.user!.role);
+        const adminOnlyStatuses: TaskStatus[] = ['APPROVED', 'DONE', 'CANCELLED', 'REJECTED'];
+        if (!isAdminOrManager && adminOnlyStatuses.includes(status)) {
+            res.status(403).json({ message: `Only Admin/Manager can set status to "${status}". Please submit for approval instead.` });
+            return;
+        }
+
         const previousStatus = task.status;
         task.status = status;
 
@@ -541,24 +754,44 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                 task.currentTimerStart = undefined;
             }
 
-            // Auto Generate Bill if it doesn't already exist for this task?
+            // ── Auto-generate Bill on task DONE ───────────────────────────
             if (task.clientId || task.clientGroupId) {
                 try {
-                    // Just to ensure not creating multiple invoices if revision count happens
-                    // But maybe we only create if there isn't an invoice with this title/task
-                    const existingInvoice = await Invoice.findOne({ notes: `Auto-generated for Task: ${task._id.toString()}` });
+                    const existingInvoice = await Invoice.findOne({
+                        notes: `auto:task:${task._id.toString()}`
+                    });
                     if (!existingInvoice) {
-                        const invCount = await Invoice.countDocuments();
-                        const invoiceNumber = `INV-${Date.now().toString().slice(-6)}-${invCount + 1}`;
+                        // ── Resolve billing firm & invoice prefix ───────────────
+                        let invoicePrefix = 'INV-';
+                        let billingFirmId: mongoose.Types.ObjectId | undefined = undefined;
+
+                        if (task.multiFirmId) {
+                            // Task was linked to a specific billing firm (multiFirm branch)
+                            const mf = await MultiFirm.findById(task.multiFirmId).lean();
+                            if (mf) {
+                                invoicePrefix = mf.invoicePrefix || 'INV-';
+                                billingFirmId = task.multiFirmId as mongoose.Types.ObjectId;
+                            }
+                        } else {
+                            // Fall back to main firm's FirmMaster prefix
+                            const FirmMaster = mongoose.model('FirmMaster');
+                            const fm = await FirmMaster.findOne({ firmId: task.firmId }).lean();
+                            if (fm && (fm as any).invoicePrefix) invoicePrefix = (fm as any).invoicePrefix;
+                        }
+
+                        // ── Firm-scoped unique invoice number ───────────────────
+                        const firmInvCount = await Invoice.countDocuments({ firmId: task.firmId });
+                        const invoiceNumber = `${invoicePrefix}${new Date().getFullYear()}-${String(firmInvCount + 1).padStart(4, '0')}`;
 
                         const billingAmt = task.billingAmount && task.billingAmount > 0 ? task.billingAmount : 0;
 
                         const newInvoice = new Invoice({
                             invoiceNumber,
-                            billingType: task.billingType || 'SINGLE_CLIENT',
+                            billingType: task.billingType === 'GROUP' ? 'CLIENT_GROUP' : (task.billingType || 'SINGLE_CLIENT'),
                             clientId: task.clientId,
                             clientGroupId: task.clientGroupId,
                             firmId: task.firmId,
+                            multiFirmId: billingFirmId,  // ← billing firm for letterhead
                             items: [{
                                 name: `Task Completion: ${task.title}`,
                                 description: task.description || '',
@@ -571,15 +804,16 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                             totalAmount: billingAmt,
                             paidAmount: 0,
                             balanceAmount: billingAmt,
-                            status: billingAmt > 0 ? 'PENDING' : 'PAID', // mark as paid if 0
-                            dueDate: new Date(Date.now() + 7 * 86400000), // 7 days from now
-                            notes: `Auto-generated for Task: ${task._id.toString()}`,
+                            status: billingAmt > 0 ? 'PENDING' : 'PAID',
+                            dueDate: new Date(Date.now() + 30 * 86400000), // 30 days
+                            notes: `auto:task:${task._id.toString()}`,  // unique marker
                             createdBy: req.user!.userId
                         });
                         await newInvoice.save();
+                        console.log(`[AutoBill] Invoice ${invoiceNumber} created for task ${task.title} → firm ${invoicePrefix}`);
                     }
                 } catch (invoiceErr) {
-                    console.error('Failed to auto-generate invoice:', invoiceErr);
+                    console.error('[AutoBill] Failed to auto-generate invoice:', invoiceErr);
                 }
             }
         }

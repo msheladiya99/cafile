@@ -93,7 +93,7 @@ export const OngoingTask: React.FC = () => {
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
 
     const { data: tasks = [], isLoading: tasksLoading, refetch } = useQuery<Task[]>({
-        queryKey: ['tasks', groupName, clientName, selectedTask, frequency, status, employee],
+        queryKey: ['tasks', groupName, clientName, selectedTask, frequency, status, employee, year],
         queryFn: () => taskService.getTasks({
             clientGroupId: groupName || undefined,
             clientId: clientName || undefined,
@@ -101,6 +101,7 @@ export const OngoingTask: React.FC = () => {
             assignedTo: employee || undefined,
             taskMasterId: selectedTask || undefined,
             frequency: frequency || undefined,
+            year: year || undefined,
         }),
         refetchInterval: 30_000,
     });
@@ -189,6 +190,9 @@ export const OngoingTask: React.FC = () => {
         const flowStep = FLOW_STEPS.findIndex(s => s.status === currentTask.status);
         const timeH = Math.round((currentTask.actualTimeSpent || 0) / 60 * 10) / 10;
         const isAdmin = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+        const isEmployee = user?.role === 'STAFF' || user?.role === 'INTERN';
+        // Statuses an employee is NOT allowed to set directly
+        const adminOnlyStatuses: TaskStatus[] = ['APPROVED', 'DONE', 'CANCELLED', 'REJECTED'];
 
         return (
             <Dialog open={!!processingTask} onClose={() => setProcessingTask(null)} maxWidth="md" fullWidth
@@ -223,11 +227,21 @@ export const OngoingTask: React.FC = () => {
                                 const isDone = idx < flowStep;
                                 const isCurrent = idx === flowStep;
                                 const isLast = idx === FLOW_STEPS.length - 1;
+                                // Employees cannot click APPROVED or DONE steps
+                                const isLockedForEmployee = isEmployee && adminOnlyStatuses.includes(step.status);
                                 return (
                                     <React.Fragment key={step.status}>
-                                        <Tooltip title={`Set status: ${step.label}`}>
-                                            <Box onClick={() => updateStatusMutation.mutate({ taskId: currentTask._id, status: step.status })}
-                                                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', minWidth: 64, '&:hover .step-circle': { transform: 'scale(1.15)' } }}>
+                                        <Tooltip title={isLockedForEmployee
+                                            ? `Only Admin/Manager can set "${step.label}"` 
+                                            : `Set status: ${step.label}`}>
+                                            <Box
+                                                onClick={() => !isLockedForEmployee && updateStatusMutation.mutate({ taskId: currentTask._id, status: step.status })}
+                                                sx={{
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                                    cursor: isLockedForEmployee ? 'not-allowed' : 'pointer',
+                                                    minWidth: 64, opacity: isLockedForEmployee ? 0.4 : 1,
+                                                    '&:hover .step-circle': { transform: isLockedForEmployee ? 'none' : 'scale(1.15)' }
+                                                }}>
                                                 <Box className="step-circle" sx={{
                                                     width: 28, height: 28, borderRadius: '50%',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -237,7 +251,7 @@ export const OngoingTask: React.FC = () => {
                                                     boxShadow: isCurrent ? '0 0 0 4px rgba(102,126,234,0.2)' : 'none',
                                                     transition: 'all 0.2s', fontSize: '0.75rem', fontWeight: 700,
                                                 }}>
-                                                    {isDone ? '✓' : idx + 1}
+                                                    {isLockedForEmployee ? '🔒' : isDone ? '✓' : idx + 1}
                                                 </Box>
                                                 <Typography variant="caption" sx={{ mt: 0.5, fontSize: '0.62rem', fontWeight: isCurrent ? 800 : 400, color: isCurrent ? '#667eea' : isDone ? '#10b981' : '#94a3b8', textAlign: 'center', lineHeight: 1.2 }}>
                                                     {step.label}
@@ -346,10 +360,15 @@ export const OngoingTask: React.FC = () => {
                                 </Box>
                             </Box>
 
-                            {/* Status Override */}
+                            {/* Change Status — employees see limited statuses */}
                             <Box mb={2.5}>
                                 <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} display="block" mb={1}>
                                     Change Status
+                                    {isEmployee && (
+                                        <Box component="span" sx={{ ml: 1, color: '#f59e0b', fontWeight: 600, textTransform: 'none', fontSize: '0.65rem' }}>
+                                            (Approval required for final steps)
+                                        </Box>
+                                    )}
                                 </Typography>
                                 <FormControl size="small" sx={{ minWidth: 200 }}>
                                     <Select
@@ -357,16 +376,24 @@ export const OngoingTask: React.FC = () => {
                                         onChange={e => updateStatusMutation.mutate({ taskId: currentTask._id, status: e.target.value as TaskStatus })}
                                         disabled={updateStatusMutation.isPending}
                                         sx={{ borderRadius: 2 }}>
-                                        {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
-                                            <MenuItem key={val} value={val}>
-                                                <Box display="flex" alignItems="center" gap={1}>
-                                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: cfg.color }} />
-                                                    {cfg.label}
-                                                </Box>
-                                            </MenuItem>
-                                        ))}
+                                        {Object.entries(STATUS_CONFIG)
+                                            // Employees cannot directly set APPROVED, DONE, CANCELLED, REJECTED
+                                            .filter(([val]) => isEmployee ? !adminOnlyStatuses.includes(val as TaskStatus) : true)
+                                            .map(([val, cfg]) => (
+                                                <MenuItem key={val} value={val}>
+                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: cfg.color }} />
+                                                        {cfg.label}
+                                                    </Box>
+                                                </MenuItem>
+                                            ))}
                                     </Select>
                                 </FormControl>
+                                {isEmployee && currentTask.status === 'PENDING_FOR_APPROVAL' && (
+                                    <Typography variant="caption" color="warning.main" display="block" mt={0.5}>
+                                        ⏳ Waiting for Admin/Manager to approve this task.
+                                    </Typography>
+                                )}
                             </Box>
 
                             <Divider sx={{ my: 2 }} />

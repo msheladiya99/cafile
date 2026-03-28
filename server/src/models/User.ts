@@ -74,6 +74,7 @@ export interface IUser extends Document {
     accountHolderName?: string;
     ifscCode?: string;
     bankAddress?: string;
+    profileImageUrl?: string;
 
     documents?: Array<{
         documentType: string;
@@ -200,6 +201,7 @@ const userSchema = new Schema<IUser>({
     accountHolderName: { type: String, trim: true },
     ifscCode: { type: String, trim: true },
     bankAddress: { type: String, trim: true },
+    profileImageUrl: { type: String, trim: true },
 
     documents: [{
         documentType: { type: String, trim: true },

@@ -12,11 +12,17 @@ router.use(authenticate);
 // Get applied tasks
 router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const { taskMasterId, clientId } = req.query;
+        const { taskMasterId, clientId, clientGroupId } = req.query;
         const filter: any = { firmId: req.firmId };
 
-        if (taskMasterId) filter.taskMasterId = taskMasterId;
-        if (clientId) filter.clientId = clientId;
+        if (taskMasterId) {
+            // When fetching by task, return ALL applicabilities (client + group)
+            filter.taskMasterId = taskMasterId;
+        } else {
+            // When fetching by client or group specifically
+            if (clientId) filter.clientId = clientId;
+            if (clientGroupId) filter.clientGroupId = clientGroupId;
+        }
 
         const applications = await TaskApplicability.find(filter)
             .populate('taskMasterId')
@@ -50,6 +56,7 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
         const createdBy = req.user!.userId;
 
         const results = [];
+        const errors: { id: string; error: string }[] = [];
 
         // Apply to individual clients
         if (clientIds?.length) {
@@ -70,22 +77,22 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         { upsert: true, new: true }
                     );
 
-                    // Create the first instance of the task
                     const firstTask = new Task({
                         title: taskMaster.taskName,
                         description: taskMaster.description,
-                        category: department || taskMaster.department || 'CLIENT_WORK',
+                        category: 'CLIENT_WORK',  // valid enum — department stored in TaskApplicability
                         createdBy,
                         assignedTo: [],
                         reportingManager: taskMaster.reportingManager,
                         clientId,
                         firmId,
+                        multiFirmId: taskMaster.multiFirmId || undefined,
                         taskMasterId: taskMaster._id,
                         frequency: taskMaster.frequency || 'One Time',
                         billingAmount: taskMaster.billingAmount || 0,
                         billingType: 'SINGLE_CLIENT',
                         targetDate: new Date(startDate),
-                        estimatedHours: 1,
+                        estimatedHours: taskMaster.estimatedHours || 1,
                         checklist: taskMaster.subtasks.map(s => ({
                             id: uuidv4(),
                             text: s.name,
@@ -95,7 +102,11 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                     await firstTask.save();
 
                     results.push(applicability);
-                } catch (e) {
+                } catch (e: any) {
+                    const msg = e?.code === 11000
+                        ? 'Already applied to this client'
+                        : (e?.message || 'Unknown error');
+                    errors.push({ id: clientId, error: msg });
                     console.error(`Error applying to client ${clientId}:`, e);
                 }
             }
@@ -117,16 +128,46 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         },
                         { upsert: true, new: true }
                     );
+
+                    const groupTask = new Task({
+                        title: taskMaster.taskName,
+                        description: taskMaster.description,
+                        category: 'CLIENT_WORK',  // valid enum — department stored in TaskApplicability
+                        createdBy,
+                        assignedTo: [],
+                        reportingManager: taskMaster.reportingManager,
+                        clientGroupId,
+                        firmId,
+                        multiFirmId: taskMaster.multiFirmId || undefined,
+                        taskMasterId: taskMaster._id,
+                        frequency: taskMaster.frequency || 'One Time',
+                        billingAmount: taskMaster.billingAmount || 0,
+                        billingType: 'GROUP',
+                        targetDate: new Date(startDate),
+                        estimatedHours: taskMaster.estimatedHours || 1,
+                        checklist: taskMaster.subtasks.map(s => ({
+                            id: uuidv4(),
+                            text: s.name,
+                            completed: false
+                        }))
+                    });
+                    await groupTask.save();
+
                     results.push(applicability);
-                } catch (e) {
+                } catch (e: any) {
+                    const msg = e?.code === 11000
+                        ? 'Already applied to this group'
+                        : (e?.message || 'Unknown error');
+                    errors.push({ id: clientGroupId, error: msg });
                     console.error(`Error applying to group ${clientGroupId}:`, e);
                 }
             }
         }
 
         res.status(201).json({
-            message: 'Task applied successfully',
-            count: results.length
+            message: `Task applied successfully to ${results.length} client(s)/group(s)`,
+            count: results.length,
+            errors: errors.length > 0 ? errors : undefined
         });
     } catch (error) {
         console.error('Apply task error:', error);

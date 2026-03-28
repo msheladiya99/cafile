@@ -42,7 +42,8 @@ const drawerWidth = 240;
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout, isAdmin, remainingTime } = useAuth();
+    const { user, logout, isAdmin, isStaffMember, isIntern, remainingTime } = useAuth();
+    const isEmployee = isStaffMember || isIntern;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
@@ -71,7 +72,42 @@ export const AdminLayout: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const menuItems = [
+    // Employee-only sidebar (STAFF / INTERN): stripped-down view
+    const employeeMenuItems = [
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
+        {
+            text: 'Task',
+            icon: <AssignmentIcon />,
+            children: [
+                { text: 'Task Dashboard', path: '/admin/tasks' },
+                { text: 'Ongoing Task', path: '/admin/tasks/ongoing' },
+            ]
+        },
+        {
+            text: 'Employee',
+            icon: <PersonIcon />,
+            children: [
+                { text: 'Emp Task Schedule', path: '/admin/employee/tasks' },
+                {
+                    text: 'Time Sheet',
+                    children: [
+                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry' },
+                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask' },
+                        { text: 'Task Wise', path: '/admin/employee/timesheet/task' },
+                    ]
+                },
+                {
+                    text: 'Emp Attendance',
+                    children: [
+                        { text: 'Add Attendance', path: '/admin/employee/attendance/add' },
+                        { text: 'Attendance List', path: '/admin/employee/attendance/list' },
+                    ]
+                },
+            ]
+        },
+    ];
+
+    const menuItems = isEmployee ? employeeMenuItems : [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports' },

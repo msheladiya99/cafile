@@ -14,6 +14,7 @@ export const taskService = {
         overdue?: boolean;
         myTasks?: boolean;
         reportingManager?: string;
+        year?: string;
     }): Promise<Task[]> => {
         const params = new URLSearchParams();
         if (filters) {
@@ -165,6 +166,26 @@ export const taskService = {
         const query = new URLSearchParams();
         Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v); });
         const response = await api.get(`/tasks?${query.toString()}`);
+        return response.data;
+    },
+
+    // Timesheet - get tasks with time entries for all 3 timesheet views
+    getTimesheet: async (params: {
+        clientGroupId?: string;
+        clientId?: string;
+        taskMasterId?: string;
+        frequency?: string;
+        assignedTo?: string;
+        reportingManager?: string;
+        year?: string;
+        status?: string;
+        dateFrom?: string;
+        dateTo?: string;
+        view?: 'entry' | 'task' | 'subtask';
+    }): Promise<unknown> => {
+        const query = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v); });
+        const response = await api.get(`/tasks/timesheet?${query.toString()}`);
         return response.data;
     },
 };

@@ -37,9 +37,11 @@ export interface ITask extends Document {
     assignedTo: mongoose.Types.ObjectId[];
     clientId?: mongoose.Types.ObjectId;
     clientGroupId?: mongoose.Types.ObjectId;
-    billingType?: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
+    billingType?: 'SINGLE_CLIENT' | 'CLIENT_GROUP' | 'GROUP';
     firmId?: mongoose.Types.ObjectId;
+    multiFirmId?: mongoose.Types.ObjectId; // Which billing firm/branch generated the invoice
     billingAmount?: number;
+    year?: string; // Financial year e.g. "2025-2026"
 
     // Status & Priority
     status: TaskStatus;
@@ -115,9 +117,11 @@ const taskSchema = new Schema<ITask>({
     assignedTo: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     clientId: { type: Schema.Types.ObjectId, ref: 'Client' },
     clientGroupId: { type: Schema.Types.ObjectId, ref: 'ClientGroup' },
-    billingType: { type: String, enum: ['SINGLE_CLIENT', 'CLIENT_GROUP'], default: 'SINGLE_CLIENT' },
+    billingType: { type: String, enum: ['SINGLE_CLIENT', 'CLIENT_GROUP', 'GROUP'], default: 'SINGLE_CLIENT' },
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
+    multiFirmId: { type: Schema.Types.ObjectId, ref: 'MultiFirm', index: true },
     billingAmount: { type: Number, default: 0 },
+    year: { type: String },
 
     // Status & Priority
     status: {

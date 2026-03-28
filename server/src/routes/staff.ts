@@ -4,7 +4,7 @@ import multer from 'multer';
 import { User } from '../models/User';
 import { Firm } from '../models/Firm';
 import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
-import { getDriveService } from '../services/googleDrive';
+import { getTenantDriveService } from '../services/googleDrive';
 import { sendEmployeeWelcomeEmail, sendEmployeePasswordResetEmail } from '../services/emailService';
 
 const router = Router();
@@ -21,6 +21,7 @@ const upload = multer({
 router.use(authenticate, requireAdmin);
 
 // Upload staff document to Google Drive
+// Saves to: MyCAFile > FirmName > Employees > EmployeeName > file
 router.post('/upload-document', upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
         const { employeeName } = req.body;
@@ -38,14 +39,19 @@ router.post('/upload-document', upload.single('file'), async (req: AuthRequest, 
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        const driveService = getDriveService();
+        // Fetch firm's Drive root folder (MyCAFile > FirmName)
+        const firm = await Firm.findById(req.firmId).select('googleDriveRootFolderId firmName').lean();
+        const rootFolderId = firm?.googleDriveRootFolderId;
+        console.log('Firm:', firm?.firmName, '| Drive Root Folder ID:', rootFolderId || '(not set - using global root)');
 
-        // Create employee folder structure
-        console.log('Ensuring folder structure for:', employeeName);
+        const driveService = getTenantDriveService(rootFolderId);
+
+        // Create/ensure folder: [FirmRoot] > Employees > EmployeeName
+        console.log('Ensuring folder structure: [FirmRoot] > Employees >', employeeName);
         const folderId = await driveService.createEmployeeFolderStructure(employeeName || 'Unknown Employee');
-        console.log('Folder ID:', folderId);
+        console.log('Employee Folder ID:', folderId);
 
-        // Upload file
+        // Upload file into employee folder
         console.log('Uploading to Drive...');
         const driveFile = await driveService.uploadFile(
             uploadedFile.buffer,
@@ -53,7 +59,7 @@ router.post('/upload-document', upload.single('file'), async (req: AuthRequest, 
             uploadedFile.mimetype,
             folderId
         );
-        console.log('Upload success:', driveFile.fileId);
+        console.log('Upload success. File ID:', driveFile.fileId, '| Link:', driveFile.webViewLink);
 
         res.json({
             message: 'File uploaded to Google Drive successfully',
@@ -74,7 +80,8 @@ router.post('/upload-document', upload.single('file'), async (req: AuthRequest, 
 router.delete('/delete-document/:fileId', async (req: AuthRequest, res: Response) => {
     try {
         const { fileId } = req.params;
-        const driveService = getDriveService();
+        const firm = await Firm.findById(req.firmId).select('googleDriveRootFolderId').lean();
+        const driveService = getTenantDriveService(firm?.googleDriveRootFolderId);
         await driveService.deleteFile(fileId as string);
         res.json({ message: 'Document deleted from Google Drive successfully' });
     } catch (error: any) {
@@ -210,6 +217,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         });
         await user.save();
 
+        // Build the firm's portal URL from its subdomain
+        const baseDomain = process.env.APP_BASE_DOMAIN || 'mycafile.in';
+        const firmPortalUrl = firm?.subdomain
+            ? `https://${firm.subdomain}.${baseDomain}`
+            : (process.env.CLIENT_URL || 'http://localhost:5173');
+
         // Send welcome email with credentials (async, non-blocking)
         if (email) {
             sendEmployeeWelcomeEmail({
@@ -218,6 +231,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
                 username: finalUsername,
                 password: finalPassword,
                 role: actualRole,
+                portalUrl: firmPortalUrl,
             }).catch(err => console.error('Failed to send employee welcome email:', err));
         }
 
@@ -295,6 +309,13 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
         user.passwordHash = passwordHash;
         await user.save();
 
+        // Build the firm's portal URL from its subdomain
+        const firmForEmail = await Firm.findById(req.firmId).select('subdomain').lean();
+        const baseDomain = process.env.APP_BASE_DOMAIN || 'mycafile.in';
+        const firmPortalUrl = firmForEmail?.subdomain
+            ? `https://${firmForEmail.subdomain}.${baseDomain}`
+            : (process.env.CLIENT_URL || 'http://localhost:5173');
+
         // Send password reset email (async, non-blocking)
         if (user.email) {
             sendEmployeePasswordResetEmail({
@@ -302,6 +323,7 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
                 employeeName: user.name || user.username,
                 username: user.username,
                 newPassword,
+                portalUrl: firmPortalUrl,
             }).catch(err => console.error('Failed to send employee password reset email:', err));
         }
 
@@ -415,6 +437,61 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Update staff error:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Upload staff profile image to Google Drive
+// Saves to: MyCAFile > FirmName > Employees > EmployeeName > profile_<id>.jpg
+router.post('/:id/profile-image', upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
+    try {
+        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
+        if (!user) {
+            res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+
+        const uploadedFile = req.file;
+        if (!uploadedFile) {
+            res.status(400).json({ message: 'No file uploaded' });
+            return;
+        }
+
+        // Fetch firm's Drive root folder (MyCAFile > FirmName)
+        const firm = await Firm.findById(req.firmId).select('googleDriveRootFolderId firmName').lean();
+        const rootFolderId = firm?.googleDriveRootFolderId;
+        console.log('--- Profile Image Upload ---');
+        console.log('Firm:', firm?.firmName, '| Drive Root Folder ID:', rootFolderId || '(not set - using global root)');
+
+        const driveService = getTenantDriveService(rootFolderId);
+        const employeeName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Employee';
+
+        // Create/ensure folder: [FirmRoot] > Employees > EmployeeName
+        console.log('Ensuring folder: [FirmRoot] > Employees >', employeeName);
+        const folderId = await driveService.createEmployeeFolderStructure(employeeName);
+
+        // Upload profile image with a fixed name so re-uploads overwrite
+        const ext = uploadedFile.originalname.split('.').pop();
+        const fileName = `profile_${user._id}.${ext}`;
+        const driveFile = await driveService.uploadFile(
+            uploadedFile.buffer,
+            fileName,
+            uploadedFile.mimetype,
+            folderId
+        );
+        console.log('Profile image uploaded. File ID:', driveFile.fileId);
+
+        // Save direct link on user
+        user.profileImageUrl = driveFile.webViewLink;
+        await user.save();
+
+        res.json({
+            message: 'Profile image uploaded successfully',
+            profileImageUrl: driveFile.webViewLink,
+            driveFileId: driveFile.fileId,
+        });
+    } catch (error: any) {
+        console.error('Staff profile image upload error:', error);
+        res.status(500).json({ message: 'Error uploading profile image', error: error.message });
     }
 });
 

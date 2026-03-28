@@ -32,6 +32,7 @@ import {
     Info as InfoIcon,
     Delete as DeleteIcon,
     CheckCircle as CheckCircleIcon,
+    Groups as GroupsIcon,
 } from '@mui/icons-material';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
@@ -108,25 +109,34 @@ export const TaskApplicability: React.FC = () => {
     // Query key changes depending on what's selected (task or client)
     const appliedQueryKey = useMemo(() => {
         if (isSingleTask) return ['taskApplicability', 'single', singleClientName];
-        if (basedOn === 'Task') return ['taskApplicability', 'task', selectedTask];
+        if (basedOn === 'Task') return ['taskApplicability', 'task', selectedTask, groupName];
         return ['taskApplicability', 'client', singleClientName];
-    }, [isSingleTask, basedOn, selectedTask, singleClientName]);
+    }, [isSingleTask, basedOn, selectedTask, singleClientName, groupName]);
 
     const { data: appliedTasks = [], refetch: refetchApplied } = useQuery({
         queryKey: appliedQueryKey,
-        queryFn: () => taskApplicabilityService.getApplicabilities(
-            basedOn === 'Task'
-                ? { taskMasterId: selectedTask }
-                : { clientId: singleClientName }
-        ),
+        queryFn: () => {
+            if (basedOn === 'Task') {
+                // Fetch by taskMasterId; optionally also filter by group on client side
+                return taskApplicabilityService.getApplicabilities({ taskMasterId: selectedTask });
+            }
+            return taskApplicabilityService.getApplicabilities({ clientId: singleClientName });
+        },
         enabled: basedOn === 'Task' ? !!selectedTask : !!singleClientName
     });
 
     // ─── Apply Mutation (Recurrence) ───
     const applyMutation = useMutation({
         mutationFn: taskApplicabilityService.applyTask,
-        onSuccess: () => {
-            toast.success('Task applied successfully');
+        onSuccess: (data: { message: string; count: number; errors?: { id: string; error: string }[] }) => {
+            if (data.count > 0) {
+                toast.success(`✅ ${data.message}`);
+            }
+            if (data.errors?.length) {
+                const failedCount = data.errors!.length;
+                const failedMessages = data.errors!.map(e => e.error).join('; ');
+                toast.error(`⚠️ ${failedCount} item(s) failed: ${failedMessages}`, { duration: 6000 });
+            }
             setSelectedClientIds([]);
             setSelectedTaskIds([]);
             refetchApplied();
@@ -150,7 +160,7 @@ export const TaskApplicability: React.FC = () => {
         }
     });
 
-    // ─── handleApply (Recurrence) ───
+    // ─── handleApply (Recurrence — individual clients or tasks) ───
     const handleApply = () => {
         if (basedOn === 'Task') {
             if (!selectedTask) return toast.error('Please select a task');
@@ -176,13 +186,26 @@ export const TaskApplicability: React.FC = () => {
                     clientIds: [singleClientName],
                     startDate,
                     infinite: infiniteApplicability,
-                    department: department   // ✅ Fixed: now passes department
+                    department: department
                 }, {
                     onSettled: () => applyNext(idx + 1)
                 });
             };
             applyNext(0);
         }
+    };
+
+    // ─── handleApplyGroup — apply to entire selected group in one shot ───
+    const handleApplyGroup = () => {
+        if (!selectedTask) return toast.error('Please select a task first');
+        if (!groupName) return toast.error('Please select a group first');
+        applyMutation.mutate({
+            taskMasterId: selectedTask,
+            groupIds: [groupName],
+            startDate,
+            infinite: infiniteApplicability,
+            department: department,
+        });
     };
 
     // ─── handleSingleSave (Start Single Task) ───
@@ -199,7 +222,8 @@ export const TaskApplicability: React.FC = () => {
             const taskData = {
                 title: master.taskName,
                 description: master.description || '',
-                category: (singleDepartment || master.department || 'CLIENT_WORK') as import('../../../types').TaskCategory,
+                // category must be a valid TaskCategory enum — department names are NOT valid values
+                category: 'CLIENT_WORK' as import('../../../types').TaskCategory,
                 reportingManager: master.reportingManager
                     ? (typeof master.reportingManager === 'string'
                         ? master.reportingManager
@@ -209,10 +233,11 @@ export const TaskApplicability: React.FC = () => {
                 clientId: singleClientName,
                 priority: 'MEDIUM' as const,
                 targetDate: singleTargetDate,
-                estimatedHours: 1,
+                estimatedHours: master.estimatedHours || 1,
                 frequency: singleFrequency || master.frequency || 'One Time',
                 taskMasterId: master._id,
                 year: singleYear,
+                billingAmount: master.billingAmount || 0,
                 checklist: (master.subtasks || []).map(s => s.name)
             };
 
@@ -246,10 +271,17 @@ export const TaskApplicability: React.FC = () => {
                 const sId = typeof sm === 'object' ? (sm as { _id: string })?._id : sm;
                 if (sId !== subMaster) return false;
             }
-            // Hide already applied
+            // Hide already applied — check both client-level and group-level records
             const isAlreadyApplied = appliedTasks.some((at: TaskApplicabilityType) => {
                 const cid = at.clientId;
-                return (typeof cid === 'string' ? cid : (cid as Client)?._id) === client._id;
+                const clientMatch = (typeof cid === 'string' ? cid : (cid as Client)?._id) === client._id;
+                // Also hide if this client is in an already-applied group
+                const gid = at.clientGroupId;
+                const clientGroupId = typeof client.groupName === 'object'
+                    ? (client.groupName as { _id: string })?._id
+                    : client.groupName;
+                const groupMatch = !!gid && (typeof gid === 'string' ? gid : (gid as { _id: string })?._id) === clientGroupId;
+                return clientMatch || groupMatch;
             });
             return !isAlreadyApplied;
         });
@@ -744,7 +776,23 @@ export const TaskApplicability: React.FC = () => {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+                            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                                {/* Apply to entire group (when group is selected in Task mode) */}
+                                {basedOn === 'Task' && groupName && (
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleApplyGroup}
+                                        startIcon={<GroupsIcon />}
+                                        disabled={applyMutation.isPending || !selectedTask}
+                                        sx={{
+                                            borderColor: '#764ba2', color: '#764ba2',
+                                            '&:hover': { bgcolor: '#764ba215', borderColor: '#764ba2' }
+                                        }}
+                                    >
+                                        {applyMutation.isPending ? 'Applying...' : `Apply to Entire Group`}
+                                    </Button>
+                                )}
+                                {/* Apply to individually selected clients/tasks */}
                                 <Button variant="contained" onClick={handleApply} startIcon={<CheckCircleIcon />}
                                     disabled={applyMutation.isPending || (basedOn === 'Task' ? selectedClientIds.length === 0 : selectedTaskIds.length === 0)}
                                     sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}>
@@ -784,32 +832,47 @@ export const TaskApplicability: React.FC = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {appliedTasks.map((at: TaskApplicabilityType) => (
-                                            <TableRow key={at._id} hover>
-                                                <TableCell>
-                                                    {basedOn === 'Task'
-                                                        ? ((at.clientId as Client)?.name || 'Unknown')
-                                                        : ((at.taskMasterId as TaskMasterData)?.taskName || 'Unknown')
-                                                    }
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Chip label={at.frequency} size="small" color="success" variant="outlined" />
-                                                </TableCell>
-                                                <TableCell>{new Date(at.startDate).toLocaleDateString('en-IN')}</TableCell>
-                                                <TableCell>
-                                                    <Tooltip title="Remove applicability">
-                                                        <IconButton size="small" color="error"
-                                                            onClick={() => {
-                                                                if (at._id && window.confirm('Remove this task applicability?')) {
-                                                                    removeMutation.mutate(at._id);
-                                                                }
-                                                            }}>
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {appliedTasks.map((at: TaskApplicabilityType) => {
+                                            const isGroupRecord = !at.clientId && !!at.clientGroupId;
+                                            const grp = at.clientGroupId as { _id: string; groupName: string } | undefined;
+                                            const clientName = (at.clientId as Client)?.name;
+                                            const displayName = basedOn === 'Task'
+                                                ? (clientName || grp?.groupName || 'Unknown')
+                                                : ((at.taskMasterId as TaskMasterData)?.taskName || 'Unknown');
+                                            return (
+                                                <TableRow key={at._id} hover sx={isGroupRecord ? { bgcolor: '#f5f0ff' } : {}}>
+                                                    <TableCell>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            {displayName}
+                                                            {isGroupRecord && (
+                                                                <Chip
+                                                                    label="Group"
+                                                                    size="small"
+                                                                    icon={<GroupsIcon style={{ fontSize: 12 }} />}
+                                                                    sx={{ fontSize: '0.65rem', height: 18, bgcolor: '#764ba2', color: 'white', '& .MuiChip-icon': { color: 'white' } }}
+                                                                />
+                                                            )}
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip label={at.frequency} size="small" color="success" variant="outlined" />
+                                                    </TableCell>
+                                                    <TableCell>{new Date(at.startDate).toLocaleDateString('en-IN')}</TableCell>
+                                                    <TableCell>
+                                                        <Tooltip title="Remove applicability">
+                                                            <IconButton size="small" color="error"
+                                                                onClick={() => {
+                                                                    if (at._id && window.confirm('Remove this task applicability?')) {
+                                                                        removeMutation.mutate(at._id);
+                                                                    }
+                                                                }}>
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                         {appliedTasks.length === 0 && (
                                             <TableRow>
                                                 <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>

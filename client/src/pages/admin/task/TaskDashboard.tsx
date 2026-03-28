@@ -28,6 +28,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '../../../services/taskService';
 import { useNavigate } from 'react-router-dom';
+const nowMs = Date.now(); // module-level stable timestamp for day calculations
 import type { Task, Client, User } from '../../../types';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -162,6 +163,7 @@ export const TaskDashboard: React.FC = () => {
     const radialData = useMemo(() => [
         { name: 'Completion', value: stats.completionRate, fill: '#10b981' },
     ], [stats]);
+
 
     // Upcoming tasks (next 7 days, not done)
     const upcomingTasks = useMemo(() => {
@@ -310,7 +312,7 @@ export const TaskDashboard: React.FC = () => {
                                         paddingAngle={4} dataKey="value">
                                         {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                                     </Pie>
-                                    <RechartsTooltip formatter={(v: any) => [`${v} tasks`, '']} />
+                                    <RechartsTooltip formatter={(v: number | undefined) => [`${v ?? 0} tasks`, '']} />
                                     <Legend verticalAlign="bottom" height={36} />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -357,7 +359,7 @@ export const TaskDashboard: React.FC = () => {
                         </Box>
                         <List dense disablePadding>
                             {upcomingTasks.length > 0 ? upcomingTasks.map((task, i) => {
-                                const daysLeft = Math.ceil((new Date(task.targetDate).getTime() - Date.now()) / 86_400_000);
+                                const daysLeft = Math.ceil((new Date(task.targetDate).getTime() - nowMs) / 86_400_000);
                                 return (
                                     <React.Fragment key={task._id}>
                                         <ListItem sx={{ px: 2, py: 1.25 }}>
@@ -403,7 +405,7 @@ export const TaskDashboard: React.FC = () => {
                         </Box>
                         <List dense disablePadding>
                             {overdueTasks.length > 0 ? overdueTasks.map((task, i) => {
-                                const daysLate = Math.ceil((Date.now() - new Date(task.targetDate).getTime()) / 86_400_000);
+                                const daysLate = Math.ceil((nowMs - new Date(task.targetDate).getTime()) / 86_400_000);
                                 return (
                                     <React.Fragment key={task._id}>
                                         <ListItem sx={{ px: 2, py: 1.25 }}>
@@ -483,7 +485,7 @@ export const TaskDashboard: React.FC = () => {
                                     { label: 'Ongoing Tasks', path: '/admin/tasks/ongoing', icon: <ProgressIcon />, color: '#3b82f6' },
                                     { label: 'Approvals', path: '/admin/tasks/approval', icon: <ApprovalIcon />, color: '#f59e0b', badge: stats.pendingApproval },
                                     { label: 'Task Cycle', path: '/admin/tasks/cycle-detail', icon: <TimerIcon />, color: '#10b981' },
-                                    { label: 'Transfer', path: '/admin/tasks/transfer', icon: <GroupsIcon />, color: '#ec4899' },
+                                    { label: 'Transfer', path: '/admin/tasks/transfer-single', icon: <GroupsIcon />, color: '#ec4899' },
                                 ].map(nav => (
                                     <Grid size={{ xs: 6 }} key={nav.label}>
                                         <NavTile {...nav} />

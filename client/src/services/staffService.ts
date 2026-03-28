@@ -69,4 +69,11 @@ export const staffService = {
     deleteDocument: async (fileId: string): Promise<void> => {
         await api.delete(`/staff/delete-document/${fileId}`);
     },
+
+    uploadProfileImage: async (staffId: string, file: File): Promise<{ profileImageUrl: string; driveFileId: string }> => {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+        const response = await api.post(`/staff/${staffId}/profile-image`, formData);
+        return response.data;
+    },
 };

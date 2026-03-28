@@ -18,6 +18,8 @@ export interface ITaskMaster extends Document {
     hsnSac?: string;
     udin: boolean;
     billingAmount?: number;
+    estimatedHours?: number;
+    multiFirmId?: mongoose.Types.ObjectId; // Billing firm/branch for auto-invoice
     frequency?: string;
     subtasks: ISubtask[];
     firmId: mongoose.Types.ObjectId;
@@ -44,6 +46,8 @@ const TaskMasterSchema = new Schema<ITaskMaster>({
     hsnSac: { type: String },
     udin: { type: Boolean, default: false },
     billingAmount: { type: Number, default: 0 },
+    estimatedHours: { type: Number, default: 1 },
+    multiFirmId: { type: Schema.Types.ObjectId, ref: 'MultiFirm', default: null },
     frequency: { type: String },
     subtasks: [SubtaskSchema],
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },

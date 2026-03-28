@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -31,6 +31,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { staffService } from '../../../services/staffService';
 import { billingService } from '../../../services/billingService';
+import api from '../../../services/api';
 import type { ServiceItem } from '../../../services/billingService';
 import type { TaskMasterData, User, Subtask } from '../../../types';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -56,6 +57,8 @@ export const TaskMaster: React.FC = () => {
         department: '',
         frequency: '',
         billingAmount: 0,
+        estimatedHours: 1,
+        multiFirmId: '',
         reportingManager: '',
         description: '',
         status: 'Active',
@@ -98,6 +101,27 @@ export const TaskMaster: React.FC = () => {
         queryFn: taskMasterService.getTaskMasters
     });
 
+    // Apply list filters client-side
+    const filteredTaskMasters = useMemo(() => {
+        return taskMasters.filter((tm: TaskMasterData) => {
+            if (filters.department && tm.department !== filters.department) return false;
+            if (filters.frequency && tm.frequency !== filters.frequency) return false;
+            if (filters.mode && tm.mode !== filters.mode) return false;
+            if (filters.status && tm.status !== filters.status) return false;
+            if (filters.udin) {
+                const want = filters.udin === 'Yes';
+                if (!!tm.udin !== want) return false;
+            }
+            if (filters.reportingManager) {
+                const rmId = typeof tm.reportingManager === 'object' && tm.reportingManager !== null && '_id' in (tm.reportingManager as object)
+                    ? (tm.reportingManager as { _id: string })._id
+                    : tm.reportingManager as string;
+                if (rmId !== filters.reportingManager) return false;
+            }
+            return true;
+        });
+    }, [taskMasters, filters]);
+
     // Fetch Staff for Reporting Manager
     const { data: staff = [] } = useQuery({
         queryKey: ['staff'],
@@ -108,6 +132,15 @@ export const TaskMaster: React.FC = () => {
     const { data: services = [] } = useQuery({
         queryKey: ['billingServices'],
         queryFn: billingService.getServices
+    });
+
+    // Fetch Multi-Firms for billing firm selector
+    const { data: multiFirms = [] } = useQuery({
+        queryKey: ['multiFirms'],
+        queryFn: async () => {
+            const res = await api.get<{ _id: string; firmName: string; invoicePrefix?: string }[]>('/firm/multi');
+            return res.data;
+        }
     });
 
     const createMutation = useMutation({
@@ -156,6 +189,8 @@ export const TaskMaster: React.FC = () => {
             hsnSac: '',
             udin: false,
             billingAmount: 0,
+            estimatedHours: 1,
+            multiFirmId: '',
             frequency: '',
             subtasks: []
         });
@@ -341,7 +376,7 @@ export const TaskMaster: React.FC = () => {
                 <Paper elevation={0} sx={{ mx: { xs: 0, sm: 2 }, borderRadius: 0, border: '1px solid #e0e0e0', borderTop: 'none', overflowX: 'auto' }}>
                     {isMobile ? (
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: '#f8fafc' }}>
-                            {taskMasters.length > 0 ? taskMasters.map((tm: TaskMasterData) => (
+                            {filteredTaskMasters.length > 0 ? filteredTaskMasters.map((tm: TaskMasterData) => (
                                 <Paper key={tm._id} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                         <Box>
@@ -407,7 +442,9 @@ export const TaskMaster: React.FC = () => {
                                 </Paper>
                             )) : (
                                 <Box p={3} textAlign="center">
-                                    <Typography color="text.secondary">No Record Found</Typography>
+                                    <Typography color="text.secondary">
+                                        {taskMasters.length > 0 ? 'No records match the selected filters.' : 'No Record Found'}
+                                    </Typography>
                                 </Box>
                             )}
                         </Box>
@@ -428,7 +465,7 @@ export const TaskMaster: React.FC = () => {
                                     </TableHead>
                                 )}
                                 <TableBody>
-                                    {taskMasters.map((tm: TaskMasterData) => (
+                                    {filteredTaskMasters.map((tm: TaskMasterData) => (
                                         <TableRow key={tm._id} hover>
                                             <TableCell>{tm.taskName}</TableCell>
                                             <TableCell>{tm.mode}</TableCell>
@@ -464,10 +501,10 @@ export const TaskMaster: React.FC = () => {
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {taskMasters.length === 0 && (
+                                    {filteredTaskMasters.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={5} align="center" sx={{ py: 3, fontWeight: 600, color: 'text.secondary' }}>
-                                                No Record Found
+                                                {taskMasters.length > 0 ? 'No records match the selected filters.' : 'No Record Found'}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -664,6 +701,38 @@ export const TaskMaster: React.FC = () => {
                             placeholder="Amount to be billed on completion"
                             size="small"
                         />
+
+                        {/* Row 7 */}
+                        <TextField
+                            label="Estimated Hours per Task"
+                            type="number"
+                            variant="outlined"
+                            value={formData.estimatedHours || ''}
+                            onChange={(e) => setFormData({ ...formData, estimatedHours: parseFloat(e.target.value) || 1 })}
+                         size="small"
+                            inputProps={{ min: 0.5, step: 0.5 }}
+                            helperText="Used for time tracking efficiency reports"
+                        />
+
+                        {/* Billing Firm (MultiFirm) */}
+                        <TextField
+                            select
+                            label="Billing Firm (Auto Invoice From)"
+                            variant="outlined"
+                            size="small"
+                            value={typeof formData.multiFirmId === 'object' && formData.multiFirmId !== null
+                                ? (formData.multiFirmId as { _id: string })._id
+                                : (formData.multiFirmId || '')}
+                            onChange={(e) => setFormData({ ...formData, multiFirmId: e.target.value || undefined })}
+                            helperText="Which firm's letterhead to use for auto-generated invoices"
+                        >
+                            <MenuItem value=""><em>Main Firm (Default)</em></MenuItem>
+                            {multiFirms.map((mf: { _id: string; firmName: string; invoicePrefix?: string }) => (
+                                <MenuItem key={mf._id} value={mf._id}>
+                                    {mf.firmName} {mf.invoicePrefix ? `(${mf.invoicePrefix})` : ''}
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     </Box>
 
 

@@ -389,10 +389,12 @@ interface SendEmployeeWelcomeEmailParams {
     username: string;
     password: string;
     role: string;
+    portalUrl?: string;  // firm-specific subdomain URL
 }
 
 export const sendEmployeeWelcomeEmail = async (params: SendEmployeeWelcomeEmailParams): Promise<boolean> => {
-    const { employeeEmail, employeeName, username, password, role } = params;
+    const { employeeEmail, employeeName, username, password, role, portalUrl: firmPortalUrl } = params;
+    const loginUrl = firmPortalUrl || portalUrl;
     const transporter = createTransporter();
     if (!transporter) {
         console.log('Employee welcome email skipped (not configured)');
@@ -456,10 +458,12 @@ interface SendEmployeePasswordResetEmailParams {
     employeeName: string;
     username: string;
     newPassword: string;
+    portalUrl?: string;  // firm-specific subdomain URL
 }
 
 export const sendEmployeePasswordResetEmail = async (params: SendEmployeePasswordResetEmailParams): Promise<boolean> => {
-    const { employeeEmail, employeeName, username, newPassword } = params;
+    const { employeeEmail, employeeName, username, newPassword, portalUrl: firmPortalUrl } = params;
+    const loginUrl = firmPortalUrl || portalUrl;
     const transporter = createTransporter();
     if (!transporter) {
         console.log('Employee password reset email skipped (not configured)');
@@ -498,13 +502,13 @@ export const sendEmployeePasswordResetEmail = async (params: SendEmployeePasswor
     <div class="credential-row"><span class="label">New Password</span><span class="value">${newPassword}</span></div>
   </div>
   <div class="alert">⚠️ <strong>Security Notice:</strong> If you did not request this reset, contact your administrator immediately.</div>
-  <center><a href="${portalUrl}" class="btn">Login Now →</a></center>
+  <center><a href="${loginUrl}" class="btn">Login Now →</a></center>
   <p style="color:#666;font-size:13px">We recommend changing your password after logging in from your profile settings.</p>
 </div>
 <div class="footer"><p>Automated message from ${emailBrand}. Do not reply.</p></div>
 </body></html>`,
         });
-        console.log(`Employee password reset email sent to ${employeeEmail}`);
+        console.log(`Employee password reset email sent to ${employeeEmail} with portal URL: ${loginUrl}`);
         return true;
     } catch (error) {
         console.error('Error sending employee password reset email:', error);

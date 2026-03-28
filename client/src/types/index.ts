@@ -350,6 +350,8 @@ export interface TaskMasterData {
     hsnSac?: string;
     udin: boolean;
     billingAmount?: number;
+    estimatedHours?: number;
+    multiFirmId?: string | { _id: string; firmName: string; invoicePrefix?: string };
     frequency?: string;
     subtasks: Subtask[];
     createdAt?: string;
