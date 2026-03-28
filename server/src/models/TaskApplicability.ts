@@ -36,7 +36,18 @@ const TaskApplicabilitySchema = new Schema<ITaskApplicability>({
     timestamps: true
 });
 
-// Ensure a task is applied only once per client/group unless it's a different frequency (though usually one master is applied once)
-TaskApplicabilitySchema.index({ taskMasterId: 1, clientId: 1, clientGroupId: 1 }, { unique: true });
+// Performance index only (NOT unique — duplicate prevention done in route logic)
+TaskApplicabilitySchema.index({ taskMasterId: 1, clientId: 1, firmId: 1 });
+TaskApplicabilitySchema.index({ taskMasterId: 1, clientGroupId: 1, firmId: 1 });
 
 export const TaskApplicability = mongoose.model<ITaskApplicability>('TaskApplicability', TaskApplicabilitySchema);
+
+// ── Drop old conflicting unique index on startup (runs once, safe to repeat) ──
+// The old index { taskMasterId, clientId, clientGroupId } (without firmId) caused 11000 errors
+TaskApplicability.collection.dropIndex('taskMasterId_1_clientId_1_clientGroupId_1')
+    .then(() => console.log('[TaskApplicability] Dropped old unique index successfully'))
+    .catch(() => { /* Index didn't exist or already dropped — safe to ignore */ });
+
+TaskApplicability.collection.dropIndex('taskMasterId_1_clientId_1_clientGroupId_1_firmId_1')
+    .then(() => console.log('[TaskApplicability] Dropped old firmId unique index successfully'))
+    .catch(() => { /* Index didn't exist or already dropped — safe to ignore */ });

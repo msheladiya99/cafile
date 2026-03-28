@@ -36,10 +36,11 @@ import {
 } from '@mui/icons-material';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
+import { staffService } from '../../../services/staffService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import { taskService } from '../../../services/taskService';
 import { taskApplicabilityService } from '../../../services/taskApplicabilityService';
-import type { TaskMasterData, Client, TaskApplicability as TaskApplicabilityType } from '../../../types';
+import type { TaskMasterData, Client, TaskApplicability as TaskApplicabilityType, User } from '../../../types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import type { AxiosError } from 'axios';
@@ -73,6 +74,7 @@ export const TaskApplicability: React.FC = () => {
 
     const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+    const [assignedTo, setAssignedTo] = useState<string[]>([]);
     const queryClient = useQueryClient();
 
     const years = useMemo(() => {
@@ -106,41 +108,43 @@ export const TaskApplicability: React.FC = () => {
         queryFn: adminService.getClients
     });
 
+    const { data: staffList = [] } = useQuery<User[]>({
+        queryKey: ['staff'],
+        queryFn: staffService.getStaff
+    });
+
     // Query key changes depending on what's selected (task or client)
     const appliedQueryKey = useMemo(() => {
         if (isSingleTask) return ['taskApplicability', 'single', singleClientName];
-        if (basedOn === 'Task') return ['taskApplicability', 'task', selectedTask, groupName];
+        if (basedOn === 'Task') return ['taskApplicability', 'task', selectedTask];
         return ['taskApplicability', 'client', singleClientName];
-    }, [isSingleTask, basedOn, selectedTask, singleClientName, groupName]);
+    }, [isSingleTask, basedOn, selectedTask, singleClientName]);
 
     const { data: appliedTasks = [], refetch: refetchApplied } = useQuery({
         queryKey: appliedQueryKey,
         queryFn: () => {
-            if (basedOn === 'Task') {
-                // Fetch by taskMasterId; optionally also filter by group on client side
-                return taskApplicabilityService.getApplicabilities({ taskMasterId: selectedTask });
-            }
+            if (isSingleTask) return taskApplicabilityService.getApplicabilities({ clientId: singleClientName });
+            if (basedOn === 'Task') return taskApplicabilityService.getApplicabilities({ taskMasterId: selectedTask });
             return taskApplicabilityService.getApplicabilities({ clientId: singleClientName });
         },
-        enabled: basedOn === 'Task' ? !!selectedTask : !!singleClientName
+        enabled: isSingleTask ? !!singleClientName : (basedOn === 'Task' ? !!selectedTask : !!singleClientName)
     });
 
     // ─── Apply Mutation (Recurrence) ───
     const applyMutation = useMutation({
         mutationFn: taskApplicabilityService.applyTask,
         onSuccess: (data: { message: string; count: number; errors?: { id: string; error: string }[] }) => {
-            if (data.count > 0) {
-                toast.success(`✅ ${data.message}`);
-            }
+            toast.success(`✅ ${data.message}`);
             if (data.errors?.length) {
-                const failedCount = data.errors!.length;
                 const failedMessages = data.errors!.map(e => e.error).join('; ');
-                toast.error(`⚠️ ${failedCount} item(s) failed: ${failedMessages}`, { duration: 6000 });
+                toast.error(`⚠️ ${data.errors!.length} failed: ${failedMessages}`, { duration: 6000 });
             }
             setSelectedClientIds([]);
             setSelectedTaskIds([]);
-            refetchApplied();
+            // Force both invalidation AND explicit refetch to ensure right panel updates
+            queryClient.invalidateQueries({ queryKey: ['taskApplicability'] });
             queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            setTimeout(() => refetchApplied(), 500); // belt-and-suspenders refetch
         },
         onError: (err: AxiosError<{ message: string }>) => {
             toast.error(err.response?.data?.message || 'Failed to apply task');
@@ -171,6 +175,7 @@ export const TaskApplicability: React.FC = () => {
                 startDate,
                 infinite: infiniteApplicability,
                 department: department,
+                assignedTo,
                 itStatus,
                 subMaster
             });
@@ -186,7 +191,8 @@ export const TaskApplicability: React.FC = () => {
                     clientIds: [singleClientName],
                     startDate,
                     infinite: infiniteApplicability,
-                    department: department
+                    department: department,
+                    assignedTo
                 }, {
                     onSettled: () => applyNext(idx + 1)
                 });
@@ -205,6 +211,7 @@ export const TaskApplicability: React.FC = () => {
             startDate,
             infinite: infiniteApplicability,
             department: department,
+            assignedTo: assignedTo,
         });
     };
 
@@ -229,7 +236,7 @@ export const TaskApplicability: React.FC = () => {
                         ? master.reportingManager
                         : (master.reportingManager as { _id: string })._id)
                     : undefined,
-                assignedTo: [],
+                assignedTo,
                 clientId: singleClientName,
                 priority: 'MEDIUM' as const,
                 targetDate: singleTargetDate,
@@ -495,7 +502,36 @@ export const TaskApplicability: React.FC = () => {
                             </Box>
                         </Grid>
 
-                        {/* Task Info Preview */}
+                        {/* Assigned To — single task */}
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
+                                <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Assigned To</Typography>
+                                <Select
+                                    size="small"
+                                    fullWidth
+                                    multiple
+                                    displayEmpty
+                                    value={assignedTo}
+                                    onChange={(e) => setAssignedTo(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
+                                    renderValue={(selected) => {
+                                        if ((selected as string[]).length === 0) return <em style={{ color: '#888' }}>Choose employee(s)...</em>;
+                                        return (selected as string[]).map(id => {
+                                            const emp = staffList.find((s: User) => s._id === id);
+                                            return emp ? `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username : id;
+                                        }).join(', ');
+                                    }}
+                                >
+                                    <MenuItem value="" disabled><em>Choose employee(s)...</em></MenuItem>
+                                    {staffList.map((emp: User) => (
+                                        <MenuItem key={emp._id} value={emp._id}>
+                                            <Checkbox size="small" checked={assignedTo.includes(emp._id)} />
+                                            {`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </Box>
+                        </Grid>
+
                         {selectedTaskMaster && (
                             <Grid size={{ xs: 12 }}>
                                 <Box sx={{ bgcolor: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 2, p: 2, ml: 18 }}>
@@ -646,6 +682,36 @@ export const TaskApplicability: React.FC = () => {
                                 </Grid>
                             </>
                         )}
+
+                        {/* Assigned To — recurrence form */}
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Box display="flex" alignItems="center">
+                                <Typography sx={{ width: 140, color: 'text.secondary' }}>Assigned To</Typography>
+                                <Select
+                                    size="small"
+                                    fullWidth
+                                    multiple
+                                    displayEmpty
+                                    value={assignedTo}
+                                    onChange={(e) => setAssignedTo(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
+                                    renderValue={(selected) => {
+                                        if ((selected as string[]).length === 0) return <em style={{ color: '#888' }}>Choose employee(s)...</em>;
+                                        return (selected as string[]).map(id => {
+                                            const emp = staffList.find((s: User) => s._id === id);
+                                            return emp ? `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username : id;
+                                        }).join(', ');
+                                    }}
+                                >
+                                    <MenuItem value="" disabled><em>Choose employee(s)...</em></MenuItem>
+                                    {staffList.map((emp: User) => (
+                                        <MenuItem key={emp._id} value={emp._id}>
+                                            <Checkbox size="small" checked={assignedTo.includes(emp._id)} />
+                                            {`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </Box>
+                        </Grid>
 
                         {/* Infinite Applicability checkbox */}
                         <Grid size={{ xs: 12 }}>

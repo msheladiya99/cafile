@@ -127,7 +127,7 @@ interface MasterModalProps {
     onSave: (data: { name: string; description: string; status: boolean }, id?: string) => void;
     onDelete: (id: string) => void;
     isSaving: boolean;
-    dataList: { _id: string; name: string; description?: string; status?: boolean }[];
+    dataList: { _id?: string; name: string; description?: string; status?: boolean }[];
     showSnackbar: (message: string, severity?: 'success' | 'error') => void;
 }
 

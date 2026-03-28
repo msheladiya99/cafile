@@ -275,7 +275,12 @@ export const generateInvoicePDF = async (invoice: Invoice) => {
         // Table
         yPos = 110;
         const tableColumn = ["Item Description", "Qty", "Rate", "Amount"];
-        const tableRows = invoice.items.map(item => [item.name, item.quantity, item.unitPrice.toLocaleString(), item.amount.toLocaleString()]);
+        const tableRows = invoice.items.map(item => [
+            item.name + (item.description ? `\n${item.description}` : ''),
+            item.quantity,
+            item.unitPrice.toLocaleString(),
+            item.amount.toLocaleString()
+        ]);
 
         autoTable(doc, {
             head: [tableColumn], body: tableRows, startY: yPos, theme: 'plain',

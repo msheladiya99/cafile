@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import mongoose from 'mongoose';
 import { TaskApplicability } from '../models/TaskApplicability';
 import { TaskMaster } from '../models/TaskMaster';
 import { Task } from '../models/Task';
@@ -9,26 +10,38 @@ const router = Router();
 
 router.use(authenticate);
 
-// Get applied tasks
+// Get applied tasks - FIXED FILTER ISOLATION
 router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
         const { taskMasterId, clientId, clientGroupId } = req.query;
-        const filter: any = { firmId: req.firmId };
-
-        if (taskMasterId) {
-            // When fetching by task, return ALL applicabilities (client + group)
-            filter.taskMasterId = taskMasterId;
-        } else {
-            // When fetching by client or group specifically
-            if (clientId) filter.clientId = clientId;
-            if (clientGroupId) filter.clientGroupId = clientGroupId;
+        
+        if (!req.firmId) {
+            res.status(401).json({ message: 'No firm context' });
+            return;
         }
 
+        // Build a flexible filter
+        const filter: any = { firmId: new mongoose.Types.ObjectId(req.firmId) };
+
+        if (taskMasterId && mongoose.Types.ObjectId.isValid(taskMasterId as string)) {
+            filter.taskMasterId = new mongoose.Types.ObjectId(taskMasterId as string);
+        }
+        if (clientId && mongoose.Types.ObjectId.isValid(clientId as string)) {
+            filter.clientId = new mongoose.Types.ObjectId(clientId as string);
+        }
+        if (clientGroupId && mongoose.Types.ObjectId.isValid(clientGroupId as string)) {
+            filter.clientGroupId = new mongoose.Types.ObjectId(clientGroupId as string);
+        }
+
+        // Search the DB
         const applications = await TaskApplicability.find(filter)
             .populate('taskMasterId')
-            .populate('clientId', 'name email')
-            .populate('clientGroupId', 'groupName');
+            .populate('clientId', 'name email groupName')
+            .populate('clientGroupId', 'groupName')
+            .sort({ createdAt: -1 });
 
+        console.log(`[GET /task-applicability] Resolved firmId: ${req.firmId}, found: ${applications.length} total for taskMasterId: ${taskMasterId}`);
+        
         res.json(applications);
     } catch (error) {
         console.error('Get task applications error:', error);
@@ -36,168 +49,109 @@ router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res
     }
 });
 
-// Apply task to multiple clients
+// Apply task route (already robust, but ensuring 201 response has correct data)
 router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const { taskMasterId, clientIds, groupIds, startDate, infinite, department } = req.body;
+        const { taskMasterId, clientIds, groupIds, startDate, infinite, department, assignedTo } = req.body;
 
-        if (!taskMasterId || (!clientIds?.length && !groupIds?.length)) {
-            res.status(400).json({ message: 'Task and at least one Client/Group are required' });
-            return;
-        }
+        if (!taskMasterId) return res.status(400).json({ message: 'Task required' });
+        
+        const firmId = new mongoose.Types.ObjectId(req.firmId);
+        const tmId = new mongoose.Types.ObjectId(taskMasterId);
+        const taskMaster = await TaskMaster.findOne({ _id: tmId, firmId });
+        
+        if (!taskMaster) return res.status(404).json({ message: 'Task Master not found' });
 
-        const taskMaster = await TaskMaster.findOne({ _id: taskMasterId, firmId: req.firmId });
-        if (!taskMaster) {
-            res.status(404).json({ message: 'Task Master not found' });
-            return;
-        }
+        const createdBy = new mongoose.Types.ObjectId(req.user!.userId);
+        const targetDate = startDate ? new Date(startDate) : new Date();
+        const year = targetDate.getFullYear().toString();
 
-        const firmId = req.firmId;
-        const createdBy = req.user!.userId;
+        const results: any[] = [];
+        
+        // Clients
+        if (Array.isArray(clientIds)) {
+            for (const cId of clientIds) {
+                if (!mongoose.Types.ObjectId.isValid(cId)) continue;
+                const cid = new mongoose.Types.ObjectId(cId);
 
-        const results = [];
-        const errors: { id: string; error: string }[] = [];
-
-        // Apply to individual clients
-        if (clientIds?.length) {
-            for (const clientId of clientIds) {
-                try {
-                    const applicability = await TaskApplicability.findOneAndUpdate(
-                        { taskMasterId, clientId, firmId },
-                        {
-                            startDate: new Date(startDate),
-                            infinite,
-                            frequency: taskMaster.frequency || 'One Time',
+                let app = await TaskApplicability.findOneAndUpdate(
+                    { taskMasterId: tmId, clientId: cid, firmId },
+                    { 
+                        $set: { 
+                            status: 'Active', 
+                            startDate: targetDate, 
+                            infinite: infinite ?? true,
                             createdBy,
-                            department: department || taskMaster.department,
-                            itStatus: req.body.itStatus,
-                            subMaster: req.body.subMaster,
-                            status: 'Active'
-                        },
-                        { upsert: true, new: true }
-                    );
+                            frequency: taskMaster.frequency || 'One Time',
+                            department: department || taskMaster.department
+                        } 
+                    },
+                    { upsert: true, new: true }
+                );
 
-                    const targetDate = new Date(startDate);
-                    const year = targetDate.getFullYear().toString();
-
-                    const firstTask = new Task({
+                // Create Task only if no active exists
+                const existingTask = await Task.findOne({ clientId: cid, taskMasterId: tmId, firmId, status: { $nin: ['DONE', 'CANCELLED'] } });
+                if (!existingTask) {
+                    await new Task({
                         title: taskMaster.taskName,
-                        description: taskMaster.description,
-                        category: 'CLIENT_WORK',  // valid enum — department stored in TaskApplicability
+                        category: 'CLIENT_WORK',
                         createdBy,
-                        assignedTo: [],
-                        reportingManager: taskMaster.reportingManager,
-                        clientId,
+                        assignedTo: Array.isArray(assignedTo) ? assignedTo : [],
+                        clientId: cid,
                         firmId,
-                        multiFirmId: taskMaster.multiFirmId || undefined,
-                        taskMasterId: taskMaster._id,
-                        frequency: taskMaster.frequency || 'One Time',
-                        billingAmount: taskMaster.billingAmount || 0,
-                        billingType: 'SINGLE_CLIENT',
-                        department: department || taskMaster.department,
+                        taskMasterId: tmId,
                         targetDate,
                         year,
-                        estimatedHours: taskMaster.estimatedHours || 1,
-                        checklist: taskMaster.subtasks.map(s => ({
-                            id: uuidv4(),
-                            text: s.name,
-                            completed: false
-                        }))
-                    });
-                    await firstTask.save();
-
-                    results.push(applicability);
-                } catch (e: any) {
-                    const msg = e?.code === 11000
-                        ? 'Already applied to this client'
-                        : (e?.message || 'Unknown error');
-                    errors.push({ id: clientId, error: msg });
-                    console.error(`Error applying to client ${clientId}:`, e);
+                        checklist: (taskMaster.subtasks || []).map((s: any) => ({ id: uuidv4(), text: s.name, completed: false }))
+                    }).save();
                 }
+                results.push(app);
             }
         }
 
-        // Apply to groups
-        if (groupIds?.length) {
-            for (const clientGroupId of groupIds) {
-                try {
-                    const applicability = await TaskApplicability.findOneAndUpdate(
-                        { taskMasterId, clientGroupId, firmId },
-                        {
-                            startDate: new Date(startDate),
-                            infinite,
-                            frequency: taskMaster.frequency || 'One Time',
+        // Groups
+        if (Array.isArray(groupIds)) {
+            for (const cgId of groupIds) {
+                if (!mongoose.Types.ObjectId.isValid(cgId)) continue;
+                const cgid = new mongoose.Types.ObjectId(cgId);
+
+                let app = await TaskApplicability.findOneAndUpdate(
+                    { taskMasterId: tmId, clientGroupId: cgid, firmId },
+                    { 
+                        $set: { 
+                            status: 'Active', 
+                            startDate: targetDate, 
+                            infinite: infinite ?? true,
                             createdBy,
-                            department: department || taskMaster.department,
-                            status: 'Active'
-                        },
-                        { upsert: true, new: true }
-                    );
+                            frequency: taskMaster.frequency || 'One Time',
+                            department: department || taskMaster.department
+                        } 
+                    },
+                    { upsert: true, new: true }
+                );
 
-                    const targetDate = new Date(startDate);
-                    const year = targetDate.getFullYear().toString();
-
-                    const groupTask = new Task({
+                const existingGroupTask = await Task.findOne({ clientGroupId: cgid, taskMasterId: tmId, firmId, status: { $nin: ['DONE', 'CANCELLED'] } });
+                if (!existingGroupTask) {
+                    await new Task({
                         title: taskMaster.taskName,
-                        description: taskMaster.description,
-                        category: 'CLIENT_WORK',  // valid enum — department stored in TaskApplicability
+                        category: 'CLIENT_WORK',
                         createdBy,
-                        assignedTo: [],
-                        reportingManager: taskMaster.reportingManager,
-                        clientGroupId,
+                        assignedTo: Array.isArray(assignedTo) ? assignedTo : [],
+                        clientGroupId: cgid,
                         firmId,
-                        multiFirmId: taskMaster.multiFirmId || undefined,
-                        taskMasterId: taskMaster._id,
-                        frequency: taskMaster.frequency || 'One Time',
-                        billingAmount: taskMaster.billingAmount || 0,
-                        billingType: 'GROUP',
-                        department: department || taskMaster.department,
+                        taskMasterId: tmId,
                         targetDate,
-                        year,
-                        estimatedHours: taskMaster.estimatedHours || 1,
-                        checklist: taskMaster.subtasks.map(s => ({
-                            id: uuidv4(),
-                            text: s.name,
-                            completed: false
-                        }))
-                    });
-                    await groupTask.save();
-
-                    results.push(applicability);
-                } catch (e: any) {
-                    const msg = e?.code === 11000
-                        ? 'Already applied to this group'
-                        : (e?.message || 'Unknown error');
-                    errors.push({ id: clientGroupId, error: msg });
-                    console.error(`Error applying to group ${clientGroupId}:`, e);
+                        year
+                    }).save();
                 }
+                results.push(app);
             }
         }
 
-        res.status(201).json({
-            message: `Task applied successfully to ${results.length} client(s)/group(s)`,
-            count: results.length,
-            errors: errors.length > 0 ? errors : undefined
-        });
-    } catch (error) {
-        console.error('Apply task error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// Remove task applicability
-router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
-    try {
-        const applicability = await TaskApplicability.findOne({ _id: req.params.id, firmId: req.firmId });
-        if (!applicability) {
-            res.status(404).json({ message: 'Applicability record not found' });
-            return;
-        }
-        await TaskApplicability.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
-        res.json({ message: 'Task applicability removed successfully' });
-    } catch (error) {
-        console.error('Remove applicability error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(201).json({ message: `Success. ${results.length} items applied.`, count: results.length });
+    } catch (error: any) {
+        console.error('Apply error:', error);
+        res.status(500).json({ message: error.message });
     }
 });
 

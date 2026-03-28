@@ -790,16 +790,42 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
 
                         const billingAmt = task.billingAmount && task.billingAmount > 0 ? task.billingAmount : 0;
 
+                        // ── Fetch client names for Invoice visibility ──
+                        let clientNamesForBill = '';
+                        try {
+                            const ClientApp = mongoose.model('Client');
+                            if (task.clientGroupId || task.billingType === 'GROUP' || task.billingType === 'CLIENT_GROUP') {
+                                // For group tasks, grab all clients belonging to that group
+                                const clientsInGroup = await ClientApp.find({ groupName: task.clientGroupId }).lean();
+                                if (clientsInGroup && clientsInGroup.length > 0) {
+                                    clientNamesForBill = 'Clients: ' + clientsInGroup.map((c: any) => c.name).join(', ');
+                                } else {
+                                    clientNamesForBill = 'Group Task';
+                                }
+                            } else if (task.clientId) {
+                                const singleClient = await ClientApp.findById(task.clientId).lean();
+                                if (singleClient) {
+                                    clientNamesForBill = 'Client: ' + (singleClient as any).name;
+                                }
+                            }
+                        } catch (err) {
+                            console.error('[AutoBill] Failed to fetch clients for bill description', err);
+                        }
+
+                        const itemDescription = task.description 
+                                                ? `${task.description}\n${clientNamesForBill}`.trim() 
+                                                : clientNamesForBill;
+
                         const newInvoice = new Invoice({
                             invoiceNumber,
-                            billingType: task.billingType === 'GROUP' ? 'CLIENT_GROUP' : (task.billingType || 'SINGLE_CLIENT'),
-                            clientId: task.clientId,
-                            clientGroupId: task.clientGroupId,
+                            billingType: task.clientGroupId ? 'CLIENT_GROUP' : 'SINGLE_CLIENT',
+                            ...(task.clientId && { clientId: task.clientId }),
+                            ...(task.clientGroupId && { clientGroupId: task.clientGroupId }),
                             firmId: task.firmId,
                             multiFirmId: billingFirmId,  // ← billing firm for letterhead
                             items: [{
                                 name: `Task Completion: ${task.title}`,
-                                description: task.description || '',
+                                description: itemDescription,
                                 quantity: 1,
                                 unitPrice: billingAmt,
                                 amount: billingAmt
@@ -839,6 +865,79 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
         });
     } catch (error) {
         console.error('Update task status error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ============================================
+// ALL TASK UPDATE — Bulk status + time entry
+// ============================================
+router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { employeeId, clientId, taskMasterId, year, status, timeSpentMinutes, description, place, subtaskName, date } = req.body;
+
+        if (!employeeId || !clientId || !taskMasterId) {
+            res.status(400).json({ message: 'Employee, Client, and Task are required' });
+            return;
+        }
+
+        // Find matching task
+        const filter: any = {
+            firmId: req.firmId,
+            clientId,
+            taskMasterId,
+            assignedTo: employeeId,
+            status: { $nin: ['DONE', 'CANCELLED'] }
+        };
+        if (year) filter.year = year;
+
+        const task = await Task.findOne(filter);
+        if (!task) {
+            res.status(404).json({ message: 'No active task found for the selected Employee, Client, and Task combination. Make sure the task is assigned to this employee.' });
+            return;
+        }
+
+        // Update status if provided
+        if (status) {
+            const validStatuses: TaskStatus[] = ['PENDING', 'IN_PROCESS', 'PENDING_FOR_APPROVAL', 'APPROVED', 'DONE', 'CANCELLED', 'ON_HOLD', 'PENDING_FROM_CLIENT', 'PENDING_FROM_DEPARTMENT', 'REJECTED'];
+            if (validStatuses.includes(status as TaskStatus)) {
+                task.status = status as TaskStatus;
+                if (status === 'IN_PROCESS' && !task.startDate) task.startDate = new Date();
+                if (status === 'DONE' && !task.completedAt) {
+                    task.completedAt = new Date();
+                    task.progressPercentage = 100;
+                }
+            }
+        }
+
+        // Record time entry
+        const minutes = parseInt(timeSpentMinutes) || 0;
+        if (minutes > 0) {
+            const entryDate = date ? new Date(date) : new Date();
+            task.timeEntries.push({
+                startTime: entryDate,
+                endTime: new Date(entryDate.getTime() + minutes * 60000),
+                duration: minutes
+            });
+            (task as any).actualTimeSpent = (task.actualTimeSpent || 0) + minutes;
+        }
+
+        // Add description as a comment if provided
+        if (description) {
+            task.comments.push({
+                id: uuidv4(),
+                userId: req.user!.userId as any,
+                userName: (req.user as any).username || (req.user as any).name || 'Admin',
+                text: `[${place || 'Office'}${subtaskName ? ' | ' + subtaskName : ''}] ${description}`,
+                createdAt: new Date()
+            } as any);
+        }
+
+        await task.save();
+
+        res.json({ message: `Task updated successfully`, taskId: task._id });
+    } catch (error) {
+        console.error('Bulk update task error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

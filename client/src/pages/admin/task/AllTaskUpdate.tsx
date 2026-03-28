@@ -21,12 +21,13 @@ import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
 import type { TaskMasterData, Client, User, TaskStatus, Subtask } from '../../../types';
 import toast from 'react-hot-toast';
+import api from '../../../services/api';
 
 export const AllTaskUpdate: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const [date, setDate] = useState('14-Mar-2026');
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [employee, setEmployee] = useState('');
     const [client, setClient] = useState('');
     const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -34,18 +35,20 @@ export const AllTaskUpdate: React.FC = () => {
     const [subtask, setSubtask] = useState('');
     const [place, setPlace] = useState('Office');
     const [status, setStatus] = useState<TaskStatus | ''>('');
-    const [timeSpentType, setTimeSpentType] = useState('Direct Time');
     const [timeSpent, setTimeSpent] = useState('');
     const [description, setDescription] = useState('');
 
-    const taskStatuses: TaskStatus[] = ['PENDING', 'IN_PROCESS', 'PENDING_FOR_APPROVAL', 'APPROVED', 'DONE', 'CANCELLED', 'ON_HOLD', 'PENDING_FROM_CLIENT', 'PENDING_FROM_DEPARTMENT', 'REJECTED'];
+    const taskStatuses: TaskStatus[] = [
+        'PENDING', 'IN_PROCESS', 'PENDING_FOR_APPROVAL', 'APPROVED',
+        'DONE', 'CANCELLED', 'ON_HOLD', 'PENDING_FROM_CLIENT',
+        'PENDING_FROM_DEPARTMENT', 'REJECTED'
+    ];
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
         return Array.from({ length: 11 }, (_, i) => (currentYear - 5 + i).toString());
     }, []);
 
-    // Fetch data for dropdowns
     const { data: taskMasters = [] } = useQuery({
         queryKey: ['taskMasters'],
         queryFn: taskMasterService.getTaskMasters
@@ -63,31 +66,47 @@ export const AllTaskUpdate: React.FC = () => {
 
     const saveMutation = useMutation({
         mutationFn: async () => {
-            // This is a simplified implementation. 
-            // In a real scenario, this might create a TimeEntry or update a Task.
-            // For now, we'll simulate a success.
             if (!employee || !client || !task) {
-                throw new Error('Please fill all required fields');
+                throw new Error('Please fill all required fields (Employee, Client, Task)');
             }
 
-            // Logic to update or create task activity
-            const message = `Task update saved for ${date}`;
-            return { message };
+            // Parse time input: accepts "90" (minutes) or "1:30" (hours:minutes)
+            let timeSpentMinutes = 0;
+            if (timeSpent) {
+                if (timeSpent.includes(':')) {
+                    const [h, m] = timeSpent.split(':').map(Number);
+                    timeSpentMinutes = (h || 0) * 60 + (m || 0);
+                } else {
+                    timeSpentMinutes = parseInt(timeSpent) || 0;
+                }
+            }
+
+            const selectedSubtask = subtasks.find((s: Subtask) => s._id === subtask || s.name === subtask);
+
+            const response = await api.post('/tasks/bulk-update', {
+                employeeId: employee,
+                clientId: client,
+                taskMasterId: task,
+                year,
+                status: status || undefined,
+                timeSpentMinutes,
+                description,
+                place,
+                subtaskName: selectedSubtask?.name,
+                date,
+            });
+            return response.data;
         },
-        onSuccess: (data) => {
-            toast.success(data.message);
-            // Reset some fields if needed
+        onSuccess: (data: { message: string }) => {
+            toast.success(data.message || 'Task updated successfully');
             setDescription('');
             setTimeSpent('');
+            setStatus('');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Failed to save update');
+        onError: (error: { response?: { data?: { message?: string } }; message?: string }) => {
+            toast.error(error.response?.data?.message || error.message || 'Failed to save update');
         }
     });
-
-    const handleSave = () => {
-        saveMutation.mutate();
-    };
 
     const selectedTaskMaster = useMemo(() => {
         return taskMasters.find((t: TaskMasterData) => t._id === task);
@@ -101,7 +120,6 @@ export const AllTaskUpdate: React.FC = () => {
 
     return (
         <Box sx={{ p: 0 }}>
-            {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -115,21 +133,15 @@ export const AllTaskUpdate: React.FC = () => {
                 <Typography variant="h6" fontWeight="500">All Task Update</Typography>
             </Paper>
 
-            {/* Form Section */}
             <Paper sx={{ p: 4, borderRadius: '0 0 8px 8px' }}>
                 <Grid container spacing={3}>
-                    {/* Row 1 */}
+                    {/* Date + Employee */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
                             <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Date <span style={{ color: 'red' }}>*</span>
                             </Typography>
-                            <TextField
-                                size="small"
-                                fullWidth
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                            />
+                            <TextField type="date" size="small" fullWidth value={date} onChange={(e) => setDate(e.target.value)} />
                         </Box>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
@@ -140,13 +152,15 @@ export const AllTaskUpdate: React.FC = () => {
                             <Select size="small" fullWidth displayEmpty value={employee} onChange={(e) => setEmployee(e.target.value)}>
                                 <MenuItem value=""><em>Choose Employee...</em></MenuItem>
                                 {staffUsers.map((u: User) => (
-                                    <MenuItem key={u._id} value={u._id}>{u.name || u.username}</MenuItem>
+                                    <MenuItem key={u._id} value={u._id}>
+                                        {`${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || u.username}
+                                    </MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 2 */}
+                    {/* Client + Year */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
                             <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
@@ -167,21 +181,19 @@ export const AllTaskUpdate: React.FC = () => {
                             </Typography>
                             <Select size="small" fullWidth displayEmpty value={year} onChange={(e) => setYear(e.target.value)}>
                                 <MenuItem value=""><em>Choose Year...</em></MenuItem>
-                                {years.map(y => (
-                                    <MenuItem key={y} value={y}>{y}</MenuItem>
-                                ))}
+                                {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 3 */}
+                    {/* Task + Subtask */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 1}>
                             <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Task <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Box display="flex" width="100%" gap={1}>
-                                <Select size="small" fullWidth displayEmpty value={task} onChange={(e) => setTask(e.target.value)}>
+                                <Select size="small" fullWidth displayEmpty value={task} onChange={(e) => { setTask(e.target.value); setSubtask(''); }}>
                                     <MenuItem value=""><em>Select an Option</em></MenuItem>
                                     {taskMasters.map((t: TaskMasterData) => (
                                         <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
@@ -195,28 +207,24 @@ export const AllTaskUpdate: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
-                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
-                                Subtask <span style={{ color: 'red' }}>*</span>
-                            </Typography>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Subtask</Typography>
                             <Select size="small" fullWidth displayEmpty value={subtask} onChange={(e) => setSubtask(e.target.value)}>
                                 <MenuItem value=""><em>Select an Option</em></MenuItem>
                                 {subtasks.map((s: Subtask) => (
-                                    <MenuItem key={s._id || s.name} value={s._id}>{s.name}</MenuItem>
+                                    <MenuItem key={s._id || s.name} value={s._id || s.name}>{s.name}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 4 */}
+                    {/* Place + Status */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
                             <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
                                 Place <span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Select size="small" fullWidth value={place} onChange={(e) => setPlace(e.target.value)}>
-                                {places.map(p => (
-                                    <MenuItem key={p} value={p}>{p}</MenuItem>
-                                ))}
+                                {places.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
                             </Select>
                         </Box>
                     </Grid>
@@ -224,75 +232,60 @@ export const AllTaskUpdate: React.FC = () => {
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 0}>
                             <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Status</Typography>
                             <Select size="small" fullWidth displayEmpty value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
-                                <MenuItem value=""><em>Select Status</em></MenuItem>
+                                <MenuItem value=""><em>— No Change —</em></MenuItem>
                                 {taskStatuses.map(s => (
-                                    <MenuItem key={s} value={s}>{s.replace('_', ' ')}</MenuItem>
+                                    <MenuItem key={s} value={s}>{s.replace(/_/g, ' ')}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
 
-                    {/* Row 5 */}
+                    {/* Time Spent */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 0.5 : 1}>
-                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>
-                                Time Spent <span style={{ color: 'red' }}>*</span>
-                            </Typography>
-                            <Box display="flex" width="100%" gap={1}>
-                                <Select size="small" sx={{ width: { xs: 120, sm: 140 } }} value={timeSpentType} onChange={(e) => setTimeSpentType(e.target.value)}>
-                                    <MenuItem value="Direct Time">Direct Time</MenuItem>
-                                </Select>
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    value={timeSpent}
-                                    onChange={(e) => setTimeSpent(e.target.value)}
-                                />
-                            </Box>
-                        </Box>
-                    </Grid>
-
-                    {/* Row 6 */}
-                    <Grid size={{ xs: 12 }}>
-                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'flex-start'} gap={isMobile ? 0.5 : 0}>
-                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem', mt: isMobile ? 0 : 1 }}>Description</Typography>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Time Spent</Typography>
                             <TextField
-                                multiline
-                                rows={2}
                                 size="small"
                                 fullWidth
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Write task description here..."
+                                value={timeSpent}
+                                onChange={(e) => setTimeSpent(e.target.value)}
+                                placeholder="Minutes (e.g. 90) or H:MM (e.g. 1:30)"
+                                helperText="Enter minutes or hours:minutes"
                             />
                         </Box>
                     </Grid>
 
-                    {/* Action Buttons */}
+                    {/* Description */}
+                    <Grid size={{ xs: 12 }}>
+                        <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems="flex-start" gap={isMobile ? 0.5 : 0}>
+                            <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem', mt: 1 }}>Description</Typography>
+                            <TextField
+                                multiline rows={2} size="small" fullWidth
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Write task update notes here..."
+                            />
+                        </Box>
+                    </Grid>
+
+                    {/* Buttons */}
                     <Grid size={{ xs: 12 }} display="flex" justifyContent="center" gap={2} sx={{ mt: 2 }}>
                         <Button
                             variant="contained"
-                            onClick={handleSave}
+                            onClick={() => saveMutation.mutate()}
                             disabled={saveMutation.isPending}
-                            sx={{
-                                bgcolor: '#4fc3f7',
-                                px: 4,
-                                py: 0.8,
-                                '&:hover': { bgcolor: '#29b6f6' },
-                                textTransform: 'none'
-                            }}
+                            sx={{ bgcolor: '#4fc3f7', px: 4, '&:hover': { bgcolor: '#29b6f6' }, textTransform: 'none' }}
                         >
                             {saveMutation.isPending ? 'Saving...' : 'Save'}
                         </Button>
                         <Button
                             variant="contained"
-                            sx={{
-                                bgcolor: '#ff5252',
-                                px: 4,
-                                py: 0.8,
-                                '&:hover': { bgcolor: '#ff1744' },
-                                textTransform: 'none'
+                            onClick={() => {
+                                setEmployee(''); setClient(''); setTask('');
+                                setSubtask(''); setStatus(''); setTimeSpent('');
+                                setDescription(''); setPlace('Office');
                             }}
+                            sx={{ bgcolor: '#ff5252', px: 4, '&:hover': { bgcolor: '#ff1744' }, textTransform: 'none' }}
                         >
                             Cancel
                         </Button>
