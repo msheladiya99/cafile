@@ -127,7 +127,7 @@ interface MasterModalProps {
     onSave: (data: { name: string; description: string; status: boolean }, id?: string) => void;
     onDelete: (id: string) => void;
     isSaving: boolean;
-    dataList: any[];
+    dataList: { _id: string; name: string; description?: string; status?: boolean }[];
     showSnackbar: (message: string, severity?: 'success' | 'error') => void;
 }
 
@@ -1091,7 +1091,7 @@ export const ClientMaster: React.FC = () => {
                                     <Box sx={{ width: { xs: '100%', sm: 130 }, height: 110, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
                                         {profileImage ? (
                                             <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                        ) : formData?.profileImageUrl && clientToEdit?._id ? (
+                                        ) : (formData?.profileImageUrl || clientToEdit?.profileImageUrl) && clientToEdit?._id ? (
                                             <img src={`${API_URL}/admin/clients/${clientToEdit._id}/profile-image/view?rev=${clientToEdit.updatedAt || '1'}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
                                         ) : (
                                             <PhotoCameraIcon sx={{ fontSize: 32, color: '#ccc' }} />

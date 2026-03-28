@@ -31,7 +31,13 @@ router.get('/clients/:id/profile-image/view', async (req: any, res: Response) =>
         let driveId = client.profileImageUrl;
         // Parse ID backwards if we stored directLink
         if (driveId.includes('id=')) {
-            driveId = new URL(driveId).searchParams.get('id') || driveId;
+            try {
+                if (driveId.startsWith('http')) {
+                    driveId = new URL(driveId).searchParams.get('id') || driveId;
+                }
+            } catch (err) {
+                console.warn('Failed to parse profile image URL, using as is:', driveId);
+            }
         }
 
         const driveService = getDriveService();

@@ -207,7 +207,7 @@ const clientSchema = new Schema<IClient>({
         description: { type: String, trim: true },
         fileName: { type: String, trim: true }
     }]
-});
+}, { timestamps: true });
 
 // Index for faster queries
 clientSchema.index({ firmId: 1, email: 1 }, { unique: true });
