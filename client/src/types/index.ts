@@ -288,7 +288,8 @@ export interface Task {
     reportingManager?: string | User;
     taskMasterId?: string;
     frequency?: string;
-
+    department?: string;
+    year?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -312,6 +313,7 @@ export interface CreateTaskData {
     frequency?: string;
     taskMasterId?: string;
     year?: string;
+    department?: string;
 }
 
 export interface TaskAnalytics {

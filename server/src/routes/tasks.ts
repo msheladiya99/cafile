@@ -37,7 +37,8 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             reportingManager,
             frequency,
             taskMasterId,
-            year
+            year,
+            department
         } = req.body;
 
         if (!title || !targetDate || !estimatedHours) {
@@ -73,6 +74,7 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             frequency,
             taskMasterId,
             year,
+            department,
             checklist: checklist ? checklist.map((item: string) => ({
                 id: uuidv4(),
                 text: item,
@@ -104,7 +106,7 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager, year } = req.query;
+        const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager, year, department } = req.query;
 
         const filter: any = { firmId: req.firmId };
 
@@ -160,6 +162,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         }
         if (year) {
             filter.year = year;
+        }
+        if (department) {
+            filter.department = department;
         }
 
         const tasks = await Task.find(filter)

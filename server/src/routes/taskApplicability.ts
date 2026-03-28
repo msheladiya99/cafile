@@ -77,6 +77,9 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         { upsert: true, new: true }
                     );
 
+                    const targetDate = new Date(startDate);
+                    const year = targetDate.getFullYear().toString();
+
                     const firstTask = new Task({
                         title: taskMaster.taskName,
                         description: taskMaster.description,
@@ -91,7 +94,9 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         frequency: taskMaster.frequency || 'One Time',
                         billingAmount: taskMaster.billingAmount || 0,
                         billingType: 'SINGLE_CLIENT',
-                        targetDate: new Date(startDate),
+                        department: department || taskMaster.department,
+                        targetDate,
+                        year,
                         estimatedHours: taskMaster.estimatedHours || 1,
                         checklist: taskMaster.subtasks.map(s => ({
                             id: uuidv4(),
@@ -129,6 +134,9 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         { upsert: true, new: true }
                     );
 
+                    const targetDate = new Date(startDate);
+                    const year = targetDate.getFullYear().toString();
+
                     const groupTask = new Task({
                         title: taskMaster.taskName,
                         description: taskMaster.description,
@@ -143,7 +151,9 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                         frequency: taskMaster.frequency || 'One Time',
                         billingAmount: taskMaster.billingAmount || 0,
                         billingType: 'GROUP',
-                        targetDate: new Date(startDate),
+                        department: department || taskMaster.department,
+                        targetDate,
+                        year,
                         estimatedHours: taskMaster.estimatedHours || 1,
                         checklist: taskMaster.subtasks.map(s => ({
                             id: uuidv4(),

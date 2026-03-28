@@ -15,6 +15,7 @@ export const taskService = {
         myTasks?: boolean;
         reportingManager?: string;
         year?: string;
+        department?: string;
     }): Promise<Task[]> => {
         const params = new URLSearchParams();
         if (filters) {
@@ -162,6 +163,7 @@ export const taskService = {
         year?: string;
         startDate?: string;
         endDate?: string;
+        department?: string;
     }): Promise<Task[]> => {
         const query = new URLSearchParams();
         Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v); });

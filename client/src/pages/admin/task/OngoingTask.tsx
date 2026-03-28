@@ -75,6 +75,7 @@ export const OngoingTask: React.FC = () => {
     const [year, setYear] = useState('');
     const [status, setStatus] = useState('');
     const [employee, setEmployee] = useState('');
+    const [department, setDepartment] = useState('');
     const [search, setSearch] = useState('');
     const [showFilters, setShowFilters] = useState(true);
     const [processingTask, setProcessingTask] = useState<Task | null>(null);
@@ -93,7 +94,7 @@ export const OngoingTask: React.FC = () => {
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
 
     const { data: tasks = [], isLoading: tasksLoading, refetch } = useQuery<Task[]>({
-        queryKey: ['tasks', groupName, clientName, selectedTask, frequency, status, employee, year],
+        queryKey: ['tasks', groupName, clientName, selectedTask, frequency, status, employee, year, department],
         queryFn: () => taskService.getTasks({
             clientGroupId: groupName || undefined,
             clientId: clientName || undefined,
@@ -102,6 +103,7 @@ export const OngoingTask: React.FC = () => {
             taskMasterId: selectedTask || undefined,
             frequency: frequency || undefined,
             year: year || undefined,
+            department: department || undefined,
         }),
         refetchInterval: 30_000,
     });
@@ -111,7 +113,8 @@ export const OngoingTask: React.FC = () => {
         const s = search.toLowerCase();
         return tasks.filter(t =>
             t.title?.toLowerCase().includes(s) ||
-            (t.clientId as Client)?.name?.toLowerCase().includes(s)
+            (t.clientId as Client)?.name?.toLowerCase().includes(s) ||
+            (t.clientGroupId as { _id: string; groupName: string })?.groupName?.toLowerCase().includes(s)
         );
     }, [tasks, search]);
 
@@ -177,7 +180,7 @@ export const OngoingTask: React.FC = () => {
         }
     });
 
-    const activeFilters = [groupName, clientName, selectedTask, frequency, status, employee].filter(Boolean).length;
+    const activeFilters = [groupName, clientName, selectedTask, frequency, status, employee, year, department].filter(Boolean).length;
 
     // ─── Processing Modal ─────────────────────────────────────────────────────
     const renderModal = () => {
@@ -283,6 +286,18 @@ export const OngoingTask: React.FC = () => {
                                         {currentTask.isOverdue && ' ⚠'}
                                     </Typography>
                                 </Box>
+                                {currentTask.year && (
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>Year</Typography>
+                                        <Typography variant="body2" fontWeight={700}>{currentTask.year}</Typography>
+                                    </Box>
+                                )}
+                                {currentTask.department && (
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>Department</Typography>
+                                        <Typography variant="body2" fontWeight={700}>{currentTask.department}</Typography>
+                                    </Box>
+                                )}
                                 <Box>
                                     <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>Estimate</Typography>
                                     <Typography variant="body2" fontWeight={700}>{currentTask.estimatedHours || 1}h</Typography>
@@ -594,8 +609,9 @@ export const OngoingTask: React.FC = () => {
                             { label: 'Status', value: status, set: setStatus, items: Object.entries(STATUS_CONFIG).map(([v, c]) => ({ v, l: c.label })) },
                             { label: 'Employee', value: employee, set: setEmployee, items: staffUsers.map((u: User) => ({ v: u._id, l: u.name || u.username })) },
                             { label: 'Year', value: year, set: setYear, items: years.map(y => ({ v: y, l: y })) },
+                            { label: 'Dept', value: department, set: setDepartment, items: ['GST', 'Income Tax', 'Audit', 'Accounting', 'Compliance'].map(d => ({ v: d, l: d })) },
                         ].map(({ label, value, set, items }) => (
-                            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 1.71 }} key={label}>
+                            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 1.5 }} key={label}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>{label}</Typography>
                                 <Select size="small" fullWidth displayEmpty value={value} onChange={e => set(e.target.value)} sx={{ mt: 0.5, borderRadius: 2 }}>
                                     <MenuItem value=""><em>All {label}s</em></MenuItem>
@@ -652,6 +668,12 @@ export const OngoingTask: React.FC = () => {
                                                 {(task as Task & { frequency?: string }).frequency && (
                                                     <Typography variant="caption" color="text.secondary" display="block">
                                                         {(task as Task & { frequency?: string }).frequency}
+                                                        {task.year && ` • ${task.year}`}
+                                                    </Typography>
+                                                )}
+                                                {task.department && (
+                                                    <Typography variant="caption" color="primary" sx={{ fontWeight: 600 }}>
+                                                        {task.department}
                                                     </Typography>
                                                 )}
                                             </Box>
@@ -713,7 +735,7 @@ export const OngoingTask: React.FC = () => {
                     <Table size="small" stickyHeader>
                         <TableHead>
                             <TableRow>
-                                {['#', 'Client', 'Task Name', 'Priority', 'Target Date', 'Status', 'Progress', 'Assigned To', 'Action'].map(h => (
+                                {['#', 'Client', 'Task Name / Year', 'Dept', 'Priority', 'Target Date', 'Status', 'Progress', 'Assigned To', 'Action'].map(h => (
                                     <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5 }}>{h}</TableCell>
                                 ))}
                             </TableRow>
@@ -743,14 +765,24 @@ export const OngoingTask: React.FC = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 120 }}>
-                                                    {(task.clientId as Client)?.name || 'Internal'}
+                                                    {(task.clientId as Client)?.name || (task.clientGroupId as { _id: string; groupName: string })?.groupName || 'Internal'}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell sx={{ maxWidth: 200 }}>
-                                                <Typography variant="body2" fontWeight={600} noWrap title={task.title}>{task.title}</Typography>
-                                                {(task as Task & { frequency?: string }).frequency && (
-                                                    <Typography variant="caption" color="text.secondary">{(task as Task & { frequency?: string }).frequency}</Typography>
-                                                )}
+                                            <TableCell sx={{ maxWidth: 220 }}>
+                                                <Box display="flex" alignItems="center" gap={0.5}>
+                                                    <Typography variant="body2" fontWeight={600} noWrap title={task.title}>{task.title}</Typography>
+                                                    {task.year && <Chip label={task.year} size="small" sx={{ height: 16, fontSize: '0.6rem', bgcolor: '#f1f5f9', color: '#64748b' }} />}
+                                                </Box>
+                                                <Box display="flex" gap={1}>
+                                                    {(task as Task & { frequency?: string }).frequency && (
+                                                        <Typography variant="caption" color="text.secondary">{(task as Task & { frequency?: string }).frequency}</Typography>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                {task.department ? (
+                                                    <Chip label={task.department} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 20, color: '#764ba2', borderColor: '#764ba240' }} />
+                                                ) : '—'}
                                             </TableCell>
                                             <TableCell>
                                                 <Chip label={pri.label} size="small" sx={{ bgcolor: pri.color, fontWeight: 700, fontSize: '0.62rem', height: 20 }} />

@@ -1,8 +1,0 @@
-﻿[dotenv@17.2.3] injecting env (16) from .env -- tip: ≡ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
-Connected to MongoDB
-Collection users: 10 records without firmId
-Collection clients: 5 records without firmId
-Collection tasks: 2 records without firmId
-Collection files: 6 records without firmId
-Collection invoices: 3 records without firmId
-Collection reminders: 1 records without firmId

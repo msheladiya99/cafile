@@ -72,6 +72,7 @@ export interface ITask extends Document {
     // Metadata
     taskMasterId?: mongoose.Types.ObjectId;
     frequency?: string;
+    department?: string;
     reportingManager?: mongoose.Types.ObjectId;
     tags: string[];
     isOverdue: boolean;
@@ -160,6 +161,7 @@ const taskSchema = new Schema<ITask>({
     // Metadata
     taskMasterId: { type: Schema.Types.ObjectId, ref: 'TaskMaster' },
     frequency: { type: String },
+    department: { type: String },
     reportingManager: { type: Schema.Types.ObjectId, ref: 'User' },
     tags: [{ type: String }],
     isOverdue: { type: Boolean, default: false }
@@ -174,6 +176,7 @@ taskSchema.index({ createdBy: 1 });
 taskSchema.index({ clientId: 1 });
 taskSchema.index({ targetDate: 1 });
 taskSchema.index({ status: 1, priority: 1 });
+taskSchema.index({ department: 1 });
 taskSchema.index({ createdAt: -1 });
 
 // Middlewares

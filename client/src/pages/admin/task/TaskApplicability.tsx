@@ -237,6 +237,7 @@ export const TaskApplicability: React.FC = () => {
                 frequency: singleFrequency || master.frequency || 'One Time',
                 taskMasterId: master._id,
                 year: singleYear,
+                department: effectiveDepartment,
                 billingAmount: master.billingAmount || 0,
                 checklist: (master.subtasks || []).map(s => s.name)
             };
