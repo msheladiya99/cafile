@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Typography, Button, TextField, Select, MenuItem,
@@ -40,7 +40,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
     // Form State
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [taskType, setTaskType] = useState<string>('');
-    const [year, setYear] = useState<string>('');
+    const [year, setYear] = useState<string>(new Date().getFullYear().toString());
     const [frequency, setFrequency] = useState<string>('');
     const [targetDate, setTargetDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [description, setDescription] = useState<string>('');
@@ -57,20 +57,15 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
 
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
 
-    // Auto-fill year depending on task
-    useEffect(() => {
-        if (!year) setYear(new Date().getFullYear().toString());
-    }, [year]);
-
-    // Handle task type selection to auto-fill frequency & targetDate if available
-    useEffect(() => {
+    // Derive auto-filled frequency from selected task type (user can still override)
+    const effectiveFrequency = useMemo(() => {
+        if (frequency) return frequency; // user has manually selected
         if (taskType) {
             const tm = taskMasters.find((t: TaskMasterData) => t._id === taskType);
-            if (tm) {
-                if (tm.frequency) setFrequency(tm.frequency);
-            }
+            return tm?.frequency || '';
         }
-    }, [taskType, taskMasters]);
+        return '';
+    }, [frequency, taskType, taskMasters]);
 
     // Filter Task Masters by Category
     const filteredTasks = useMemo(() => {
@@ -159,7 +154,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
             billingAmount: tm.billingAmount || 0,
             taskMasterId: tm._id,
             department: tm.department,
-            frequency: frequency || tm.frequency || 'One Time',
+            frequency: effectiveFrequency || frequency || 'One Time',
             year
         };
 
@@ -229,7 +224,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
                             <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} mb={1} display="block">Period / Freq</Typography>
-                            <Select size="small" fullWidth value={frequency} onChange={e => setFrequency(e.target.value as string)} displayEmpty sx={{ bgcolor: 'white', borderRadius: 2 }}>
+                            <Select size="small" fullWidth value={effectiveFrequency} onChange={e => setFrequency(e.target.value as string)} displayEmpty sx={{ bgcolor: 'white', borderRadius: 2 }}>
                                 <MenuItem value=""><em>Default...</em></MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>

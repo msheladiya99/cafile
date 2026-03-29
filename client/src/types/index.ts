@@ -350,6 +350,7 @@ export interface TaskMasterData {
     taskName: string;
     mode: string;
     department?: string;
+    category?: string | { _id: string; name: string; color: string };
     reportingManager?: string | User;
     description?: string;
     status: 'Active' | 'Inactive';
