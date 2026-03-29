@@ -103,6 +103,105 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
     }
 });
 
+// Create multiple tasks in bulk (Admin, Manager, Staff)
+router.post('/bulk', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { baseTask, clients } = req.body;
+
+        if (!baseTask || !clients || !Array.isArray(clients) || clients.length === 0) {
+            res.status(400).json({ message: 'baseTask and an array of clients are required' });
+            return;
+        }
+
+        const {
+            title,
+            description,
+            category,
+            priority,
+            targetDate,
+            estimatedHours,
+            checklist,
+            firmId,
+            billingAmount,
+            reportingManager,
+            frequency,
+            taskMasterId,
+            year,
+            department
+        } = baseTask;
+
+        if (!title || !targetDate || !estimatedHours) {
+            res.status(400).json({ message: 'Title, target date, and estimated hours in baseTask are required' });
+            return;
+        }
+
+        const createdTasks = [];
+        const firmIdToUse = firmId || req.firmId || req.user?.firmId;
+
+        for (const clientWrapper of clients) {
+            const { clientId, assignedTo } = clientWrapper;
+
+            // Validate assigned users exist
+            if (assignedTo && assignedTo.length > 0) {
+                const users = await User.find({ _id: { $in: assignedTo } });
+                if (users.length !== assignedTo.length) {
+                    continue; // Skip invalid assignment
+                }
+            }
+
+            // Prevent exact duplicates
+            const existingTask = await Task.findOne({
+                clientId,
+                taskMasterId,
+                year,
+                frequency,
+                targetDate: new Date(targetDate),
+                firmId: firmIdToUse
+            });
+
+            if (existingTask) {
+                continue; // Skip duplicate task exactly mapping the same period and date
+            }
+
+            const task = new Task({
+                title,
+                description,
+                category: category || 'CLIENT_WORK',
+                createdBy: req.user!.userId,
+                assignedTo: assignedTo || [],
+                clientId,
+                billingType: 'SINGLE_CLIENT',
+                priority: priority || 'MEDIUM',
+                targetDate: new Date(targetDate),
+                estimatedHours,
+                firmId: firmIdToUse,
+                billingAmount: billingAmount || 0,
+                reportingManager,
+                frequency,
+                taskMasterId,
+                year,
+                department,
+                checklist: checklist ? checklist.map((item: string) => ({
+                    id: uuidv4(),
+                    text: item,
+                    completed: false
+                })) : []
+            });
+
+            await task.save();
+            createdTasks.push(task);
+        }
+
+        res.status(201).json({
+            message: `Successfully created ${createdTasks.length} tasks`,
+            count: createdTasks.length
+        });
+    } catch (error) {
+        console.error('Bulk create tasks error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {

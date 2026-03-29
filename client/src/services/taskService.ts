@@ -41,6 +41,12 @@ export const taskService = {
         return response.data;
     },
 
+    // Create bulk tasks
+    createBulkTasks: async (data: { baseTask: Partial<CreateTaskData>, clients: { clientId: string, assignedTo: string[] }[] }): Promise<{ message: string; count: number }> => {
+        const response = await api.post('/tasks/bulk', data);
+        return response.data;
+    },
+
     // Update task (Admin/Manager only)
     updateTask: async (taskId: string, data: Partial<CreateTaskData>): Promise<{ task: Task; message: string }> => {
         const response = await api.patch(`/tasks/${taskId}`, data);

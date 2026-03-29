@@ -11,6 +11,7 @@ export interface ISubtask {
 export interface ITaskMaster extends Document {
     taskName: string;
     mode: string;
+    category?: mongoose.Types.ObjectId; // Link to TaskCategory
     department?: string;
     reportingManager?: mongoose.Types.ObjectId;
     description?: string;
@@ -39,6 +40,7 @@ const SubtaskSchema = new Schema({
 const TaskMasterSchema = new Schema<ITaskMaster>({
     taskName: { type: String, required: true, trim: true },
     mode: { type: String, required: true },
+    category: { type: Schema.Types.ObjectId, ref: 'TaskCategory', default: null },
     department: { type: String },
     reportingManager: { type: Schema.Types.ObjectId, ref: 'User' },
     description: { type: String, default: '' },

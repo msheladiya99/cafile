@@ -26,6 +26,7 @@ import {
     PauseCircle as HoldIcon,
     Cancel as CancelIcon,
     List as ListIcon,
+    Add as AddIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -35,6 +36,7 @@ import { clientGroupService } from '../../../services/clientGroupService';
 import { taskService } from '../../../services/taskService';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { TaskMasterData, Client, User, Task, TaskStatus } from '../../../types';
+import { AddTaskModal } from './AddTaskModal';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     PENDING:                  { label: 'To Do',               color: '#64748b', bg: '#f1f5f9', icon: <PendingIcon fontSize="inherit" /> },
@@ -80,6 +82,7 @@ export const OngoingTask: React.FC = () => {
     const [showFilters, setShowFilters] = useState(true);
     const [processingTask, setProcessingTask] = useState<Task | null>(null);
     const [newComment, setNewComment] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const years = useMemo(() => {
         const cur = new Date().getFullYear();
@@ -576,6 +579,15 @@ export const OngoingTask: React.FC = () => {
                     <Tooltip title="Refresh">
                         <IconButton onClick={() => refetch()} sx={{ color: 'white' }}><RefreshIcon /></IconButton>
                     </Tooltip>
+                    <Button 
+                        variant="contained" 
+                        size="small" 
+                        startIcon={<AddIcon />}
+                        onClick={() => setIsAddModalOpen(true)}
+                        sx={{ ml: { xs: 0, sm: 1 }, textTransform: 'none', fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
+                    >
+                        Add Task
+                    </Button>
                 </Box>
             </Paper>
 
@@ -735,7 +747,7 @@ export const OngoingTask: React.FC = () => {
                     <Table size="small" stickyHeader>
                         <TableHead>
                             <TableRow>
-                                {['#', 'Client', 'Task Name / Year', 'Dept', 'Priority', 'Target Date', 'Status', 'Progress', 'Assigned To', 'Action'].map(h => (
+                                {['#', 'Client', 'Task / Period', 'Dept', 'Priority', 'Due Date', 'Status', 'Progress', 'Working User', 'Action'].map(h => (
                                     <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5 }}>{h}</TableCell>
                                 ))}
                             </TableRow>
@@ -855,6 +867,7 @@ export const OngoingTask: React.FC = () => {
             </Paper>
 
             {renderModal()}
+            <AddTaskModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={() => refetch()} />
         </Box>
     );
 };

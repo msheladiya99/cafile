@@ -23,6 +23,7 @@ import attendanceRoutes from './routes/attendance';
 import superAdminRoutes from './routes/super-admin';
 import taskMasterRoutes from './routes/taskMaster';
 import taskApplicabilityRoutes from './routes/taskApplicability';
+import taskCategoryRoutes from './routes/taskCategory';
 
 
 // Load environment variables
@@ -110,6 +111,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/task-master', taskMasterRoutes);
 app.use('/api/task-applicability', taskApplicabilityRoutes);
+app.use('/api/task-category', taskCategoryRoutes);
 
 
 // Health check

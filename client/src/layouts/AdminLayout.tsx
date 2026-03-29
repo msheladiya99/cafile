@@ -159,6 +159,7 @@ export const AdminLayout: React.FC = () => {
                     children: [
                         { text: 'Add Task', path: '/admin/task-master/add' },
                         { text: 'Task List', path: '/admin/task-master/list' },
+                        { text: 'Task Category', path: '/admin/task-category' },
                     ]
                 },
                 {

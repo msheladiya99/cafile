@@ -31,6 +31,7 @@ const TaskDashboard = lazy(() => import('./pages/admin/task/TaskDashboard').then
 const TaskMasterPage = lazy(() => import('./pages/admin/task/TaskMaster').then(module => ({ default: module.TaskMaster })));
 const TaskApplicability = lazy(() => import('./pages/admin/task/TaskApplicability').then(module => ({ default: module.TaskApplicability })));
 const TaskApproval = lazy(() => import('./pages/admin/task/TaskApproval').then(module => ({ default: module.TaskApproval })));
+const TaskCategoryPage = lazy(() => import('./pages/admin/task/TaskCategoryPage').then(module => ({ default: module.TaskCategoryPage })));
 const ApprovedTaskList = lazy(() => import('./pages/admin/task/ApprovedTaskList').then(module => ({ default: module.ApprovedTaskList })));
 const UpdateApprovedTask = lazy(() => import('./pages/admin/task/UpdateApprovedTask').then(module => ({ default: module.UpdateApprovedTask })));
 const TransferTask = lazy(() => import('./pages/admin/task/TransferTask').then(module => ({ default: module.TransferTask })));
@@ -195,6 +196,7 @@ const AppRoutes: React.FC = () => {
             <Route path="list" element={<TaskMasterPage />} />
             <Route index element={<Navigate to="list" replace />} />
           </Route>
+          <Route path="task-category" element={<TaskCategoryPage />} />
           <Route path="task-applicability" element={<TaskApplicability />} />
           <Route path="upload" element={<UploadFile />} />
           <Route path="files" element={<ManageFiles />} />

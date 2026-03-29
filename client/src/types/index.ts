@@ -9,6 +9,8 @@ export interface Client {
     aadharNumber?: string;
     gstNumber?: string;
     physicalFileNumber?: string;
+    fileNo?: string;
+    tradeName?: string;
     rackLocation?: string;
     clientCode?: string;
     profileImageUrl?: string;
@@ -64,6 +66,8 @@ export interface CreateClientData {
     email: string;
     phone: string;
     panNumber?: string;
+    fileNo?: string;
+    tradeName?: string;
     aadharNumber?: string;
     gstNumber?: string;
     username?: string;
