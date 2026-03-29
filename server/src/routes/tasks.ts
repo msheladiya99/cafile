@@ -897,7 +897,10 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                                 // For group tasks, grab all clients belonging to that group
                                 const clientsInGroup = await ClientApp.find({ groupName: task.clientGroupId }).lean();
                                 if (clientsInGroup && clientsInGroup.length > 0) {
-                                    clientNamesForBill = 'Clients: ' + clientsInGroup.map((c: any) => c.name).join(', ');
+                                    const numberedList = clientsInGroup
+                                        .map((c: any, idx: number) => `${idx + 1}. ${c.name}`)
+                                        .join('\n');
+                                    clientNamesForBill = `Clients:\n${numberedList}`;
                                 } else {
                                     clientNamesForBill = 'Group Task';
                                 }
@@ -911,9 +914,9 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                             console.error('[AutoBill] Failed to fetch clients for bill description', err);
                         }
 
-                        const itemDescription = task.description 
-                                                ? `${task.description}\n${clientNamesForBill}`.trim() 
-                                                : clientNamesForBill;
+                        const itemDescription = task.description
+                            ? `${task.description}\n${clientNamesForBill}`.trim()
+                            : clientNamesForBill;
 
                         const newInvoice = new Invoice({
                             invoiceNumber,
