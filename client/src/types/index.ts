@@ -361,6 +361,13 @@ export interface TaskMasterData {
     multiFirmId?: string | { _id: string; firmName: string; invoicePrefix?: string };
     frequency?: string;
     subtasks: Subtask[];
+    typeOfClient?: string[];
+    dueDays?: number;
+    recurringTask?: boolean;
+    recurringDays?: number;
+    tags?: string[];
+    users?: (string | User)[];
+    workingUser?: string | User;
     createdAt?: string;
     updatedAt?: string;
 }

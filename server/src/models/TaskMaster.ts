@@ -22,6 +22,13 @@ export interface ITaskMaster extends Document {
     estimatedHours?: number;
     multiFirmId?: mongoose.Types.ObjectId; // Billing firm/branch for auto-invoice
     frequency?: string;
+    typeOfClient?: string[];
+    dueDays?: number;
+    recurringTask?: boolean;
+    recurringDays?: number;
+    tags?: string[];
+    users?: mongoose.Types.ObjectId[];
+    workingUser?: mongoose.Types.ObjectId;
     subtasks: ISubtask[];
     firmId: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
@@ -51,6 +58,13 @@ const TaskMasterSchema = new Schema<ITaskMaster>({
     estimatedHours: { type: Number, default: 1 },
     multiFirmId: { type: Schema.Types.ObjectId, ref: 'MultiFirm', default: null },
     frequency: { type: String },
+    typeOfClient: [{ type: String }],
+    dueDays: { type: Number },
+    recurringTask: { type: Boolean, default: false },
+    recurringDays: { type: Number },
+    tags: [{ type: String }],
+    users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    workingUser: { type: Schema.Types.ObjectId, ref: 'User' },
     subtasks: [SubtaskSchema],
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }

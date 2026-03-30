@@ -68,7 +68,14 @@ export const TaskMaster: React.FC = () => {
         status: 'Active',
         hsnSac: '',
         udin: false,
-        subtasks: []
+        subtasks: [],
+        typeOfClient: [],
+        dueDays: 0,
+        recurringTask: false,
+        recurringDays: 0,
+        tags: [],
+        users: [],
+        workingUser: ''
     });
 
     const [filters, setFilters] = useState({
@@ -213,7 +220,14 @@ export const TaskMaster: React.FC = () => {
             estimatedHours: 1,
             multiFirmId: '',
             frequency: '',
-            subtasks: []
+            subtasks: [],
+            typeOfClient: [],
+            dueDays: 0,
+            recurringTask: false,
+            recurringDays: 0,
+            tags: [],
+            users: [],
+            workingUser: ''
         });
         setSubtaskInput({
             name: '',
@@ -266,9 +280,9 @@ export const TaskMaster: React.FC = () => {
         }
     };
 
-    if (view === 'list') {
-        return (
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
+    return (
+        <Box sx={{ p: { xs: 2, md: 3 }, position: 'relative' }}>
+            {view === 'list' ? (
                 <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 3 }}>
                     <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: { xs: 2, sm: 2.5 }, color: 'white', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
                         <Typography variant="h5" fontWeight="600" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Task List</Typography>
@@ -491,29 +505,52 @@ export const TaskMaster: React.FC = () => {
                             )}
                         </Box>
                     ) : (
-                        <TableContainer>
-                            <Table>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
+                            <Table sx={{ minWidth: 1600 }}>
                                 {taskMasters.length > 0 && (
                                     <TableHead sx={{ bgcolor: '#f5f5f5' }}>
-                                        <TableRow>
-                                            <TableCell sx={{ fontWeight: 700 }}>Task Name</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Mode</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Frequency</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Department</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Billing</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                                        <TableRow sx={{ textTransform: 'uppercase' }}>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 200, position: 'sticky', left: 0, bgcolor: '#f5f5f5', zIndex: 1 }}>NAME</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>CATEGORY</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 180 }}>TYPE OF CLIENT</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>PERIOD</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 120 }}>DUE DAYS</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 160 }}>RECURRING TASK</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 160 }}>RECURRING DAYS</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>TAGS</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>NO. OF CLIENTS</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>USERS</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 150 }}>WORKING USER</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 200 }}>DESCRIPTION</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, minWidth: 100 }}>STATUS</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700, minWidth: 120, position: 'sticky', right: 0, bgcolor: '#f5f5f5', zIndex: 1 }}>ACTIONS</TableCell>
                                         </TableRow>
                                     </TableHead>
                                 )}
                                 <TableBody>
                                     {filteredTaskMasters.map((tm: TaskMasterData) => (
                                         <TableRow key={tm._id} hover>
-                                            <TableCell>{tm.taskName}</TableCell>
-                                            <TableCell>{tm.mode}</TableCell>
+                                            <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 0 }}>{tm.taskName}</TableCell>
+                                            <TableCell>
+                                                {tm.category ? (typeof tm.category === 'object' ? (tm.category as any).name : taskCategories.find((c: any) => c._id === tm.category)?.name || '-') : '-'}
+                                            </TableCell>
+                                            <TableCell>{tm.typeOfClient?.join(', ') || '-'}</TableCell>
                                             <TableCell>{tm.frequency || '-'}</TableCell>
-                                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{tm.department}</TableCell>
-                                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>₹{tm.billingAmount || 0}</TableCell>
+                                            <TableCell>{tm.dueDays || '-'}</TableCell>
+                                            <TableCell>{tm.recurringTask ? 'Yes' : 'No'}</TableCell>
+                                            <TableCell>{tm.recurringDays || '-'}</TableCell>
+                                            <TableCell>{tm.tags?.join(', ') || '-'}</TableCell>
+                                            <TableCell>{'-'}</TableCell>
+                                            <TableCell>
+                                                {tm.users?.map(u => {
+                                                    const userId = typeof u === 'object' ? (u as { _id: string })._id : u as string;
+                                                    return staff.find((s: User) => s._id === userId)?.name || staff.find((s: User) => s._id === userId)?.username || '';
+                                                }).filter(Boolean).join(', ') || '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                {tm.workingUser ? (typeof tm.workingUser === 'object' ? (tm.workingUser as any).name || (tm.workingUser as any).username : staff.find((s: any) => s._id === tm.workingUser)?.name || staff.find((s: any) => s._id === tm.workingUser)?.username || '-') : '-'}
+                                            </TableCell>
+                                            <TableCell sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tm.description || '-'}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={tm.status}
@@ -521,7 +558,7 @@ export const TaskMaster: React.FC = () => {
                                                     color={tm.status === 'Active' ? 'success' : 'default'}
                                                 />
                                             </TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="right" sx={{ position: 'sticky', right: 0, bgcolor: 'background.paper', zIndex: 0 }}>
                                                 <IconButton size="small" onClick={() => {
                                                     const rm = tm.reportingManager;
                                                     const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
@@ -545,7 +582,7 @@ export const TaskMaster: React.FC = () => {
                                     ))}
                                     {filteredTaskMasters.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={5} align="center" sx={{ py: 3, fontWeight: 600, color: 'text.secondary' }}>
+                                            <TableCell colSpan={14} align="center" sx={{ py: 3, fontWeight: 600, color: 'text.secondary' }}>
                                                 {taskMasters.length > 0 ? 'No records match the selected filters.' : 'No Record Found'}
                                             </TableCell>
                                         </TableRow>
@@ -555,13 +592,10 @@ export const TaskMaster: React.FC = () => {
                         </TableContainer>
                     )}
                 </Paper>
-            </Paper>
-            </Box>
-        );
-    }
+                </Paper>
+            ) : (
+                <Box sx={{ p: { xs: 0, md: 0 }, bgcolor: '#f0f2f8', minHeight: '100vh' }}>
 
-    return (
-        <Box sx={{ p: { xs: 1.5, md: 3 }, bgcolor: '#f0f2f8', minHeight: '100vh' }}>
 
             {/* Premium Header */}
             <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', mb: 3, boxShadow: '0 8px 32px rgba(102,126,234,0.18)', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
@@ -640,6 +674,21 @@ export const TaskMaster: React.FC = () => {
                             ))}
                         </TextField>
 
+                        <TextField select label="Type of Client" variant="outlined" value={formData.typeOfClient || []}
+                            onChange={(e) => setFormData({ ...formData, typeOfClient: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[] })}
+                            size="small" SelectProps={{ multiple: true }}
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        >
+                            <MenuItem value="Individual">Individual</MenuItem>
+                            <MenuItem value="HUF">HUF</MenuItem>
+                            <MenuItem value="Company">Company</MenuItem>
+                            <MenuItem value="Partnership">Partnership</MenuItem>
+                            <MenuItem value="LLP">LLP</MenuItem>
+                            <MenuItem value="Trust">Trust</MenuItem>
+                            <MenuItem value="Society">Society</MenuItem>
+                        </TextField>
+
                         <TextField select label="Department *" variant="outlined" value={formData.department}
                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                             required size="small"
@@ -655,13 +704,13 @@ export const TaskMaster: React.FC = () => {
                             <MenuItem value="Other">Other</MenuItem>
                         </TextField>
 
-                        <TextField select label="Frequency" variant="outlined" value={formData.frequency}
+                        <TextField select label="Period (Frequency)" variant="outlined" value={formData.frequency || ''}
                             onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                            size="small" disabled={formData.mode !== 'Recurrence' && formData.mode !== 'Recurring'}
+                            size="small"
                             InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
-                            <MenuItem value=""><em>— Select Frequency —</em></MenuItem>
+                            <MenuItem value=""><em>— Select Period —</em></MenuItem>
                             <MenuItem value="Daily">Daily</MenuItem>
                             <MenuItem value="Weekly">Weekly</MenuItem>
                             <MenuItem value="Fortnightly">Fortnightly</MenuItem>
@@ -671,13 +720,67 @@ export const TaskMaster: React.FC = () => {
                             <MenuItem value="Yearly">Yearly</MenuItem>
                         </TextField>
 
+                        <TextField label="Due Days" type="number" variant="outlined" value={formData.dueDays || ''}
+                            onChange={(e) => setFormData({ ...formData, dueDays: parseInt(e.target.value) || 0 })}
+                            size="small"
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        />
+
+                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Recurring Task</Typography>
+                                <Typography variant="body2" fontWeight={500}>{formData.recurringTask ? 'Yes' : 'No'}</Typography>
+                            </Box>
+                            <Switch checked={!!formData.recurringTask} onChange={(e) => setFormData({ ...formData, recurringTask: e.target.checked })}
+                                sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />
+                        </Box>
+
+                        <TextField label="Recurring Days" type="number" variant="outlined" value={formData.recurringDays || ''}
+                            onChange={(e) => setFormData({ ...formData, recurringDays: parseInt(e.target.value) || 0 })}
+                            size="small" disabled={!formData.recurringTask}
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        />
+
+                        <TextField label="Tags (comma separated)" variant="outlined" value={formData.tags?.join(', ') || ''}
+                            onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                            size="small"
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        />
+
+                        <TextField select label="Users" variant="outlined" value={(formData.users || []).map(u => typeof u === 'object' ? (u as { _id: string })._id : u)}
+                            onChange={(e) => setFormData({ ...formData, users: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[] })}
+                            size="small" SelectProps={{ multiple: true }}
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        >
+                            {staff.map((s: User) => (
+                                <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField select label="Working User" variant="outlined" value={typeof formData.workingUser === 'object' && formData.workingUser !== null ? (formData.workingUser as { _id: string })._id : (formData.workingUser || '')}
+                            onChange={(e) => setFormData({ ...formData, workingUser: e.target.value })}
+                            size="small"
+                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
+                        >
+                            <MenuItem value=""><em>— Auto Select / Open —</em></MenuItem>
+                            {staff.map((s: User) => (
+                                <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
+                            ))}
+                        </TextField>
+
                         <TextField select label="Approval Access (Reporting Manager) *" variant="outlined"
-                            value={formData.reportingManager}
+                            value={typeof formData.reportingManager === 'object' && formData.reportingManager !== null ? (formData.reportingManager as { _id: string })._id : (formData.reportingManager || '')}
                             onChange={(e) => setFormData({ ...formData, reportingManager: e.target.value })}
                             required size="small"
                             InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
+                            <MenuItem value=""><em>— Select Reporting Manager —</em></MenuItem>
                             {staff.filter((s: User) => ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(s.role)).map((s: User) => (
                                 <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
                             ))}
@@ -994,6 +1097,8 @@ export const TaskMaster: React.FC = () => {
                     </DialogActions>
                 </Dialog>
             </form>
+                </Box>
+            )}
         </Box>
     );
 };
