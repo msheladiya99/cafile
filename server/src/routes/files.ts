@@ -26,8 +26,10 @@ const checkFileAccess = async (req: AuthRequest, res: Response, next: Function) 
             return res.status(403).json({ message: 'Client ID not found' });
         }
 
+        const { Invoice } = (req as any).models;
         // Find all invoices for this client
         const invoices = await Invoice.find({ clientId }).lean();
+
 
         // If no invoices, allow access (new client)
         if (invoices.length === 0) {
@@ -36,24 +38,26 @@ const checkFileAccess = async (req: AuthRequest, res: Response, next: Function) 
 
         // Check for overdue invoices
         const now = new Date();
-        const pendingInvoices = invoices.filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL');
-        const overdueInvoices = pendingInvoices.filter(inv => new Date(inv.dueDate) < now);
+        const pendingInvoices = invoices.filter((inv: any) => inv.status === 'PENDING' || inv.status === 'PARTIAL');
+        const overdueInvoices = pendingInvoices.filter((inv: any) => new Date(inv.dueDate) < now);
+
 
         // Block access if there are overdue invoices
         if (overdueInvoices.length > 0) {
-            const totalOutstanding = overdueInvoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+            const totalOutstanding = overdueInvoices.reduce((sum: number, inv: any) => sum + inv.balanceAmount, 0);
             return res.status(403).json({
                 message: 'File access restricted due to pending payments',
                 hasFileAccess: false,
                 overdueInvoices: overdueInvoices.length,
                 totalOutstanding,
-                overdueDetails: overdueInvoices.map(inv => ({
+                overdueDetails: overdueInvoices.map((inv: any) => ({
                     invoiceNumber: inv.invoiceNumber,
                     dueDate: inv.dueDate,
                     balanceAmount: inv.balanceAmount,
                 })),
             });
         }
+
 
         // Allow access if no overdue invoices
         next();
@@ -77,7 +81,9 @@ const upload = multer({
  */
 router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, File } = (req as any).models;
         const { clientId, year, category, fileName, month } = req.body;
+
         const uploadedFile = req.file;
 
         if (!uploadedFile) {
@@ -475,7 +481,9 @@ router.post('/upload', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'])
  */
 router.get('/:id/download', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -521,7 +529,9 @@ router.get('/:id/download', authenticate, checkFileAccess, async (req: AuthReque
  */
 router.get('/:id/preview', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -587,6 +597,7 @@ router.get('/:id/preview', authenticate, checkFileAccess, async (req: AuthReques
  */
 router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileIds } = req.body;
 
         if (!Array.isArray(fileIds) || fileIds.length === 0) {
@@ -595,17 +606,19 @@ router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequ
 
         const files = await File.find({ _id: { $in: fileIds }, firmId: (req as any).firmId });
 
+
         if (files.length === 0) {
             return res.status(404).json({ message: 'No files found' });
         }
 
         // Security check: Ensure user has access to ALL requested files
         if (req.user!.role === 'CLIENT') {
-            const unauthorized = files.some(f => f.clientId.toString() !== req.user!.clientId?.toString());
+            const unauthorized = files.some((f: any) => f.clientId.toString() !== req.user!.clientId?.toString());
             if (unauthorized) {
                 return res.status(403).json({ message: 'Access denied to one or more files' });
             }
         }
+
 
         // Initialize archive
         const archive = archiver('zip', {
@@ -655,7 +668,9 @@ router.post('/download-zip', authenticate, checkFileAccess, async (req: AuthRequ
  */
 router.delete('/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const file = await File.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -694,6 +709,7 @@ router.delete('/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']),
  */
 router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileIds } = req.body;
 
         if (!Array.isArray(fileIds) || fileIds.length === 0) {
@@ -701,6 +717,7 @@ router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STA
         }
 
         const files = await File.find({ _id: { $in: fileIds }, firmId: (req as any).firmId });
+
 
         if (files.length === 0) {
             return res.status(404).json({ message: 'No files found' });
@@ -756,7 +773,9 @@ router.post('/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STA
  */
 router.get('/client/:clientId', authenticate, checkFileAccess, async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { clientId } = req.params;
+
         const { year, category, search, favorites } = req.query;
 
         // Check if user has access

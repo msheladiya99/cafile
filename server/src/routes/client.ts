@@ -13,7 +13,9 @@ router.use(authenticate, requireClient);
 // Get client's files
 router.get('/files', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { year, category } = req.query;
+
 
         // Client can only see their own files
         const query: any = { clientId: req.user!.clientId };
@@ -34,7 +36,9 @@ router.get('/files', async (req: AuthRequest, res: Response) => {
 // Get available years
 router.get('/years', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const years = await File.distinct('year', { clientId: req.user!.clientId });
+
         res.json(years.sort().reverse());
     } catch (error) {
         console.error('Get years error:', error);
@@ -45,7 +49,9 @@ router.get('/years', async (req: AuthRequest, res: Response) => {
 // Download file
 router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileId } = req.params;
+
 
         const file = await File.findOne({ 
             _id: fileId, 
@@ -91,7 +97,9 @@ router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
 // Get file categories with counts
 router.get('/stats', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const stats = await File.aggregate([
+
             { $match: { clientId: new mongoose.Types.ObjectId(req.user!.clientId) } },
             {
                 $group: {

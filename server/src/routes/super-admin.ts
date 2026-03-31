@@ -12,6 +12,8 @@ import { ActivityLog } from '../models/ActivityLog';
 import { Plan } from '../models/Plan';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
+import { encrypt } from '../utils/encryption';
+import { getTenantConnection, getModelFromConnection, rawUserSchema } from '../services/dbManager';
 import mongoose from 'mongoose';
 import os from 'os';
 
@@ -183,7 +185,19 @@ router.get('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Respo
 
 router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType, maxAdmins, googleDriveType, googleDriveRootFolderId: customFolderId } = req.body;
+        const {
+            firmName,
+            adminEmail,
+            adminName,
+            adminPassword,
+            mobileNumber,
+            planType,
+            maxAdmins,
+            googleDriveType,
+            googleDriveRootFolderId: customFolderId,
+            dbType,
+            mongoUri: rawMongoUri
+        } = req.body;
         let { subdomain } = req.body;
 
         // Auto-generate subdomain if not provided
@@ -198,6 +212,20 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
         while (await Firm.findOne({ subdomain: finalSubdomain })) {
             finalSubdomain = `${subdomain}${counter}`;
             counter++;
+        }
+
+        // Validate MongoDB URI if dbType is 'personal'
+        if (dbType === 'personal' && !rawMongoUri) {
+            return res.status(400).json({ message: 'MongoDB URI is required for personal database type' });
+        }
+
+        let encryptedMongoUri = undefined;
+        if (dbType === 'personal' && rawMongoUri) {
+            // Simple validation of MongoDB URI format
+            if (!rawMongoUri.startsWith('mongodb://') && !rawMongoUri.startsWith('mongodb+srv://')) {
+                return res.status(400).json({ message: 'Invalid MongoDB URI format' });
+            }
+            encryptedMongoUri = encrypt(rawMongoUri);
         }
 
         let googleDriveRootFolderId = customFolderId || '';
@@ -228,12 +256,10 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             }
         } catch (driveError) {
             console.error('Critical Google Drive error during firm creation:', driveError);
-            // If it's a personal drive error, we already handled it above.
-            // For other unexpected drive errors, we might want to warn or fail depending on how critical drive is.
-            // Since this is a file-heavy app, failing is probably safer.
-            return res.status(500).json({ message: 'Google Drive initialization failed. Please contact support.', error: (driveError as Error).message });
+            return res.status(500).json({ message: 'Google Drive initialization failed.', error: (driveError as Error).message });
         }
 
+        // 1. Save Firm in Master Database
         const firm = await Firm.create({
             firmName,
             subdomain: finalSubdomain,
@@ -243,21 +269,76 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             mobile: mobileNumber,
             googleDriveRootFolderId,
             googleDriveType: googleDriveType || 'app',
-            maxAdmins: Number(maxAdmins) || 5
+            maxAdmins: Number(maxAdmins) || 5,
+            dbType: dbType || 'default',
+            mongoUri: encryptedMongoUri,
+            dbName: `${finalSubdomain}_db`
         });
 
-        const bcrypt = await import('bcryptjs');
-        const passwordHash = await bcrypt.hash(adminPassword, 10);
-        const user = await User.create({
-            username: adminEmail,
-            passwordHash,
-            role: 'ADMIN',
-            firmId: firm._id,
-            email: adminEmail,
-            name: adminName || `${firmName} Admin`
-        });
+        // 2. Create Admin User
+        const bcryptLib = await import('bcryptjs');
+        const passwordHash = await bcryptLib.hash(adminPassword, 10);
 
-        res.status(201).json({ firm, user });
+        if (dbType === 'personal') {
+            // ── PERSONAL DB: Create admin user INSIDE the tenant's own MongoDB cluster ──
+            try {
+                console.log(`🔌 [CreateFirm] Connecting to personal DB for "${finalSubdomain}"...`);
+                console.log(`🔌 [CreateFirm] mongoUri encrypted? ${!!encryptedMongoUri}`);
+
+                const tenantConn = await getTenantConnection(firm);
+                console.log(`✅ [CreateFirm] Connection established. readyState=${tenantConn.readyState}`);
+
+                // Use rawUserSchema — no tenantPlugin, no AsyncLocalStorage dependency
+                const TenantUser = getModelFromConnection(tenantConn, 'User', rawUserSchema);
+                console.log(`✅ [CreateFirm] TenantUser model bound to connection`);
+
+                const saved = await TenantUser.create({
+                    username: adminEmail,
+                    passwordHash,
+                    role: 'ADMIN',
+                    firmId: firm._id,
+                    email: adminEmail,
+                    name: adminName || `${firmName} Admin`
+                });
+                console.log(`✅ [CreateFirm] Admin user saved in personal DB. _id=${saved._id}`);
+            } catch (dbError) {
+                console.error('❌ [CreateFirm] Failed to initialize personal DB:', dbError);
+                // ROLLBACK: Remove the firm from master DB so state stays consistent
+                try { await Firm.findByIdAndDelete(firm._id); } catch (_) { /* ignore */ }
+                return res.status(500).json({
+                    message: 'Failed to connect to your MongoDB URI. Firm creation rolled back. Please verify the URI and ensure our server IP is whitelisted.',
+                    error: (dbError as Error).message
+                });
+            }
+        } else {
+            // ── DEFAULT DB: Create admin user in the system ca-office database (original behavior) ──
+            try {
+                const saved = await User.create({
+                    username: adminEmail,
+                    passwordHash,
+                    role: 'ADMIN',
+                    firmId: firm._id,
+                    email: adminEmail,
+                    name: adminName || `${firmName} Admin`
+                });
+                console.log(`✅ [CreateFirm] Default DB admin created. _id=${saved._id}`);
+            } catch (userError) {
+                console.error('Failed to create admin user in default DB:', userError);
+                try { await Firm.findByIdAndDelete(firm._id); } catch (_) { /* ignore */ }
+                return res.status(500).json({
+                    message: 'Failed to create admin user. Firm creation rolled back.',
+                    error: (userError as Error).message
+                });
+            }
+        }
+
+
+        res.status(201).json({ 
+            message: "Tenant created successfully",
+            firm,
+            dbType: firm.dbType,
+            loginUrl: `https://${firm.subdomain}.mycafile.in`
+        });
     } catch (error) {
         console.error('Create firm error:', error);
         res.status(500).json({ message: 'Server error' });

@@ -1,8 +1,5 @@
 import { Router, Response } from 'express';
 import mongoose from 'mongoose';
-import { TaskApplicability } from '../models/TaskApplicability';
-import { TaskMaster } from '../models/TaskMaster';
-import { Task } from '../models/Task';
 import { AuthRequest, authenticate, requireRoles } from '../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -13,6 +10,7 @@ router.use(authenticate);
 // Get applied tasks - FIXED FILTER ISOLATION
 router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskApplicability } = (req as any).models;
         const { taskMasterId, clientId, clientGroupId } = req.query;
         
         if (!req.firmId) {
@@ -52,6 +50,7 @@ router.get('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res
 // Apply task route (already robust, but ensuring 201 response has correct data)
 router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskApplicability, TaskMaster, Task } = (req as any).models;
         const { taskMasterId, clientIds, groupIds, startDate, infinite, department, assignedTo } = req.body;
 
         if (!taskMasterId) return res.status(400).json({ message: 'Task required' });

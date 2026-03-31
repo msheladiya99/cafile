@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import Reminder from '../models/Reminder';
 import { authenticate as authMiddleware } from '../middleware/auth';
 import { sendEmail } from '../utils/email';
 
@@ -8,6 +7,7 @@ const router = Router();
 // Get all reminders (Admin only)
 router.get('/', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const { status, clientId, reminderType } = req.query;
 
         const user = (req as any).user;
@@ -35,6 +35,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 // Get upcoming reminders (next 30 days)
 router.get('/upcoming', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const today = new Date();
         const next30Days = new Date();
         next30Days.setDate(today.getDate() + 30);
@@ -66,6 +67,7 @@ router.get('/upcoming', authMiddleware, async (req: Request, res: Response) => {
 // Get overdue reminders
 router.get('/overdue', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const today = new Date();
 
         const user = (req as any).user;
@@ -104,6 +106,7 @@ router.get('/overdue', authMiddleware, async (req: Request, res: Response) => {
 // Get reminders for a specific client
 router.get('/client/:clientId', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const { clientId } = req.params;
         const user = (req as any).user;
 
@@ -124,6 +127,7 @@ router.get('/client/:clientId', authMiddleware, async (req: Request, res: Respon
 // Create a new reminder
 router.post('/', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const {
             clientId,
             title,
@@ -159,6 +163,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 // Update a reminder
 router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const { id } = req.params;
         const updates = req.body;
 
@@ -182,6 +187,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Mark reminder as completed
 router.patch('/:id/complete', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const { id } = req.params;
 
         const reminder = await Reminder.findOneAndUpdate(
@@ -204,6 +210,7 @@ router.patch('/:id/complete', authMiddleware, async (req: Request, res: Response
 // Delete a reminder
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const { id } = req.params;
 
         const reminder = await Reminder.findOneAndDelete({ _id: id, firmId: (req as any).firmId });
@@ -222,6 +229,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Send reminder notifications (called by cron job)
 router.post('/send-notifications', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Reminder } = (req as any).models;
         const today = new Date();
 
         // Find reminders that need notification

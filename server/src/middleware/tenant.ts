@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import { Connection } from 'mongoose';
 import { Firm } from '../models/Firm';
 import { requestContext } from '../utils/context';
+import { getTenantConnection } from '../services/dbManager';
 
 // ── In-memory firm cache to avoid a DB hit on every request ──────────────────
 const FIRM_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in ms
@@ -29,6 +31,7 @@ declare global {
         interface Request {
             firmId?: string;
             firm?: any;
+            db?: Connection;
         }
     }
 }
@@ -38,13 +41,6 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     const host = req.headers.host || '';
 
     // 2. Extract subdomain
-    // Example: abc.cacloud.in -> abc
-    // Example: localhost:5000 -> no subdomain or 'localhost'
-    const parts = host.split('.');
-
-    // For local development, we might use subdomains like abc.localhost:5000
-    // If it's just localhost:5000, we might want to skip or handle super admin
-
     let subdomain = '';
 
     // Check custom header first (useful for local dev and API stability)
@@ -52,16 +48,9 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
     if (headerTenant && typeof headerTenant === 'string') {
         subdomain = headerTenant.toLowerCase();
     } else {
-        // Robust subdomain extraction
-        // Detect current base domain (e.g., mycafile.in)
-        const hostParts = host.split(':'); // remove port
-        const hostname = hostParts[0].toLowerCase();
+        const hostname = host.split(':')[0].toLowerCase();
 
-        // Skip for bare IP addresses
-        if (/^[\d.]+$/.test(hostname)) {
-            subdomain = '';
-        } else {
-            // Check for known base domains
+        if (!/^[\d.]+$/.test(hostname)) {
             const bases = ['mycafile.in', 'vercel.app', 'onrender.com', 'localhost'];
             let foundBase = '';
             for (const b of bases) {
@@ -72,45 +61,35 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
             }
 
             if (foundBase) {
-                // If hostname is 'paresh.co.mycafile.in' and base is 'mycafile.in'
-                // Subdomain is 'paresh.co'
                 const subStr = hostname.replace(`.${foundBase}`, '').replace(foundBase, '');
                 if (subStr && subStr !== 'www') {
                     subdomain = subStr;
                 }
-            } else if (parts.length >= 3) {
-                // Fallback for unknown domains
-                subdomain = parts.slice(0, parts.length - 2).join('.');
+            } else {
+                const parts = hostname.split('.');
+                if (parts.length >= 3) {
+                    subdomain = parts.slice(0, parts.length - 2).join('.');
+                }
             }
         }
     }
 
-    // Only log in development for debugging
     if (process.env.NODE_ENV !== 'production') {
-        console.log('🔍 Tenant Subdomain:', subdomain || 'ROOT/NONE', 'Host:', host);
+        // console.log('🔍 Tenant Subdomain:', subdomain || 'ROOT/NONE', 'Host:', host);
     }
 
     // Skip middleware for:
-    // 1. Super admin base path
-    // 2. Main domain (no subdomain or 'www' or matches base domain)
-    // 3. Localhost base
     if (
         req.path.startsWith('/super-admin') ||
         req.baseUrl.startsWith('/api/super-admin') ||
         !subdomain ||
-        subdomain === 'www' ||
-        subdomain === 'api' ||
-        subdomain === 'admin' ||
-        subdomain === 'superadmin' ||
-        subdomain === 'super-admin' ||
-        subdomain === 'localhost' ||
-        subdomain === 'mycafile'
+        ['www', 'api', 'admin', 'superadmin', 'super-admin', 'localhost', 'mycafile'].includes(subdomain)
     ) {
         return next();
     }
 
     try {
-        // 3. Find firm in database (uses in-memory cache, 5-min TTL)
+        // 3. Find firm in master database
         const firm = await getFirmBySubdomain(subdomain);
 
         if (!firm) {
@@ -118,7 +97,23 @@ export const tenantMiddleware = async (req: Request, res: Response, next: NextFu
             return res.status(404).json({ message: 'Firm not found' });
         }
 
-        // 4. Attach firmId to request context
+        // 4. BYODB: Only create a separate connection for personal DB tenants.
+        //    Default tenants use the main mongoose connection (data is in ca-office DB, scoped by firmId).
+        if (firm.dbType === 'personal') {
+            try {
+                const tenantConn = await getTenantConnection(firm);
+                req.db = tenantConn;
+            } catch (dbError: any) {
+                console.error(`❌ Personal DB Connection Error for "${subdomain}":`, dbError.message);
+                return res.status(503).json({
+                    message: 'Your firm\'s personal database is unavailable. Please contact support.',
+                    error: dbError.message
+                });
+            }
+        }
+        // For dbType === 'default': req.db stays undefined → routes use main User model ✅
+
+        // 5. Attach firmId to request context
         req.firmId = (firm._id as any).toString();
         req.firm = firm;
 

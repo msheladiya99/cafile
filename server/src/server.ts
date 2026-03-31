@@ -7,6 +7,9 @@ import path from 'path';
 import { createServer } from 'http';
 import { connectDB } from './config/database'; // database.ts applies the plugin immediately
 import { tenantMiddleware } from './middleware/tenant';
+import { modelConnector } from './middleware/modelConnector';
+import { closeAllTenantConnections } from './services/dbManager';
+
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import clientRoutes from './routes/client';
@@ -87,8 +90,11 @@ app.use('/api', (req, res, next) => {
     if (req.path === '/health' || req.path.startsWith('/super-admin')) {
         return next();
     }
-    tenantMiddleware(req, res, next);
+    tenantMiddleware(req, res, () => {
+        modelConnector(req, res, next);
+    });
 });
+
 
 // Routes
 app.get('/', (req, res) => {
@@ -152,3 +158,16 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Graceful shutdown
+const shutdown = async (signal: string) => {
+    console.log(`\n⚠️  ${signal} received. Closing connections...`);
+    await closeAllTenantConnections();
+    httpServer.close(() => {
+        console.log('🛑 HTTP server closed.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
