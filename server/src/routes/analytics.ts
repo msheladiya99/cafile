@@ -1,7 +1,4 @@
 import { Router, Response } from 'express';
-import { File } from '../models/File';
-import { Client } from '../models/Client';
-import { User } from '../models/User';
 import { authenticate, requireRoles, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -12,7 +9,7 @@ const router = Router();
  */
 router.get('/dashboard', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
-        const user = (req as any).user;
+        const { Client, File, User } = (req as any).models;
         const filter: any = { firmId: (req as any).firmId };
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -119,29 +116,29 @@ router.get('/dashboard', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'
                 totalUsers,
                 recentFiles
             },
-            categoryDistribution: categoryDistribution.map(item => ({
+            categoryDistribution: categoryDistribution.map((item: any) => ({
                 category: item._id,
                 count: item.count
             })),
-            storageByClient: storageByClient.map(item => ({
+            storageByClient: storageByClient.map((item: any) => ({
                 clientId: item._id,
                 clientName: item.client.name,
                 totalSize: item.totalSize,
                 fileCount: item.fileCount
             })),
-            uploadTrends: uploadTrends.map(item => ({
+            uploadTrends: uploadTrends.map((item: any) => ({
                 year: item._id.year,
                 month: item._id.month,
                 count: item.count
             })),
-            clientActivity: clientActivity.map(user => ({
-                userId: user._id,
-                username: user.username,
-                clientName: user.client?.name || 'Unknown',
-                lastLogin: user.lastLogin,
-                email: user.email
+            clientActivity: clientActivity.map((userDetail: any) => ({
+                userId: userDetail._id,
+                username: userDetail.username,
+                clientName: userDetail.client?.name || 'Unknown',
+                lastLogin: userDetail.lastLogin,
+                email: userDetail.email
             })),
-            mostActiveClients: mostActiveClients.map(item => ({
+            mostActiveClients: mostActiveClients.map((item: any) => ({
                 clientId: item._id,
                 clientName: item.client.name,
                 uploadCount: item.uploadCount
@@ -159,6 +156,8 @@ router.get('/dashboard', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF'
  */
 router.get('/monthly-report', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, File } = (req as any).models;
+
         const { year, month } = req.query;
         const targetYear = year ? parseInt(year as string) : new Date().getFullYear();
         const targetMonth = month ? parseInt(month as string) : new Date().getMonth() + 1;

@@ -1,5 +1,4 @@
 import { Router, Response } from 'express';
-import { TaskCategory } from '../models/TaskCategory';
 import { AuthRequest, authenticate, requireRoles } from '../middleware/auth';
 import mongoose from 'mongoose';
 
@@ -9,6 +8,7 @@ router.use(authenticate);
 // GET all categories for this firm
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskCategory } = (req as any).models;
         const categories = await TaskCategory.find({ firmId: req.firmId })
             .sort({ name: 1 });
         res.json(categories);
@@ -20,6 +20,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // POST create category
 router.post('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskCategory } = (req as any).models;
         const { name, color, description } = req.body;
         if (!name) { res.status(400).json({ message: 'Category name is required' }); return; }
 
@@ -44,12 +45,13 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, re
 // PUT update category
 router.put('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskCategory } = (req as any).models;
         const cat = await TaskCategory.findOneAndUpdate(
             { _id: req.params.id, firmId: req.firmId },
             { $set: { name: req.body.name, color: req.body.color, description: req.body.description, status: req.body.status } },
             { new: true }
         );
-        if (!cat) { res.status(404).json({ message: 'Category not found' }); return; }
+        if (!cat) { res.status(404).json({ message: 'Category found' }); return; }
         res.json(cat);
     } catch (err: any) {
         res.status(500).json({ message: err.message });
@@ -59,6 +61,7 @@ router.put('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, 
 // DELETE category
 router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskCategory } = (req as any).models;
         const cat = await TaskCategory.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         if (!cat) { res.status(404).json({ message: 'Category not found' }); return; }
         res.json({ message: 'Category deleted' });

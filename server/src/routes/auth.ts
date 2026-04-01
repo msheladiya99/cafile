@@ -2,10 +2,11 @@ import { Router, Response } from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { User, userSchema } from '../models/User';
 import { Client } from '../models/Client';
 import { ActivityLog } from '../models/ActivityLog';
 import { AuthRequest } from '../middleware/auth';
+import { getModelFromConnection, rawUserSchema } from '../services/dbManager';
 
 const router = Router();
 
@@ -18,6 +19,9 @@ router.post('/login', async (req, res: Response) => {
             res.status(400).json({ message: 'Username and password are required' });
             return;
         }
+
+        const { User: UserModel, Client, ActivityLog } = (req as any).models;
+
 
         // Find user by email (case-insensitive) OR username
         const normalizedUsername = username.trim();
@@ -32,10 +36,9 @@ router.post('/login', async (req, res: Response) => {
         //    If on a firm subdomain, also resolve firm-scoped user in PARALLEL
         let user;
         if (req.firmId) {
-            // Run both lookups concurrently and pick the right one
             const [globalUser, firmUser] = await Promise.all([
                 User.findOne({ ...query, firmId: null }).select('+passwordHash').lean(),
-                User.findOne({ ...query, firmId: req.firmId }).select('+passwordHash').lean()
+                UserModel.findOne({ ...query, firmId: req.firmId }).select('+passwordHash').lean()
             ]);
             user = globalUser || firmUser;
 
@@ -95,7 +98,7 @@ router.post('/login', async (req, res: Response) => {
 
         // Run lastLogin update, activity log, and client name fetch all in PARALLEL
         const [, , clientDoc] = await Promise.all([
-            User.updateOne({ _id: user._id }, { lastLogin: new Date() }),
+            UserModel.updateOne({ _id: user._id }, { lastLogin: new Date() }),
             ActivityLog.create({
                 userId: user._id,
                 firmId: user.firmId,
@@ -130,7 +133,10 @@ router.post('/login', async (req, res: Response) => {
 // Get current user info
 router.get('/me', async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findById(req.user?.userId).select('-passwordHash');
+        const { User: UserModel, Client } = (req as any).models;
+
+
+        const user = await UserModel.findById(req.user?.userId).select('-passwordHash');
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;

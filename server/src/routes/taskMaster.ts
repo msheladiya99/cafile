@@ -1,5 +1,4 @@
 import { Router, Response } from 'express';
-import { TaskMaster } from '../models/TaskMaster';
 import { authenticate, requireStaff, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -10,6 +9,7 @@ router.use(authenticate);
 // Get all task masters for a firm
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskMaster } = (req as any).models;
         const query: any = { firmId: req.firmId };
         const taskMasters = await TaskMaster.find(query).populate('reportingManager', 'name email').sort({ createdAt: -1 });
         res.json(taskMasters);
@@ -22,6 +22,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Create task master
 router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskMaster } = (req as any).models;
         const taskMaster = new TaskMaster({
             ...req.body,
             firmId: req.firmId,
@@ -38,6 +39,7 @@ router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
 // Update task master
 router.put('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskMaster } = (req as any).models;
         const taskMaster = await TaskMaster.findOneAndUpdate(
             { _id: req.params.id, firmId: req.firmId },
             { $set: req.body },
@@ -54,6 +56,7 @@ router.put('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
 // Delete task master
 router.delete('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
+        const { TaskMaster } = (req as any).models;
         const taskMaster = await TaskMaster.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
         if (!taskMaster) return res.status(404).json({ message: 'Task master not found' });
         res.json({ message: 'Task master deleted' });

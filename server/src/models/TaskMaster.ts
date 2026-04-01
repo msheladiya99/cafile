@@ -32,6 +32,7 @@ export interface ITaskMaster extends Document {
     subtasks: ISubtask[];
     firmId: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
+    isDefault?: boolean; // true = this task is a global template, seeded into every new firm
     createdAt: Date;
     updatedAt: Date;
 }
@@ -67,7 +68,8 @@ const TaskMasterSchema = new Schema<ITaskMaster>({
     workingUser: { type: Schema.Types.ObjectId, ref: 'User' },
     subtasks: [SubtaskSchema],
     firmId: { type: Schema.Types.ObjectId, ref: 'Firm', required: true, index: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    isDefault: { type: Boolean, default: false, index: true } // global template — seeded into every new firm
 }, {
     timestamps: true
 });

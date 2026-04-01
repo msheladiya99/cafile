@@ -141,11 +141,13 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         }
 
         // Check availability
-        const existingEmail = await User.findOne({ email });
+        const { User: UserModel } = (req as any).models;
+        const existingEmail = await UserModel.findOne({ email });
         if (existingEmail) {
             res.status(400).json({ message: 'Email already exists' });
             return;
         }
+
 
         const firm = await Firm.findById(req.firmId);
         if (!firm) {
@@ -159,10 +161,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
         // General staff limit
         if (staffLimit > 0 && staffLimit < 99999) {
-            const currentStaffCount = await User.countDocuments({
+            const currentStaffCount = await UserModel.countDocuments({
                 firmId: req.firmId,
                 role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
             });
+
 
             if (currentStaffCount >= staffLimit) {
                 res.status(400).json({ message: `Staff limit reached for your ${plan?.displayName || firm.plan} plan.` });
@@ -172,10 +175,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
         // Enforce maxAdmins limit if creating an ADMIN
         if (actualRole === 'ADMIN') {
-            const currentAdminsCount = await User.countDocuments({
+            const currentAdminsCount = await UserModel.countDocuments({
                 firmId: req.firmId,
                 role: 'ADMIN'
             });
+
 
             if (currentAdminsCount >= (firm.maxAdmins || 5)) {
                 res.status(400).json({
@@ -192,10 +196,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         const passwordHash = await bcrypt.hash(finalPassword, 10);
 
         // Create user account
-        const user = new User({
+        const user = new UserModel({
             username: finalUsername,
             name,
             email,
+
             phone: phone || mobileNumber,
             passwordHash,
             role: actualRole,
@@ -256,10 +261,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // Get all staff members
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
-        const staff = await User.find({
+        const { User: UserModel } = (req as any).models;
+        const staff = await UserModel.find({
             firmId: req.firmId,
             role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
         }).select('-passwordHash').sort({ createdAt: -1 }).lean();
+
 
         res.json(staff);
     } catch (error) {
@@ -271,7 +278,9 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get staff member by id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const staff = await User.findOne({ _id: req.params.id, firmId: req.firmId }).select('-passwordHash').lean();
+        const { User: UserModel } = (req as any).models;
+        const staff = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId }).select('-passwordHash').lean();
+
         if (!staff) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -286,7 +295,9 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // Reset staff password
 router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
+        const { User: UserModel } = (req as any).models;
+        const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
+
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -341,6 +352,7 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
 // Update staff member
 router.patch('/:id', async (req: AuthRequest, res: Response) => {
     try {
+        const { User: UserModel } = (req as any).models;
         const {
             firstName, lastName, email, phone, role, permissions,
             employeeCode, address, country, state, city, postalCode,
@@ -356,7 +368,8 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
-        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
+        const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
+
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -388,7 +401,8 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
         }
 
         if (email) {
-            const existingEmail = await User.findOne({ email, _id: { $ne: req.params.id as any } });
+            const existingEmail = await UserModel.findOne({ email, _id: { $ne: req.params.id as any } });
+
             if (existingEmail) {
                 res.status(400).json({ message: 'Email already exists' });
                 return;
@@ -444,7 +458,9 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 // Saves to: MyCAFile > FirmName > Employees > EmployeeName > profile_<id>.jpg
 router.post('/:id/profile-image', upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
+        const { User: UserModel } = (req as any).models;
+        const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
+
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -498,7 +514,9 @@ router.post('/:id/profile-image', upload.single('profileImage'), async (req: Aut
 // Delete staff member
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findOne({ _id: req.params.id, firmId: req.firmId });
+        const { User: UserModel } = (req as any).models;
+        const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
+
         if (!user) {
             res.status(404).json({ message: 'Staff member not found' });
             return;
@@ -515,7 +533,8 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        await User.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
+        await UserModel.findOneAndDelete({ _id: req.params.id, firmId: req.firmId });
+
         res.json({ message: 'Staff member deleted successfully' });
     } catch (error) {
         console.error('Delete staff error:', error);

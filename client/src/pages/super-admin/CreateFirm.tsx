@@ -21,7 +21,9 @@ const CreateFirm: React.FC = () => {
         planType: 'Trial',
         maxAdmins: 5,
         googleDriveType: 'app' as 'app' | 'personal',
-        googleDriveRootFolderId: ''
+        googleDriveRootFolderId: '',
+        dbType: 'default' as 'default' | 'personal',
+        mongoUri: ''
     });
 
     const createMutation = useMutation({
@@ -48,11 +50,15 @@ const CreateFirm: React.FC = () => {
             setError('Please provide a Google Drive Folder ID for personal storage.');
             return;
         }
+        if (formData.dbType === 'personal' && !formData.mongoUri) {
+            setError('Please provide a MongoDB URI for personal database.');
+            return;
+        }
         createMutation.mutate(formData);
     };
 
     return (
-        <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+        <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, mb: 8 }}>
             <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 800, mb: 3 }}>
                     Create New Firm Account
@@ -108,6 +114,8 @@ const CreateFirm: React.FC = () => {
                             </TextField>
                         </Grid>
 
+                        <Grid size={{ xs: 12 }}><Typography variant="h6" sx={{ mt: 2, fontWeight: 700 }}>Infrastructure</Typography></Grid>
+
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField fullWidth select label="Data Storage Type"
                                 value={formData.googleDriveType} onChange={e => setFormData({ ...formData, googleDriveType: e.target.value as 'app' | 'personal' })}>
@@ -116,18 +124,35 @@ const CreateFirm: React.FC = () => {
                             </TextField>
                         </Grid>
 
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField fullWidth select label="Database Mode"
+                                value={formData.dbType} onChange={e => setFormData({ ...formData, dbType: e.target.value as 'default' | 'personal' })}>
+                                <MenuItem value="default">Default System MongoDB</MenuItem>
+                                <MenuItem value="personal">Bring Your Own Database (BYODB)</MenuItem>
+                            </TextField>
+                        </Grid>
+
+                        {formData.dbType === 'personal' && (
+                            <Grid size={{ xs: 12 }}>
+                                <TextField fullWidth label="Personal MongoDB URI" variant="outlined"
+                                    value={formData.mongoUri} onChange={e => setFormData({ ...formData, mongoUri: e.target.value })}
+                                    placeholder="mongodb+srv://user:pass@cluster.mongodb.net/..."
+                                    helperText="Ensure your MongoDB cluster allows connections from our server IP." required />
+                            </Grid>
+                        )}
+
                         {formData.googleDriveType === 'personal' && (
                             <>
                                 <Grid size={{ xs: 12 }}>
-                                    <Alert severity="info" sx={{ mb: 2 }}>
+                                    <Alert severity="info" sx={{ mb: 1 }}>
                                         <strong>Configuration Required:</strong> Please share your Google Drive folder with 
                                         <code style={{ background: '#eee', padding: '2px 5px', margin: '0 5px', borderRadius: 3 }}>
                                             drive-bot@ca-office-portal-486705.iam.gserviceaccount.com
                                         </code> 
-                                        and grant <strong>'Editor'</strong> access before proceeding.
+                                        and grant <strong>'Editor'</strong> access.
                                     </Alert>
                                 </Grid>
-                                <Grid size={{ xs: 12, md: 12 }}>
+                                <Grid size={{ xs: 12 }}>
                                     <TextField fullWidth label="Personal Google Drive Folder ID" variant="outlined"
                                         value={formData.googleDriveRootFolderId} onChange={e => setFormData({ ...formData, googleDriveRootFolderId: e.target.value })}
                                         helperText="Paste the ID of the folder from your browser URL." required />
@@ -137,7 +162,7 @@ const CreateFirm: React.FC = () => {
 
                         <Grid size={{ xs: 12 }}><Typography variant="h6" sx={{ mt: 2, fontWeight: 700 }}>Security</Typography></Grid>
 
-                        <Grid size={{ xs: 12, md: 12 }}>
+                        <Grid size={{ xs: 12 }}>
                             <TextField fullWidth label="Set Admin Password" type="password" variant="outlined"
                                 value={formData.adminPassword} onChange={e => setFormData({ ...formData, adminPassword: e.target.value })}
                                 required />

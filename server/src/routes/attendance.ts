@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticate, requireStaff } from '../middleware/auth';
-import Attendance from '../models/Attendance';
 
 const router = express.Router();
 
@@ -11,6 +10,7 @@ router.use(requireStaff);
 // Create new attendance
 router.post('/', async (req, res) => {
     try {
+        const { Attendance } = (req as any).models;
         const { employee, date, inTime, outTime, description } = req.body;
 
         const newAttendance = new Attendance({
@@ -36,6 +36,7 @@ router.post('/', async (req, res) => {
 // Get all attendance with optional filters
 router.get('/', async (req, res) => {
     try {
+        const { Attendance } = (req as any).models;
         const { employee, startDate, endDate } = req.query;
         const filter: any = { firmId: (req as any).firmId };
 
@@ -68,6 +69,7 @@ router.get('/', async (req, res) => {
 // Form 108 - Monthly summary for a given employee & year
 router.get('/form108', async (req, res) => {
     try {
+        const { Attendance } = (req as any).models;
         const { employee, year } = req.query;
 
         if (!employee || !year) {
@@ -130,6 +132,7 @@ router.get('/form108', async (req, res) => {
 // Update attendance
 router.put('/:id', async (req, res) => {
     try {
+        const { Attendance } = (req as any).models;
         const { employee, date, inTime, outTime, description } = req.body;
 
         const updated = await Attendance.findOneAndUpdate(
@@ -150,6 +153,7 @@ router.put('/:id', async (req, res) => {
 // Delete attendance
 router.delete('/:id', async (req, res) => {
     try {
+        const { Attendance } = (req as any).models;
         const deletedAttendance = await Attendance.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
         if (!deletedAttendance) {
             return res.status(404).json({ message: 'Attendance record not found' });

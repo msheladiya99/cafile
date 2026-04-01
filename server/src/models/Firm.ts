@@ -11,6 +11,9 @@ export interface IFirm extends Document {
     googleDriveRootFolderId?: string;
     googleDriveType: 'app' | 'personal';
     maxAdmins: number;
+    dbType: 'default' | 'personal';
+    mongoUri?: string;
+    dbName?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -58,7 +61,14 @@ const firmSchema = new Schema<IFirm>(
             default: 5,
             min: 1,
             max: 5
-        }
+        },
+        dbType: {
+            type: String,
+            enum: ['default', 'personal'],
+            default: 'default'
+        },
+        mongoUri: String,
+        dbName: String
     },
     { timestamps: true }
 );

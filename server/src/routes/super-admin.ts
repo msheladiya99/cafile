@@ -10,8 +10,12 @@ import { File } from '../models/File';
 import { SuperAdmin } from '../models/SuperAdmin';
 import { ActivityLog } from '../models/ActivityLog';
 import { Plan } from '../models/Plan';
+import { TaskCategory } from '../models/TaskCategory';
+import { TaskMaster } from '../models/TaskMaster';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
+import { encrypt } from '../utils/encryption';
+import { getTenantConnection, getModelFromConnection, rawUserSchema } from '../services/dbManager';
 import mongoose from 'mongoose';
 import os from 'os';
 
@@ -183,7 +187,19 @@ router.get('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Respo
 
 router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const { firmName, adminEmail, adminName, adminPassword, mobileNumber, planType, maxAdmins, googleDriveType, googleDriveRootFolderId: customFolderId } = req.body;
+        const {
+            firmName,
+            adminEmail,
+            adminName,
+            adminPassword,
+            mobileNumber,
+            planType,
+            maxAdmins,
+            googleDriveType,
+            googleDriveRootFolderId: customFolderId,
+            dbType,
+            mongoUri: rawMongoUri
+        } = req.body;
         let { subdomain } = req.body;
 
         // Auto-generate subdomain if not provided
@@ -198,6 +214,20 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
         while (await Firm.findOne({ subdomain: finalSubdomain })) {
             finalSubdomain = `${subdomain}${counter}`;
             counter++;
+        }
+
+        // Validate MongoDB URI if dbType is 'personal'
+        if (dbType === 'personal' && !rawMongoUri) {
+            return res.status(400).json({ message: 'MongoDB URI is required for personal database type' });
+        }
+
+        let encryptedMongoUri = undefined;
+        if (dbType === 'personal' && rawMongoUri) {
+            // Simple validation of MongoDB URI format
+            if (!rawMongoUri.startsWith('mongodb://') && !rawMongoUri.startsWith('mongodb+srv://')) {
+                return res.status(400).json({ message: 'Invalid MongoDB URI format' });
+            }
+            encryptedMongoUri = encrypt(rawMongoUri);
         }
 
         let googleDriveRootFolderId = customFolderId || '';
@@ -228,12 +258,10 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             }
         } catch (driveError) {
             console.error('Critical Google Drive error during firm creation:', driveError);
-            // If it's a personal drive error, we already handled it above.
-            // For other unexpected drive errors, we might want to warn or fail depending on how critical drive is.
-            // Since this is a file-heavy app, failing is probably safer.
-            return res.status(500).json({ message: 'Google Drive initialization failed. Please contact support.', error: (driveError as Error).message });
+            return res.status(500).json({ message: 'Google Drive initialization failed.', error: (driveError as Error).message });
         }
 
+        // 1. Save Firm in Master Database
         const firm = await Firm.create({
             firmName,
             subdomain: finalSubdomain,
@@ -243,21 +271,164 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             mobile: mobileNumber,
             googleDriveRootFolderId,
             googleDriveType: googleDriveType || 'app',
-            maxAdmins: Number(maxAdmins) || 5
+            maxAdmins: Number(maxAdmins) || 5,
+            dbType: dbType || 'default',
+            mongoUri: encryptedMongoUri,
+            dbName: `${finalSubdomain}_db`
         });
 
-        const bcrypt = await import('bcryptjs');
-        const passwordHash = await bcrypt.hash(adminPassword, 10);
-        const user = await User.create({
-            username: adminEmail,
-            passwordHash,
-            role: 'ADMIN',
-            firmId: firm._id,
-            email: adminEmail,
-            name: adminName || `${firmName} Admin`
-        });
+        // 2. Create Admin User
+        const bcryptLib = await import('bcryptjs');
+        const passwordHash = await bcryptLib.hash(adminPassword, 10);
+        
+        let adminUserId: any;
 
-        res.status(201).json({ firm, user });
+        if (dbType === 'personal') {
+            // ── PERSONAL DB: Create admin user INSIDE the tenant's own MongoDB cluster ──
+            try {
+                console.log(`🔌 [CreateFirm] Connecting to personal DB for "${finalSubdomain}"...`);
+                console.log(`🔌 [CreateFirm] mongoUri encrypted? ${!!encryptedMongoUri}`);
+
+                const tenantConn = await getTenantConnection(firm);
+                console.log(`✅ [CreateFirm] Connection established. readyState=${tenantConn.readyState}`);
+
+                // Use rawUserSchema — no tenantPlugin, no AsyncLocalStorage dependency
+                const TenantUser = getModelFromConnection(tenantConn, 'User', rawUserSchema);
+                console.log(`✅ [CreateFirm] TenantUser model bound to connection`);
+
+                const saved = await TenantUser.create({
+                    username: adminEmail,
+                    passwordHash,
+                    role: 'ADMIN',
+                    firmId: firm._id,
+                    email: adminEmail,
+                    name: adminName || `${firmName} Admin`
+                });
+                adminUserId = saved._id;
+                console.log(`✅ [CreateFirm] Admin user saved in personal DB. _id=${saved._id}`);
+            } catch (dbError) {
+                console.error('❌ [CreateFirm] Failed to initialize personal DB:', dbError);
+                // ROLLBACK: Remove the firm from master DB so state stays consistent
+                try { await Firm.findByIdAndDelete(firm._id); } catch (_) { /* ignore */ }
+                return res.status(500).json({
+                    message: 'Failed to connect to your MongoDB URI. Firm creation rolled back. Please verify the URI and ensure our server IP is whitelisted.',
+                    error: (dbError as Error).message
+                });
+            }
+        } else {
+            // ── DEFAULT DB: Create admin user in the system ca-office database (original behavior) ──
+            try {
+                const saved = await User.create({
+                    username: adminEmail,
+                    passwordHash,
+                    role: 'ADMIN',
+                    firmId: firm._id,
+                    email: adminEmail,
+                    name: adminName || `${firmName} Admin`
+                });
+                adminUserId = saved._id;
+                console.log(`✅ [CreateFirm] Default DB admin created. _id=${saved._id}`);
+            } catch (userError) {
+                console.error('Failed to create admin user in default DB:', userError);
+                try { await Firm.findByIdAndDelete(firm._id); } catch (_) { /* ignore */ }
+                return res.status(500).json({
+                    message: 'Failed to create admin user. Firm creation rolled back.',
+                    error: (userError as Error).message
+                });
+            }
+        }
+
+        // 3. Seed Default Task Categories and Task Masters
+        try {
+            console.log('\ud83c\udf31 Seeding default Task Masters into new firm...');
+
+            // IMPORTANT: Only seed tasks explicitly flagged as isDefault:true.
+            // Firms can freely create their own tasks without affecting other firms.
+            const defaultMasters = await TaskMaster.find({ isDefault: true }).lean();
+
+            if (defaultMasters.length > 0) {
+                // Collect the unique template firmId(s) to fetch matching categories
+                const templateFirmIds = [...new Set(defaultMasters.map((t: any) => t.firmId.toString()))];
+                const defaultCategories = await TaskCategory.find({ firmId: { $in: templateFirmIds } }).lean();
+
+                console.log(`\ud83c\udf31 Seeding ${defaultMasters.length} default tasks + ${defaultCategories.length} categories into "${firm.firmName}"...`);
+
+                let TargetCategoryModel: any = TaskCategory;
+                let TargetMasterModel: any = TaskMaster;
+
+                if (dbType === 'personal') {
+                    // For personal DB — bind models to the tenant's own cluster
+                    const tenantConn = await getTenantConnection(firm);
+                    TargetCategoryModel = getModelFromConnection(tenantConn, 'TaskCategory', TaskCategory.schema);
+                    TargetMasterModel = getModelFromConnection(tenantConn, 'TaskMaster', TaskMaster.schema);
+                }
+
+                // Step A: Seed categories and build old-ID → new-ID map
+                const categoryIdMap = new Map<string, mongoose.Types.ObjectId>();
+                for (const oldCat of defaultCategories) {
+                    const savedCat = await new TargetCategoryModel({
+                        name: oldCat.name,
+                        color: oldCat.color || '#667eea',
+                        description: oldCat.description || '',
+                        status: oldCat.status || 'Active',
+                        firmId: firm._id,
+                        createdBy: adminUserId
+                    }).save();
+                    categoryIdMap.set(oldCat._id.toString(), savedCat._id as mongoose.Types.ObjectId);
+                }
+
+                // Step B: Seed task masters, re-wiring category IDs to new ones
+                for (const oldTm of defaultMasters) {
+                    const newCategoryId = oldTm.category
+                        ? (categoryIdMap.get(oldTm.category.toString()) || null)
+                        : null;
+
+                    await new TargetMasterModel({
+                        taskName: oldTm.taskName,
+                        mode: oldTm.mode,
+                        category: newCategoryId,
+                        department: oldTm.department,
+                        description: oldTm.description || '',
+                        status: oldTm.status || 'Active',
+                        hsnSac: oldTm.hsnSac,
+                        udin: oldTm.udin || false,
+                        billingAmount: oldTm.billingAmount || 0,
+                        estimatedHours: oldTm.estimatedHours || 1,
+                        frequency: oldTm.frequency,
+                        typeOfClient: oldTm.typeOfClient || [],
+                        dueDays: oldTm.dueDays,
+                        recurringTask: oldTm.recurringTask || false,
+                        recurringDays: oldTm.recurringDays,
+                        tags: oldTm.tags || [],
+                        firmId: firm._id,
+                        createdBy: adminUserId,
+                        isDefault: false, // copied tasks are firm-specific, NOT global templates
+                        // reportingManager omitted — no valid user ref across firms
+                        subtasks: (oldTm.subtasks || []).map((st: any) => ({
+                            name: st.name,
+                            description: st.description || '',
+                            designation: st.designation || '',
+                            activityOrder: st.activityOrder || 0
+                            // predefinedEmployee omitted — user refs don't carry across firms
+                        }))
+                    }).save();
+                }
+
+                console.log(`\u2705 Seeded ${defaultMasters.length} default tasks into new firm: ${firm.firmName}`);
+            } else {
+                console.log('\ud83c\udf31 No default template tasks found (isDefault:true) \u2014 skipping task seeding.');
+            }
+        } catch (seedError) {
+            // Task seeding is non-fatal. Firm and admin already created successfully.
+            console.error('\u274c Non-fatal error during task seeding (firm still created):', seedError);
+        }
+
+        res.status(201).json({ 
+            message: "Tenant created successfully",
+            firm,
+            dbType: firm.dbType,
+            loginUrl: `https://${firm.subdomain}.mycafile.in`
+        });
     } catch (error) {
         console.error('Create firm error:', error);
         res.status(500).json({ message: 'Server error' });

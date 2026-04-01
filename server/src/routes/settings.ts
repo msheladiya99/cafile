@@ -1,5 +1,4 @@
-import express, { Request, Response } from 'express';
-import Settings from '../models/Settings';
+import express, { Response } from 'express';
 import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
 
 const router = express.Router();
@@ -8,6 +7,7 @@ const router = express.Router();
 // Anyone authenticated can read settings (e.g. client viewing invoice)
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { Settings } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context required' });
 
@@ -31,6 +31,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 // UPDATE Settings (Admin Only)
 router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { Settings } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context required' });
 
