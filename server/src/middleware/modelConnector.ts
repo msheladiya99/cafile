@@ -20,6 +20,7 @@ import { FirmDocument } from '../models/FirmDocument';
 import { MultiFirm } from '../models/MultiFirm';
 import { TaxDetail } from '../models/TaxDetail';
 import { Currency } from '../models/Currency';
+import { DSC } from '../models/DSC';
 
 
 /**
@@ -48,7 +49,8 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         FirmDocument: getTenantModel(req, 'FirmDocument', FirmDocument),
         MultiFirm: getTenantModel(req, 'MultiFirm', MultiFirm),
         TaxDetail: getTenantModel(req, 'TaxDetail', TaxDetail),
-        Currency: getTenantModel(req, 'Currency', Currency)
+        Currency: getTenantModel(req, 'Currency', Currency),
+        DSC: getTenantModel(req, 'DSC', DSC)
     };
 
 
