@@ -11,7 +11,9 @@ const router = Router();
 // Get all services
 router.get('/services', authMiddleware, async (req: Request, res: Response) => {
     try {
+        const { Service } = (req as any).models;
         const services = await Service.find({ firmId: (req as any).firmId }).sort({ name: 1 });
+
         res.json(services);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching services' });
@@ -21,8 +23,10 @@ router.get('/services', authMiddleware, async (req: Request, res: Response) => {
 // Create service
 router.post('/services', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Service } = (req as any).models;
         const service = new Service(req.body);
         await service.save();
+
         res.status(201).json(service);
     } catch (error) {
         res.status(400).json({ message: 'Error creating service' });
@@ -32,10 +36,12 @@ router.post('/services', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
 // Update service
 router.put('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Service } = (req as any).models;
         const service = await Service.findOneAndUpdate(
             { _id: req.params.id, firmId: (req as any).firmId }, 
             req.body, { new: true }
         );
+
         if (!service) return res.status(404).json({ message: 'Service not found' });
         res.json(service);
     } catch (error) {
@@ -46,7 +52,9 @@ router.put('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 // Delete service
 router.delete('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Service } = (req as any).models;
         const service = await Service.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
+
         if (!service) return res.status(404).json({ message: 'Service not found' });
         res.json({ message: 'Service deleted' });
     } catch (error) {
@@ -59,10 +67,12 @@ router.delete('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']
 // Get all invoices (Admin) or client's invoices
 router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
     try {
+        const { Invoice, Client, MultiFirm } = (req as any).models;
         let query: any = {};
+
         if (req.user.role === 'CLIENT') {
-            const Client = mongoose.model('Client');
             const client = await Client.findById(req.user.clientId);
+
             if (client && client.groupName) {
                 query = {
                     $or: [
@@ -98,7 +108,9 @@ router.get('/invoices', authMiddleware, async (req: any, res: Response) => {
 // Get single invoice
 router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
     try {
+        const { Invoice, Client, MultiFirm } = (req as any).models;
         const query: any = { _id: req.params.id };
+
         if (req.user.role === 'CLIENT') {
             query.clientId = req.user.clientId;
         } else {
@@ -125,12 +137,14 @@ router.get('/invoices/:id', authMiddleware, async (req: any, res: Response) => {
 // Create invoice (Admin only)
 router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: any, res: Response) => {
     try {
+        const { Invoice, MultiFirm } = (req as any).models;
+
         // Find prefix
         let prefix = 'INV-';
         if (req.body.firmId) {
-            const MultiFirm = mongoose.model('MultiFirm');
             const mf = await MultiFirm.findById(req.body.firmId);
             if (mf && mf.invoicePrefix) prefix = mf.invoicePrefix;
+
         } else {
             const firmId = req.firmId || req.user?.firmId;
             const FirmMaster = mongoose.model('FirmMaster');
@@ -173,7 +187,9 @@ router.post('/invoices', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), asy
 // Add payment to invoice
 router.post('/invoices/:id/payments', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         invoice.payments.push(req.body);
@@ -187,7 +203,9 @@ router.post('/invoices/:id/payments', authMiddleware, requireRoles(['ADMIN', 'MA
 // Delete payment from invoice
 router.delete('/invoices/:id/payments/:paymentId', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Remove payment
@@ -206,7 +224,9 @@ router.delete('/invoices/:id/payments/:paymentId', authMiddleware, requireRoles(
 // Update invoice (Admin only)
 router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const invoice = await Invoice.findOne({ _id: req.params.id, firmId: (req as any).firmId });
+
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
 
         // Update fields
@@ -233,10 +253,12 @@ router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 
         // Recalculate totals
         if (req.body.items || req.body.tax !== undefined) {
-            const subtotal = invoice.items.reduce((sum, item) => sum + item.amount, 0);
+            const subtotal = invoice.items.reduce((sum: number, item: any) => sum + item.amount, 0);
             invoice.subtotal = subtotal;
             invoice.totalAmount = subtotal + (invoice.tax || 0);
         }
+
+
 
         await invoice.save(); // pre-save hook will handle balance and status
         res.json(invoice);
@@ -249,11 +271,13 @@ router.put('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 // Update invoice status (Admin only)
 router.patch('/invoices/:id/status', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const { status } = req.body;
         const invoice = await Invoice.findOneAndUpdate(
             { _id: req.params.id, firmId: (req as any).firmId }, 
             { status }, { new: true }
         );
+
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
         res.json(invoice);
     } catch (error) {
@@ -264,7 +288,9 @@ router.patch('/invoices/:id/status', authMiddleware, requireRoles(['ADMIN', 'MAN
 // Delete invoice (Admin only)
 router.delete('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const invoice = await Invoice.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
+
         if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
         res.json({ message: 'Invoice deleted' });
     } catch (error) {
@@ -275,7 +301,9 @@ router.delete('/invoices/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']
 // Check client payment status for file access
 router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Response) => {
     try {
+        const { Invoice } = (req as any).models;
         const { clientId } = req.params;
+
 
         // Security check: Clients can only check their own status
         if (req.user.role === 'CLIENT' && clientId !== req.user.clientId?.toString()) {
@@ -287,13 +315,17 @@ router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Re
 
         // Calculate payment statistics
         const totalInvoices = invoices.length;
-        const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length;
-        const pendingInvoices = invoices.filter(inv => inv.status === 'PENDING' || inv.status === 'PARTIAL');
-        const totalOutstanding = invoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+        const paidInvoices = invoices.filter((inv: any) => inv.status === 'PAID').length;
+        const pendingInvoices = invoices.filter((inv: any) => inv.status === 'PENDING' || inv.status === 'PARTIAL');
+        const totalOutstanding = invoices.reduce((sum: number, inv: any) => sum + inv.balanceAmount, 0);
+
+
 
         // Check for overdue invoices
         const now = new Date();
-        const overdueInvoices = pendingInvoices.filter(inv => new Date(inv.dueDate) < now);
+        const overdueInvoices = pendingInvoices.filter((inv: any) => new Date(inv.dueDate) < now);
+
+
 
         // Determine file access status
         // Files are accessible if:
@@ -311,12 +343,13 @@ router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Re
             pendingInvoices: pendingInvoices.length,
             overdueInvoices: overdueInvoices.length,
             totalOutstanding,
-            overdueDetails: overdueInvoices.map(inv => ({
+            overdueDetails: overdueInvoices.map((inv: any) => ({
                 invoiceNumber: inv.invoiceNumber,
                 dueDate: inv.dueDate,
                 balanceAmount: inv.balanceAmount,
             })),
         });
+
     } catch (error) {
         console.error('Error checking payment status:', error);
         res.status(500).json({ message: 'Error checking payment status' });
@@ -326,7 +359,9 @@ router.get('/payment-status/:clientId', authMiddleware, async (req: any, res: Re
 // Get client-wise ledger (Complete financial history)
 router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
+        const { Invoice, Client } = (req as any).models;
         const { clientId, startDate, endDate, staffId, groupId, year, month } = req.query;
+
 
         // Build date filter
         const dateFilter: any = {};
@@ -369,7 +404,6 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
             clientFilter.groupName = groupId;
         }
 
-        const Client = mongoose.model('Client');
         const clients = await Client.find(clientFilter).select('name email phone address').lean();
 
         // Get ledger for each client
@@ -396,28 +430,33 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
 
                 // Calculate financial metrics
                 const totalInvoices = invoices.length;
-                const totalBilled = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-                const totalPaid = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
-                const totalDue = invoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+                const totalBilled = invoices.reduce((sum: number, inv: any) => sum + inv.totalAmount, 0);
+                const totalPaid = invoices.reduce((sum: number, inv: any) => sum + inv.paidAmount, 0);
+                const totalDue = invoices.reduce((sum: number, inv: any) => sum + inv.balanceAmount, 0);
+
+
 
                 // Status breakdown
-                const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length;
-                const partialInvoices = invoices.filter(inv => inv.status === 'PARTIAL').length;
-                const pendingInvoices = invoices.filter(inv => inv.status === 'PENDING').length;
-                const cancelledInvoices = invoices.filter(inv => inv.status === 'CANCELLED').length;
+                const paidInvoices = invoices.filter((inv: any) => inv.status === 'PAID').length;
+                const partialInvoices = invoices.filter((inv: any) => inv.status === 'PARTIAL').length;
+                const pendingInvoices = invoices.filter((inv: any) => inv.status === 'PENDING').length;
+                const cancelledInvoices = invoices.filter((inv: any) => inv.status === 'CANCELLED').length;
+
 
                 // Overdue calculation
                 const now = new Date();
-                const overdueInvoices = invoices.filter(inv =>
+                const overdueInvoices = invoices.filter((inv: any) =>
                     inv.status !== 'PAID' &&
                     inv.status !== 'CANCELLED' &&
                     new Date(inv.dueDate) < now
                 );
-                const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + inv.balanceAmount, 0);
+
+                const totalOverdue = overdueInvoices.reduce((sum: number, inv: any) => sum + inv.balanceAmount, 0);
+
 
                 // Payment history (all payments from all invoices)
                 const allPayments: any[] = [];
-                invoices.forEach(invoice => {
+                invoices.forEach((invoice: any) => {
                     invoice.payments.forEach((payment: any) => {
                         allPayments.push({
                             ...payment,
@@ -427,16 +466,17 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                         });
                     });
                 });
+
                 allPayments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                 // Last payment info
                 const lastPayment = allPayments.length > 0 ? allPayments[0] : null;
 
                 // Average payment time (days from invoice to full payment)
-                const fullyPaidInvoices = invoices.filter(inv => inv.status === 'PAID');
+                const fullyPaidInvoices = invoices.filter((inv: any) => inv.status === 'PAID');
                 let avgPaymentDays = 0;
                 if (fullyPaidInvoices.length > 0) {
-                    const totalDays = fullyPaidInvoices.reduce((sum, inv) => {
+                    const totalDays = fullyPaidInvoices.reduce((sum: number, inv: any) => {
                         const issueDate = new Date(inv.issueDate);
                         const lastPaymentDate = inv.payments.length > 0
                             ? new Date(inv.payments[inv.payments.length - 1].date)
@@ -444,13 +484,14 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                         const days = Math.floor((lastPaymentDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
                         return sum + days;
                     }, 0);
+
+
                     avgPaymentDays = Math.round(totalDays / fullyPaidInvoices.length);
                 }
 
                 // Ledger entries (chronological list of all transactions)
                 const ledgerEntries: any[] = [];
-
-                invoices.forEach(invoice => {
+                invoices.forEach((invoice: any) => {
                     // Invoice entry
                     ledgerEntries.push({
                         date: invoice.issueDate,
@@ -465,6 +506,7 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                         dueDate: invoice.dueDate,
                         items: invoice.items
                     });
+
 
                     // Payment entries
                     invoice.payments.forEach((payment: any) => {
@@ -522,7 +564,7 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                         paymentRate: totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0
                     },
                     ledgerEntries,
-                    invoices: invoices.map(inv => ({
+                    invoices: invoices.map((inv: any) => ({
                         _id: inv._id,
                         invoiceNumber: inv.invoiceNumber,
                         issueDate: inv.issueDate,
@@ -531,6 +573,7 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
                         paidAmount: inv.paidAmount,
                         balanceAmount: inv.balanceAmount,
                         status: inv.status,
+
                         items: inv.items,
                         payments: inv.payments,
                         notes: inv.notes
@@ -551,13 +594,14 @@ router.get('/client-ledger', authMiddleware, requireRoles(['ADMIN', 'MANAGER']),
         // Overall summary
         const overallSummary = {
             totalClients: clientLedgers.length,
-            totalBilled: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalBilled, 0),
-            totalPaid: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalPaid, 0),
-            totalDue: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalDue, 0),
-            totalOverdue: clientLedgers.reduce((sum, cl) => sum + cl.summary.totalOverdue, 0),
-            clientsWithDues: clientLedgers.filter(cl => cl.summary.totalDue > 0).length,
-            clientsWithOverdue: clientLedgers.filter(cl => cl.summary.totalOverdue > 0).length
+            totalBilled: clientLedgers.reduce((sum: number, cl: any) => sum + cl.summary.totalBilled, 0),
+            totalPaid: clientLedgers.reduce((sum: number, cl: any) => sum + cl.summary.totalPaid, 0),
+            totalDue: clientLedgers.reduce((sum: number, cl: any) => sum + cl.summary.totalDue, 0),
+            totalOverdue: clientLedgers.reduce((sum: number, cl: any) => sum + cl.summary.totalOverdue, 0),
+            clientsWithDues: clientLedgers.filter((cl: any) => cl.summary.totalDue > 0).length,
+            clientsWithOverdue: clientLedgers.filter((cl: any) => cl.summary.totalOverdue > 0).length
         };
+
 
         res.json({
             clientLedgers,

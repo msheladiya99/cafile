@@ -22,6 +22,8 @@ const router = Router();
 // Serve Profile Image for client (Public to allow <img> tags)
 router.get('/clients/:id/profile-image/view', async (req: any, res: Response) => {
     try {
+        const { Client } = req.models;
+
         const client = await Client.findById(req.params.id);
         if (!client || !client.profileImageUrl) {
             res.status(404).send('Not found');
@@ -81,6 +83,8 @@ const generateUsername = (name: string): string => {
 // Create client (Admin and Manager only)
 router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
+
         const {
             name, email, phone, panNumber, aadharNumber, gstNumber, username: customUsername,
             clientCode, groupName, itStatus, masterType, subMaster, birthDate,
@@ -234,6 +238,8 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
 // Bulk create clients (Admin and Manager only)
 router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
+
         const { clients } = req.body;
         if (!Array.isArray(clients) || clients.length === 0) {
             res.status(400).json({ message: 'No clients provided' });
@@ -382,6 +388,8 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
 // Get client count only (lightweight endpoint for dashboards)
 router.get('/clients/count', async (req: AuthRequest, res: Response) => {
     try {
+        const { Client } = (req as any).models;
+
         const count = await Client.countDocuments({ firmId: req.firmId });
         res.set('Cache-Control', 'private, max-age=60'); // cache for 1 min
         res.json({ count });
@@ -394,6 +402,8 @@ router.get('/clients/count', async (req: AuthRequest, res: Response) => {
 // Single optimized Dashboard endpoint: returns multiple stats in parallel
 router.get('/dashboard', async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, Reminder } = (req as any).models;
+
         const today = new Date();
         const next30Days = new Date();
         next30Days.setDate(today.getDate() + 30);
@@ -424,6 +434,8 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
 // Get all clients
 router.get('/clients', async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
+
         const clients = await Client.find({ firmId: req.firmId })
             .populate('groupName', 'groupName')
             .populate('itStatus', 'name')
@@ -431,8 +443,9 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
             .lean();
 
         // Fetch usernames for these clients
-        const clientIds = clients.map(c => c._id);
+        const clientIds = clients.map((c: any) => c._id);
         const users = await User.find({ clientId: { $in: clientIds }, role: 'CLIENT' }).select('clientId username').lean();
+
 
         const usernameMap = users.reduce((acc: any, u: any) => {
             if (u.clientId) {
@@ -441,10 +454,11 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
             return acc;
         }, {} as Record<string, string>);
 
-        const clientsWithUsername = clients.map(client => ({
+        const clientsWithUsername = clients.map((client: any) => ({
             ...client,
             username: usernameMap[client._id.toString()] || ''
         }));
+
 
         res.set('Cache-Control', 'private, max-age=30'); // cache for 30s
         res.json(clientsWithUsername);
@@ -458,7 +472,9 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
 // Get single client
 router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
         const client = await Client.findOne({ _id: req.params.id, firmId: req.firmId })
+
             .populate('groupName', 'groupName')
             .populate('itStatus', 'name')
             .lean();
@@ -483,6 +499,8 @@ router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
 // Update client details (Admin, Manager, and Staff)
 router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client } = (req as any).models;
+
         const { id } = req.params;
         const updates = req.body;
 
@@ -534,6 +552,8 @@ router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async 
 // Upload Profile Image for client
 router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client } = (req as any).models;
+
         if (!req.file) {
             res.status(400).json({ message: 'No file uploaded' });
             return;
@@ -593,7 +613,9 @@ router.post('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STA
 // Delete Profile Image for client
 router.delete('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client } = (req as any).models;
         const { id } = req.params;
+
         const client = await Client.findOne({ _id: id, firmId: req.firmId });
 
         if (!client) {
@@ -630,6 +652,8 @@ router.delete('/clients/:id/profile-image', requireRoles(['ADMIN', 'MANAGER', 'S
 // Upload file for client
 router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, File } = (req as any).models;
+
         if (!req.file) {
             res.status(400).json({ message: 'No file uploaded' });
             return;
@@ -696,6 +720,8 @@ router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.
 // Get files for a client
 router.get('/files/:clientId', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
+
         const { clientId } = req.params;
         const { year, category } = req.query;
 
@@ -718,7 +744,9 @@ router.get('/files/:clientId', async (req: AuthRequest, res: Response) => {
 // Update file name
 router.patch('/files/:fileId', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileId } = req.params;
+
         const { fileName } = req.body;
 
         if (!fileName) {
@@ -747,7 +775,9 @@ router.patch('/files/:fileId', async (req: AuthRequest, res: Response) => {
 // Delete file (Admin, Manager, and Staff only - No Interns)
 router.delete('/files/:fileId', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileId } = req.params;
+
 
         const file = await File.findOne({ _id: fileId, firmId: req.firmId });
         if (!file) {
@@ -828,7 +858,9 @@ router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
 // Get client credentials (username only, password cannot be retrieved)
 router.get('/clients/:clientId/credentials', async (req: AuthRequest, res: Response) => {
     try {
+        const { User } = (req as any).models;
         const { clientId } = req.params;
+
 
         const user = await User.findOne({ clientId, role: 'CLIENT' });
         if (!user) {
@@ -849,7 +881,9 @@ router.get('/clients/:clientId/credentials', async (req: AuthRequest, res: Respo
 // Send credentials via email
 router.post('/clients/:clientId/send-credentials', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
         const { clientId } = req.params;
+
         const { password } = req.body; // Admin provides the password (from reset or recent creation)
 
         if (!password) {
@@ -879,7 +913,9 @@ router.post('/clients/:clientId/send-credentials', requireRoles(['ADMIN', 'MANAG
 // Reset client password (Admin and Manager only)
 router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User } = (req as any).models;
         const { clientId } = req.params;
+
 
         const user = await User.findOne({ clientId, role: 'CLIENT' });
         if (!user) {
@@ -923,7 +959,9 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
 // Delete client (Admin only)
 router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User, File } = (req as any).models;
         const { id } = req.params;
+
 
         const client = await Client.findOne({ _id: id, firmId: req.firmId });
         if (!client) {
@@ -964,7 +1002,9 @@ router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Respon
 // Bulk Delete clients (Admin only)
 router.post('/clients/bulk-delete', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { Client, User, File } = (req as any).models;
         const { clientIds } = req.body;
+
         if (!Array.isArray(clientIds) || clientIds.length === 0) {
             res.status(400).json({ message: 'No clients selected' });
             return;
@@ -1021,7 +1061,9 @@ router.post('/migrate-lastlogin', requireAdmin, async (req: AuthRequest, res: Re
 // Get all staff users (Admin and Manager only)
 router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { User } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
+
         const users = await User.find({ role: { $ne: 'CLIENT' }, firmId })
             .select('_id username name email role')
             .sort({ name: 1 })
@@ -1036,7 +1078,9 @@ router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
 // Get employee login logs
 router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { User, ActivityLog } = (req as any).models;
         const { userId, startDate, endDate } = req.query;
+
 
         // Find staff members (non-clients)
         const query: any = { role: { $ne: 'CLIENT' } };
@@ -1045,7 +1089,8 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
         }
 
         const staffUsers = await User.find(query).select('_id name username role').lean();
-        const staffIds = staffUsers.map(u => u._id);
+        const staffIds = staffUsers.map((u: any) => u._id);
+
 
         const filter: any = {
             action: 'LOGIN',
@@ -1082,15 +1127,17 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
 router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
         // Find tasks that are not DONE or CANCELLED
-        const { Task } = await import('../models/Task');
+        const { Task, User } = (req as any).models;
         const activeTasks = await Task.find({ status: { $in: ['PENDING', 'STARTED', 'UNDER_REVIEW'] }, firmId: req.firmId });
 
+
         let busyUserIds: any[] = [];
-        activeTasks.forEach(task => {
+        activeTasks.forEach((task: any) => {
             if (task.assignedTo && Array.isArray(task.assignedTo)) {
                 busyUserIds.push(...task.assignedTo);
             }
         });
+
 
         // Find users that are not busy
         const freeEmployees = await User.find({
@@ -1111,7 +1158,9 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
 // Create Client Group (Admin and Manager only)
 router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ClientGroup } = (req as any).models;
         const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
+
 
         if (!groupName || !email || !mobileNumber) {
             res.status(400).json({ message: 'Group Name, Email, and Mobile Number are required.' });
@@ -1149,8 +1198,10 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
 // Get all Client Groups
 router.get('/client-groups', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { ClientGroup } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         const groups = await ClientGroup.find({ firmId })
+
             .sort({ createdAt: -1 })
             .lean();
         res.json(groups);
@@ -1163,7 +1214,9 @@ router.get('/client-groups', authenticate, async (req: AuthRequest, res: Respons
 // Delete Client Group (Admin and Manager only)
 router.delete('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ClientGroup, Client } = (req as any).models;
         const { id } = req.params;
+
         const firmId = req.firmId || req.user?.firmId;
 
         const group = await ClientGroup.findOne({ _id: id, firmId });
@@ -1190,7 +1243,9 @@ router.delete('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGE
 // Update Client Group (Admin, Manager, and Staff)
 router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ClientGroup } = (req as any).models;
         const { id } = req.params;
+
         const updates = req.body;
         const firmId = req.firmId || req.user?.firmId;
 
@@ -1218,7 +1273,9 @@ router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER
 
 router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ITStatus } = (req as any).models;
         const { name, description, status } = req.body;
+
         if (!name) return res.status(400).json({ message: 'Name is required' });
 
         const firmId = req.firmId || req.user?.firmId;
@@ -1310,7 +1367,9 @@ router.get('/it-status', authenticate, async (req: AuthRequest, res: Response) =
 // -- Sub Master Routes --
 router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { SubMaster } = (req as any).models;
         const { name, description, status } = req.body;
+
         if (!name) return res.status(400).json({ message: 'Name is required' });
 
         const firmId = req.firmId || req.user?.firmId;

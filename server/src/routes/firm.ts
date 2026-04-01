@@ -1,10 +1,5 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authenticate, requireAdmin, requireStaff } from '../middleware/auth';
-import { FirmMaster } from '../models/FirmMaster';
-import { FirmDocument } from '../models/FirmDocument';
-import { MultiFirm } from '../models/MultiFirm';
-import { TaxDetail } from '../models/TaxDetail';
-import { Currency } from '../models/Currency';
 import { getDriveService, getTenantDriveService } from '../services/googleDrive';
 import { upload, uploadAny } from '../middleware/upload';
 import mongoose from 'mongoose';
@@ -34,6 +29,7 @@ router.use(authenticate);
 // GET /api/firm — get firm details (single record, upserted)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmMaster } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) {
             return res.status(400).json({ message: 'Firm context required' });
@@ -57,6 +53,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // PUT /api/firm — update firm details (admin or super-admin only)
 router.put('/', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmMaster } = (req as any).models;
         console.log('UPDATE_FIRM_START', 'REQ_FID:', req.firmId, 'CTX_FID:', getFirmId(), 'USER_FID:', req.user?.firmId);
         const updates = req.body;
         delete updates._id;
@@ -110,6 +107,7 @@ router.put('/', requireStaff, async (req: AuthRequest, res: Response) => {
 // POST /api/firm/logo — upload firm logo
 router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmMaster } = (req as any).models;
         if (!req.file) {
             res.status(400).json({ message: 'No file uploaded' });
             return;
@@ -146,6 +144,7 @@ router.post('/logo', requireAdmin, upload.single('logo'), async (req: AuthReques
 // POST /api/firm/stamp — upload firm stamp
 router.post('/stamp', requireAdmin, upload.single('stamp'), async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmMaster } = (req as any).models;
         if (!req.file) {
             res.status(400).json({ message: 'No file uploaded' });
             return;
@@ -209,11 +208,10 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: AuthRequ
     }
 });
 
-export default router;
-
 // GET all firm documents
 router.get('/documents', async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmDocument } = (req as any).models;
         const docs = await FirmDocument.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(docs);
     } catch (error) {
@@ -225,6 +223,7 @@ router.get('/documents', async (req: AuthRequest, res: Response) => {
 // POST - upload a new firm document
 router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmDocument } = (req as any).models;
         const { documentName, documentNumber, description } = req.body;
         if (!documentName) {
             if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
@@ -276,6 +275,7 @@ router.post('/documents', requireAdmin, uploadAny.single('file'), async (req: Au
 // DELETE a firm document
 router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { FirmDocument } = (req as any).models;
         const doc = await FirmDocument.findOne({ _id: req.params.id, firmId: req.firmId });
         if (!doc) {
             res.status(404).json({ message: 'Document not found' });
@@ -305,6 +305,7 @@ router.delete('/documents/:id', requireAdmin, async (req: AuthRequest, res: Resp
 // GET all multi-firms
 router.get('/multi', async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         const firms = await MultiFirm.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean();
         res.json(firms);
     } catch (error) {
@@ -316,6 +317,7 @@ router.get('/multi', async (req: AuthRequest, res: Response) => {
 // POST - create multi firm
 router.post('/multi', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
@@ -330,6 +332,7 @@ router.post('/multi', requireAdmin, async (req: AuthRequest, res: Response) => {
 // PUT - update multi firm
 router.put('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         const firm = await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
         if (!firm) { res.status(404).json({ message: 'Not found' }); return; }
@@ -343,6 +346,7 @@ router.put('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) =
 // DELETE multi firm
 router.delete('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         const result = await MultiFirm.findOneAndDelete({ _id: req.params.id, firmId });
         if (!result) return res.status(404).json({ message: 'Not found' });
@@ -356,6 +360,7 @@ router.delete('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response
 // POST - upload multi firm logo
 router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const buf = fs.readFileSync(req.file.path);
@@ -375,6 +380,7 @@ router.post('/multi/:id/logo', requireAdmin, upload.single('logo'), async (req: 
 // POST - upload multi firm sign
 router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: AuthRequest, res: Response) => {
     try {
+        const { MultiFirm } = (req as any).models;
         if (!req.file) { res.status(400).json({ message: 'No file' }); return; }
         const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
         const buf = fs.readFileSync(req.file.path);
@@ -394,12 +400,16 @@ router.post('/multi/:id/sign', requireAdmin, upload.single('sign'), async (req: 
 // ─── Tax Detail Routes ──────────────────────────────────────────────────────
 
 router.get('/tax', async (req: AuthRequest, res: Response) => {
-    try { res.json(await TaxDetail.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean()); }
+    try {
+        const { TaxDetail } = (req as any).models;
+        res.json(await TaxDetail.find({ firmId: req.firmId }).sort({ createdAt: -1 }).lean());
+    }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
 router.post('/tax', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { TaxDetail } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
@@ -415,6 +425,7 @@ router.post('/tax', requireAdmin, async (req: AuthRequest, res: Response) => {
 
 router.put('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { TaxDetail } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (req.body.isDefault) await TaxDetail.updateMany({ firmId }, { isDefault: false });
         const tax = await TaxDetail.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
@@ -424,19 +435,26 @@ router.put('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => 
 });
 
 router.delete('/tax/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
-    try { await TaxDetail.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' }); }
+    try {
+        const { TaxDetail } = (req as any).models;
+        await TaxDetail.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' });
+    }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
 // ─── Currency Routes ──────────────────────────────────────────────────────
 
 router.get('/currency', async (req: AuthRequest, res: Response) => {
-    try { res.json(await Currency.find({ firmId: req.firmId }).sort({ isDefault: -1, currencyCode: 1 }).lean()); }
+    try {
+        const { Currency } = (req as any).models;
+        res.json(await Currency.find({ firmId: req.firmId }).sort({ isDefault: -1, currencyCode: 1 }).lean());
+    }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
 router.post('/currency', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { Currency } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
@@ -446,7 +464,7 @@ router.post('/currency', requireAdmin, async (req: AuthRequest, res: Response) =
     } catch (error) {
         console.error(error);
         // Duplicate key
-        if ((error as NodeJS.ErrnoException).code === '11000') {
+        if ((error as any).code === '11000' || (error as any).code === 11000) {
             res.status(400).json({ message: 'Currency code already exists' });
         } else {
             res.status(500).json({ message: 'Server error' });
@@ -456,6 +474,7 @@ router.post('/currency', requireAdmin, async (req: AuthRequest, res: Response) =
 
 router.put('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const { Currency } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (req.body.isDefault) await Currency.updateMany({ firmId }, { isDefault: false });
         const currency = await Currency.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
@@ -465,7 +484,11 @@ router.put('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response
 });
 
 router.delete('/currency/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
-    try { await Currency.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' }); }
+    try {
+        const { Currency } = (req as any).models;
+        await Currency.findOneAndDelete({ _id: req.params.id, firmId: req.firmId }); res.json({ message: 'Deleted' });
+    }
     catch (error) { console.error(error); res.status(500).json({ message: 'Server error' }); }
 });
 
+export default router;

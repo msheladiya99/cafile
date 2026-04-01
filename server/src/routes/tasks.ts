@@ -19,6 +19,8 @@ router.use(authenticate);
 // Create a new task (Admin, Manager, Staff)
 router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task, User } = (req as any).models;
+
         const {
             title,
             description,
@@ -106,6 +108,8 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
 // Create multiple tasks in bulk (Admin, Manager, Staff)
 router.post('/bulk', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task, User } = (req as any).models;
+
         const { baseTask, clients } = req.body;
 
         if (!baseTask || !clients || !Array.isArray(clients) || clients.length === 0) {
@@ -205,6 +209,8 @@ router.post('/bulk', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: Au
 // Get all tasks with filters (Admin Dashboard)
 router.get('/', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
+
         const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager, year, department } = req.query;
 
         const filter: any = { firmId: req.firmId };
@@ -278,10 +284,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
         // Dynamically calculate overdue status for each task
         const now = new Date();
-        const tasksWithOverdue = tasks.map(task => ({
+        const tasksWithOverdue = tasks.map((task: any) => ({
             ...task,
             isOverdue: task.status !== 'DONE' && task.status !== 'CANCELLED' && task.targetDate && new Date(task.targetDate) < now
         }));
+
 
         res.json(tasksWithOverdue);
     } catch (error) {
@@ -297,6 +304,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get tasks for transfer preview
 router.get('/transfer/preview', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
+
         const { fromUserId, clientId, taskMasterId, frequency } = req.query;
         if (!fromUserId) {
             res.status(400).json({ message: 'fromUserId is required' });
@@ -319,10 +328,11 @@ router.get('/transfer/preview', requireRoles(['ADMIN', 'MANAGER']), async (req: 
             .sort({ targetDate: 1 })
             .lean();
 
-        const tasksWithOverdue = tasks.map(t => ({
+        const tasksWithOverdue = tasks.map((t: any) => ({
             ...t,
             isOverdue: t.status !== 'DONE' && t.status !== 'CANCELLED' && t.targetDate && new Date(t.targetDate) < now
         }));
+
         res.json(tasksWithOverdue);
     } catch (error) {
         console.error('Transfer preview error:', error);
@@ -333,7 +343,9 @@ router.get('/transfer/preview', requireRoles(['ADMIN', 'MANAGER']), async (req: 
 // Transfer tasks from one employee to another
 router.post('/transfer', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const { fromUserId, toUserId, clientId, taskMasterId, frequency, removeFromCurrent } = req.body;
+
         if (!fromUserId || !toUserId) {
             res.status(400).json({ message: 'fromUserId and toUserId are required' });
             return;
@@ -376,7 +388,9 @@ router.post('/transfer', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReq
 // Get staff-wise task history (Ledger style)
 router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { User, Task } = (req as any).models;
         const { staffId, startDate, endDate, status } = req.query;
+
 
         // Build date filter
         const dateFilter: any = {};
@@ -410,9 +424,10 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
 
         // [PERFORMANCE] Pre-fetch all tasks for these staff members
         const allTasksFilter: any = {
-            assignedTo: { $in: staffMembers.map(s => s._id) },
+            assignedTo: { $in: staffMembers.map((s: any) => s._id) },
             ...dateFilter
         };
+
         if (status) {
             allTasksFilter.status = status;
         }
@@ -427,7 +442,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
 
         // [PERFORMANCE] Group tasks by staff ID
         const tasksByStaff = new Map<string, any[]>();
-        allTasks.forEach(task => {
+        allTasks.forEach((task: any) => {
             task.assignedTo.forEach((assignedUserId: any) => {
                 const uid = assignedUserId.toString();
                 if (!tasksByStaff.has(uid)) {
@@ -437,8 +452,10 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
             });
         });
 
+
         // Get tasks for each staff member
-        const staffHistory = staffMembers.map((staff) => {
+        const staffHistory = staffMembers.map((staff: any) => {
+
             try {
                 const tasks: any[] = tasksByStaff.get(staff._id.toString()) || [];
 
@@ -451,15 +468,16 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                 const overdueTasks = tasks.filter(t => t.isOverdue && t.status !== 'DONE').length;
 
                 // Time tracking metrics
-                const totalEstimatedHours = tasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
-                const totalActualMinutes = tasks.reduce((sum, t) => sum + (t.actualTimeSpent || 0), 0);
+                const totalEstimatedHours = tasks.reduce((sum: number, t: any) => sum + (t.estimatedHours || 0), 0);
+                const totalActualMinutes = tasks.reduce((sum: number, t: any) => sum + (t.actualTimeSpent || 0), 0);
                 const totalActualHours = Math.round((totalActualMinutes / 60) * 100) / 100;
 
+
                 // Efficiency calculation
-                const completedTasksWithTime = tasks.filter(t => t.status === 'DONE' && (t.actualTimeSpent || 0) > 0);
+                const completedTasksWithTime = tasks.filter((t: any) => t.status === 'DONE' && (t.actualTimeSpent || 0) > 0);
                 const avgEfficiency = completedTasksWithTime.length > 0
                     ? Math.round(
-                        completedTasksWithTime.reduce((acc, task) => {
+                        completedTasksWithTime.reduce((acc: number, task: any) => {
                             const estimated = (task.estimatedHours || 0) * 60;
                             const actual = task.actualTimeSpent || 0;
                             return acc + (estimated / actual) * 100;
@@ -467,8 +485,9 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                     )
                     : 0;
 
+
                 // On-time completion rate
-                const completedOnTime = tasks.filter(t =>
+                const completedOnTime = tasks.filter((t: any) =>
                     t.status === 'DONE' &&
                     t.completedAt &&
                     new Date(t.completedAt) <= new Date(t.targetDate)
@@ -476,6 +495,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                 const onTimeRate = completedTasks > 0
                     ? Math.round((completedOnTime / completedTasks) * 100)
                     : 0;
+
 
                 // Average revision count
                 const avgRevisions = completedTasks > 0
@@ -504,7 +524,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                         avgRevisions,
                         completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
                     },
-                    tasks: tasks.map(task => ({
+                    tasks: tasks.map((task: any) => ({
                         _id: task._id,
                         title: task.title,
                         description: task.description,
@@ -535,6 +555,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
                         updatedAt: task.updatedAt
                     }))
                 };
+
             } catch (staffError) {
                 console.error(`Error processing history for staff ${staff.username}:`, staffError);
                 // Return basic info so other staff members' data can still load
@@ -553,7 +574,8 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
         );
 
         // Sort by total tasks (descending)
-        staffHistory.sort((a, b) => b.summary.totalTasks - a.summary.totalTasks);
+        staffHistory.sort((a: any, b: any) => b.summary.totalTasks - a.summary.totalTasks);
+
 
         res.json({
             staffHistory,
@@ -571,6 +593,7 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
 // ============================================
 router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const {
             clientGroupId, clientId, taskMasterId, frequency,
             assignedTo, reportingManager,
@@ -578,6 +601,7 @@ router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req
             dateFrom, dateTo,
             view // 'entry' | 'task' | 'subtask'
         } = req.query;
+
 
         // Build base filter
         const filter: any = { firmId: req.firmId };
@@ -700,8 +724,9 @@ router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req
         }
 
         // ── Task Wise & Subtask Wise: one row per task ──
-        const rows = tasks.map(task => {
+        const rows = tasks.map((task: any) => {
             const totalMinutes = (task.actualTimeSpent || 0);
+
             // If timer is running, add live elapsed
             const liveMinutes = task.currentTimerStart
                 ? Math.floor((now.getTime() - new Date(task.currentTimerStart).getTime()) / 60000)
@@ -749,14 +774,15 @@ router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req
         // Summary totals
         const summary = {
             totalTasks: rows.length,
-            totalEstimatedHours: Math.round(rows.reduce((s, r) => s + r.estimatedHours, 0) * 100) / 100,
-            totalActualHours: Math.round(rows.reduce((s, r) => s + r.totalHours, 0) * 100) / 100,
-            totalMinutes: rows.reduce((s, r) => s + r.totalMinutes, 0),
-            byStatus: rows.reduce((acc: any, r) => {
+            totalEstimatedHours: Math.round(rows.reduce((s: number, r: any) => s + r.estimatedHours, 0) * 100) / 100,
+            totalActualHours: Math.round(rows.reduce((s: number, r: any) => s + r.totalHours, 0) * 100) / 100,
+            totalMinutes: rows.reduce((s: number, r: any) => s + r.totalMinutes, 0),
+            byStatus: rows.reduce((acc: any, r: any) => {
                 acc[r.taskStatus] = (acc[r.taskStatus] || 0) + 1;
                 return acc;
             }, {})
         };
+
 
         res.json({ view: view || 'task', rows, summary, total: rows.length });
 
@@ -769,7 +795,9 @@ router.get('/timesheet', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req
 // Get single task by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId })
+
             .populate('createdBy', 'username name email')
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
@@ -806,8 +834,10 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // Update task status (Staff Workflow: PENDING → STARTED → UNDER_REVIEW → DONE)
 router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task, Invoice, MultiFirm, Client: ClientApp } = (req as any).models;
         const { status } = req.body;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -877,11 +907,13 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                                 billingFirmId = task.multiFirmId as mongoose.Types.ObjectId;
                             }
                         } else {
-                            // Fall back to main firm's FirmMaster prefix
-                            const FirmMaster = mongoose.model('FirmMaster');
+                            // Fall back to main firm's FirmMaster prefix (ALWAYS in default DB)
+                            const { FirmMaster } = (req as any).models;
                             const fm = await FirmMaster.findOne({ firmId: task.firmId }).lean();
                             if (fm && (fm as any).invoicePrefix) invoicePrefix = (fm as any).invoicePrefix;
                         }
+
+
 
                         // ── Firm-scoped unique invoice number ───────────────────
                         const firmInvCount = await Invoice.countDocuments({ firmId: task.firmId });
@@ -892,8 +924,8 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
                         // ── Fetch client names for Invoice visibility ──
                         let clientNamesForBill = '';
                         try {
-                            const ClientApp = mongoose.model('Client');
                             if (task.clientGroupId || task.billingType === 'GROUP' || task.billingType === 'CLIENT_GROUP') {
+
                                 // For group tasks, grab all clients belonging to that group
                                 const clientsInGroup = await ClientApp.find({ groupName: task.clientGroupId }).lean();
                                 if (clientsInGroup && clientsInGroup.length > 0) {
@@ -976,7 +1008,9 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
 // ============================================
 router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const { employeeId, clientId, taskMasterId, year, status, timeSpentMinutes, description, place, subtaskName, date } = req.body;
+
 
         if (!employeeId || !clientId || !taskMasterId) {
             res.status(400).json({ message: 'Employee, Client, and Task are required' });
@@ -1047,8 +1081,10 @@ router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: Auth
 // Start/Stop Timer for time tracking
 router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const { action } = req.params; // 'start' or 'stop'
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -1056,7 +1092,8 @@ router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
         }
 
         // Check if user is assigned to this task
-        const isAssigned = task.assignedTo.some(userId => userId.toString() === req.user!.userId);
+        const isAssigned = task.assignedTo.some((userId: any) => userId.toString() === req.user!.userId);
+
         if (!isAssigned && !['ADMIN', 'MANAGER'].includes(req.user!.role)) {
             res.status(403).json({ message: 'You are not assigned to this task' });
             return;
@@ -1136,8 +1173,10 @@ router.post('/:id/timer/:action', async (req: AuthRequest, res: Response) => {
 // Update progress percentage (0-100%)
 router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const { progressPercentage } = req.body;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -1180,8 +1219,10 @@ router.patch('/:id/progress', async (req: AuthRequest, res: Response) => {
 // Add comment to task
 router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task, User } = (req as any).models;
         const { text } = req.body;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -1193,15 +1234,15 @@ router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const user = await User.findById(req.user!.userId);
 
         task.comments.push({
             id: uuidv4(),
             userId: req.user!.userId as any,
-            userName: user?.name || user?.username || 'Unknown',
+            userName: (req.user as any).username || (req.user as any).name || 'Unknown',
             text: text.trim(),
             createdAt: new Date()
         });
+
 
         await task.save();
 
@@ -1221,15 +1262,18 @@ router.post('/:id/comments', async (req: AuthRequest, res: Response) => {
 // Update checklist item
 router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const { completed } = req.body;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
             return;
         }
 
-        const item = task.checklist.find(i => i.id === req.params.itemId);
+        const item = task.checklist.find((i: any) => i.id === req.params.itemId);
+
         if (!item) {
             res.status(404).json({ message: 'Checklist item not found' });
             return;
@@ -1245,7 +1289,8 @@ router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) =
         }
 
         // Auto-calculate progress based on checklist
-        const completedItems = task.checklist.filter(i => i.completed).length;
+        const completedItems = task.checklist.filter((i: any) => i.completed).length;
+
         const totalItems = task.checklist.length;
         if (totalItems > 0) {
             task.progressPercentage = Math.round((completedItems / totalItems) * 100);
@@ -1270,8 +1315,10 @@ router.patch('/:id/checklist/:itemId', async (req: AuthRequest, res: Response) =
 // Update task (Admin/Manager only)
 router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const updates = req.body;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -1313,7 +1360,9 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
 // Delete task (Admin/Manager only)
 router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
+        const { Task } = (req as any).models;
         const task = await Task.findOne({ _id: req.params.id, firmId: req.firmId });
+
 
         if (!task) {
             res.status(404).json({ message: 'Task not found' });
@@ -1331,7 +1380,10 @@ router.delete('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
 
 // Analytics dashboard
 router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { Task } = (req as any).models;
         const { startDate, endDate } = req.query;
+
 
         const dateFilter: any = {};
         if (startDate) {
@@ -1341,7 +1393,6 @@ router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (re
             dateFilter.createdAt = { ...dateFilter.createdAt, $lte: new Date(endDate as string) };
         }
 
-        try {
         // Total tasks by status
         const tasksByStatus = await Task.aggregate([
             { $match: dateFilter },
@@ -1362,9 +1413,10 @@ router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (re
             completedAt: { $exists: true }
         });
 
-        const onTimeCompletions = completedTasks.filter(task =>
+        const onTimeCompletions = completedTasks.filter((task: any) =>
             task.completedAt! <= task.targetDate
         ).length;
+
 
         const completionRate = completedTasks.length > 0
             ? Math.round((onTimeCompletions / completedTasks.length) * 100)
@@ -1378,13 +1430,14 @@ router.get('/analytics/dashboard', requireRoles(['ADMIN', 'MANAGER']), async (re
         });
 
         const avgEfficiency = tasksWithTime.length > 0
-            ? tasksWithTime.reduce((acc, task) => {
+            ? (tasksWithTime as any[]).reduce((acc: number, task: any) => {
                 const estimated = task.estimatedHours * 60;
                 const actual = task.actualTimeSpent;
                 const efficiency = (estimated / actual) * 100;
                 return acc + efficiency;
             }, 0) / tasksWithTime.length
             : 100;
+
 
         // Staff workload distribution
         const workloadByStaff = await Task.aggregate([

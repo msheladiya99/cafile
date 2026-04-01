@@ -1,9 +1,6 @@
 import express, { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { User } from '../models/User';
-import { Client } from '../models/Client';
-import { ActivityLog } from '../models/ActivityLog';
 import { sendPasswordChangeEmail } from '../services/emailService';
 
 const router = express.Router();
@@ -11,6 +8,7 @@ const router = express.Router();
 // Get current user profile
 router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { User } = (req as any).models;
         let user: any = await User.findOne({ _id: req.user!.userId, firmId: (req as any).firmId })
             .select('-passwordHash')
             .populate('clientId', 'name email phone');
@@ -46,6 +44,7 @@ router.get('/profile', authenticate, async (req: AuthRequest, res: Response) => 
 // Update profile (for all users)
 router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { User, Client, ActivityLog } = (req as any).models;
         const { name, email, phone, username } = req.body;
         const userId = req.user!.userId;
 
@@ -60,6 +59,9 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
                 if (email) admin.email = email;
                 await admin.save();
 
+                // Note: ActivityLog for SuperAdmin is usually in the shared DB
+                // but since it's not in req.models (if we didn't add it), we'd need the global one.
+                // However, ActivityLog IS in req.models.
                 await ActivityLog.create({
                     userId: admin._id,
                     action: 'PROFILE_UPDATE',
@@ -144,6 +146,7 @@ router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => 
 // Change password
 router.post('/change-password', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { User, Client, ActivityLog } = (req as any).models;
         const { currentPassword, newPassword } = req.body;
         const userId = req.user!.userId;
 
@@ -263,6 +266,7 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
 // Get activity log
 router.get('/activity-log', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { ActivityLog } = (req as any).models;
         const userId = req.user!.userId;
         const limit = parseInt(req.query.limit as string) || 50;
         const skip = parseInt(req.query.skip as string) || 0;
