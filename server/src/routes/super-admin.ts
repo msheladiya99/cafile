@@ -10,6 +10,8 @@ import { File } from '../models/File';
 import { SuperAdmin } from '../models/SuperAdmin';
 import { ActivityLog } from '../models/ActivityLog';
 import { Plan } from '../models/Plan';
+import { TaskCategory } from '../models/TaskCategory';
+import { TaskMaster } from '../models/TaskMaster';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService } from '../services/googleDrive';
 import { encrypt } from '../utils/encryption';
@@ -278,6 +280,8 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
         // 2. Create Admin User
         const bcryptLib = await import('bcryptjs');
         const passwordHash = await bcryptLib.hash(adminPassword, 10);
+        
+        let adminUserId: any;
 
         if (dbType === 'personal') {
             // ── PERSONAL DB: Create admin user INSIDE the tenant's own MongoDB cluster ──
@@ -300,6 +304,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
                     email: adminEmail,
                     name: adminName || `${firmName} Admin`
                 });
+                adminUserId = saved._id;
                 console.log(`✅ [CreateFirm] Admin user saved in personal DB. _id=${saved._id}`);
             } catch (dbError) {
                 console.error('❌ [CreateFirm] Failed to initialize personal DB:', dbError);
@@ -321,6 +326,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
                     email: adminEmail,
                     name: adminName || `${firmName} Admin`
                 });
+                adminUserId = saved._id;
                 console.log(`✅ [CreateFirm] Default DB admin created. _id=${saved._id}`);
             } catch (userError) {
                 console.error('Failed to create admin user in default DB:', userError);
@@ -332,6 +338,90 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             }
         }
 
+        // 3. Seed Default Task Categories and Task Masters
+        try {
+            console.log('\ud83c\udf31 Seeding default Task Masters into new firm...');
+
+            // IMPORTANT: Only seed tasks explicitly flagged as isDefault:true.
+            // Firms can freely create their own tasks without affecting other firms.
+            const defaultMasters = await TaskMaster.find({ isDefault: true }).lean();
+
+            if (defaultMasters.length > 0) {
+                // Collect the unique template firmId(s) to fetch matching categories
+                const templateFirmIds = [...new Set(defaultMasters.map((t: any) => t.firmId.toString()))];
+                const defaultCategories = await TaskCategory.find({ firmId: { $in: templateFirmIds } }).lean();
+
+                console.log(`\ud83c\udf31 Seeding ${defaultMasters.length} default tasks + ${defaultCategories.length} categories into "${firm.firmName}"...`);
+
+                let TargetCategoryModel: any = TaskCategory;
+                let TargetMasterModel: any = TaskMaster;
+
+                if (dbType === 'personal') {
+                    // For personal DB — bind models to the tenant's own cluster
+                    const tenantConn = await getTenantConnection(firm);
+                    TargetCategoryModel = getModelFromConnection(tenantConn, 'TaskCategory', TaskCategory.schema);
+                    TargetMasterModel = getModelFromConnection(tenantConn, 'TaskMaster', TaskMaster.schema);
+                }
+
+                // Step A: Seed categories and build old-ID → new-ID map
+                const categoryIdMap = new Map<string, mongoose.Types.ObjectId>();
+                for (const oldCat of defaultCategories) {
+                    const savedCat = await new TargetCategoryModel({
+                        name: oldCat.name,
+                        color: oldCat.color || '#667eea',
+                        description: oldCat.description || '',
+                        status: oldCat.status || 'Active',
+                        firmId: firm._id,
+                        createdBy: adminUserId
+                    }).save();
+                    categoryIdMap.set(oldCat._id.toString(), savedCat._id as mongoose.Types.ObjectId);
+                }
+
+                // Step B: Seed task masters, re-wiring category IDs to new ones
+                for (const oldTm of defaultMasters) {
+                    const newCategoryId = oldTm.category
+                        ? (categoryIdMap.get(oldTm.category.toString()) || null)
+                        : null;
+
+                    await new TargetMasterModel({
+                        taskName: oldTm.taskName,
+                        mode: oldTm.mode,
+                        category: newCategoryId,
+                        department: oldTm.department,
+                        description: oldTm.description || '',
+                        status: oldTm.status || 'Active',
+                        hsnSac: oldTm.hsnSac,
+                        udin: oldTm.udin || false,
+                        billingAmount: oldTm.billingAmount || 0,
+                        estimatedHours: oldTm.estimatedHours || 1,
+                        frequency: oldTm.frequency,
+                        typeOfClient: oldTm.typeOfClient || [],
+                        dueDays: oldTm.dueDays,
+                        recurringTask: oldTm.recurringTask || false,
+                        recurringDays: oldTm.recurringDays,
+                        tags: oldTm.tags || [],
+                        firmId: firm._id,
+                        createdBy: adminUserId,
+                        isDefault: false, // copied tasks are firm-specific, NOT global templates
+                        // reportingManager omitted — no valid user ref across firms
+                        subtasks: (oldTm.subtasks || []).map((st: any) => ({
+                            name: st.name,
+                            description: st.description || '',
+                            designation: st.designation || '',
+                            activityOrder: st.activityOrder || 0
+                            // predefinedEmployee omitted — user refs don't carry across firms
+                        }))
+                    }).save();
+                }
+
+                console.log(`\u2705 Seeded ${defaultMasters.length} default tasks into new firm: ${firm.firmName}`);
+            } else {
+                console.log('\ud83c\udf31 No default template tasks found (isDefault:true) \u2014 skipping task seeding.');
+            }
+        } catch (seedError) {
+            // Task seeding is non-fatal. Firm and admin already created successfully.
+            console.error('\u274c Non-fatal error during task seeding (firm still created):', seedError);
+        }
 
         res.status(201).json({ 
             message: "Tenant created successfully",
