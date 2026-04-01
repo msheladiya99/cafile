@@ -64,6 +64,7 @@ const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(modul
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
+const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(module => ({ default: module.DSCManagement })));
 
 // Main Entry Pages
 import { LandingPage } from './pages/LandingPage';
@@ -224,6 +225,7 @@ const AppRoutes: React.FC = () => {
             <Route path="form108" element={<Form108 />} />
           </Route>
           <Route path="profile" element={<ProfileSettings />} />
+          <Route path="dsc" element={<DSCManagement />} />
         </Route>
 
         {/* Client Routes */}
