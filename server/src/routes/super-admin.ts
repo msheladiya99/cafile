@@ -17,6 +17,7 @@ import { getDriveService } from '../services/googleDrive';
 import { encrypt } from '../utils/encryption';
 import { getTenantConnection, getModelFromConnection, rawUserSchema } from '../services/dbManager';
 import mongoose from 'mongoose';
+import { DEFAULT_TASKS, DEFAULT_TASK_CATEGORIES } from '../utils/defaultTasks';
 import os from 'os';
 
 const router = Router();
@@ -338,118 +339,62 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             }
         }
 
-        // 3. Seed Default Task Categories and Task Masters
+        // 3. Seed Default Task Categories and Task Masters (hardcoded 30 CA defaults)
         try {
-            console.log('🌱 Seeding default Task Masters into new firm...');
+            console.log(`🌱 [CreateFirm] Seeding 30 default CA tasks into "${firm.firmName}"...`);
 
-            // ── Hardcoded 30 default CA tasks (always seeded) ──────────────────────
-            // These are seeded directly — no dependency on isDefault records in master DB.
-            const DEFAULT_CATEGORIES = [
-                { name: 'Income Tax', color: '#3b82f6' },
-                { name: 'GST', color: '#10b981' },
-                { name: 'Audit & Assurance', color: '#f59e0b' },
-                { name: 'ROC / Company Law', color: '#8b5cf6' },
-                { name: 'Accounting', color: '#ef4444' },
-                { name: 'Payroll & HR', color: '#06b6d4' },
-            ];
-
-            // Template: { taskName, mode, category (index into above), frequency, estimatedHours, udin }
-            const DEFAULT_TASKS: Array<{
-                taskName: string; mode: string; categoryIdx: number;
-                frequency: string; estimatedHours: number; udin: boolean;
-                department?: string; dueDays?: number; recurringTask?: boolean;
-            }> = [
-                // Income Tax (0)
-                { taskName: 'Income Tax Return Filing – Individual', mode: 'Offline', categoryIdx: 0, frequency: 'Yearly', estimatedHours: 3, udin: false, dueDays: 30 },
-                { taskName: 'Income Tax Return Filing – Business (Non-Audit)', mode: 'Offline', categoryIdx: 0, frequency: 'Yearly', estimatedHours: 5, udin: false, dueDays: 30 },
-                { taskName: 'Income Tax Return Filing – Business (Audit)', mode: 'Offline', categoryIdx: 0, frequency: 'Yearly', estimatedHours: 8, udin: true, dueDays: 45 },
-                { taskName: 'TDS Return Filing – Quarterly', mode: 'Offline', categoryIdx: 0, frequency: 'Quarterly', estimatedHours: 3, udin: false, recurringTask: true },
-                { taskName: 'Advance Tax Calculation & Payment', mode: 'Offline', categoryIdx: 0, frequency: 'Quarterly', estimatedHours: 2, udin: false, dueDays: 5 },
-                { taskName: 'Form 15CA / 15CB Preparation', mode: 'Offline', categoryIdx: 0, frequency: 'One Time', estimatedHours: 2, udin: false },
-                { taskName: 'Income Tax Notice Reply / Assessment', mode: 'Offline', categoryIdx: 0, frequency: 'One Time', estimatedHours: 6, udin: false },
-                // GST (1)
-                { taskName: 'GST Monthly Return – GSTR-1', mode: 'Offline', categoryIdx: 1, frequency: 'Monthly', estimatedHours: 2, udin: false, recurringTask: true, dueDays: 11 },
-                { taskName: 'GST Monthly Return – GSTR-3B', mode: 'Offline', categoryIdx: 1, frequency: 'Monthly', estimatedHours: 2, udin: false, recurringTask: true, dueDays: 20 },
-                { taskName: 'GST Annual Return – GSTR-9', mode: 'Offline', categoryIdx: 1, frequency: 'Yearly', estimatedHours: 6, udin: false, dueDays: 30 },
-                { taskName: 'GST Reconciliation (2A/2B vs Books)', mode: 'Offline', categoryIdx: 1, frequency: 'Monthly', estimatedHours: 3, udin: false, recurringTask: true },
-                { taskName: 'GST Registration', mode: 'Offline', categoryIdx: 1, frequency: 'One Time', estimatedHours: 3, udin: false },
-                { taskName: 'GST Audit – GSTR-9C', mode: 'Offline', categoryIdx: 1, frequency: 'Yearly', estimatedHours: 8, udin: false },
-                { taskName: 'GST Notice Reply / Assessment', mode: 'Offline', categoryIdx: 1, frequency: 'One Time', estimatedHours: 5, udin: false },
-                // Audit & Assurance (2)
-                { taskName: 'Statutory Audit', mode: 'Offline', categoryIdx: 2, frequency: 'Yearly', estimatedHours: 20, udin: true, dueDays: 60 },
-                { taskName: 'Tax Audit – Form 3CB-3CD', mode: 'Offline', categoryIdx: 2, frequency: 'Yearly', estimatedHours: 12, udin: true, dueDays: 30 },
-                { taskName: 'Internal Audit', mode: 'Offline', categoryIdx: 2, frequency: 'Quarterly', estimatedHours: 10, udin: false },
-                { taskName: 'Concurrent Audit', mode: 'Offline', categoryIdx: 2, frequency: 'Monthly', estimatedHours: 8, udin: false, recurringTask: true },
-                { taskName: 'Stock Audit', mode: 'Offline', categoryIdx: 2, frequency: 'Yearly', estimatedHours: 6, udin: false },
-                // ROC / Company Law (3)
-                { taskName: 'Annual Return Filing – MGT-7', mode: 'Offline', categoryIdx: 3, frequency: 'Yearly', estimatedHours: 4, udin: false, dueDays: 60 },
-                { taskName: 'Financial Statements Filing – AOC-4', mode: 'Offline', categoryIdx: 3, frequency: 'Yearly', estimatedHours: 4, udin: false, dueDays: 30 },
-                { taskName: 'Company Incorporation', mode: 'Offline', categoryIdx: 3, frequency: 'One Time', estimatedHours: 8, udin: false },
-                { taskName: 'DIN / DSC / Director KYC', mode: 'Offline', categoryIdx: 3, frequency: 'Yearly', estimatedHours: 2, udin: false },
-                { taskName: 'LLP Annual Filing – Form 11 & Form 8', mode: 'Offline', categoryIdx: 3, frequency: 'Yearly', estimatedHours: 4, udin: false },
-                // Accounting (4)
-                { taskName: 'Monthly Bookkeeping / Accounting', mode: 'Offline', categoryIdx: 4, frequency: 'Monthly', estimatedHours: 5, udin: false, recurringTask: true },
-                { taskName: 'Bank Reconciliation', mode: 'Offline', categoryIdx: 4, frequency: 'Monthly', estimatedHours: 2, udin: false, recurringTask: true },
-                { taskName: 'Finalization of Accounts', mode: 'Offline', categoryIdx: 4, frequency: 'Yearly', estimatedHours: 10, udin: false, dueDays: 45 },
-                { taskName: 'MIS Report Preparation', mode: 'Offline', categoryIdx: 4, frequency: 'Monthly', estimatedHours: 3, udin: false, recurringTask: true },
-                // Payroll & HR (5)
-                { taskName: 'Monthly Payroll Processing', mode: 'Offline', categoryIdx: 5, frequency: 'Monthly', estimatedHours: 3, udin: false, recurringTask: true },
-                { taskName: 'PF / ESI Return Filing', mode: 'Offline', categoryIdx: 5, frequency: 'Monthly', estimatedHours: 2, udin: false, recurringTask: true },
-            ];
-
-            // Bind models to the correct connection
             let TargetCategoryModel: any = TaskCategory;
             let TargetMasterModel: any = TaskMaster;
 
             if (dbType === 'personal') {
+                // For personal DB — bind models to the tenant's own cluster
                 const tenantConn = await getTenantConnection(firm);
                 TargetCategoryModel = getModelFromConnection(tenantConn, 'TaskCategory', TaskCategory.schema);
                 TargetMasterModel = getModelFromConnection(tenantConn, 'TaskMaster', TaskMaster.schema);
-                console.log('🔗 [Seed] Models bound to personal MongoDB cluster.');
             }
 
-            // Step A: Create categories and build index → ObjectId map
-            const categoryIdByIndex = new Map<number, mongoose.Types.ObjectId>();
-            for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
-                const cat = DEFAULT_CATEGORIES[i];
+            // Step A: Create categories and build name → _id map
+            const categoryIdMap = new Map<string, mongoose.Types.ObjectId>();
+            for (const cat of DEFAULT_TASK_CATEGORIES) {
                 const saved = await new TargetCategoryModel({
                     name: cat.name,
                     color: cat.color,
                     description: '',
                     status: 'Active',
                     firmId: firm._id,
-                    createdBy: adminUserId,
+                    createdBy: adminUserId
                 }).save();
-                categoryIdByIndex.set(i, saved._id as mongoose.Types.ObjectId);
+                categoryIdMap.set(cat.name, saved._id as mongoose.Types.ObjectId);
             }
 
-            // Step B: Create task masters
-            for (const tmpl of DEFAULT_TASKS) {
+            // Step B: Seed all 30 default tasks
+            for (const task of DEFAULT_TASKS) {
+                const categoryId = categoryIdMap.get(task.category) || null;
                 await new TargetMasterModel({
-                    taskName: tmpl.taskName,
-                    mode: tmpl.mode,
-                    category: categoryIdByIndex.get(tmpl.categoryIdx) || null,
-                    department: tmpl.department || '',
-                    description: '',
+                    taskName: task.taskName,
+                    mode: task.mode,
+                    category: categoryId,
+                    description: task.description || '',
                     status: 'Active',
-                    udin: tmpl.udin,
+                    udin: task.udin,
                     billingAmount: 0,
-                    estimatedHours: tmpl.estimatedHours,
-                    frequency: tmpl.frequency,
-                    dueDays: tmpl.dueDays,
-                    recurringTask: tmpl.recurringTask || false,
+                    estimatedHours: task.estimatedHours,
+                    frequency: task.frequency,
+                    typeOfClient: task.typeOfClient,
+                    dueDays: task.dueDays,
+                    recurringTask: task.recurringTask,
                     tags: [],
+                    subtasks: [],
                     firmId: firm._id,
                     createdBy: adminUserId,
-                    isDefault: false,
-                    subtasks: [],
+                    isDefault: false
                 }).save();
             }
 
-            console.log(`✅ Seeded ${DEFAULT_TASKS.length} default tasks + ${DEFAULT_CATEGORIES.length} categories into: ${firm.firmName}`);
+            console.log(`✅ [CreateFirm] Seeded ${DEFAULT_TASKS.length} default tasks into: ${firm.firmName}`);
         } catch (seedError) {
-            // Task seeding is non-fatal. Firm and admin already created successfully.
-            console.error('\u274c Non-fatal error during task seeding (firm still created):', seedError);
+            // Task seeding is non-fatal — firm and admin are already created.
+            console.error('❌ [CreateFirm] Non-fatal error during task seeding (firm still created):', seedError);
         }
 
         res.status(201).json({ 

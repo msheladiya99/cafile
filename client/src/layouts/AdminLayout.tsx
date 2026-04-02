@@ -31,6 +31,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
+import GppGoodIcon from '@mui/icons-material/GppGood';
 import { useAuth } from '../contexts/AuthContext';
 import settingsService from '../services/settingsService';
 import firmService from '../services/firmService';
@@ -192,6 +193,7 @@ export const AdminLayout: React.FC = () => {
             ]
         },
         { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },
+        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
