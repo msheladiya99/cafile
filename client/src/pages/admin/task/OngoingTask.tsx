@@ -86,7 +86,11 @@ export const OngoingTask: React.FC = () => {
 
     const years = useMemo(() => {
         const cur = new Date().getFullYear();
-        return Array.from({ length: 11 }, (_, i) => (cur - 5 + i).toString());
+        // Financial year format: April to March (e.g. 2025-2026)
+        return Array.from({ length: 8 }, (_, i) => {
+            const y = cur - 4 + i;
+            return `${y}-${y + 1}`;
+        });
     }, []);
 
     const queryClient = useQueryClient();
