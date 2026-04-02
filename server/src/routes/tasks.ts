@@ -91,7 +91,6 @@ router.post('/', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRe
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName')
             .populate('reportingManager', 'username name email')
             .populate('taskMasterId', 'taskName frequency');
 
@@ -277,7 +276,6 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName')
             .populate('reportingManager', 'username name email')
             .sort({ priority: -1, targetDate: 1 })
             .lean();
@@ -436,7 +434,6 @@ router.get('/staff-history', requireRoles(['ADMIN', 'MANAGER']), async (req: Aut
             .populate('createdBy', 'username name')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -802,7 +799,6 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName')
             .populate('comments.userId', 'username name');
 
         if (!task) {
@@ -990,7 +986,6 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName')
             .populate('reportingManager', 'username name email');
 
         res.json({
@@ -1345,7 +1340,6 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
             .populate('assignedTo', 'username name email role')
             .populate('clientId', 'name email phone')
             .populate('clientGroupId', 'groupName')
-            .populate('firmId', 'firmName');
 
         res.json({
             task: updatedTask,
