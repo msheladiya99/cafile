@@ -95,7 +95,8 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                 if (!existingTask) {
                     await new Task({
                         title: taskMaster.taskName,
-                        category: taskMaster.category || null,
+                        // category omitted — Task schema on live still uses String enum;
+                        // will default to null until schema is migrated to ObjectId.
                         createdBy,
                         assignedTo: Array.isArray(assignedTo) ? assignedTo : (taskMaster.users || []),
                         clientId: cid,
@@ -141,7 +142,8 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                 if (!existingGroupTask) {
                     await new Task({
                         title: taskMaster.taskName,
-                        category: taskMaster.category || null,
+                        // category omitted — Task schema on live still uses String enum;
+                        // will default to null until schema is migrated to ObjectId.
                         createdBy,
                         assignedTo: Array.isArray(assignedTo) ? assignedTo : (taskMaster.users || []),
                         clientGroupId: cgid,
