@@ -36,14 +36,20 @@ export const UpdateApprovedTask: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState('');
     const [frequencyType, setFrequencyType] = useState('Sel...');
     const [frequency, setFrequency] = useState('');
-    const [year, setYear] = useState(new Date().getFullYear().toString());
+    const cur = new Date().getFullYear();
+    const curMonth = new Date().getMonth() + 1;
+    const curFinYear = curMonth >= 4 ? `${cur}-${cur + 1}` : `${cur - 1}-${cur}`;
+    const [year, setYear] = useState(curFinYear);
     const [reportingManager, setReportingManager] = useState('');
     const [taskStatus, setTaskStatus] = useState('');
     const [dateType, setDateType] = useState('On Effective ...');
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
-        return Array.from({ length: 11 }, (_, i) => (currentYear - 5 + i).toString());
+        return Array.from({ length: 8 }, (_, i) => {
+            const y = currentYear - 4 + i;
+            return `${y}-${y + 1}`;
+        });
     }, []);
 
     // Fetch data for dropdowns
