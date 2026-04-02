@@ -63,7 +63,9 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
 
         const createdBy = new mongoose.Types.ObjectId(req.user!.userId);
         const targetDate = startDate ? new Date(startDate) : new Date();
-        const year = targetDate.getFullYear().toString();
+        const month = targetDate.getMonth() + 1; // 1-12
+        const yearVal = targetDate.getFullYear();
+        const year = month >= 4 ? `${yearVal}-${yearVal + 1}` : `${yearVal - 1}-${yearVal}`;
 
         const results: any[] = [];
         
@@ -93,14 +95,20 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                 if (!existingTask) {
                     await new Task({
                         title: taskMaster.taskName,
-                        category: 'CLIENT_WORK',
+                        category: taskMaster.category || null,
                         createdBy,
-                        assignedTo: Array.isArray(assignedTo) ? assignedTo : [],
+                        assignedTo: Array.isArray(assignedTo) ? assignedTo : (taskMaster.users || []),
                         clientId: cid,
                         firmId,
                         taskMasterId: tmId,
                         targetDate,
                         year,
+                        priority: taskMaster.priority || 'MEDIUM',
+                        department: department || taskMaster.department,
+                        estimatedHours: taskMaster.estimatedHours || 1,
+                        billingAmount: taskMaster.billingAmount || 0,
+                        reportingManager: taskMaster.reportingManager,
+                        frequency: taskMaster.frequency,
                         checklist: (taskMaster.subtasks || []).map((s: any) => ({ id: uuidv4(), text: s.name, completed: false }))
                     }).save();
                 }
@@ -133,14 +141,21 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                 if (!existingGroupTask) {
                     await new Task({
                         title: taskMaster.taskName,
-                        category: 'CLIENT_WORK',
+                        category: taskMaster.category || null,
                         createdBy,
-                        assignedTo: Array.isArray(assignedTo) ? assignedTo : [],
+                        assignedTo: Array.isArray(assignedTo) ? assignedTo : (taskMaster.users || []),
                         clientGroupId: cgid,
                         firmId,
                         taskMasterId: tmId,
                         targetDate,
-                        year
+                        year,
+                        priority: taskMaster.priority || 'MEDIUM',
+                        department: department || taskMaster.department,
+                        estimatedHours: taskMaster.estimatedHours || 1,
+                        billingAmount: taskMaster.billingAmount || 0,
+                        reportingManager: taskMaster.reportingManager,
+                        frequency: taskMaster.frequency,
+                        checklist: (taskMaster.subtasks || []).map((s: any) => ({ id: uuidv4(), text: s.name, completed: false }))
                     }).save();
                 }
                 results.push(app);
