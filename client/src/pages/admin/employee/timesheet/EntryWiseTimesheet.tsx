@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
     Box, Paper, Typography, MenuItem, Select, FormControl,
-    Button, TextField, CircularProgress, Grid, Chip, Avatar,
+    TextField, CircularProgress, Grid, Chip, Avatar,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Tooltip, Alert
 } from '@mui/material';
@@ -18,6 +18,8 @@ import { adminService } from '../../../../services/adminService';
 import { clientGroupService } from '../../../../services/clientGroupService';
 import { staffService } from '../../../../services/staffService';
 import { taskService } from '../../../../services/taskService';
+import type { Client, User } from '../../../../types';
+import { CommonButton } from '../../../../components/common/UIComponents';
 
 const fmtDuration = (minutes: number) => {
     if (!minutes) return '0m';
@@ -52,6 +54,22 @@ const empty: FilterState = {
     groupName: '', clientName: '', task: '', frequency: '',
     employee: '', year: '', status: '', dateFrom: '', dateTo: ''
 };
+
+interface TimesheetEntry {
+    entryId?: string;
+    taskId?: string;
+    taskTitle: string;
+    frequency?: string;
+    client?: Client;
+    clientGroup?: { _id: string; groupName: string };
+    assignedTo: User[];
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+    taskStatus: string;
+    taskPriority: string;
+    isOverdue?: boolean;
+}
 
 export const EntryWiseTimesheet: React.FC = () => {
     const [filterData, setFilterData] = useState<FilterState>(empty);
@@ -96,15 +114,15 @@ export const EntryWiseTimesheet: React.FC = () => {
         enabled: !!activeFilters
     });
 
-    const sheet = timesheetData as any;
-    const rows: any[] = sheet?.rows || [];
-    const totalMinutes = rows.reduce((s: number, r: any) => s + (r.durationMinutes || 0), 0);
+    const sheet = timesheetData as { rows: TimesheetEntry[] };
+    const rows = sheet?.rows || [];
+    const totalMinutes = rows.reduce((s: number, r: TimesheetEntry) => s + (r.durationMinutes || 0), 0);
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <TimerIcon />
                         <Typography variant="h5" fontWeight="600">Entry Wise Timesheet</Typography>
@@ -125,16 +143,16 @@ export const EntryWiseTimesheet: React.FC = () => {
             </Paper>
 
             {/* Filters */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Grid container spacing={2.5} alignItems="flex-end">
                     {/* Group */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Group Name</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Groups</MenuItem>
                                 {loadingGroups ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    groups.map((g: any) => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
+                                    groups.map((g: { _id: string; groupName: string }) => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -143,10 +161,10 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Client</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Clients</MenuItem>
                                 {loadingClients ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    clients.map((c: any) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+                                    clients.map((c: Client) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -155,10 +173,10 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Task</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Tasks</MenuItem>
                                 {loadingTasks ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    tasks.map((t: any) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
+                                    tasks.map((t: { _id: string; title: string }) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -167,7 +185,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Frequency</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Frequencies</MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>
@@ -178,10 +196,10 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Employee</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Employees</MenuItem>
                                 {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    staff.map((s: any) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
+                                    staff.map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -190,7 +208,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Year</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Years</MenuItem>
                                 {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
@@ -201,7 +219,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Status</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Statuses</MenuItem>
                                 {statuses.map(s => <MenuItem key={s} value={s}>{s.replace(/_/g, ' ')}</MenuItem>)}
                             </Select>
@@ -212,33 +230,33 @@ export const EntryWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Date Range (Start Time)</Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                             <Box sx={{ px: 1, color: 'text.secondary', fontSize: 12, whiteSpace: 'nowrap' }}>to</Box>
-                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Box>
                     </Grid>
 
                     {/* Buttons */}
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-                            <Button variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />} sx={{ borderRadius: 1.5 }}>Clear</Button>
-                            <Button variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}
-                                sx={{ borderRadius: 1.5, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                            <CommonButton variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />} sx={{ borderRadius: '8px' }}>Clear</CommonButton>
+                            <CommonButton variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}
+                                sx={{ borderRadius: '8px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
                                 Search
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Grid>
                 </Grid>
             </Paper>
 
             {/* Results */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ListIcon fontSize="small" />
                     <Typography variant="h6" fontWeight="600">Time Entries</Typography>
                     {rows.length > 0 && (
                         <Chip label={`${rows.length} entries · ${fmtDuration(totalMinutes)}`} size="small"
-                            sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }} />
+                            sx={{ ml: 1, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 600 }} />
                     )}
                 </Box>
 
@@ -286,7 +304,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {rows.map((row: any, idx: number) => (
+                                {rows.map((row: TimesheetEntry, idx: number) => (
                                     <TableRow key={row.entryId || `${row.taskId}-${idx}`}
                                         sx={{ '&:hover': { bgcolor: '#f5f7ff' }, borderLeft: row.isOverdue ? '3px solid #ef4444' : '3px solid transparent' }}>
                                         <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>{idx + 1}</TableCell>
@@ -298,24 +316,24 @@ export const EntryWiseTimesheet: React.FC = () => {
                                             {row.client ? (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                                     <BusinessIcon sx={{ fontSize: 14, color: '#667eea' }} />
-                                                    <Typography fontSize={12}>{(row.client as any).name}</Typography>
+                                                    <Typography fontSize={12}>{row.client.name}</Typography>
                                                 </Box>
                                             ) : row.clientGroup ? (
-                                                <Typography fontSize={12} color="text.secondary">{(row.clientGroup as any).groupName}</Typography>
+                                                <Typography fontSize={12} color="text.secondary">{row.clientGroup.groupName}</Typography>
                                             ) : <Typography fontSize={12} color="text.disabled">—</Typography>}
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                                {(row.assignedTo as any[])?.slice(0, 2).map((u: any) => (
+                                                {row.assignedTo?.slice(0, 2).map((u: User) => (
                                                     <Tooltip key={u._id} title={u.name || u.username}>
-                                                        <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: '#667eea' }}>
+                                                        <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
                                                             {(u.name || u.username || '?')[0].toUpperCase()}
                                                         </Avatar>
                                                     </Tooltip>
                                                 ))}
-                                                {(row.assignedTo as any[])?.length > 2 && (
+                                                {row.assignedTo?.length > 2 && (
                                                     <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: '#764ba2' }}>
-                                                        +{(row.assignedTo as any[]).length - 2}
+                                                        +{row.assignedTo.length - 2}
                                                     </Avatar>
                                                 )}
                                             </Box>
@@ -342,7 +360,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                                     <TableCell colSpan={6} sx={{ fontWeight: 700, color: '#667eea' }}>Total</TableCell>
                                     <TableCell>
                                         <Chip label={fmtDuration(totalMinutes)} size="small"
-                                            sx={{ bgcolor: '#667eea', color: 'white', fontWeight: 700 }} />
+                                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', fontWeight: 700 }} />
                                     </TableCell>
                                     <TableCell colSpan={2} />
                                 </TableRow>
@@ -354,3 +372,8 @@ export const EntryWiseTimesheet: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
     Box, Paper, Typography, MenuItem, Select, FormControl,
-    Button, TextField, CircularProgress, Grid, Chip, Avatar,
+    TextField, CircularProgress, Grid, Chip, Avatar,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Tooltip, Alert, LinearProgress
 } from '@mui/material';
@@ -13,10 +13,41 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '../../../../services/adminService';
-import type { User } from '../../../../types';
+import type { User, Client, Task } from '../../../../types';
+import { CommonButton } from '../../../../components/common/UIComponents';
 import { clientGroupService } from '../../../../services/clientGroupService';
 import { staffService } from '../../../../services/staffService';
 import { taskService } from '../../../../services/taskService';
+
+interface TimesheetSummary {
+    totalTasks: number;
+    totalEstimatedHours: number;
+    totalActualHours: number;
+}
+
+interface TimesheetTaskRow {
+    taskId: string;
+    taskTitle: string;
+    frequency?: string;
+    client?: Client;
+    clientGroup?: { _id: string; groupName: string };
+    assignedTo: User[];
+    estimatedHours: number;
+    totalHours: number;
+    progressPercentage: number;
+    efficiency: number | null;
+    targetDate: string;
+    taskStatus: string;
+    isOverdue: boolean;
+    timerRunning?: boolean;
+    liveMinutes?: number;
+    revisionCount: number;
+}
+
+interface TimesheetResponse {
+    rows: TimesheetTaskRow[];
+    summary: TimesheetSummary;
+}
 
 const fmtHours = (h: number) => (h === 0 ? '0h' : h < 1 ? `${Math.round(h * 60)}m` : `${h.toFixed(1)}h`);
 const fmtDate = (dt: string | Date | undefined) => dt ? new Date(dt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -43,10 +74,10 @@ export const TaskWiseTimesheet: React.FC = () => {
     const [filterData, setFilterData] = useState<FilterState>(empty);
     const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
 
-    const { data: clients = [], isLoading: loadingClients } = useQuery({ queryKey: ['clients'], queryFn: adminService.getClients });
-    const { data: groups = [], isLoading: loadingGroups } = useQuery({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
-    const { data: staff = [], isLoading: loadingStaff } = useQuery({ queryKey: ['staff'], queryFn: staffService.getStaff });
-    const { data: tasks = [], isLoading: loadingTasks } = useQuery({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
+    const { data: clients = [], isLoading: loadingClients } = useQuery<Client[]>({ queryKey: ['clients'], queryFn: adminService.getClients });
+    const { data: groups = [], isLoading: loadingGroups } = useQuery<{ _id: string; groupName: string }[]>({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
+    const { data: staff = [], isLoading: loadingStaff } = useQuery<User[]>({ queryKey: ['staff'], queryFn: staffService.getStaff });
+    const { data: tasks = [], isLoading: loadingTasks } = useQuery<Task[]>({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
 
     const frequencies = ['One Time', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
     const years = ['2023-2024', '2024-2025', '2025-2026', '2026-2027'];
@@ -72,18 +103,18 @@ export const TaskWiseTimesheet: React.FC = () => {
         view: 'task' as const
     }), []);
 
-    const { data: timesheetData, isLoading: loadingSheet, error } = useQuery({
+    const { data: timesheetData, isLoading: loadingSheet, error } = useQuery<TimesheetResponse>({
         queryKey: ['timesheet-task', activeFilters],
-        queryFn: () => taskService.getTimesheet(buildParams(activeFilters!)),
+        queryFn: () => taskService.getTimesheet(buildParams(activeFilters!)) as Promise<TimesheetResponse>,
         enabled: !!activeFilters
     });
 
-    const sheet = timesheetData as any;
-    const rows: any[] = sheet?.rows || [];
+    const sheet = timesheetData;
+    const rows = sheet?.rows || [];
     const summary = sheet?.summary;
 
     const filteredRows = activeFilters?.approvalStatus
-        ? rows.filter((r: any) => {
+        ? rows.filter(r => {
             if (activeFilters.approvalStatus === 'Approved') return r.taskStatus === 'APPROVED' || r.taskStatus === 'DONE';
             if (activeFilters.approvalStatus === 'Pending') return r.taskStatus === 'PENDING_FOR_APPROVAL';
             if (activeFilters.approvalStatus === 'Rejected') return r.taskStatus === 'REJECTED';
@@ -94,8 +125,8 @@ export const TaskWiseTimesheet: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <CheckIcon />
                         <Typography variant="h5" fontWeight="600">Task Wise Timesheet</Typography>
@@ -118,15 +149,15 @@ export const TaskWiseTimesheet: React.FC = () => {
             </Paper>
 
             {/* Filters */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Grid container spacing={2.5} alignItems="flex-end">
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Group Name</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Groups</MenuItem>
                                 {loadingGroups ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    groups.map((g: any) => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
+                                    groups.map(g => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -134,10 +165,10 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Client</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Clients</MenuItem>
                                 {loadingClients ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    clients.map((c: any) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+                                    clients.map(c => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -145,10 +176,10 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Task</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Tasks</MenuItem>
                                 {loadingTasks ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    tasks.map((t: any) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
+                                    tasks.map(t => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -156,7 +187,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Frequency</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Frequencies</MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>
@@ -166,7 +197,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Reporting Manager</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.reportingManager} onChange={handleChange('reportingManager')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.reportingManager} onChange={handleChange('reportingManager')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Managers</MenuItem>
                                 {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
                                     staff.filter((s: User) => ['ADMIN', 'MANAGER', 'STAFF'].includes(s.role))
@@ -178,7 +209,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Year</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Years</MenuItem>
                                 {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
@@ -188,7 +219,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Status</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Statuses</MenuItem>
                                 {statuses.map(s => <MenuItem key={s} value={s}>{s.replace(/_/g, ' ')}</MenuItem>)}
                             </Select>
@@ -198,7 +229,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Approval Status</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.approvalStatus} onChange={handleChange('approvalStatus')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.approvalStatus} onChange={handleChange('approvalStatus')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All</MenuItem>
                                 {['Pending', 'Approved', 'Rejected'].map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                             </Select>
@@ -208,32 +239,32 @@ export const TaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Date Range</Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                             <Box sx={{ px: 1, color: 'text.secondary', fontSize: 12, whiteSpace: 'nowrap' }}>to</Box>
-                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Box>
                     </Grid>
 
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-                            <Button variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />} sx={{ borderRadius: 1.5 }}>Clear</Button>
-                            <Button variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}
-                                sx={{ borderRadius: 1.5, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                            <CommonButton variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />} sx={{ borderRadius: '8px' }}>Clear</CommonButton>
+                            <CommonButton variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}
+                                sx={{ borderRadius: '8px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
                                 Search
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Grid>
                 </Grid>
             </Paper>
 
             {/* Results */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ListIcon fontSize="small" />
                     <Typography variant="h6" fontWeight="600">Task List</Typography>
                     {filteredRows.length > 0 && (
                         <Chip label={`${filteredRows.length} tasks`} size="small"
-                            sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }} />
+                            sx={{ ml: 1, bgcolor: '#6366f1', color: 'white', fontWeight: 600, '&:hover': { bgcolor: '#4338ca' } }} />
                     )}
                 </Box>
 
@@ -280,7 +311,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredRows.map((row: any, idx: number) => (
+                                {filteredRows.map((row: TimesheetTaskRow, idx: number) => (
                                     <TableRow key={row.taskId}
                                         sx={{ '&:hover': { bgcolor: '#f5f7ff' }, borderLeft: row.isOverdue ? '3px solid #ef4444' : '3px solid transparent' }}>
                                         <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>{idx + 1}</TableCell>
@@ -304,16 +335,16 @@ export const TaskWiseTimesheet: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                {(row.assignedTo as any[])?.slice(0, 3).map((u: any) => (
+                                                {row.assignedTo?.slice(0, 3).map((u: User) => (
                                                     <Tooltip key={u._id} title={`${u.name || u.username} (${u.role})`}>
-                                                        <Avatar sx={{ width: 26, height: 26, fontSize: 11, bgcolor: '#667eea' }}>
+                                                        <Avatar sx={{ width: 26, height: 26, fontSize: 11, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
                                                             {(u.name || u.username || '?')[0].toUpperCase()}
                                                         </Avatar>
                                                     </Tooltip>
                                                 ))}
-                                                {(row.assignedTo as any[])?.length > 3 && (
+                                                {row.assignedTo?.length > 3 && (
                                                     <Avatar sx={{ width: 26, height: 26, fontSize: 11, bgcolor: '#764ba2' }}>
-                                                        +{(row.assignedTo as any[]).length - 3}
+                                                        +{row.assignedTo.length - 3}
                                                     </Avatar>
                                                 )}
                                             </Box>
@@ -384,3 +415,8 @@ export const TaskWiseTimesheet: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

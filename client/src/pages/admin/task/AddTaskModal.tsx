@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Box, Typography, Button, TextField, Select, MenuItem,
+    Box, Typography, TextField, Select, MenuItem,
     Grid, Checkbox, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, IconButton, CircularProgress, Chip,
     InputAdornment, useMediaQuery, useTheme
@@ -18,6 +18,7 @@ import { adminService } from '../../../services/adminService';
 import { staffService } from '../../../services/staffService';
 import { taskService } from '../../../services/taskService';
 import type { TaskMasterData, Client, User } from '../../../types';
+import { CommonButton } from '../../../components/common/UIComponents';
 
 interface AddTaskModalProps {
     open: boolean;
@@ -170,12 +171,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
         <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
             {/* Header */}
             <DialogTitle sx={{ p: 0 }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 3, py: 2, color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', px: 3, py: 2, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box display="flex" alignItems="center" gap={1.5}>
-                        <Box sx={{ bgcolor: 'rgba(255,255,255,0.2)', p: 1, borderRadius: 2, display: 'flex' }}><AddIcon /></Box>
+                        <Box sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, p: 1, borderRadius: '12px', display: 'flex' }}><AddIcon /></Box>
                         <Typography variant="h6" fontWeight={800}>Add Task (Bulk Create)</Typography>
                     </Box>
-                    <IconButton size="small" onClick={onClose} sx={{ color: 'white' }}><CloseIcon /></IconButton>
+                    <IconButton size="small" onClick={onClose} sx={{ color: '#1e293b' }}><CloseIcon /></IconButton>
                 </Box>
             </DialogTitle>
 
@@ -192,7 +193,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                                     key={cat} label={cat}
                                     onClick={() => { setSelectedCategory(cat); setTaskType(''); }}
                                     sx={{
-                                        fontWeight: 600, borderRadius: 2,
+                                        fontWeight: 600, borderRadius: '12px',
                                         bgcolor: selectedCategory === cat ? '#667eea' : 'white',
                                         color: selectedCategory === cat ? 'white' : '#475569',
                                         border: '1px solid', borderColor: selectedCategory === cat ? '#667eea' : '#cbd5e1',
@@ -206,7 +207,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                     {/* Task Type */}
                     <Box mb={3}>
                         <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} mb={1} display="block">Task Type *</Typography>
-                        <Select size="small" fullWidth displayEmpty value={taskType} onChange={e => setTaskType(e.target.value as string)} sx={{ bgcolor: 'white', borderRadius: 2 }}>
+                        <Select size="small" fullWidth displayEmpty value={taskType} onChange={e => setTaskType(e.target.value as string)} sx={{ bgcolor: 'white', borderRadius: '12px' }}>
                             <MenuItem value="" disabled><em>Select a task...</em></MenuItem>
                             {filteredTasks.map((t: TaskMasterData) => (
                                 <MenuItem key={t._id} value={t._id}>{t.taskName} {t.frequency ? `(${t.frequency})` : ''}</MenuItem>
@@ -218,20 +219,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                     <Grid container spacing={2} mb={3}>
                         <Grid size={{ xs: 12, sm: 4 }}>
                             <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} mb={1} display="block">Year *</Typography>
-                            <Select size="small" fullWidth value={year} onChange={e => setYear(e.target.value as string)} sx={{ bgcolor: 'white', borderRadius: 2 }}>
+                            <Select size="small" fullWidth value={year} onChange={e => setYear(e.target.value as string)} sx={{ bgcolor: 'white', borderRadius: '12px' }}>
                                 {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
                             <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} mb={1} display="block">Period / Freq</Typography>
-                            <Select size="small" fullWidth value={effectiveFrequency} onChange={e => setFrequency(e.target.value as string)} displayEmpty sx={{ bgcolor: 'white', borderRadius: 2 }}>
+                            <Select size="small" fullWidth value={effectiveFrequency} onChange={e => setFrequency(e.target.value as string)} displayEmpty sx={{ bgcolor: 'white', borderRadius: '12px' }}>
                                 <MenuItem value=""><em>Default...</em></MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
                             <Typography variant="caption" fontWeight={800} color="text.secondary" textTransform="uppercase" letterSpacing={0.5} mb={1} display="block">Due Date *</Typography>
-                            <TextField type="date" size="small" fullWidth value={targetDate} onChange={e => setTargetDate(e.target.value)} sx={{ bgcolor: 'white', borderRadius: 2 }} />
+                            <TextField type="date" size="small" fullWidth value={targetDate} onChange={e => setTargetDate(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px' }} />
                         </Grid>
                     </Grid>
 
@@ -242,7 +243,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                             multiline rows={4} fullWidth size="small"
                             placeholder="Add task notes, guidelines, or specific instructions here..."
                             value={description} onChange={e => setDescription(e.target.value)}
-                            sx={{ bgcolor: 'white', borderRadius: 2 }}
+                            sx={{ bgcolor: 'white', borderRadius: '12px' }}
                         />
                     </Box>
                 </Box>
@@ -263,12 +264,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                             InputProps={{
                                 startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
                             }}
-                            sx={{ borderRadius: 2, bgcolor: '#f1f5f9' }}
+                            sx={{ borderRadius: '12px', bgcolor: '#f1f5f9' }}
                         />
                     </Box>
 
                     {/* Client Table */}
-                    <TableContainer sx={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 2, overflowY: 'auto' }}>
+                    <TableContainer sx={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '12px', overflowY: 'auto' }}>
                         <Table size="small" stickyHeader>
                             <TableHead>
                                 <TableRow>
@@ -319,7 +320,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                                                                 </Box>
                                                             );
                                                         }}
-                                                        sx={{ bgcolor: isSelected ? 'white' : 'transparent', borderRadius: 1.5, minHeight: 32, fontSize: '0.8rem' }}
+                                                        sx={{ bgcolor: isSelected ? 'white' : 'transparent', borderRadius: '8px', minHeight: 32, fontSize: '0.8rem' }}
                                                     >
                                                         {staffList.map((emp: User) => (
                                                             <MenuItem key={emp._id} value={emp._id} sx={{ fontSize: '0.85rem' }}>
@@ -346,19 +347,19 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ open, onClose, onSuc
                 <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
                     {selectedClients.size} clients selected. Duplicates for the exact period will be skipped automatically.
                 </Typography>
-                <Button onClick={onClose} color="inherit" sx={{ textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
-                <Button
-                    variant="contained"
+                <CommonButton onClick={onClose} variant="outlined">Cancel</CommonButton>
+                <CommonButton
                     onClick={handleSave}
-                    disabled={bulkCreateMutation.isPending || loadingTasks}
-                    sx={{
-                        textTransform: 'none', fontWeight: 700, borderRadius: 2, px: 4,
-                        bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }
-                    }}
+                    loading={bulkCreateMutation.isPending || loadingTasks}
                 >
-                    {bulkCreateMutation.isPending ? 'Creating Tasks...' : 'Create Tasks'}
-                </Button>
+                    Create Tasks
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );
 };
+
+
+
+
+

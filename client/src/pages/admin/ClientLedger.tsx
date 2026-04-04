@@ -11,7 +11,6 @@ import {
     Chip,
     TextField,
     MenuItem,
-    Button,
     Grid,
     Accordion,
     AccordionSummary,
@@ -45,7 +44,7 @@ import type { Client, User } from '../../types';
 import { adminService } from '../../services/adminService';
 import { clientGroupService, type ClientGroup } from '../../services/clientGroupService';
 import firmService, { type IMultiFirmData } from '../../services/firmService';
-import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../components/common/UIComponents';
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../components/common/UIComponents';
 
 interface ClientLedgerRecord {
     client: Client;
@@ -181,16 +180,16 @@ export const ClientLedger: React.FC = () => {
             <PageHeader
                 title="Client Ledger"
                 actions={
-                    <Button
+                    <CommonButton
                         variant="contained"
                         size="small"
                         startIcon={<DownloadIcon />}
                         onClick={handleExport}
                         disabled={!ledgerData?.clientLedgers?.length}
-                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                        sx={{ borderRadius: '8px', boxShadow: 'none' }}
                     >
                         Export CSV
-                    </Button>
+                    </CommonButton>
                 }
             />
 
@@ -209,7 +208,7 @@ export const ClientLedger: React.FC = () => {
                                     displayEmpty
                                     value={selectedStaff}
                                     onChange={(e) => setSelectedStaff(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: selectedStaff ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: selectedStaff ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Staff Member' }}
                                 >
                                     <MenuItem value="">Choose a Staff...</MenuItem>
@@ -226,7 +225,7 @@ export const ClientLedger: React.FC = () => {
                                     displayEmpty
                                     value={selectedClient}
                                     onChange={(e) => setSelectedClient(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: selectedClient ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: selectedClient ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
@@ -243,7 +242,7 @@ export const ClientLedger: React.FC = () => {
                                     displayEmpty
                                     value={selectedGroup}
                                     onChange={(e) => setSelectedGroup(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: selectedGroup ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: selectedGroup ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
@@ -260,7 +259,7 @@ export const ClientLedger: React.FC = () => {
                                     displayEmpty
                                     value={selectedFirm}
                                     onChange={(e) => setSelectedFirm(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: selectedFirm ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: selectedFirm ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Firm Name' }}
                                 >
                                     <MenuItem value="">Choose a Firm...</MenuItem>
@@ -280,7 +279,7 @@ export const ClientLedger: React.FC = () => {
                                         size="small"
                                         value={selectedYear}
                                         onChange={(e) => setSelectedYear(e.target.value)}
-                                        sx={{ borderRadius: 1.5 }}
+                                        sx={{ borderRadius: '8px' }}
                                     >
                                         {years.map(year => (
                                             <MenuItem key={year} value={year}>{year}</MenuItem>
@@ -292,7 +291,7 @@ export const ClientLedger: React.FC = () => {
                                         displayEmpty
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(e.target.value)}
-                                        sx={{ borderRadius: 1.5, color: selectedMonth ? 'inherit' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: selectedMonth ? 'inherit' : 'text.secondary' }}
                                     >
                                         <MenuItem value="">Full Year</MenuItem>
                                         {months.map(month => (
@@ -309,7 +308,7 @@ export const ClientLedger: React.FC = () => {
                                         size="small"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         InputLabelProps={{ shrink: true }}
                                         inputProps={{ 'aria-label': 'Start Date' }}
                                     />
@@ -319,7 +318,7 @@ export const ClientLedger: React.FC = () => {
                                         size="small"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         InputLabelProps={{ shrink: true }}
                                         inputProps={{ 'aria-label': 'End Date' }}
                                     />
@@ -327,8 +326,9 @@ export const ClientLedger: React.FC = () => {
                             </FilterRow>
 
                             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                                <Button
+                                <CommonButton
                                     size="small"
+                                    variant="text"
                                     onClick={() => {
                                         setSelectedStaff('');
                                         setSelectedClient('');
@@ -344,7 +344,7 @@ export const ClientLedger: React.FC = () => {
                                     aria-label="Clear all filters"
                                 >
                                     Clear Filters
-                                </Button>
+                                </CommonButton>
                             </Box>
                         </Box>
                     </Box>
@@ -407,7 +407,7 @@ export const ClientLedger: React.FC = () => {
                                                 <Paper
                                                     sx={{
                                                         p: { xs: 1.5, sm: 2 },
-                                                        borderRadius: 2.5,
+                                                        borderRadius: '12px',
                                                         height: '100%',
                                                         border: `1px solid ${alpha(card.color, 0.2)}`,
                                                         bgcolor: '#ffffff',
@@ -423,7 +423,7 @@ export const ClientLedger: React.FC = () => {
                                                             sx={{
                                                                 width: 36,
                                                                 height: 36,
-                                                                borderRadius: 1.5,
+                                                                borderRadius: '8px',
                                                                 bgcolor: card.bgColor,
                                                                 display: 'flex',
                                                                 alignItems: 'center',
@@ -488,8 +488,8 @@ export const ClientLedger: React.FC = () => {
                                                     sx={{
                                                         width: { xs: 36, sm: 40 },
                                                         height: { xs: 36, sm: 40 },
-                                                        borderRadius: 1.5,
-                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        borderRadius: '8px',
+                                                        bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
@@ -539,7 +539,7 @@ export const ClientLedger: React.FC = () => {
                                                                 sx={{
                                                                     p: 1.2,
                                                                     textAlign: 'center',
-                                                                    borderRadius: 2,
+                                                                    borderRadius: '12px',
                                                                     borderColor: alpha(metric.color, 0.1),
                                                                     bgcolor: alpha(metric.color, 0.02),
                                                                     display: 'flex',
@@ -580,7 +580,7 @@ export const ClientLedger: React.FC = () => {
                                                             variant="outlined"
                                                             sx={{
                                                                 p: 1.5,
-                                                                borderRadius: 2,
+                                                                borderRadius: '12px',
                                                                 borderColor: 'divider',
                                                                 bgcolor: entry.type === 'PAYMENT' ? 'rgba(16, 185, 129, 0.02)' : '#ffffff'
                                                             }}
@@ -620,7 +620,7 @@ export const ClientLedger: React.FC = () => {
                                                 <TableContainer
                                                     component={Paper}
                                                     variant="outlined"
-                                                    sx={{ borderRadius: 1.5, maxHeight: 400 }}
+                                                    sx={{ borderRadius: '8px', maxHeight: 400 }}
                                                 >
                                                     <Table size="small" stickyHeader>
                                                         <TableHead>
@@ -714,3 +714,8 @@ export const ClientLedger: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+

@@ -162,10 +162,10 @@ export const AttendanceList: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="600">Employee Attendance List</Typography>
-                    <Button size="small" variant="contained" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }} onClick={() => navigate('/admin/employee/attendance/add')}>
+                    <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>
                         Add New
                     </Button>
                 </Box>
@@ -179,7 +179,7 @@ export const AttendanceList: React.FC = () => {
                                 fullWidth size="small" displayEmpty
                                 value={selectedEmployee}
                                 onChange={(e) => setSelectedEmployee(e.target.value as string)}
-                                sx={{ borderRadius: 1.5 }}
+                                sx={{ borderRadius: '8px' }}
                             >
                                 <MenuItem value="">All Employees</MenuItem>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -191,12 +191,12 @@ export const AttendanceList: React.FC = () => {
 
                         <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>From</Typography>
-                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>To</Typography>
-                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -209,8 +209,8 @@ export const AttendanceList: React.FC = () => {
             </Paper>
 
             {/* Table */}
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ListIcon fontSize="small" />
                     <Typography variant="subtitle2" fontWeight="700">Attendance Records</Typography>
                     {attendanceList && !isLoading && (
@@ -249,20 +249,20 @@ export const AttendanceList: React.FC = () => {
                                         <TableCell>{record.date ? safeFormatDate(record.date) : '-'}</TableCell>
                                         <TableCell>
                                             {record.inTime ? (
-                                                <Box component="span" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                <Box component="span" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                                     {record.inTime}
                                                 </Box>
                                             ) : '-'}
                                         </TableCell>
                                         <TableCell>
                                             {record.outTime ? (
-                                                <Box component="span" sx={{ bgcolor: '#fff3e0', color: '#e65100', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                <Box component="span" sx={{ bgcolor: '#fff3e0', color: '#e65100', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                                     {record.outTime}
                                                 </Box>
                                             ) : '-'}
                                         </TableCell>
                                         <TableCell>
-                                            <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                            <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                                 {calculateHours(record.inTime, record.outTime)}
                                             </Box>
                                         </TableCell>
@@ -286,7 +286,7 @@ export const AttendanceList: React.FC = () => {
 
             {/* ─── Edit Dialog ─── */}
             <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+                <DialogTitle sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
                     <Typography fontWeight="600">Edit Attendance</Typography>
                     <IconButton size="small" onClick={() => setEditOpen(false)} sx={{ color: 'white' }}>
                         <CloseIcon />
@@ -304,7 +304,7 @@ export const AttendanceList: React.FC = () => {
                                 name="employee"
                                 value={editForm.employee}
                                 onChange={(e) => setEditForm(prev => ({ ...prev, employee: e.target.value as string }))}
-                                sx={{ borderRadius: 1.5 }}
+                                sx={{ borderRadius: '8px' }}
                             >
                                 <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -324,7 +324,7 @@ export const AttendanceList: React.FC = () => {
                                 name="date"
                                 value={editForm.date}
                                 onChange={handleEditChange}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
 
@@ -344,7 +344,7 @@ export const AttendanceList: React.FC = () => {
                                     value={editForm.inTime}
                                     onChange={handleEditChange}
                                     disabled={!editForm.inTimeChecked}
-                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Box>
                         </Box>
@@ -365,7 +365,7 @@ export const AttendanceList: React.FC = () => {
                                     value={editForm.outTime}
                                     onChange={handleEditChange}
                                     disabled={!editForm.outTimeChecked}
-                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Box>
                         </Box>
@@ -378,7 +378,7 @@ export const AttendanceList: React.FC = () => {
                                 name="description"
                                 value={editForm.description}
                                 onChange={handleEditChange}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
                     </Box>
@@ -388,7 +388,7 @@ export const AttendanceList: React.FC = () => {
                         variant="contained"
                         onClick={handleEditSave}
                         disabled={updateMutation.isPending}
-                        sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                        sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', px: 3, boxShadow: 'none' }}
                     >
                         {updateMutation.isPending ? 'Saving...' : 'Update'}
                     </Button>
@@ -404,3 +404,8 @@ export const AttendanceList: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

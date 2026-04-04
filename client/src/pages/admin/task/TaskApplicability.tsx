@@ -44,6 +44,7 @@ import type { TaskMasterData, Client, TaskApplicability as TaskApplicabilityType
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import type { AxiosError } from 'axios';
+import { CommonButton } from '../../../components/common/UIComponents';
 
 
 export const TaskApplicability: React.FC = () => {
@@ -58,6 +59,7 @@ export const TaskApplicability: React.FC = () => {
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTask, setSelectedTask] = useState('');
     const [groupName, setGroupName] = useState('');
+    const [singleSaving, setSingleSaving] = useState(false);
     const [itStatus, setITStatus] = useState('');
     const [subMaster, setSubMaster] = useState('');
     const [department, setDepartment] = useState('');
@@ -225,6 +227,7 @@ export const TaskApplicability: React.FC = () => {
         const master = taskMasters.find((t: TaskMasterData) => t._id === singleTask);
         if (!master) return;
 
+        setSingleSaving(true);
         try {
             const taskData = {
                 title: master.taskName,
@@ -255,6 +258,8 @@ export const TaskApplicability: React.FC = () => {
         } catch (error: unknown) {
             const axiosErr = error as import('axios').AxiosError<{ message: string }>;
             toast.error(axiosErr.response?.data?.message || 'Failed to start task');
+        } finally {
+            setSingleSaving(false);
         }
     };
 
@@ -331,8 +336,8 @@ export const TaskApplicability: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: { xs: 2.5, sm: 2 },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
@@ -534,7 +539,7 @@ export const TaskApplicability: React.FC = () => {
 
                         {selectedTaskMaster && (
                             <Grid size={{ xs: 12 }}>
-                                <Box sx={{ bgcolor: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: 2, p: 2, ml: 18 }}>
+                                <Box sx={{ bgcolor: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.2)', borderRadius: '12px', p: 2, ml: 18 }}>
                                     <Typography variant="body2" fontWeight={600} color="primary" mb={0.5}>Task Details</Typography>
                                     <Typography variant="caption" color="text.secondary">
                                         <strong>Description:</strong> {selectedTaskMaster.description || '—'} &nbsp;|&nbsp;
@@ -549,14 +554,13 @@ export const TaskApplicability: React.FC = () => {
                         {/* Save / Cancel buttons */}
                         <Grid size={{ xs: 12 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 2 }}>
-                                <Button variant="contained" size="small" onClick={handleSingleSave}
-                                    sx={{ bgcolor: '#667eea', px: 3, '&:hover': { bgcolor: '#764ba2' } }}>
+                                <CommonButton size="small" onClick={handleSingleSave} loading={singleSaving} sx={{ px: 3 }}>
                                     Save & Start Task
-                                </Button>
-                                <Button variant="contained" size="small" onClick={() => navigate('/admin/tasks/ongoing')}
-                                    sx={{ bgcolor: '#ff5252', px: 3, '&:hover': { bgcolor: '#f44336' } }}>
+                                </CommonButton>
+                                <CommonButton variant="outlined" size="small" onClick={() => navigate('/admin/tasks/ongoing')}
+                                    sx={{ bgcolor: 'transparent', color: '#ff5252', borderColor: '#ff5252', px: 3, '&:hover': { bgcolor: '#ffebee', borderColor: '#d32f2f', color: '#d32f2f' } }}>
                                     Cancel
-                                </Button>
+                                </CommonButton>
                             </Box>
                         </Grid>
                     </Grid>
@@ -746,11 +750,11 @@ export const TaskApplicability: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* LEFT: New (eligible) items */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                        <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                             <Box sx={{
                                 p: 1.5,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
+                                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                                color: '#1e293b',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 1
@@ -846,36 +850,39 @@ export const TaskApplicability: React.FC = () => {
                             <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                                 {/* Apply to entire group (when group is selected in Task mode) */}
                                 {basedOn === 'Task' && groupName && (
-                                    <Button
+                                    <CommonButton
                                         variant="outlined"
                                         onClick={handleApplyGroup}
                                         startIcon={<GroupsIcon />}
-                                        disabled={applyMutation.isPending || !selectedTask}
+                                        loading={applyMutation.isPending}
+                                        disabled={!selectedTask}
                                         sx={{
+                                            bgcolor: 'transparent',
                                             borderColor: '#764ba2', color: '#764ba2',
                                             '&:hover': { bgcolor: '#764ba215', borderColor: '#764ba2' }
                                         }}
                                     >
-                                        {applyMutation.isPending ? 'Applying...' : `Apply to Entire Group`}
-                                    </Button>
+                                        Apply to Entire Group
+                                    </CommonButton>
                                 )}
                                 {/* Apply to individually selected clients/tasks */}
-                                <Button variant="contained" onClick={handleApply} startIcon={<CheckCircleIcon />}
-                                    disabled={applyMutation.isPending || (basedOn === 'Task' ? selectedClientIds.length === 0 : selectedTaskIds.length === 0)}
-                                    sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}>
-                                    {applyMutation.isPending ? 'Applying...' : `Apply to Selected (${basedOn === 'Task' ? selectedClientIds.length : selectedTaskIds.length})`}
-                                </Button>
+                                <CommonButton onClick={handleApply} startIcon={<CheckCircleIcon />}
+                                    loading={applyMutation.isPending}
+                                    disabled={(basedOn === 'Task' ? selectedClientIds.length === 0 : selectedTaskIds.length === 0)}
+                                    sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' } }}>
+                                    Apply to Selected ({basedOn === 'Task' ? selectedClientIds.length : selectedTaskIds.length})
+                                </CommonButton>
                             </Box>
                         </Paper>
                     </Grid>
 
                     {/* RIGHT: Already applied */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                        <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                             <Box sx={{
                                 p: 1.5,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                color: 'white',
+                                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                                color: '#1e293b',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between'
@@ -959,3 +966,8 @@ export const TaskApplicability: React.FC = () => {
 };
 
 export default TaskApplicability;
+
+
+
+
+

@@ -125,15 +125,15 @@ export const TaskApproval: React.FC = () => {
             {/* ── Header ── */}
             <Paper elevation={0} sx={{
                 p: { xs: 2.5, sm: 2 },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '12px 12px 0 0',
                 display: 'flex', flexDirection: { xs: 'column', md: 'row' }, 
                 justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' },
                 gap: { xs: 2, md: 0 }
             }}>
                 <Box display="flex" alignItems="center" gap={1.5}>
-                    <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <TaskIcon />
                     </Box>
                     <Box>
@@ -149,7 +149,7 @@ export const TaskApproval: React.FC = () => {
                         onChange={e => setSearch(e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }} /></InputAdornment> }}
                         sx={{
-                            flexGrow: { xs: 1, md: 0 }, width: { xs: '100%', md: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
+                            flexGrow: { xs: 1, md: 0 }, width: { xs: '100%', md: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '12px',
                             '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } },
                             '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
                         }}
@@ -242,7 +242,7 @@ export const TaskApproval: React.FC = () => {
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: '#f8fafc' }}>
                             {tasksLoading ? (
                                 <Box display="flex" flexDirection="column" alignItems="center" gap={1} py={4}>
-                                    <LinearProgress sx={{ width: 200, borderRadius: 2 }} />
+                                    <LinearProgress sx={{ width: 200, borderRadius: '12px' }} />
                                     <Typography variant="caption" color="text.secondary">Loading approval queue…</Typography>
                                 </Box>
                             ) : filteredTasks.length > 0 ? (
@@ -255,7 +255,7 @@ export const TaskApproval: React.FC = () => {
                                     const freq = (task as Task & { frequency?: string }).frequency;
 
                                     return (
-                                        <Paper key={task._id} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: isOverdue ? '#fff5f5' : 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                        <Paper key={task._id} variant="outlined" sx={{ p: 2, borderRadius: '12px', bgcolor: isOverdue ? '#fff5f5' : 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                                 <Box>
                                                     <Typography variant="caption" fontWeight="700" color="text.secondary" mr={1}>#{index + 1}</Typography>
@@ -314,14 +314,14 @@ export const TaskApproval: React.FC = () => {
                                                     startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
                                                     onClick={() => setRejectTask(task)}
                                                     disabled={updateStatusMutation.isPending}
-                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '12px' }}>
                                                     Reject
                                                 </Button>
                                                 <Button size="small" variant="contained" color="success"
                                                     startIcon={<ApproveIcon sx={{ fontSize: 14 }} />}
                                                     onClick={() => handleApprove(task._id)}
                                                     disabled={updateStatusMutation.isPending}
-                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '12px' }}>
                                                     Approve
                                                 </Button>
                                             </Box>
@@ -350,7 +350,7 @@ export const TaskApproval: React.FC = () => {
                                     <TableRow>
                                         <TableCell align="center" colSpan={8} sx={{ py: 6 }}>
                                             <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-                                                <LinearProgress sx={{ width: 200, borderRadius: 2 }} />
+                                                <LinearProgress sx={{ width: 200, borderRadius: '12px' }} />
                                                 <Typography variant="caption" color="text.secondary">Loading approval queue…</Typography>
                                             </Box>
                                         </TableCell>
@@ -386,10 +386,10 @@ export const TaskApproval: React.FC = () => {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Box display="flex" gap={0.5} flexWrap="wrap">
+                                                <Box display="flex" gap={0.5} flexWrap="wrap">
                                                         {(task.assignedTo as User[])?.slice(0, 3).map(u => (
                                                             <Tooltip key={u._id} title={u.name || u.username}>
-                                                                <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#667eea' }}>
+                                                                <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1' }}>
                                                                     {(u.name || u.username || '?').charAt(0).toUpperCase()}
                                                                 </Avatar>
                                                             </Tooltip>
@@ -436,7 +436,7 @@ export const TaskApproval: React.FC = () => {
                                                     <Box display="flex" gap={0.5} alignItems="center">
                                                         <Tooltip title="View task details">
                                                             <IconButton size="small" onClick={() => setDetailTask(task)}
-                                                                sx={{ color: '#667eea', bgcolor: '#f0f0ff', '&:hover': { bgcolor: '#667eea', color: 'white' } }}>
+                                                                sx={{ color: '#667eea', bgcolor: '#f0f0ff', '&:hover': { bgcolor: '#6366f1', color: 'white' } }}>
                                                                 <InfoIcon sx={{ fontSize: 16 }} />
                                                             </IconButton>
                                                         </Tooltip>
@@ -444,14 +444,14 @@ export const TaskApproval: React.FC = () => {
                                                             startIcon={<ApproveIcon sx={{ fontSize: 14 }} />}
                                                             onClick={() => handleApprove(task._id)}
                                                             disabled={updateStatusMutation.isPending}
-                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: '12px' }}>
                                                             Approve
                                                         </Button>
                                                         <Button size="small" variant="contained" color="error"
                                                             startIcon={<RejectIcon sx={{ fontSize: 14 }} />}
                                                             onClick={() => setRejectTask(task)}
                                                             disabled={updateStatusMutation.isPending}
-                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                                            sx={{ fontSize: '0.72rem', py: 0.4, px: 1.2, textTransform: 'none', fontWeight: 700, borderRadius: '12px' }}>
                                                             Reject
                                                         </Button>
                                                     </Box>
@@ -490,7 +490,7 @@ export const TaskApproval: React.FC = () => {
                 </DialogTitle>
                 <Divider />
                 <DialogContent sx={{ pt: 2.5 }}>
-                    <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+                    <Alert severity="warning" sx={{ mb: 2, borderRadius: '12px' }}>
                         The employee will be able to rework and resubmit this task.
                     </Alert>
                     <Typography variant="body2" color="text.secondary" mb={1.5}>
@@ -501,13 +501,13 @@ export const TaskApproval: React.FC = () => {
                         placeholder="Explain what needs to be fixed or improved..."
                         value={rejectReason}
                         onChange={e => setRejectReason(e.target.value)}
-                        size="small" sx={{ borderRadius: 2 }} />
+                        size="small" sx={{ borderRadius: '12px' }} />
                 </DialogContent>
                 <DialogActions sx={{ p: 2, gap: 1 }}>
                     <Button onClick={() => { setRejectTask(null); setRejectReason(''); }} color="inherit" sx={{ fontWeight: 600, textTransform: 'none' }}>Cancel</Button>
                     <Button variant="contained" color="error" onClick={handleRejectConfirm}
                         disabled={updateStatusMutation.isPending}
-                        sx={{ fontWeight: 700, textTransform: 'none', borderRadius: 2, px: 3 }}>
+                        sx={{ fontWeight: 700, textTransform: 'none', borderRadius: '12px', px: 3 }}>
                         Confirm Rejection
                     </Button>
                 </DialogActions>
@@ -516,7 +516,7 @@ export const TaskApproval: React.FC = () => {
             {/* ── Detail Dialog ── */}
             <Dialog open={!!detailTask} onClose={() => setDetailTask(null)} maxWidth="sm" fullWidth
                 PaperProps={{ sx: { borderRadius: 3 } }}>
-                <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', py: 2 }}>
+                <DialogTitle sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', py: 2 }}>
                     <Typography fontWeight={800} lineHeight={1}>Task Details</Typography>
                     <Typography variant="caption" sx={{ opacity: 0.8 }}>{detailTask?.title}</Typography>
                 </DialogTitle>
@@ -539,7 +539,7 @@ export const TaskApproval: React.FC = () => {
 
                             <Divider sx={{ my: 2 }} />
                             <Typography variant="subtitle2" fontWeight={700} mb={1}>Description</Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ bgcolor: '#f8fafc', p: 1.5, borderRadius: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ bgcolor: '#f8fafc', p: 1.5, borderRadius: '12px' }}>
                                 {detailTask.description || 'No description provided.'}
                             </Typography>
 
@@ -554,7 +554,7 @@ export const TaskApproval: React.FC = () => {
                                     </Box>
                                     {detailTask.checklist.map(item => (
                                         <Box key={item.id} display="flex" alignItems="center" gap={1.5} py={0.75}
-                                            sx={{ borderRadius: 1, bgcolor: item.completed ? '#f0fdf4' : 'transparent', px: 1, mb: 0.25 }}>
+                                            sx={{ borderRadius: '8px', bgcolor: item.completed ? '#f0fdf4' : 'transparent', px: 1, mb: 0.25 }}>
                                             <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: item.completed ? '#10b981' : '#e2e8f0', flexShrink: 0 }} />
                                             <Typography variant="body2" sx={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'text.disabled' : 'inherit' }}>
                                                 {item.text}
@@ -571,7 +571,7 @@ export const TaskApproval: React.FC = () => {
                                     {[...detailTask.comments].reverse().slice(0, 4).map(c => (
                                         <Box key={c.id} sx={{ mb: 1.5 }}>
                                             <Box display="flex" alignItems="center" gap={1} mb={0.25}>
-                                                <Avatar sx={{ width: 22, height: 22, fontSize: '0.6rem', bgcolor: '#667eea' }}>
+                                                <Avatar sx={{ width: 22, height: 22, fontSize: '0.6rem', bgcolor: '#6366f1' }}>
                                                     {(c.userName || '?').charAt(0).toUpperCase()}
                                                 </Avatar>
                                                 <Typography variant="caption" fontWeight={700}>{c.userName}</Typography>
@@ -595,13 +595,13 @@ export const TaskApproval: React.FC = () => {
                         <>
                             <Button variant="contained" color="error"
                                 onClick={() => { setRejectTask(detailTask); setDetailTask(null); }}
-                                sx={{ fontWeight: 700, textTransform: 'none', borderRadius: 2 }}>
+                                sx={{ fontWeight: 700, textTransform: 'none', borderRadius: '12px' }}>
                                 Reject
                             </Button>
                             <Button variant="contained" color="success"
                                 onClick={() => { handleApprove(detailTask._id); setDetailTask(null); }}
                                 disabled={updateStatusMutation.isPending}
-                                sx={{ fontWeight: 700, textTransform: 'none', borderRadius: 2, px: 3 }}>
+                                sx={{ fontWeight: 700, textTransform: 'none', borderRadius: '12px', px: 3 }}>
                                 Approve ✅
                             </Button>
                         </>
@@ -613,3 +613,8 @@ export const TaskApproval: React.FC = () => {
 };
 
 export default TaskApproval;
+
+
+
+
+

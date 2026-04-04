@@ -183,23 +183,23 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b' }}>
                 <Typography variant="h6" fontWeight="bold">Bulk Import Clients (Excel)</Typography>
                 <IconButton onClick={onClose} sx={{ color: 'white' }}><CloseIcon /></IconButton>
             </DialogTitle>
             <DialogContent sx={{ p: 4, bgcolor: '#fbfbfb' }}>
                 <Box sx={{ display: 'flex', gap: 2, mb: 4, justifyContent: 'center', mt: 2 }}>
-                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadTemplate} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadTemplate} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600 }}>
                         Download Template
                     </Button>
-                    <Button variant="contained" component="label" startIcon={<CloudUploadIcon />} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #FF602E 0%, #E25529 100%)' }}>
+                    <Button variant="contained" component="label" startIcon={<CloudUploadIcon />} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #FF602E 0%, #E25529 100%)' }}>
                         Upload Excel File
                         <input type="file" hidden accept=".xlsx, .xls, .csv" onChange={handleFileUpload} />
                     </Button>
                 </Box>
 
                 {importResults && (
-                    <Box sx={{ mt: 2, p: 3, bgcolor: '#fff4f4', borderRadius: 2, border: '1px solid #fecaca' }}>
+                    <Box sx={{ mt: 2, p: 3, bgcolor: '#fff4f4', borderRadius: '12px', border: '1px solid #fecaca' }}>
                         <Typography variant="h6" color="error" fontWeight="bold" gutterBottom>
                             Import Completed with Errors
                         </Typography>
@@ -208,7 +208,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         </Typography>
                         
                         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>Failure Reasons:</Typography>
-                        <Box sx={{ maxHeight: 200, overflowY: 'auto', bgcolor: '#fff', p: 2, borderRadius: 1, border: '1px solid #fecaca' }}>
+                        <Box sx={{ maxHeight: 200, overflowY: 'auto', bgcolor: '#fff', p: 2, borderRadius: '8px', border: '1px solid #fecaca' }}>
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
                                 {importResults.errors.map((err, i) => (
                                     <li key={i}><Typography variant="body2" color="error">{err}</Typography></li>
@@ -217,7 +217,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         </Box>
                         
                         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-                            <Button variant="contained" color="error" onClick={handleReset} sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
+                            <Button variant="contained" color="error" onClick={handleReset} sx={{ textTransform: 'none', borderRadius: '12px', fontWeight: 600 }}>
                                 Upload Fixed File
                             </Button>
                         </Box>
@@ -227,7 +227,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                 {!importResults && fileName && previewData.length > 0 && (
                     <Box>
                         <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>Previewing: <b>{fileName}</b> ({previewData.length} records)</Typography>
-                        <TableContainer component={Paper} sx={{ maxHeight: 400, borderRadius: 2 }}>
+                        <TableContainer component={Paper} sx={{ maxHeight: 400, borderRadius: '12px' }}>
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>
@@ -271,7 +271,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         variant="contained" 
                         onClick={handleConfirmImport} 
                         disabled={previewData.length === 0 || bulkImportMutation.isPending}
-                        sx={{ px: 4, borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', fontWeight: 600 }}
+                        sx={{ px: 4, borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
                     >
                         {bulkImportMutation.isPending ? 'Importing...' : `Import ${previewData.length} Clients`}
                     </Button>
@@ -280,3 +280,8 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
         </Dialog>
     );
 };
+
+
+
+
+

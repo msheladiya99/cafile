@@ -37,8 +37,8 @@ export const TransferAllTask: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{ 
                 p: 2, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', 
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -120,7 +120,7 @@ export const TransferAllTask: React.FC = () => {
                                 py: 1,
                                 fontSize: '0.9rem',
                                 '&:hover': { bgcolor: '#29b6f6' },
-                                borderRadius: 1.5,
+                                borderRadius: '8px',
                                 textTransform: 'none'
                             }}
                         >
@@ -134,3 +134,8 @@ export const TransferAllTask: React.FC = () => {
 };
 
 export default TransferAllTask;
+
+
+
+
+

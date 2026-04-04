@@ -3,7 +3,6 @@ import {
     Typography,
     Box,
     Paper,
-    Button,
     Table,
     TableBody,
     TableCell,
@@ -24,7 +23,6 @@ import {
     Snackbar,
     Card,
     CardContent,
-    CircularProgress,
     useMediaQuery,
     useTheme,
     Stack,
@@ -48,6 +46,7 @@ import type { ClientGroup } from '../../services/clientGroupService';
 import type { Reminder, Client } from '../../types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@mui/material';
+import { CommonButton } from '../../components/common/UIComponents';
 
 interface ReminderDialogProps {
     open: boolean;
@@ -234,21 +233,14 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
                 </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 1 }}>
-                <Button onClick={onClose} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
-                <Button
+                <CommonButton onClick={onClose} variant="text" sx={{ color: 'text.secondary' }}>Cancel</CommonButton>
+                <CommonButton
                     onClick={handleSubmit}
                     variant="contained"
-                    sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        px: 4,
-                        py: 1,
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600
-                    }}
+                    sx={{ px: 4 }}
                 >
                     {initialData ? 'Update Reminder' : 'Create Reminder'}
-                </Button>
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );
@@ -410,27 +402,18 @@ export const Reminders: React.FC = () => {
                     gap={2}
                     width={{ xs: '100%', md: 'auto' }}
                 >
-                    <Button
+                    <CommonButton
                         variant="outlined"
-                        startIcon={notifying ? <CircularProgress size={20} /> : <NotificationsIcon />}
-                        disabled={notifying}
+                        startIcon={<NotificationsIcon />}
+                        loading={notifying}
                         onClick={handleSendNotifications}
                         sx={{
-                            width: { xs: '100%', sm: 'auto' },
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            borderColor: '#667eea',
-                            color: '#667eea',
-                            '&:hover': {
-                                borderColor: '#764ba2',
-                                backgroundColor: 'rgba(102, 126, 234, 0.04)'
-                            }
+                            width: { xs: '100%', sm: 'auto' }
                         }}
                     >
                         Send Manual Alerts
-                    </Button>
-                    <Button
+                    </CommonButton>
+                    <CommonButton
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => {
@@ -439,16 +422,11 @@ export const Reminders: React.FC = () => {
                         }}
                         sx={{
                             width: { xs: '100%', sm: 'auto' },
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            borderRadius: 2,
-                            px: 3,
-                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                            textTransform: 'none',
-                            fontWeight: 600
+                            px: 3
                         }}
                     >
                         Create Reminder
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Box>
 
@@ -457,7 +435,7 @@ export const Reminders: React.FC = () => {
                     <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" gap={2}>
-                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(102, 126, 234, 0.1)', color: '#667eea' }}>
+                                <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: 'rgba(102, 126, 234, 0.1)', color: '#667eea' }}>
                                     <ScheduleIcon />
                                 </Box>
                                 <Box>
@@ -472,7 +450,7 @@ export const Reminders: React.FC = () => {
                     <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" gap={2}>
-                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(244, 67, 54, 0.1)', color: '#f44336' }}>
+                                <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: 'rgba(244, 67, 54, 0.1)', color: '#f44336' }}>
                                     <HistoryIcon />
                                 </Box>
                                 <Box>
@@ -487,7 +465,7 @@ export const Reminders: React.FC = () => {
                     <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                         <CardContent>
                             <Box display="flex" alignItems="center" gap={2}>
-                                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#4caf50' }}>
+                                <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#4caf50' }}>
                                     <CheckCircleIcon />
                                 </Box>
                                 <Box>
@@ -627,19 +605,19 @@ export const Reminders: React.FC = () => {
                                                 label={reminder.reminderType}
                                                 size="small"
                                                 variant="outlined"
-                                                sx={{ fontWeight: 600, borderRadius: 1.5 }}
+                                                sx={{ fontWeight: 600, borderRadius: '8px' }}
                                             />
                                             <Chip
                                                 label={reminder.priority}
                                                 size="small"
                                                 color={getPriorityColor(reminder.priority)}
-                                                sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: '0.65rem' }}
+                                                sx={{ fontWeight: 700, borderRadius: '8px', fontSize: '0.65rem' }}
                                             />
                                             <Chip
                                                 label={reminder.status}
                                                 size="small"
                                                 color={getStatusColor(reminder.status, reminder.dueDate)}
-                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                                sx={{ fontWeight: 700, borderRadius: '8px' }}
                                             />
                                         </Stack>
 
@@ -701,7 +679,7 @@ export const Reminders: React.FC = () => {
                                                 label={reminder.reminderType}
                                                 size="small"
                                                 variant="outlined"
-                                                sx={{ fontWeight: 600, borderRadius: 1.5 }}
+                                                sx={{ fontWeight: 600, borderRadius: '8px' }}
                                             />
                                         </TableCell>
                                         <TableCell>
@@ -709,7 +687,7 @@ export const Reminders: React.FC = () => {
                                                 label={reminder.priority}
                                                 size="small"
                                                 color={getPriorityColor(reminder.priority)}
-                                                sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: '0.65rem' }}
+                                                sx={{ fontWeight: 700, borderRadius: '8px', fontSize: '0.65rem' }}
                                             />
                                         </TableCell>
                                         <TableCell>
@@ -717,7 +695,7 @@ export const Reminders: React.FC = () => {
                                                 label={reminder.status}
                                                 size="small"
                                                 color={getStatusColor(reminder.status, reminder.dueDate)}
-                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                                sx={{ fontWeight: 700, borderRadius: '8px' }}
                                             />
                                         </TableCell>
                                         <TableCell align="right">
@@ -795,11 +773,16 @@ export const Reminders: React.FC = () => {
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px' }}>
                     {snackbar.message}
                 </Alert>
             </Snackbar>
         </Box>
     );
 };
+
+
+
+
+
 

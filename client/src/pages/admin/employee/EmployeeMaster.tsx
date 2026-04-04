@@ -8,7 +8,6 @@ import {
     Paper,
     Typography,
     TextField,
-    Button,
     Switch,
     Tabs,
     Tab,
@@ -51,6 +50,7 @@ import {
     Visibility,
     VisibilityOff,
 } from '@mui/icons-material';
+import { CommonButton } from '../../../components/common/UIComponents';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -100,7 +100,7 @@ const FormRow = ({ label, required, children, helperText }: FormRowProps) => {
             {helperText && (
                 <Box sx={{ display: 'flex', mt: 0.5 }}>
                     <Box sx={{ width: { xs: 0, sm: '160px' }, display: { xs: 'none', sm: 'block' }, flexShrink: 0 }} />
-                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, display: 'inline-block', fontSize: '0.75rem' }}>
+                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: '8px', display: 'inline-block', fontSize: '0.75rem' }}>
                         <strong style={{ marginRight: '4px' }}>NOTE!</strong> {helperText}
                     </Typography>
                 </Box>
@@ -116,7 +116,7 @@ interface SectionProps {
 }
 
 const Section = ({ title, icon, children }: SectionProps) => (
-    <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+    <Paper variant="outlined" sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden' }}>
         <Box sx={{ bgcolor: '#f5f7fa', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
             {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
             <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
@@ -572,22 +572,22 @@ export const EmployeeMaster: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: { xs: 2.5, sm: 3 }, py: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: { xs: 2.5, sm: 3 }, py: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
                     <Typography variant="h5" fontWeight="700" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, letterSpacing: '-0.01em' }}>{isEditMode ? 'Edit Employee' : 'Employee Master'}</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-end' } }}>
-                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/master')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
+                        <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/master')} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Add New
-                        </Button>
-                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenDesignationDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenDesignationDialog(true)} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Designation
-                        </Button>
-                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             List
-                        </Button>
-                        <Button variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenFieldMasterDialog(true)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, py: 0.8, boxShadow: 'none', fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => setOpenFieldMasterDialog(true)} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Field Master
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fff', px: 1 }}>
@@ -610,7 +610,7 @@ export const EmployeeMaster: React.FC = () => {
                 </Box>
             </Paper>
 
-            <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', mb: 3 }}>
+            <Paper elevation={0} variant="outlined" sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', mb: 3 }}>
                 <CustomTabPanel value={tabValue} index={0}>
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: 3, pb: 0, pt: 2 }}>
 
@@ -618,16 +618,16 @@ export const EmployeeMaster: React.FC = () => {
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
                                 <FormRow label="First Name" required>
-                                    <TextField name="firstName" value={formData.firstName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="firstName" value={formData.firstName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Last Name" required>
-                                    <TextField name="lastName" value={formData.lastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="lastName" value={formData.lastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Employee ID / Code">
-                                    <TextField name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="System ID will be used if blank" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="System ID will be used if blank" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Address" required>
-                                    <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Country" required>
                                     <Select
@@ -637,7 +637,7 @@ export const EmployeeMaster: React.FC = () => {
                                         name="country"
                                         value={formData.country}
                                         onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.country ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.country ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Country...</MenuItem>
                                         <MenuItem value="India">India</MenuItem>
@@ -651,7 +651,7 @@ export const EmployeeMaster: React.FC = () => {
                                         name="state"
                                         value={formData.state}
                                         onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.state ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.state ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a State...</MenuItem>
                                         <MenuItem value="Gujarat">Gujarat</MenuItem>
@@ -666,7 +666,7 @@ export const EmployeeMaster: React.FC = () => {
                                         name="city"
                                         value={formData.city}
                                         onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.city ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.city ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a City...</MenuItem>
                                         <MenuItem value="Surat">Surat</MenuItem>
@@ -674,19 +674,19 @@ export const EmployeeMaster: React.FC = () => {
                                     </Select>
                                 </FormRow>
                                 <FormRow label="Postal Code" required>
-                                    <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Mobile Number" required>
-                                    <TextField name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Phone">
-                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Email" required helperText='Separate multiple Email with "," (Comma).'>
-                                    <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Birth Date" required>
-                                    <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                             </Section>
 
@@ -712,7 +712,7 @@ export const EmployeeMaster: React.FC = () => {
                                                 role: roleMap[val] || 'STAFF'
                                             }));
                                         }}
-                                        sx={{ borderRadius: 1.5, color: formData.designation ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.designation ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Designation</MenuItem>
                                         <MenuItem value="Admin">Admin</MenuItem>
@@ -722,22 +722,22 @@ export const EmployeeMaster: React.FC = () => {
                                     </Select>
                                 </FormRow>
                                 <FormRow label="Joining Date" required>
-                                    <TextField name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    <TextField name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                                 <FormRow label="Monthly Salary">
-                                    <TextField name="monthlySalary" value={formData.monthlySalary} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="monthlySalary" value={formData.monthlySalary} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Rate Per Hours">
-                                    <TextField name="ratePerHours" value={formData.ratePerHours} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="ratePerHours" value={formData.ratePerHours} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Leaving Date">
-                                    <TextField name="leavingDate" value={formData.leavingDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    <TextField name="leavingDate" value={formData.leavingDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                                 <FormRow label="Reference">
-                                    <TextField name="reference" value={formData.reference} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="reference" value={formData.reference} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Description">
-                                    <TextField name="description" value={formData.description} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="description" value={formData.description} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Status">
                                     <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: formData.status ? '#e8f5e9' : '#ffebee', borderRadius: 4, px: 2, height: 32, width: 'fit-content' }}>
@@ -753,7 +753,7 @@ export const EmployeeMaster: React.FC = () => {
                         <Box sx={{ flex: 10 }}>
                             <Section title="Profile Image" icon={<ImageIcon />}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                                    <Box sx={{ width: 150, height: 150, border: '1px solid #e2e8f0', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
+                                    <Box sx={{ width: 150, height: 150, border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f8fafc', overflow: 'hidden' }}>
                                         {profileImagePreview ? (
                                             <img
                                                 src={profileImagePreview}
@@ -766,8 +766,8 @@ export const EmployeeMaster: React.FC = () => {
                                         )}
                                     </Box>
                                     <Box sx={{ width: '100%' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden' }}>
-                                            <Button component="label" size="small" sx={{ bgcolor: '#f1f5f9', color: '#333', borderRadius: 0, textTransform: 'none', px: 2, borderRight: '1px solid #ccc', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+                                            <CommonButton component="label" size="small" sx={{ bgcolor: '#f1f5f9', color: '#333', borderRadius: 0, px: 2, borderRight: '1px solid #ccc', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                                                 Choose File
                                                 <input
                                                     type="file"
@@ -781,12 +781,12 @@ export const EmployeeMaster: React.FC = () => {
                                                         }
                                                     }}
                                                 />
-                                            </Button>
+                                            </CommonButton>
                                             <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', flex: 1 }}>
                                                 {profileImageFile ? profileImageFile.name : 'No file chosen'}
                                             </Typography>
                                         </Box>
-                                        <Typography variant="caption" sx={{ mt: 1, bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, display: 'inline-block' }}>
+                                        <Typography variant="caption" sx={{ mt: 1, bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: '8px', display: 'inline-block' }}>
                                             <strong style={{ marginRight: '4px' }}>NOTE!</strong> JPEG or PNG Image Format only
                                         </Typography>
                                     </Box>
@@ -795,22 +795,22 @@ export const EmployeeMaster: React.FC = () => {
 
                             <Section title="Emergency Contact Detail" icon={<EmergencyIcon />}>
                                 <FormRow label="First Name">
-                                    <TextField name="emergencyFirstName" value={formData.emergencyFirstName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="emergencyFirstName" value={formData.emergencyFirstName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Last Name">
-                                    <TextField name="emergencyLastName" value={formData.emergencyLastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="emergencyLastName" value={formData.emergencyLastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Relationship">
-                                    <TextField name="emergencyRelationship" value={formData.emergencyRelationship} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="emergencyRelationship" value={formData.emergencyRelationship} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Phone">
-                                    <TextField name="emergencyPhone" value={formData.emergencyPhone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="emergencyPhone" value={formData.emergencyPhone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
 
                             <Section title="Login Information" icon={<LoginIcon />}>
                                 <FormRow label="Username" required>
-                                    <TextField name="username" value={formData.username} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="username" value={formData.username} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Password" required>
                                     <TextField
@@ -820,7 +820,7 @@ export const EmployeeMaster: React.FC = () => {
                                         onChange={handleInputChange}
                                         fullWidth
                                         size="small"
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         InputProps={{
                                             endAdornment: (
                                                 <InputAdornment position="end">
@@ -840,7 +840,7 @@ export const EmployeeMaster: React.FC = () => {
                                         onChange={handleInputChange}
                                         fullWidth
                                         size="small"
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         error={formData.password !== formData.confirmPassword && !!formData.confirmPassword}
                                         helperText={formData.password !== formData.confirmPassword && !!formData.confirmPassword ? 'Passwords do not match' : ''}
                                     />
@@ -848,16 +848,16 @@ export const EmployeeMaster: React.FC = () => {
 
                                 {isEditMode && (
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                                        <Button
+                                        <CommonButton
                                             variant="outlined"
                                             color="warning"
                                             size="small"
                                             onClick={handleResetPassword}
-                                            disabled={resetPasswordMutation.isPending}
-                                            sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                                            loading={resetPasswordMutation.isPending}
+                                            sx={{ borderRadius: '8px' }}
                                         >
-                                            {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password & Send Email'}
-                                        </Button>
+                                            Reset Password & Send Email
+                                        </CommonButton>
                                     </Box>
                                 )}
                             </Section>
@@ -869,7 +869,7 @@ export const EmployeeMaster: React.FC = () => {
                                         if (!label || !label.trim()) return null;
                                         return (
                                             <FormRow key={num} label={label}>
-                                                <TextField name={`field${num}`} value={formData[`field${num}` as keyof typeof formData] as string} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                                <TextField name={`field${num}`} value={formData[`field${num}` as keyof typeof formData] as string} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                             </FormRow>
                                         );
                                     })}
@@ -878,12 +878,12 @@ export const EmployeeMaster: React.FC = () => {
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 3, pb: 3, px: isMobile ? 3 : 0 }}>
-                        <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#667eea', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' }, height: 44 }}>
+                        <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', boxShadow: 'none', height: 44 }}>
                             {isEditMode ? 'Update' : 'Save'}
-                        </Button>
-                        <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </CustomTabPanel>
 
@@ -915,7 +915,7 @@ export const EmployeeMaster: React.FC = () => {
                                             displayEmpty
                                             value={documentForm.documentType}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, documentType: e.target.value }))}
-                                            sx={{ borderRadius: 1.5, bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
+                                            sx={{ borderRadius: '8px', bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
                                         >
                                             <MenuItem value="" disabled>Choose a Document...</MenuItem>
                                             <MenuItem value="PAN Card">PAN Card</MenuItem>
@@ -938,7 +938,7 @@ export const EmployeeMaster: React.FC = () => {
                                             value={documentForm.date}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, date: e.target.value }))}
                                             fullWidth size="small"
-                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }}
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }}
                                         />
                                     </FormRow>
                                 </Box>
@@ -954,7 +954,7 @@ export const EmployeeMaster: React.FC = () => {
                                             displayEmpty
                                             value={documentForm.documentFormat}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, documentFormat: e.target.value }))}
-                                            sx={{ borderRadius: 1.5, bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
+                                            sx={{ borderRadius: '8px', bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
                                         >
                                             <MenuItem value="Original Hard Copy">Original Hard Copy</MenuItem>
                                             <MenuItem value="Xerox Hard Copy">Xerox Hard Copy</MenuItem>
@@ -964,11 +964,11 @@ export const EmployeeMaster: React.FC = () => {
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Upload to Drive">
-                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', bgcolor: '#fff' }}>
-                                            <Button component="label" size="small" sx={{ bgcolor: '#f1f5f9', color: '#333', borderRadius: 0, textTransform: 'none', px: 2, borderRight: '1px solid #ccc', fontSize: '0.8rem', whiteSpace: 'nowrap', height: '36px' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', bgcolor: '#fff' }}>
+                                            <CommonButton component="label" size="small" sx={{ bgcolor: '#f1f5f9', color: '#333', borderRadius: 0, px: 2, borderRight: '1px solid #ccc', fontSize: '0.8rem', whiteSpace: 'nowrap', height: '36px' }}>
                                                 {documentForm.driveFileId ? 'Change File' : 'Choose File'}
                                                 <input type="file" hidden onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
-                                            </Button>
+                                            </CommonButton>
                                             <Typography variant="caption" sx={{ px: 2, color: selectedFile ? 'text.primary' : 'text.secondary', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {selectedFile ? selectedFile.name : (documentForm.fileName || 'No file chosen')}
                                             </Typography>
@@ -999,7 +999,7 @@ export const EmployeeMaster: React.FC = () => {
                                             displayEmpty
                                             value={documentForm.fileLocation}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, fileLocation: e.target.value }))}
-                                            sx={{ borderRadius: 1.5, color: documentForm.fileLocation ? 'inherit' : '#aaa', bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
+                                            sx={{ borderRadius: '8px', color: documentForm.fileLocation ? 'inherit' : '#aaa', bgcolor: '#fafafa', '& .MuiSelect-select': { py: 1 } }}
                                         >
                                             <MenuItem value="" disabled>Choose a File Location...</MenuItem>
                                             <MenuItem value="Office Cabin 1">Office Cabin 1</MenuItem>
@@ -1016,7 +1016,7 @@ export const EmployeeMaster: React.FC = () => {
                                             displayEmpty
                                             value={documentForm.fileLabel}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, fileLabel: e.target.value }))}
-                                            sx={{ borderRadius: 1.5, color: documentForm.fileLabel ? 'inherit' : '#aaa', bgcolor: '#f8fafc', '& .MuiSelect-select': { py: 1 } }}
+                                            sx={{ borderRadius: '8px', color: documentForm.fileLabel ? 'inherit' : '#aaa', bgcolor: '#f8fafc', '& .MuiSelect-select': { py: 1 } }}
                                         >
                                             <MenuItem value="" disabled>Select an Option</MenuItem>
                                             <MenuItem value="A">A</MenuItem>
@@ -1035,7 +1035,7 @@ export const EmployeeMaster: React.FC = () => {
                                             size="small"
                                             value={documentForm.description}
                                             onChange={(e) => setDocumentForm(prev => ({ ...prev, description: e.target.value }))}
-                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }}
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }}
                                         />
                                     </FormRow>
                                 </Box>
@@ -1060,16 +1060,16 @@ export const EmployeeMaster: React.FC = () => {
                         </Box>
 
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, mt: 2 }}>
-                            <Button
+                            <CommonButton
                                 variant="contained"
                                 onClick={handleSaveDocument}
-                                disabled={isUploading}
+                                loading={isUploading}
                                 fullWidth={isMobile}
-                                sx={{ px: 4, bgcolor: '#667eea', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                                sx={{ px: 4, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', boxShadow: 'none' }}
                             >
-                                {isUploading ? 'Uploading...' : (editingDocumentId ? 'Update Document' : 'Add Document')}
-                            </Button>
-                            <Button 
+                                {editingDocumentId ? 'Update Document' : 'Add Document'}
+                            </CommonButton>
+                            <CommonButton 
                                 variant="contained" 
                                 fullWidth={isMobile}
                                 onClick={() => {
@@ -1077,20 +1077,20 @@ export const EmployeeMaster: React.FC = () => {
                                     setSelectedFile(null);
                                     setEditingDocumentId(null);
                                 }} 
-                                sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
+                                sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
                             >
                                 Cancel
-                            </Button>
+                            </CommonButton>
                         </Box>
 
                         {/* Document List Table */}
                         <Box sx={{ mt: 4 }}>
-                            <Box sx={{ bgcolor: '#667eea', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '4px 4px 0 0' }}>
+                            <Box sx={{ bgcolor: '#6366f1', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '4px 4px 0 0' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <FormatListBulletedIcon fontSize="small" />
                                     <Typography variant="body2" fontWeight={600}>Document List</Typography>
                                 </Box>
-                                <IconButton size="small" sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
+                                <IconButton size="small" sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, borderRadius: '8px' }}>
                                     <GetAppIcon fontSize="small" />
                                 </IconButton>
                             </Box>
@@ -1102,7 +1102,7 @@ export const EmployeeMaster: React.FC = () => {
                             ) : isMobile ? (
                                 <Stack spacing={2} sx={{ p: 2, border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
                                     {documents.map((doc) => (
-                                        <Paper key={doc.id || doc._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                                        <Paper key={doc.id || doc._id} variant="outlined" sx={{ p: 1.5, borderRadius: '12px' }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{doc.documentType}</Typography>
                                                 <Chip label={doc.documentFormat} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
@@ -1121,9 +1121,9 @@ export const EmployeeMaster: React.FC = () => {
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                                     {doc.driveWebViewLink && (
-                                                        <Button size="small" variant="outlined" component="a" href={doc.driveWebViewLink} target="_blank" startIcon={<Visibility sx={{ fontSize: 16 }} />} sx={{ textTransform: 'none', height: 28, fontSize: '0.75rem' }}>
+                                                        <CommonButton size="small" variant="outlined" component="a" href={doc.driveWebViewLink} target="_blank" startIcon={<Visibility sx={{ fontSize: 16 }} />} sx={{ height: 28, fontSize: '0.75rem' }}>
                                                             View
-                                                        </Button>
+                                                        </CommonButton>
                                                     )}
                                                 </Box>
                                                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1183,12 +1183,12 @@ export const EmployeeMaster: React.FC = () => {
 
                     {/* Tab Footer Actions */}
                     <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 3, pb: 3, px: isMobile ? 3 : 0 }}>
-                        <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
+                        <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: '8px', boxShadow: 'none', height: 44 }}>
                             {isEditMode ? 'Update' : 'Save'}
-                        </Button>
-                        <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </CustomTabPanel>
 
@@ -1210,12 +1210,12 @@ export const EmployeeMaster: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="PF Number">
-                                        <TextField fullWidth size="small" name="pfNumber" value={formData.pfNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="pfNumber" value={formData.pfNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="ESI Number">
-                                        <TextField fullWidth size="small" name="esiNumber" value={formData.esiNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="esiNumber" value={formData.esiNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                             </Box>
@@ -1224,12 +1224,12 @@ export const EmployeeMaster: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Aadhar Number">
-                                        <TextField fullWidth size="small" name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Driving Licence No">
-                                        <TextField fullWidth size="small" name="drivingLicenceNo" value={formData.drivingLicenceNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="drivingLicenceNo" value={formData.drivingLicenceNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                             </Box>
@@ -1239,10 +1239,10 @@ export const EmployeeMaster: React.FC = () => {
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Passport">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <Checkbox size="small" checked={!!formData.passport} onChange={(e) => handleSwitchChange('passport', e.target.checked)} sx={{ p: 0.5, color: '#94a3b8' }} />
                                             </Box>
-                                            <TextField fullWidth size="small" name="passportNo" value={formData.passportNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField fullWidth size="small" name="passportNo" value={formData.passportNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1253,17 +1253,17 @@ export const EmployeeMaster: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Passport Authority">
-                                        <TextField fullWidth size="small" name="passportAuthority" value={formData.passportAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="passportAuthority" value={formData.passportAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Passport Date">
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <TextField type="date" fullWidth size="small" name="passportDateFrom" value={formData.passportDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="passportDateFrom" value={formData.passportDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                             <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#e2e8f0', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                 <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.8rem' }}>To</Typography>
                                             </Box>
-                                            <TextField type="date" fullWidth size="small" name="passportDateTo" value={formData.passportDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="passportDateTo" value={formData.passportDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1274,10 +1274,10 @@ export const EmployeeMaster: React.FC = () => {
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Visa">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <Checkbox size="small" checked={!!formData.visa} onChange={(e) => handleSwitchChange('visa', e.target.checked)} sx={{ p: 0.5, color: '#94a3b8' }} />
                                             </Box>
-                                            <TextField fullWidth size="small" name="visaNo" value={formData.visaNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField fullWidth size="small" name="visaNo" value={formData.visaNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1288,17 +1288,17 @@ export const EmployeeMaster: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Visa Authority">
-                                        <TextField fullWidth size="small" name="visaAuthority" value={formData.visaAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="visaAuthority" value={formData.visaAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="Visa Date">
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <TextField type="date" fullWidth size="small" name="visaDateFrom" value={formData.visaDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="visaDateFrom" value={formData.visaDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                             <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#e2e8f0', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                 <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.8rem' }}>To</Typography>
                                             </Box>
-                                            <TextField type="date" fullWidth size="small" name="visaDateTo" value={formData.visaDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="visaDateTo" value={formData.visaDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1309,10 +1309,10 @@ export const EmployeeMaster: React.FC = () => {
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="EID">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Box sx={{ bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <Checkbox size="small" checked={!!formData.eid} onChange={(e) => handleSwitchChange('eid', e.target.checked)} sx={{ p: 0.5, color: '#94a3b8' }} />
                                             </Box>
-                                            <TextField fullWidth size="small" name="eidNo" value={formData.eidNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField fullWidth size="small" name="eidNo" value={formData.eidNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1323,17 +1323,17 @@ export const EmployeeMaster: React.FC = () => {
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="EID Authority">
-                                        <TextField fullWidth size="small" name="eidAuthority" value={formData.eidAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                        <TextField fullWidth size="small" name="eidAuthority" value={formData.eidAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                     </FormRow>
                                 </Box>
                                 <Box sx={{ flex: 1 }}>
                                     <FormRow label="EID Date">
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <TextField type="date" fullWidth size="small" name="eidDateFrom" value={formData.eidDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="eidDateFrom" value={formData.eidDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                             <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#e2e8f0', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                 <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.8rem' }}>To</Typography>
                                             </Box>
-                                            <TextField type="date" fullWidth size="small" name="eidDateTo" value={formData.eidDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                            <TextField type="date" fullWidth size="small" name="eidDateTo" value={formData.eidDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', bgcolor: '#fff' } }} />
                                         </Box>
                                     </FormRow>
                                 </Box>
@@ -1352,12 +1352,12 @@ export const EmployeeMaster: React.FC = () => {
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                         <Box sx={{ flex: 1 }}>
                                             <FormRow label="Bank Name">
-                                                <TextField fullWidth size="small" name="bankName" value={formData.bankName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                                <TextField fullWidth size="small" name="bankName" value={formData.bankName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                             </FormRow>
                                         </Box>
                                         <Box sx={{ flex: 1 }}>
                                             <FormRow label="Bank Branch">
-                                                <TextField fullWidth size="small" name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                                <TextField fullWidth size="small" name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                             </FormRow>
                                         </Box>
                                     </Box>
@@ -1366,12 +1366,12 @@ export const EmployeeMaster: React.FC = () => {
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                         <Box sx={{ flex: 1 }}>
                                             <FormRow label="Account Holder Name" helperText=""> {/* Just to keep the height matched if needed, but not showing it here */}
-                                                <TextField fullWidth size="small" name="accountHolderName" value={formData.accountHolderName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                                <TextField fullWidth size="small" name="accountHolderName" value={formData.accountHolderName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                             </FormRow>
                                         </Box>
                                         <Box sx={{ flex: 1 }}>
                                             <FormRow label="Bank A/C No">
-                                                <TextField fullWidth size="small" name="accountNo" value={formData.accountNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                                <TextField fullWidth size="small" name="accountNo" value={formData.accountNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                             </FormRow>
                                         </Box>
                                     </Box>
@@ -1380,7 +1380,7 @@ export const EmployeeMaster: React.FC = () => {
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 4 } }}>
                                         <Box sx={{ flex: 1 }}>
                                             <FormRow label="Bank IFS Code">
-                                                <TextField fullWidth size="small" name="ifscCode" value={formData.ifscCode || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, bgcolor: '#fff' } }} />
+                                                <TextField fullWidth size="small" name="ifscCode" value={formData.ifscCode || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: '#fff' } }} />
                                             </FormRow>
                                         </Box>
                                         <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' } }} />
@@ -1390,12 +1390,12 @@ export const EmployeeMaster: React.FC = () => {
                         </Box>
 
                         <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
-                            <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
+                            <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: '8px', boxShadow: 'none', height: 44 }}>
                                 {isEditMode ? 'Update' : 'Save'}
-                            </Button>
-                            <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
+                            </CommonButton>
+                            <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                                 Cancel
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Box>
                 </CustomTabPanel>
@@ -1424,7 +1424,7 @@ export const EmployeeMaster: React.FC = () => {
                                     Start Single Task Approval Allow Popup Access
                                 </Typography>
                                 <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                                    <Box sx={{ width: 28, height: 28, bgcolor: '#667eea', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)' }}>
+                                    <Box sx={{ width: 28, height: 28, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)' }}>
                                         <Box component="svg" viewBox="0 0 24 24" fill="white" sx={{ width: 18, height: 18 }}>
                                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                         </Box>
@@ -1437,12 +1437,12 @@ export const EmployeeMaster: React.FC = () => {
                         </Box>
 
                         <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
-                            <Button variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', height: 44 }}>
+                            <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: '8px', boxShadow: 'none', height: 44 }}>
                                 {isEditMode ? 'Update' : 'Save'}
-                            </Button>
-                            <Button variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: 1.5, textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
+                            </CommonButton>
+                            <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
                                 Cancel
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Box>
                 </CustomTabPanel>
@@ -1454,13 +1454,13 @@ export const EmployeeMaster: React.FC = () => {
                 onClose={() => setOpenDesignationDialog(false)}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
+                PaperProps={{ sx: { borderRadius: '12px', overflow: 'hidden' } }}
             >
-                <Box sx={{ bgcolor: '#667eea', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
+                <Box sx={{ bgcolor: '#6366f1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
                     <Typography variant="subtitle1" fontWeight={600}>
                         {editingDesignationId ? 'Edit Designation' : 'Add Designation'}
                     </Typography>
-                    <IconButton size="small" onClick={() => setOpenDesignationDialog(false)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
+                    <IconButton size="small" onClick={() => setOpenDesignationDialog(false)} sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
                         <CloseIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -1476,7 +1476,7 @@ export const EmployeeMaster: React.FC = () => {
                                 size="small"
                                 value={designationForm.name}
                                 onChange={(e) => setDesignationForm(prev => ({ ...prev, name: e.target.value }))}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
 
@@ -1491,7 +1491,7 @@ export const EmployeeMaster: React.FC = () => {
                                 size="small"
                                 value={designationForm.description}
                                 onChange={(e) => setDesignationForm(prev => ({ ...prev, description: e.target.value }))}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
 
@@ -1516,27 +1516,27 @@ export const EmployeeMaster: React.FC = () => {
                         </Box>
 
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                            <Button variant="contained" onClick={handleSaveDesignation} sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}>
+                            <CommonButton variant="contained" onClick={handleSaveDesignation} sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', px: 3, boxShadow: 'none' }}>
                                 {editingDesignationId ? 'Update' : 'Save'}
-                            </Button>
-                            <Button variant="contained" sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#e56156' } }} onClick={() => { setOpenDesignationDialog(false); handleAddNewDesignation(); }}>
+                            </CommonButton>
+                            <CommonButton variant="contained" sx={{ bgcolor: '#ff6c60', color: 'white', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#e56156' } }} onClick={() => { setOpenDesignationDialog(false); handleAddNewDesignation(); }}>
                                 Cancel
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Box>
 
                     {/* List Section */}
                     <Box>
-                        <Box sx={{ bgcolor: '#667eea', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ bgcolor: '#6366f1', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <FormatListBulletedIcon fontSize="small" />
                                 <Typography variant="body2" fontWeight={600}>List</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Button size="small" onClick={handleAddNewDesignation} sx={{ color: 'white', textTransform: 'none', fontSize: '0.8rem', minWidth: 'auto', p: 0 }}>
+                                <CommonButton size="small" onClick={handleAddNewDesignation} sx={{ color: 'white', fontSize: '0.8rem', minWidth: 'auto', p: 0 }}>
                                     ADD NEW
-                                </Button>
-                                <IconButton size="small" sx={{ bgcolor: 'white', color: '#667eea', p: 0.3, borderRadius: 1, '&:hover': { bgcolor: '#f1f5f9' } }}>
+                                </CommonButton>
+                                <IconButton size="small" sx={{ bgcolor: 'white', color: '#667eea', p: 0.3, borderRadius: '8px', '&:hover': { bgcolor: '#f1f5f9' } }}>
                                     <GetAppIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
                             </Box>
@@ -1562,10 +1562,10 @@ export const EmployeeMaster: React.FC = () => {
                                             </TableCell>
                                             <TableCell align="center" sx={{ borderBottom: '1px solid #e2e8f0', p: 0.5 }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                                                    <IconButton size="small" onClick={() => handleEditDesignation(row.id)} sx={{ bgcolor: '#667eea', color: 'white', p: 0.5, borderRadius: 1, '&:hover': { bgcolor: '#5568d3' } }}>
+                                                    <IconButton size="small" onClick={() => handleEditDesignation(row.id)} sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', p: 0.5, borderRadius: '8px' }}>
                                                         <EditIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
-                                                    <IconButton size="small" onClick={() => handleDeleteDesignation(row.id)} sx={{ bgcolor: '#ff6c60', color: 'white', p: 0.5, borderRadius: 1, '&:hover': { bgcolor: '#e56156' } }}>
+                                                    <IconButton size="small" onClick={() => handleDeleteDesignation(row.id)} sx={{ bgcolor: '#ff6c60', color: 'white', p: 0.5, borderRadius: '8px', '&:hover': { bgcolor: '#e56156' } }}>
                                                         <DeleteIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
                                                 </Box>
@@ -1585,13 +1585,13 @@ export const EmployeeMaster: React.FC = () => {
                 onClose={() => setOpenFieldMasterDialog(false)}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 2, overflow: 'hidden' } }}
+                PaperProps={{ sx: { borderRadius: '12px', overflow: 'hidden' } }}
             >
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
                     <Typography variant="subtitle1" fontWeight={600}>
                         Employee Extra Fields
                     </Typography>
-                    <IconButton size="small" onClick={() => setOpenFieldMasterDialog(false)} sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}>
+                    <IconButton size="small" onClick={() => setOpenFieldMasterDialog(false)} sx={{ color: 'inherit', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}>
                         <CloseIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -1616,7 +1616,7 @@ export const EmployeeMaster: React.FC = () => {
                                                 value={tempFieldLabels[`field${num}` as keyof typeof tempFieldLabels]}
                                                 onChange={(e) => setTempFieldLabels(prev => ({ ...prev, [`field${num}`]: e.target.value }))}
                                                 placeholder={`Enter label for Field ${num}`}
-                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                             />
                                         </TableCell>
                                     </TableRow>
@@ -1626,20 +1626,20 @@ export const EmployeeMaster: React.FC = () => {
                     </TableContainer>
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                        <Button
+                        <CommonButton
                             variant="contained"
                             onClick={handleSaveFieldLabels}
-                            sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', px: 4, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', px: 4, boxShadow: 'none' }}
                         >
                             Save
-                        </Button>
-                        <Button
+                        </CommonButton>
+                        <CommonButton
                             variant="contained"
                             onClick={() => setOpenFieldMasterDialog(false)}
-                            sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 4, boxShadow: 'none', '&:hover': { bgcolor: '#e56156' } }}
+                            sx={{ bgcolor: '#ff6c60', color: 'white', px: 4, boxShadow: 'none', '&:hover': { bgcolor: '#e56156' } }}
                         >
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </DialogContent>
             </Dialog>
@@ -1657,3 +1657,8 @@ export const EmployeeMaster: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

@@ -13,7 +13,6 @@ import {
     IconButton,
     Chip,
     InputAdornment,
-    Button,
     Tooltip,
     useTheme,
     useMediaQuery
@@ -30,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/adminService';
+import { CommonButton } from '../../components/common/UIComponents';
 import type { Client } from '../../types';
 
 export const FileRegister: React.FC = () => {
@@ -109,7 +109,7 @@ export const FileRegister: React.FC = () => {
                     label={`${totalFiles} Files Tracked`}
                     color="primary"
                     variant="outlined"
-                    sx={{ fontWeight: 'bold', borderRadius: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-start' } }}
+                    sx={{ fontWeight: 'bold', borderRadius: '12px', width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-start' } }}
                 />
             </Box>
 
@@ -126,17 +126,17 @@ export const FileRegister: React.FC = () => {
                                 <SearchIcon color="action" />
                             </InputAdornment>
                         ),
-                        sx: { borderRadius: 2 }
+                        sx: { borderRadius: '12px' }
                     }}
                     size="small"
                 />
-                <Button
+                <CommonButton
                     variant="outlined"
                     startIcon={<FilterIcon />}
-                    sx={{ borderRadius: 2, whiteSpace: 'nowrap', width: { xs: '100%', md: 'auto' } }}
+                    sx={{ borderRadius: '12px', whiteSpace: 'nowrap', width: { xs: '100%', md: 'auto' } }}
                 >
                     Filters
-                </Button>
+                </CommonButton>
             </Paper>
 
             {/* Content Switcher: Mobile Cards vs Desktop Table */}
@@ -152,7 +152,7 @@ export const FileRegister: React.FC = () => {
                                         <Typography fontWeight="700" color="#1e293b" fontSize="1rem">{client.name}</Typography>
                                         <Typography variant="caption" color="text.secondary" display="block">{client.email}</Typography>
                                         {client.panNumber && (
-                                            <Chip label={client.panNumber} size="small" variant="outlined" sx={{ borderRadius: 1, fontWeight: 600, mt: 0.5, fontSize: '0.7rem', height: 20 }} />
+                                            <Chip label={client.panNumber} size="small" variant="outlined" sx={{ borderRadius: '8px', fontWeight: 600, mt: 0.5, fontSize: '0.7rem', height: 20 }} />
                                         )}
                                     </Box>
                                     {!isEditing && (
@@ -211,26 +211,27 @@ export const FileRegister: React.FC = () => {
                                 {/* Edit Actions */}
                                 {isEditing && (
                                     <Box display="flex" gap={2} mt={2} pt={2} borderTop="1px solid #e2e8f0">
-                                        <Button
+                                        <CommonButton
                                             fullWidth
                                             variant="contained"
                                             color="primary"
                                             startIcon={<SaveIcon />}
                                             onClick={() => handleSave(client._id)}
-                                            sx={{ borderRadius: 2 }}
+                                            loading={updateClientMutation.isPending}
+                                            sx={{ borderRadius: '12px' }}
                                         >
                                             Save
-                                        </Button>
-                                        <Button
+                                        </CommonButton>
+                                        <CommonButton
                                             fullWidth
                                             variant="outlined"
                                             color="error"
                                             startIcon={<CancelIcon />}
                                             onClick={handleCancel}
-                                            sx={{ borderRadius: 2 }}
+                                            sx={{ borderRadius: '12px' }}
                                         >
                                             Cancel
-                                        </Button>
+                                        </CommonButton>
                                     </Box>
                                 )}
                             </Paper>
@@ -260,7 +261,7 @@ export const FileRegister: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                             {client.panNumber ? (
-                                                <Chip label={client.panNumber} size="small" variant="outlined" sx={{ borderRadius: 1, fontWeight: 600 }} />
+                                                <Chip label={client.panNumber} size="small" variant="outlined" sx={{ borderRadius: '8px', fontWeight: 600 }} />
                                             ) : (
                                                 <Typography variant="caption" color="text.disabled">N/A</Typography>
                                             )}
@@ -348,3 +349,8 @@ export const FileRegister: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

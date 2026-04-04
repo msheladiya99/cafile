@@ -122,8 +122,8 @@ export const AllTaskUpdate: React.FC = () => {
         <Box sx={{ p: 0 }}>
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -199,7 +199,7 @@ export const AllTaskUpdate: React.FC = () => {
                                         <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
                                     ))}
                                 </Select>
-                                <IconButton size="small" sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#7cb342' } }}>
+                                <IconButton size="small" sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#7cb342' } }}>
                                     <TaskDetailsIcon fontSize="small" />
                                 </IconButton>
                             </Box>
@@ -297,3 +297,8 @@ export const AllTaskUpdate: React.FC = () => {
 };
 
 export default AllTaskUpdate;
+
+
+
+
+

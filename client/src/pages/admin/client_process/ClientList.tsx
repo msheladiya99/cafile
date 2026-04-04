@@ -43,7 +43,7 @@ import { masterService } from '../../../services/masterService';
 import type { Client } from '../../../types';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import type { ITStatus } from '../../../services/masterService';
-import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../../components/common/UIComponents';
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
 import toast from 'react-hot-toast';
 
 
@@ -239,35 +239,23 @@ export const ClientList: React.FC = () => {
             <PageHeader
                 title="Client List"
                 actions={
-                    <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1.5, 
-                        flexWrap: 'wrap',
-                        width: { xs: '100%', sm: 'auto' },
-                        '& .MuiButton-root': { 
-                            flex: { xs: 1, sm: 'none' },
-                            whiteSpace: 'nowrap'
-                        }
-                    }}>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {selectedClients.length > 0 && (
-                            <Button 
-                                variant="contained" 
-                                size="small" 
+                            <Button
+                                variant="contained"
+                                size="small"
                                 color="error"
                                 onClick={handleBulkDelete}
                                 disabled={bulkDeleteMutation.isPending}
                                 startIcon={<DeleteIcon />}
-                                sx={{ textTransform: 'none', borderRadius: 1.5, fontWeight: 600, boxShadow: 'none' }}
+                                sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, boxShadow: 'none', fontSize: '0.85rem' }}
                             >
                                 Delete Selected ({selectedClients.length})
                             </Button>
                         )}
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
-                            Add New
-                        </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600 }}>
-                            List
-                        </Button>
+                        <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ boxShadow: 'none' }}>
+                            + Add New
+                        </CommonButton>
                     </Box>
                 }
             />
@@ -288,7 +276,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterGroup}
                                     onChange={(e) => setFilterGroup(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterGroup ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
@@ -305,7 +293,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterClient}
                                     onChange={(e) => setFilterClient(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterClient ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
@@ -320,7 +308,7 @@ export const ClientList: React.FC = () => {
                                         size="small"
                                         value={filterSearchType}
                                         onChange={(e) => setFilterSearchType(e.target.value)}
-                                        sx={{ width: '150px', borderRadius: 1.5 }}
+                                        sx={{ width: '150px', borderRadius: '8px' }}
                                         inputProps={{ 'aria-label': 'Search Category' }}
                                     >
                                         <MenuItem value="name">By Name</MenuItem>
@@ -334,7 +322,7 @@ export const ClientList: React.FC = () => {
                                         size="small"
                                         value={filterSearchText}
                                         onChange={(e) => setFilterSearchText(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         inputProps={{ 'aria-label': 'Search Text' }}
                                     />
                                 </Box>
@@ -347,7 +335,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterMasterType}
                                     onChange={(e) => setFilterMasterType(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterMasterType ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterMasterType ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Master Type' }}
                                 >
                                     <MenuItem value="">Choose a Master type...</MenuItem>
@@ -368,7 +356,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterItStatus}
                                     onChange={(e) => setFilterItStatus(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterItStatus ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterItStatus ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'IT Status' }}
                                 >
                                     <MenuItem value="">Choose a IT Status...</MenuItem>
@@ -385,7 +373,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterSubMaster}
                                     onChange={(e) => setFilterSubMaster(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterSubMaster ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Sub Master' }}
                                 >
                                     <MenuItem value="">Choose a Sub Master...</MenuItem>
@@ -401,7 +389,7 @@ export const ClientList: React.FC = () => {
                                     size="small"
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value)}
-                                    sx={{ borderRadius: 1.5 }}
+                                    sx={{ borderRadius: '8px' }}
                                     inputProps={{ 'aria-label': 'Client Status' }}
                                 >
                                     <MenuItem value="all">All Client</MenuItem>
@@ -417,7 +405,7 @@ export const ClientList: React.FC = () => {
                                     displayEmpty
                                     value={filterFYear}
                                     onChange={(e) => setFilterFYear(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterFYear ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterFYear ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Financial Year' }}
                                 >
                                     <MenuItem value="">Choose a Period...</MenuItem>
@@ -430,7 +418,7 @@ export const ClientList: React.FC = () => {
                 </Section>
 
                 {/* List Section */}
-                <Section title="List" icon={<FormatListBulletedIcon />}>
+                <Section title="List" icon={<FormatListBulletedIcon />} noPad>
                     {isMobile ? (
                         <Stack spacing={2}>
                             {isLoading ? (
@@ -439,7 +427,7 @@ export const ClientList: React.FC = () => {
                                 <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>No clients found.</Box>
                             ) : (
                                 filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((client) => (
-                                    <Card key={client._id} variant="outlined" sx={{ borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}>
+                                    <Card key={client._id} variant="outlined" sx={{ borderRadius: '12px', borderColor: 'divider', overflow: 'hidden' }}>
                                         <CardContent sx={{ p: 2 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                                 <Box>
@@ -448,12 +436,12 @@ export const ClientList: React.FC = () => {
                                                     </Typography>
                                                     <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                                                         {client.username && (
-                                                            <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 700, bgcolor: '#eef2ff', px: 0.8, py: 0.2, borderRadius: 1 }}>
+                                                            <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 700, bgcolor: '#eef2ff', px: 0.8, py: 0.2, borderRadius: '8px' }}>
                                                                 ID: {client.username}
                                                             </Typography>
                                                         )}
                                                         {client.clientCode && (
-                                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, bgcolor: '#f1f5f9', px: 0.8, py: 0.2, borderRadius: 1 }}>
+                                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, bgcolor: '#f1f5f9', px: 0.8, py: 0.2, borderRadius: '8px' }}>
                                                                 Code: {client.clientCode}
                                                             </Typography>
                                                         )}
@@ -462,7 +450,7 @@ export const ClientList: React.FC = () => {
                                                 <Box sx={{
                                                     px: 1,
                                                     py: 0.3,
-                                                    borderRadius: 1,
+                                                    borderRadius: '8px',
                                                     fontSize: '0.65rem',
                                                     fontWeight: 700,
                                                     textTransform: 'uppercase',
@@ -594,7 +582,7 @@ export const ClientList: React.FC = () => {
                                                         alignItems: 'center',
                                                         px: 1.5,
                                                         py: 0.5,
-                                                        borderRadius: 2,
+                                                        borderRadius: '12px',
                                                         fontSize: '0.75rem',
                                                         fontWeight: 600,
                                                         bgcolor: client.status !== false ? '#e8f5e9' : '#ffebee',
@@ -670,7 +658,7 @@ export const ClientList: React.FC = () => {
                 open={confirmDialog.open} 
                 onClose={closeConfirm}
                 PaperProps={{
-                    sx: { borderRadius: 2, minWidth: { xs: 300, sm: 400 } }
+                    sx: { borderRadius: '12px', minWidth: { xs: 300, sm: 400 } }
                 }}
             >
                 <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>{confirmDialog.title}</DialogTitle>
@@ -687,3 +675,8 @@ export const ClientList: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+

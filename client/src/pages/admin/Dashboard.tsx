@@ -7,8 +7,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
+import { CommonButton } from '../../components/common/UIComponents';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -131,7 +131,6 @@ export const AdminDashboard: React.FC = () => {
                 <meta name="description" content="View firm statistics, management tasks, and filing deadlines on your MyCAFile dashboard." />
             </Helmet>
 
-            {/* Header Section */}
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
                 <Box>
                     <Typography variant="h4" component="h1" fontWeight="800" sx={{ background: 'linear-gradient(45deg, #2c3e50, #3498db)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -141,15 +140,36 @@ export const AdminDashboard: React.FC = () => {
                         Welcome to your CA Admin Panel
                     </Typography>
                 </Box>
-                <Chip
-                    label="FY 2025-26"
-                    sx={{
-                        fontWeight: 'bold',
-                        bgcolor: '#1e3a5f',
-                        color: '#ffffff',
-                        '& .MuiChip-label': { color: '#ffffff' }
-                    }}
-                />
+                <Box display="flex" gap={2} alignItems="center">
+                    <CommonButton
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => navigate('/admin/clients')}
+                        sx={{
+                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            color: 'white',
+                            borderRadius: '12px',
+                            px: 3,
+                            py: 0.8,
+                            boxShadow: 'none',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255,255,255,0.3)',
+                                boxShadow: 'none',
+                            },
+                        }}
+                    >
+                        Add New Client
+                    </CommonButton>
+                    <Chip
+                        label="FY 2025-26"
+                        sx={{
+                            fontWeight: 'bold',
+                            bgcolor: '#1e3a5f',
+                            color: '#ffffff',
+                            '& .MuiChip-label': { color: '#ffffff' }
+                        }}
+                    />
+                </Box>
             </Box>
 
             {/* Top Stats Row */}
@@ -389,7 +409,7 @@ export const AdminDashboard: React.FC = () => {
                                                                     color: deadlineInfo.color,
                                                                 },
                                                                 boxShadow: `0 4px 12px ${deadlineInfo.color}60`,
-                                                                borderRadius: 2
+                                                                borderRadius: '12px'
                                                             }
                                                         }
                                                     }}
@@ -427,7 +447,7 @@ export const AdminDashboard: React.FC = () => {
                             </Box>
                             <Box display="flex" alignItems="center" justifyContent="space-between">
                                 <Box display="flex" alignItems="center" gap={1}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#667eea' }} />
+                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }} />
                                     <Typography variant="caption" fontSize="0.7rem" color="text.secondary">GSTR-1</Typography>
                                 </Box>
                                 <Typography variant="caption" fontSize="0.7rem" fontWeight={600} color="text.primary">
@@ -488,9 +508,9 @@ export const AdminDashboard: React.FC = () => {
                                 onClick={() => navigate('/admin/clients')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
-                                    borderRadius: 2.5,
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    color: 'white',
+                                    borderRadius: 3.5,
+                                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                                    color: '#1e293b',
                                     cursor: 'pointer',
                                     transition: 'all 0.3s ease',
                                     display: 'flex',
@@ -506,8 +526,8 @@ export const AdminDashboard: React.FC = () => {
                             >
                                 <Box sx={{
                                     p: 1,
-                                    borderRadius: 2,
-                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '12px',
+                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
@@ -525,7 +545,7 @@ export const AdminDashboard: React.FC = () => {
                                 onClick={() => navigate('/admin/reminders')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
-                                    borderRadius: 2.5,
+                                    borderRadius: 3.5,
                                     background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
                                     color: 'white',
                                     cursor: 'pointer',
@@ -543,8 +563,8 @@ export const AdminDashboard: React.FC = () => {
                             >
                                 <Box sx={{
                                     p: 1,
-                                    borderRadius: 2,
-                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '12px',
+                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
@@ -563,7 +583,7 @@ export const AdminDashboard: React.FC = () => {
                                 onClick={() => navigate('/admin/upload')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
-                                    borderRadius: 2.5,
+                                    borderRadius: 3.5,
                                     background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                                     color: 'white',
                                     cursor: 'pointer',
@@ -581,8 +601,8 @@ export const AdminDashboard: React.FC = () => {
                             >
                                 <Box sx={{
                                     p: 1,
-                                    borderRadius: 2,
-                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '12px',
+                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
@@ -601,7 +621,7 @@ export const AdminDashboard: React.FC = () => {
                                 onClick={() => navigate('/admin/billing')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
-                                    borderRadius: 2.5,
+                                    borderRadius: 3.5,
                                     background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
                                     color: 'white',
                                     cursor: 'pointer',
@@ -619,8 +639,8 @@ export const AdminDashboard: React.FC = () => {
                             >
                                 <Box sx={{
                                     p: 1,
-                                    borderRadius: 2,
-                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '12px',
+                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
@@ -670,22 +690,22 @@ export const AdminDashboard: React.FC = () => {
                                     onChange={(e) => setNewTask(e.target.value)}
                                     size="small"
                                     InputProps={{
-                                        sx: { borderRadius: 2, fontSize: '0.9rem' }
+                                        sx: { borderRadius: '12px', fontSize: '0.9rem' }
                                     }}
                                 />
-                                <Button
+                                <CommonButton
                                     variant="contained"
                                     type="submit"
                                     aria-label="Add task"
                                     sx={{
-                                        borderRadius: 2,
+                                        borderRadius: '12px',
                                         minWidth: 'auto',
                                         px: 2,
                                         background: 'linear-gradient(45deg, #11998e 30%, #38ef7d 90%)',
                                     }}
                                 >
                                     <AddIcon />
-                                </Button>
+                                </CommonButton>
                             </Box>
                         </form>
 
@@ -702,7 +722,7 @@ export const AdminDashboard: React.FC = () => {
                                             px: 1.5,
                                             py: 0.5,
                                             mb: 1,
-                                            borderRadius: 2,
+                                            borderRadius: '12px',
                                             bgcolor: task.completed ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,1)',
                                             border: '1px solid',
                                             borderColor: 'divider',
@@ -753,3 +773,8 @@ export const AdminDashboard: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+
