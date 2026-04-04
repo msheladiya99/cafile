@@ -6,16 +6,11 @@ import {
     TextField,
     Typography,
     Alert,
-    CircularProgress,
-    InputAdornment,
     Checkbox,
     FormControlLabel,
     Link,
-    Stack
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import Person from '@mui/icons-material/Person';
-import Lock from '@mui/icons-material/Lock';
+import { Building2, Shield, Users, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { adminService } from '../services/adminService';
@@ -27,6 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import { getSubdomain } from '../utils/subdomain';
+import { CommonButton } from '../components/common/UIComponents';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -136,26 +132,7 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <Box sx={{
-            height: '100vh',
-            width: '100vw',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            position: 'relative',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)',
-            '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                bgcolor: 'rgba(255,255,255,0.1)',
-                zIndex: 1
-            }
-        }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', width: '100vw' }}>
             <Helmet>
                 <title>Login | My CA File - CA Office Management Portal</title>
                 <meta name="robots" content="noindex, nofollow" />
@@ -163,268 +140,203 @@ export const Login: React.FC = () => {
                 <meta name="description" content="Login to your My CA File workspace. Secure access for CA firms, staff, and clients." />
             </Helmet>
 
-            {/* Blurred Background Shapes with Animation - Light Mode Pastels */}
-            <Box sx={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '100%',
-                height: '100%',
-                zIndex: 0,
-            }}>
-                <motion.div
-                    animate={{
-                        x: [0, 80, 0],
-                        y: [0, -40, 0],
-                        scale: [1, 1.1, 1],
-                    }}
-                    transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ position: 'absolute', top: '10%', left: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, #fbcfe8 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.6 }}
-                />
-                <motion.div
-                    animate={{
-                        x: [0, -60, 0],
-                        y: [0, 100, 0],
-                        scale: [1.1, 1, 1.1],
-                    }}
-                    transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ position: 'absolute', bottom: '10%', right: '15%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, #dbeafe 0%, transparent 70%)', filter: 'blur(100px)', opacity: 0.6 }}
-                />
-                <motion.div
-                    animate={{
-                        x: [0, 40, -40, 0],
-                        y: [0, 40, 40, 0],
-                    }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ position: 'absolute', top: '35%', left: '35%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, #f3e8ff 0%, transparent 70%)', filter: 'blur(90px)', opacity: 0.5 }}
-                />
-            </Box>
-
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8 }}
-                style={{ zIndex: 10, width: '100%', maxWidth: 440, padding: '20px' }}
+            {/* Left Panel */}
+            <Box
+                sx={{
+                    display: { xs: 'none', lg: 'flex' },
+                    width: '50%',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    p: { lg: 6, xl: 8 },
+                    background: 'linear-gradient(135deg, hsl(213, 56%, 24%) 0%, hsl(213, 56%, 16%) 100%)',
+                }}
             >
-                <Box sx={{ position: 'relative', textAlign: 'center' }}>
-                    {/* Top Avatar */}
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: -65,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: 130,
-                            height: 130,
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '1px solid rgba(0, 0, 0, 0.05)',
-                            zIndex: 2,
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-                        }}
-                    >
-                        <Person sx={{ fontSize: 70, color: '#1e293b', opacity: 0.8 }} />
+                <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                        <Building2 size={40} color="hsl(210, 40%, 98%)" />
+                        <Typography variant="h4" fontWeight="bold" sx={{ color: 'hsl(210, 40%, 98%)' }}>
+                            {firm?.firmName || (subdomain ? subdomain.toUpperCase() : 'Kumar & Associates')}
+                        </Typography>
                     </Box>
-
-                    {/* Login Card */}
-                    <Box
-                        sx={{
-                            pt: 11,
-                            pb: 5,
-                            px: 5,
-                            borderRadius: 10,
-                            bgcolor: 'rgba(255, 255, 255, 0.7)',
-                            backdropFilter: 'blur(30px)',
-                            WebkitBackdropFilter: 'blur(30px)',
-                            border: '1px solid rgba(255, 255, 255, 0.8)',
-                            boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
-                            color: '#1e293b'
-                        }}
-                    >
-                        {/* Firm/Workspace Info */}
-                        <Box mb={4} sx={{ textAlign: 'center' }}>
-                            <Typography variant="body2" component="p" sx={{ letterSpacing: 2, opacity: 0.5, fontSize: '0.85rem', textTransform: 'uppercase', mb: 0.5 }}>
-                                Workspace
-                            </Typography>
-                            <Typography 
-                                variant="h5" 
-                                component="h1" 
-                                fontWeight="800" 
-                                sx={{ 
-                                    letterSpacing: -0.5, 
-                                    color: '#1e1b4b',
-                                    fontSize: '1.5rem' // Ensure consistent visual size
-                                }}
-                            >
-                                {firm?.firmName || (subdomain ? subdomain.toUpperCase() : 'MY CA FILE')}
-                            </Typography>
-                        </Box>
-
-                        {error && (
-                            <Alert severity="error" sx={{ mb: 4, borderRadius: 2, bgcolor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
-                                {error}
-                            </Alert>
-                        )}
-
-                        <Box component="form" onSubmit={handleSubmit} noValidate>
-                            <Stack spacing={2.5}>
-                                <TextField
-                                    fullWidth
-                                    placeholder="Email ID"
-                                    variant="standard"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    disabled={loading}
-                                    inputProps={{
-                                        'aria-label': 'Email ID',
-                                    }}
-                                    InputProps={{
-                                        disableUnderline: true,
-                                        startAdornment: (
-                                            <InputAdornment position="start" sx={{ m: 0 }}>
-                                                <Box sx={{ bgcolor: '#f1f5f9', p: 1.8, mr: 0, display: 'flex', alignSelf: 'stretch', alignItems: 'center' }}>
-                                                    <Person fontSize="small" sx={{ color: '#64748b' }} />
-                                                </Box>
-                                            </InputAdornment>
-                                        ),
-                                        sx: {
-                                            bgcolor: 'rgba(248, 250, 252, 0.8)',
-                                            color: '#1e293b',
-                                            height: 54,
-                                            paddingLeft: 0,
-                                            overflow: 'hidden',
-                                            fontSize: '1rem',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: 2,
-                                            '& input': { px: 2 },
-                                            '& input::placeholder': { color: '#94a3b8', opacity: 1 },
-                                        }
-                                    }}
-                                />
-
-                                <TextField
-                                    fullWidth
-                                    placeholder="Password"
-                                    variant="standard"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    disabled={loading}
-                                    inputProps={{
-                                        'aria-label': 'Password',
-                                    }}
-                                    InputProps={{
-                                        disableUnderline: true,
-                                        startAdornment: (
-                                            <InputAdornment position="start" sx={{ m: 0 }}>
-                                                <Box sx={{ bgcolor: '#f1f5f9', p: 1.8, mr: 0, display: 'flex', alignSelf: 'stretch', alignItems: 'center' }}>
-                                                    <Lock fontSize="small" sx={{ color: '#64748b' }} />
-                                                </Box>
-                                            </InputAdornment>
-                                        ),
-                                        sx: {
-                                            bgcolor: 'rgba(248, 250, 252, 0.8)',
-                                            color: '#1e293b',
-                                            height: 54,
-                                            paddingLeft: 0,
-                                            overflow: 'hidden',
-                                            fontSize: '1rem',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: 2,
-                                            '& input': { px: 2 },
-                                            '& input::placeholder': { color: '#94a3b8', opacity: 1 },
-                                        }
-                                    }}
-                                />
-
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                                    <FormControlLabel
-                                        control={<Checkbox size="small" sx={{ color: '#cbd5e1', '&.Mui-checked': { color: '#6366f1' } }} />}
-                                        label={<Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.8rem' }}>Remember me</Typography>}
-                                    />
-                                    <Link href="#" sx={{ color: '#6366f1', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>
-                                        Forgot Password?
-                                    </Link>
-                                </Box>
-                            </Stack>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: -4 }}>
-                                <Box
-                                    component="button"
-                                    type="submit"
-                                    disabled={loading}
-                                    sx={{
-                                        border: 'none',
-                                        outline: 'none',
-                                        width: 180,
-                                        height: 52,
-                                        bgcolor: loading ? '#4f46e5' : '#6366f1',
-                                        borderRadius: '0 0 26px 26px',
-                                        boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
-                                        cursor: loading ? 'not-allowed' : 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        transition: 'all 0.3s ease',
-                                        zIndex: 100,
-                                        position: 'relative',
-                                        '&:hover': {
-                                            bgcolor: '#4f46e5',
-                                            transform: loading ? 'none' : 'translateY(3px)',
-                                        }
-                                    }}
-                                >
-                                    {loading ? (
-                                        <CircularProgress size={24} sx={{ color: 'white' }} />
-                                    ) : (
-                                        <Typography
-                                            sx={{ 
-                                                color: '#ffffff', 
-                                                fontSize: '1rem', 
-                                                fontWeight: 900, 
-                                                letterSpacing: '2px',
-                                                textTransform: 'uppercase',
-                                            }}
-                                        >
-                                            LOGIN
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    {/* Shadow effect - Closely tucked behind the main button */}
-                    <Box sx={{ 
-                        mx: 'auto', 
-                        width: '45%', 
-                        height: 30, 
-                        bgcolor: 'rgba(99, 102, 241, 0.08)', 
-                        borderRadius: '0 0 30px 30px',
-                        border: '1px solid rgba(99, 102, 241, 0.1)',
-                        borderTop: 'none',
-                        mt: -1,
-                        zIndex: -1,
-                    }} />
+                    <Typography sx={{ color: 'hsl(210, 40%, 80%)', fontSize: '1.125rem', mt: 0.5 }}>
+                        Chartered Accountants
+                    </Typography>
                 </Box>
 
-                {loading && (
-                    <Typography variant="body2" align="center" sx={{ mt: 10, color: '#64748b', opacity: 0.8, fontWeight: 500 }}>
-                        {loadingMessage}
+                <Box sx={{ '& > *:not(:last-child)': { mb: 4 }, mt: -8 }}>
+                    <Typography variant="h5" fontWeight="600" sx={{ color: 'hsl(210, 40%, 98%)', mb: 3 }}>
+                        Trusted Financial Excellence Since 1995
                     </Typography>
-                )}
-            </motion.div>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {[
+                            { icon: Shield, text: 'Secure & Compliant Platform' },
+                            { icon: Users, text: 'Manage Clients Effortlessly' },
+                            { icon: BarChart3, text: 'Real-time Financial Insights' },
+                        ].map(({ icon: Icon, text }) => (
+                            <Box key={text} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{
+                                    height: 48,
+                                    width: 48,
+                                    borderRadius: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: 'hsla(210, 40%, 98%, 0.1)'
+                                }}>
+                                    <Icon size={24} color="hsl(210, 40%, 98%)" />
+                                </Box>
+                                <Typography sx={{ fontSize: '1.125rem', color: 'hsl(210, 40%, 90%)' }}>
+                                    {text}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
 
-            {/* SEO Text Footer (Transparent) */}
-            <Box sx={{ position: 'fixed', bottom: 10, width: '100%', textAlign: 'center', opacity: 0.5, zIndex: 0 }}>
-                <Typography variant="caption" sx={{ color: '#64748b' }}>
-                    &copy; {new Date().getFullYear()} MyCAFile - Secure CA Office Management Portal
+                <Typography sx={{ fontSize: '0.875rem', color: 'hsl(210, 40%, 60%)' }}>
+                    © {new Date().getFullYear()} {firm?.firmName || 'Kumar & Associates'}. All rights reserved.
                 </Typography>
+            </Box>
+
+            {/* Right Panel */}
+            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: { xs: 4, sm: 8 }, bgcolor: '#ffffff' }}>
+                <Box sx={{ width: '100%', maxWidth: 440 }}>
+                    {/* Mobile Branding */}
+                    <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1.5, mb: 4 }}>
+                        <Building2 size={32} color="#0f172a" />
+                        <Typography variant="h5" fontWeight="bold" color="#0f172a">
+                            {firm?.firmName || (subdomain ? subdomain.toUpperCase() : 'Kumar & Associates')}
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h3" fontWeight="bold" sx={{ color: '#0f172a', mb: 1, fontSize: '2rem', letterSpacing: '-0.02em' }}>
+                            Welcome Back
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#64748b', fontSize: '1rem', mt: 1 }}>
+                            Sign in to your account to continue
+                        </Typography>
+                    </Box>
+                    
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+
+                    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                        <Box>
+                            <Typography component="label" htmlFor="email1" sx={{ display: 'block', mb: 1, fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
+                                Email Address
+                            </Typography>
+                            <TextField
+                                id="email1"
+                                fullWidth
+                                placeholder="you@company.com"
+                                variant="outlined"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                disabled={loading}
+                                size="small"
+                                InputProps={{
+                                    sx: { 
+                                        borderRadius: '6px', 
+                                        height: 44, 
+                                        bgcolor: '#ffffff',
+                                        '& fieldset': { borderColor: '#e2e8f0' },
+                                        '&:hover fieldset': { borderColor: '#cbd5e1' },
+                                        '&.Mui-focused fieldset': { borderColor: '#0f172a', borderWidth: '1px' },
+                                        fontSize: '0.875rem',
+                                        color: '#0f172a'
+                                    }
+                                }}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography component="label" htmlFor="password1" sx={{ display: 'block', mb: 1, fontSize: '0.875rem', fontWeight: 600, color: '#0f172a' }}>
+                                Password
+                            </Typography>
+                            <TextField
+                                id="password1"
+                                fullWidth
+                                type="password"
+                                placeholder="••••••••"
+                                variant="outlined"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
+                                size="small"
+                                InputProps={{
+                                    sx: { borderRadius: '6px', height: 44, bgcolor: '#ffffff', '& fieldset': { borderColor: '#e2e8f0' }, '&:hover fieldset': { borderColor: '#cbd5e1' }, '&.Mui-focused fieldset': { borderColor: '#0f172a', borderWidth: '1px' }, fontSize: '0.875rem', color: '#0f172a', letterSpacing: password ? '0.2em' : 'normal' }
+                                }}
+                            />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox 
+                                        id="remember1" 
+                                        size="small" 
+                                        sx={{ 
+                                            color: '#cbd5e1', 
+                                            padding: '4px 8px 4px 4px',
+                                            '&.Mui-checked': { color: '#0f172a' } 
+                                        }} 
+                                    />
+                                }
+                                label={<Typography sx={{ fontSize: '0.875rem', color: '#64748b' }}>Remember me</Typography>}
+                                sx={{ m: 0 }}
+                            />
+                            <Link href="#" sx={{ fontSize: '0.875rem', color: '#475569', textDecoration: 'none', '&:hover': { color: '#0f172a' } }}>
+                                Forgot password?
+                            </Link>
+                        </Box>
+
+                                                <Box
+                            component="button"
+                            type="submit"
+                            disabled={loading}
+                            sx={{
+                                mt: 1,
+                                width: '100%',
+                                height: 44,
+                                bgcolor: '#0f172a',
+                                color: '#ffffff',
+                                borderRadius: '6px',
+                                fontWeight: 600,
+                                fontSize: '0.95rem',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'background-color 0.2s ease',
+                                '&:hover': { bgcolor: '#1e293b' },
+                                '&:disabled': { bgcolor: '#94a3b8', cursor: 'not-allowed' }
+                            }}
+                        >
+                            {loading ? <CircularProgress size={20} sx={{ color: '#ffffff' }} /> : 'Sign In'}
+                        </Box>
+                        
+                        {loading && (
+                            <Typography variant="body2" align="center" sx={{ color: '#64748b', fontWeight: 500, mt: 1 }}>
+                                {loadingMessage}
+                            </Typography>
+                        )}
+                    </Box>
+
+                    <Typography align="center" sx={{ mt: 4, fontSize: '0.875rem', color: '#64748b' }}>
+                        Don't have an account?{' '}
+                        <Link href="#" sx={{ color: '#0f172a', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                            Contact Admin
+                        </Link>
+                    </Typography>
+                </Box>
             </Box>
         </Box>
     );
 };
+
+export default Login;
