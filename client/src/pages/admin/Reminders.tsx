@@ -43,6 +43,8 @@ import {
 } from '@mui/icons-material';
 import { reminderService } from '../../services/reminderService';
 import { adminService } from '../../services/adminService';
+import { clientGroupService } from '../../services/clientGroupService';
+import type { ClientGroup } from '../../services/clientGroupService';
 import type { Reminder, Client } from '../../types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@mui/material';
@@ -53,6 +55,7 @@ interface ReminderDialogProps {
     onSubmit: (data: Partial<Reminder>) => void;
     initialData?: Reminder | null;
     clients: Client[];
+    clientGroups: ClientGroup[];
 }
 
 const ReminderDialog: React.FC<ReminderDialogProps> = ({
@@ -60,8 +63,12 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
     onSubmit,
     initialData,
     clients,
+    clientGroups,
     open
 }) => {
+    const [targetType, setTargetType] = useState<'CLIENT' | 'GROUP' | 'ALL'>('CLIENT');
+    const [groupId, setGroupId] = useState('');
+    
     const [formData, setFormData] = useState(() => {
         if (initialData) {
             return {
@@ -86,7 +93,15 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
     });
 
     const handleSubmit = () => {
-        onSubmit(formData as Partial<Reminder>);
+        let finalClientId = formData.clientId;
+        if (!initialData) {
+            if (targetType === 'ALL') {
+                finalClientId = 'ALL';
+            } else if (targetType === 'GROUP') {
+                finalClientId = `GROUP_${groupId}`;
+            }
+        }
+        onSubmit({ ...formData, clientId: finalClientId } as Partial<Reminder>);
     };
 
     return (
@@ -99,22 +114,58 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
                     Set a deadline and automated notification for your client.
                 </Typography>
                 <Grid container spacing={2.5}>
-                    <Grid size={{ xs: 12 }}>
-                        <TextField
-                            select
-                            label="Select Client"
-                            fullWidth
-                            value={formData.clientId}
-                            onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                            variant="outlined"
-                        >
-                            {clients.map((client) => (
-                                <MenuItem key={client._id} value={client._id}>
-                                    {client.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
+                    {!initialData && (
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                select
+                                label="Reminder Target"
+                                fullWidth
+                                value={targetType}
+                                onChange={(e) => setTargetType(e.target.value as 'CLIENT' | 'GROUP' | 'ALL')}
+                                variant="outlined"
+                            >
+                                <MenuItem value="CLIENT">Selected Client</MenuItem>
+                                <MenuItem value="GROUP">Client Group</MenuItem>
+                                <MenuItem value="ALL">All Clients</MenuItem>
+                            </TextField>
+                        </Grid>
+                    )}
+                    {(initialData || targetType === 'CLIENT') && (
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                select
+                                label="Select Client"
+                                fullWidth
+                                value={formData.clientId}
+                                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                                variant="outlined"
+                            >
+                                {clients.map((client) => (
+                                    <MenuItem key={client._id} value={client._id}>
+                                        {client.name}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                    )}
+                    {!initialData && targetType === 'GROUP' && (
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                select
+                                label="Select Client Group"
+                                fullWidth
+                                value={groupId}
+                                onChange={(e) => setGroupId(e.target.value)}
+                                variant="outlined"
+                            >
+                                {clientGroups.map((group) => (
+                                    <MenuItem key={group._id} value={group._id}>
+                                        {group.groupName}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                    )}
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             label="Reminder Title (e.g., ITR Filing - Q3)"
@@ -218,7 +269,12 @@ export const Reminders: React.FC = () => {
         queryFn: () => adminService.getClients()
     });
 
-    const isLoading = isLoadingReminders || isLoadingClients;
+    const { data: clientGroups = [], isLoading: isLoadingGroups } = useQuery({
+        queryKey: ['clientGroups'],
+        queryFn: clientGroupService.getGroups
+    });
+
+    const isLoading = isLoadingReminders || isLoadingClients || isLoadingGroups;
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
@@ -730,6 +786,7 @@ export const Reminders: React.FC = () => {
                 onSubmit={editingReminder ? handleUpdate : handleCreate}
                 initialData={editingReminder}
                 clients={clients}
+                clientGroups={clientGroups}
             />
 
             <Snackbar

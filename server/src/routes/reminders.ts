@@ -127,7 +127,7 @@ router.get('/client/:clientId', authMiddleware, async (req: Request, res: Respon
 // Create a new reminder
 router.post('/', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const { Reminder } = (req as any).models;
+        const { Reminder, Client } = (req as any).models;
         const {
             clientId,
             title,
@@ -137,6 +137,46 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
             priority,
             notifyBefore,
         } = req.body;
+
+        if (clientId === 'ALL') {
+            const clients = await Client.find({ firmId: (req as any).firmId });
+            const remindersToCreate = clients.map((c: any) => ({
+                clientId: c._id,
+                title,
+                description,
+                dueDate: new Date(dueDate),
+                reminderType,
+                priority,
+                notifyBefore: notifyBefore || 7,
+                createdBy: (req as any).user.userId,
+                firmId: (req as any).firmId,
+            }));
+            await Reminder.insertMany(remindersToCreate);
+            return res.status(201).json({ message: 'Reminders created for all clients' });
+        }
+        
+        if (typeof clientId === 'string' && clientId.startsWith('GROUP_')) {
+            const groupId = clientId.replace('GROUP_', '');
+            const clients = await Client.find({ groupName: groupId, firmId: (req as any).firmId });
+            
+            if (!clients.length) {
+                return res.status(404).json({ message: 'No clients found in this group' });
+            }
+
+            const remindersToCreate = clients.map((c: any) => ({
+                clientId: c._id,
+                title,
+                description,
+                dueDate: new Date(dueDate),
+                reminderType,
+                priority,
+                notifyBefore: notifyBefore || 7,
+                createdBy: (req as any).user.userId,
+                firmId: (req as any).firmId,
+            }));
+            await Reminder.insertMany(remindersToCreate);
+            return res.status(201).json({ message: `Reminders created for ${clients.length} clients in the group` });
+        }
 
         const reminder = new Reminder({
             clientId,
