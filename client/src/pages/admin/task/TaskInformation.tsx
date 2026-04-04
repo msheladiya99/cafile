@@ -82,8 +82,8 @@ export const TaskInformation: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -188,12 +188,12 @@ export const TaskInformation: React.FC = () => {
                             <Select size="small" sx={{ width: 140 }} value={dateType} onChange={(e) => setDateType(e.target.value)}>
                                 <MenuItem value="On Effective ...">On Effective ...</MenuItem>
                             </Select>
-                            <Box display="flex" alignItems="center" gap={0} sx={{ border: '1px solid #ddd', borderRadius: 1, overflow: 'hidden' }}>
+                            <Box display="flex" alignItems="center" gap={0} sx={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
                                 <TextField size="small" placeholder="From" sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' }, width: 120 }} />
                                 <Box sx={{ px: 1, bgcolor: '#f0f0f0', py: 1, borderLeft: '1px solid #ddd', borderRight: '1px solid #ddd', fontSize: '0.8rem' }}>To</Box>
                                 <TextField size="small" placeholder="To" sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' }, width: 120 }} />
                             </Box>
-                            <IconButton size="small" sx={{ bgcolor: '#ff5252', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#ff1744' } }}>
+                            <IconButton size="small" sx={{ bgcolor: '#ff5252', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#ff1744' } }}>
                                 <CloseIcon fontSize="small" />
                             </IconButton>
                         </Box>
@@ -248,11 +248,11 @@ export const TaskInformation: React.FC = () => {
             </Paper>
 
             {/* Job List Section */}
-            <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                    color: '#1e293b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
@@ -282,3 +282,8 @@ export const TaskInformation: React.FC = () => {
 };
 
 export default TaskInformation;
+
+
+
+
+

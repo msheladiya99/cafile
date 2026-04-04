@@ -65,20 +65,20 @@ export const FreeEmployeeList: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header Section */}
-            <Paper sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 4, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Typography variant="h5" fontWeight="600">Free Employee List</Typography>
                 </Box>
             </Paper>
 
             {/* List Section */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ListIcon fontSize="small" />
                         <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.25rem' }}>Free Employee List</Typography>
                     </Box>
-                    <IconButton size="small" onClick={handleExportExcel} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }} title="Export to CSV">
+                    <IconButton size="small" onClick={handleExportExcel} sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, borderRadius: '8px' }} title="Export to CSV">
                         <ExcelIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -100,13 +100,13 @@ export const FreeEmployeeList: React.FC = () => {
                                 const lastName = nameParts.slice(1).join(' ') || '';
 
                                 return (
-                                    <Card key={emp._id} sx={{ borderRadius: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
+                                    <Card key={emp._id} sx={{ borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
                                         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                             <Box display="flex" justifyContent="space-between" mb={1.5}>
                                                 <Typography variant="subtitle1" fontWeight="600" color="text.primary">
                                                     {firstName} {lastName}
                                                 </Typography>
-                                                <Box sx={{ bgcolor: 'primary.light', color: 'primary.contrastText', px: 1, py: 0.5, borderRadius: 1, fontSize: '0.75rem', fontWeight: 600 }}>
+                                                <Box sx={{ bgcolor: 'primary.light', color: 'primary.contrastText', px: 1, py: 0.5, borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
                                                     ID: {index + 1}
                                                 </Box>
                                             </Box>
@@ -169,3 +169,8 @@ export const FreeEmployeeList: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

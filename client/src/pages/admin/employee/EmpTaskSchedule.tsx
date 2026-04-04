@@ -142,7 +142,7 @@ const TaskRow: React.FC<{ task: any; staffMap: Record<string, string>; clientMap
                             const name = staffMap[uId] ?? uId;
                             return (
                                 <Tooltip key={uId} title={name}>
-                                    <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#667eea' }}>
+                                    <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
                                         {name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                                     </Avatar>
                                 </Tooltip>
@@ -387,8 +387,8 @@ export const EmpTaskSchedule: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* ── Header ── */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <TaskIcon sx={{ fontSize: 28 }} />
                         <Box>
@@ -409,7 +409,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     { label: 'Overdue',      value: counts.overdue,  bg: '#ef4444', icon: '⚠️' },
                 ].map(card => (
                     <Grid key={card.label} size={{ xs: 6, sm: 4, md: 'auto' }} sx={{ flex: { md: 1 } }}>
-                        <Paper sx={{ p: 2, borderRadius: 2, borderTop: `3px solid ${card.bg}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+                        <Paper sx={{ p: 2, borderRadius: '12px', borderTop: `3px solid ${card.bg}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', textAlign: 'center' }}>
                             <Typography variant="h4" fontWeight="800" sx={{ color: card.bg, lineHeight: 1 }}>{card.value}</Typography>
                             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>{card.icon} {card.label}</Typography>
                         </Paper>
@@ -418,7 +418,7 @@ export const EmpTaskSchedule: React.FC = () => {
             </Grid>
 
             {/* ── Filter Panel ── */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
                     🔍 Filters
                 </Typography>
@@ -427,7 +427,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Client</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Clients</MenuItem>
                                 {loadingClients
                                     ? <MenuItem disabled><CircularProgress size={16} /></MenuItem>
@@ -441,7 +441,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Employee</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Employees</MenuItem>
                                 {loadingStaff
                                     ? <MenuItem disabled><CircularProgress size={16} /></MenuItem>
@@ -459,7 +459,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Frequency</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Frequencies</MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>
@@ -470,7 +470,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Status</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Statuses</MenuItem>
                                 {statuses.map(s => (
                                     <MenuItem key={s} value={s}>
@@ -485,7 +485,7 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Financial Year</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Years</MenuItem>
                                 {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
@@ -497,21 +497,21 @@ export const EmpTaskSchedule: React.FC = () => {
                         <Typography sx={{ fontSize: 12, mb: 0.5, color: 'text.secondary', fontWeight: 600 }}>Date Range</Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                             <FormControl size="small" sx={{ minWidth: 110 }}>
-                                <Select displayEmpty value={filterData.dateType} onChange={handleChange('dateType')} sx={{ borderRadius: 1.5 }}>
+                                <Select displayEmpty value={filterData.dateType} onChange={handleChange('dateType')} sx={{ borderRadius: '8px' }}>
                                     <MenuItem value="">Type</MenuItem>
                                     {dateTypes.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
                                 </Select>
                             </FormControl>
-                            <TextField type="date" size="small" value={filterData.dateFrom} onChange={handleChange('dateFrom')} sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField type="date" size="small" value={filterData.dateFrom} onChange={handleChange('dateFrom')} sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                             <Box sx={{ color: 'text.disabled', fontSize: '0.8rem', flexShrink: 0 }}>to</Box>
-                            <TextField type="date" size="small" value={filterData.dateTo} onChange={handleChange('dateTo')} sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField type="date" size="small" value={filterData.dateTo} onChange={handleChange('dateTo')} sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Box>
                     </Grid>
 
                     {/* Action Buttons */}
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                            <Button variant="outlined" color="error" startIcon={<ClearIcon />} onClick={handleClear} sx={{ textTransform: 'none', borderRadius: 1.5 }}>
+                            <Button variant="outlined" color="error" startIcon={<ClearIcon />} onClick={handleClear} sx={{ textTransform: 'none', borderRadius: '8px' }}>
                                 Clear
                             </Button>
                             <Button
@@ -519,7 +519,7 @@ export const EmpTaskSchedule: React.FC = () => {
                                 startIcon={loadingTasks ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
                                 onClick={handleSearch}
                                 disabled={loadingTasks}
-                                sx={{ textTransform: 'none', borderRadius: 1.5, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', boxShadow: 'none' }}
+                                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', boxShadow: 'none' }}
                             >
                                 Search
                             </Button>
@@ -529,13 +529,13 @@ export const EmpTaskSchedule: React.FC = () => {
             </Paper>
 
             {/* ── Task List ── */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ListIcon fontSize="small" />
                         <Typography variant="h6" fontWeight="700" sx={{ fontSize: '1rem' }}>Job List</Typography>
                     </Box>
-                    <Chip label={`${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 700 }} />
+                    <Chip label={`${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`} size="small" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 700 }} />
                 </Box>
 
                 {loadingTasks ? (
@@ -579,3 +579,8 @@ export const EmpTaskSchedule: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

@@ -70,17 +70,17 @@ export const AddAttendance: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="600">Add Attendance</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button size="small" variant="contained" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }} onClick={() => navigate('/admin/employee/attendance/add')}>Add New</Button>
-                        <Button size="small" variant="contained" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }} onClick={() => navigate('/admin/employee/attendance/list')}>List</Button>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>Add New</Button>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/list')}>List</Button>
                     </Box>
                 </Box>
             </Paper>
 
-            <Paper sx={{ p: 4, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
+            <Paper sx={{ p: 4, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
                 <Grid container spacing={4} sx={{ maxWidth: 800 }}>
                     <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
@@ -93,7 +93,7 @@ export const AddAttendance: React.FC = () => {
                             name="employee"
                             value={formData.employee}
                             onChange={handleInputChange}
-                            sx={{ borderRadius: 1.5 }}
+                            sx={{ borderRadius: '8px' }}
                         >
                             <MenuItem value="" disabled>Choose a Employee...</MenuItem>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -116,7 +116,7 @@ export const AddAttendance: React.FC = () => {
                             name="date"
                             value={formData.date}
                             onChange={handleInputChange}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                         />
                     </Grid>
 
@@ -139,7 +139,7 @@ export const AddAttendance: React.FC = () => {
                                 value={formData.inTime}
                                 onChange={handleInputChange}
                                 disabled={!formData.inTimeChecked}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
                     </Grid>
@@ -163,7 +163,7 @@ export const AddAttendance: React.FC = () => {
                                 value={formData.outTime}
                                 onChange={handleInputChange}
                                 disabled={!formData.outTimeChecked}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                             />
                         </Box>
                     </Grid>
@@ -180,7 +180,7 @@ export const AddAttendance: React.FC = () => {
                             name="description"
                             value={formData.description}
                             onChange={handleInputChange}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                         />
                     </Grid>
 
@@ -188,14 +188,14 @@ export const AddAttendance: React.FC = () => {
                         <Button
                             variant="contained"
                             onClick={handleSave}
-                            sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', px: 4, borderRadius: 1, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none' }}
                         >
                             Save
                         </Button>
                         <Button
                             variant="contained"
                             onClick={() => navigate('/admin/employee/attendance/list')}
-                            sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 4, borderRadius: 1, boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
+                            sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
                         >
                             Cancel
                         </Button>
@@ -205,3 +205,8 @@ export const AddAttendance: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

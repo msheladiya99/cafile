@@ -130,8 +130,8 @@ export const TransferTask: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -260,7 +260,7 @@ export const TransferTask: React.FC = () => {
                             <Button variant="contained" startIcon={<TransferIcon />}
                                 onClick={handleTransfer}
                                 disabled={!transferFrom || !transferTo || previewTasks.length === 0 || transferMutation.isPending}
-                                sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#764ba2' } }}>
+                                sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' } }}>
                                 {transferMutation.isPending ? 'Transferring...' : `Transfer ${previewTasks.length > 0 ? `(${previewTasks.length})` : ''} Tasks`}
                             </Button>
                         </Box>
@@ -277,11 +277,11 @@ export const TransferTask: React.FC = () => {
             </Paper>
 
             {/* Job List Preview */}
-            <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                    color: '#1e293b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
@@ -364,3 +364,8 @@ export const TransferTask: React.FC = () => {
 };
 
 export default TransferTask;
+
+
+
+
+

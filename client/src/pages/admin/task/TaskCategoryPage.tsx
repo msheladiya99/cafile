@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
-    Box, Paper, Typography, Button, TextField, Table, TableBody,
+    Box, Paper, Typography, TextField, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, IconButton,
     Dialog, DialogTitle, DialogContent, DialogActions, Chip,
     CircularProgress, InputAdornment
 } from '@mui/material';
+import { CommonButton } from '../../../components/common/UIComponents';
 import {
     Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
     Category as CategoryIcon, Search as SearchIcon
@@ -23,8 +24,8 @@ interface TaskCategoryData {
 }
 
 const PRESET_COLORS = [
-    '#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#3b82f6', '#ec4899', '#14b8a6', '#f97316', '#6b7280'
+    '#667eea', '#10b981', '#c026d3', '#ef4444', '#8b5cf6',
+    '#3b82f6', '#ec4899', '#14b8a6', '#7e22ce', '#6b7280'
 ];
 
 export const TaskCategoryPage: React.FC = () => {
@@ -109,20 +110,18 @@ export const TaskCategoryPage: React.FC = () => {
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', mb: 3 }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 2.5, color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper elevation={0} sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', mb: 3 }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', p: 2.5, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box display="flex" alignItems="center" gap={1.5}>
                         <CategoryIcon />
                         <Typography variant="h5" fontWeight={700}>Task Categories</Typography>
                     </Box>
-                    <Button
-                        variant="contained"
+                    <CommonButton
                         startIcon={<AddIcon />}
                         onClick={() => handleOpen()}
-                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, textTransform: 'none', fontWeight: 600 }}
                     >
                         Add Category
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Paper>
 
@@ -139,7 +138,7 @@ export const TaskCategoryPage: React.FC = () => {
             </Box>
 
             {/* Table */}
-            <Paper elevation={0} sx={{ borderRadius: 2, border: '1px solid #e0e0e0', overflow: 'hidden' }}>
+            <Paper elevation={0} sx={{ borderRadius: '12px', border: '1px solid #e0e0e0', overflow: 'hidden' }}>
                 <TableContainer>
                     <Table>
                         <TableHead sx={{ bgcolor: '#f5f5f5' }}>
@@ -212,7 +211,7 @@ export const TaskCategoryPage: React.FC = () => {
 
             {/* Add/Edit Dialog */}
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ fontWeight: 700, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', py: 2 }}>
+                <DialogTitle sx={{ fontWeight: 700, bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', py: 2 }}>
                     {editItem ? 'Edit Category' : 'Add Task Category'}
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3, pb: 1 }}>
@@ -264,17 +263,20 @@ export const TaskCategoryPage: React.FC = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-                    <Button onClick={handleClose} variant="outlined" sx={{ textTransform: 'none' }}>Cancel</Button>
-                    <Button
+                    <CommonButton onClick={handleClose} variant="outlined">Cancel</CommonButton>
+                    <CommonButton
                         onClick={handleSubmit}
-                        variant="contained"
-                        disabled={createMutation.isPending || updateMutation.isPending}
-                        sx={{ textTransform: 'none', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                        loading={createMutation.isPending || updateMutation.isPending}
                     >
                         {editItem ? 'Update' : 'Create Category'}
-                    </Button>
+                    </CommonButton>
                 </DialogActions>
             </Dialog>
         </Box>
     );
 };
+
+
+
+
+

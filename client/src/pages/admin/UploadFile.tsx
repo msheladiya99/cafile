@@ -2,45 +2,29 @@ import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Button,
     Select,
     MenuItem,
     FormControl,
-    InputLabel,
     Alert,
-    InputAdornment,
-    Card,
-    CardContent,
-    useTheme,
-    alpha,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    IconButton,
     CircularProgress,
-    Container,
-    Stack,
-    Paper,
     Fade,
-    Zoom,
+    Chip,
+    Stack,
     Divider,
-    Chip
+    IconButton,
 } from '@mui/material';
 import {
     CloudUpload as UploadIcon,
     CheckCircle as SuccessIcon,
     CloudDone as CloudDoneIcon,
-    Person as PersonIcon,
-    FolderOpen as FolderIcon,
-    EventNote as CalendarIcon,
     InsertDriveFile as FileIcon,
     DeleteOutline as DeleteIcon,
     ErrorOutline as ErrorIcon,
-    Storage as StorageIcon,
-    InfoOutlined as InfoIcon
+    InfoOutlined as InfoIcon,
+    FolderSpecial as FolderSpecialIcon,
 } from '@mui/icons-material';
 import { adminService } from '../../services/adminService';
+import { CommonButton } from '../../components/common/UIComponents';
 import type { Client } from '../../types';
 import { AxiosError } from 'axios';
 
@@ -52,7 +36,6 @@ interface FileUploadItem {
 }
 
 export const UploadFile: React.FC = () => {
-    const theme = useTheme();
     const [clients, setClients] = useState<Client[]>([]);
     const [selectedClient, setSelectedClient] = useState('');
     const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -131,7 +114,6 @@ export const UploadFile: React.FC = () => {
         setError('');
         setLoading(true);
 
-        // Process files in batches to avoid overwhelming the server/browser
         const BATCH_SIZE = 3;
         const filesToProcess = selectedFiles.map((file, index) => ({ file, index })).filter(({ file }) => file.status !== 'success');
         const updatedFiles = [...selectedFiles];
@@ -171,7 +153,6 @@ export const UploadFile: React.FC = () => {
                     updatedFiles[index] = { ...updatedFiles[index], status: 'error', message };
                 }
 
-                // Update state to reflect progress
                 setSelectedFiles([...updatedFiles]);
             }));
         }
@@ -179,173 +160,74 @@ export const UploadFile: React.FC = () => {
         setLoading(false);
     };
 
+    const handleReset = () => {
+        setSelectedFiles([]);
+        setSelectedClient('');
+        setYear(new Date().getFullYear().toString());
+        setMonth('');
+        setDocType('');
+        setCategory('ITR');
+        setError('');
+    };
+
     const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
 
+    const selectSx = {
+        borderRadius: '8px',
+        fontSize: '0.875rem',
+        bgcolor: '#fff',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#e5e7eb',
+        },
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#9ca3af',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#111827',
+            borderWidth: '1.5px',
+        },
+    };
+
     return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-
-
-            <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap={4}>
-                {/* Left Column: Configuration */}
-                <Box gridColumn={{ xs: 'span 12', lg: 'span 5' }}>
-                    <Stack spacing={3}>
-                        <Card sx={{
-                            borderRadius: 5,
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
-                            border: '1px solid',
-                            borderColor: alpha(theme.palette.divider, 0.5)
-                        }}>
-                            <CardContent sx={{ p: 4 }}>
-                                <Typography variant="h6" fontWeight={700} sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                    <StorageIcon color="primary" />
-                                    Upload Files
-                                </Typography>
-
-                                <Stack spacing={4}>
-                                    <FormControl fullWidth variant="outlined">
-                                        <InputLabel>Target Client</InputLabel>
-                                        <Select
-                                            value={selectedClient}
-                                            onChange={(e) => setSelectedClient(e.target.value)}
-                                            label="Target Client"
-                                            startAdornment={
-                                                <InputAdornment position="start">
-                                                    <PersonIcon color="action" />
-                                                </InputAdornment>
-                                            }
-                                            sx={{ borderRadius: 3, bgcolor: '#f8fafc' }}
-                                        >
-                                            {loadingClients ? (
-                                                <MenuItem disabled><CircularProgress size={20} sx={{ mr: 2 }} /> Loading...</MenuItem>
-                                            ) : clients.map((client) => (
-                                                <MenuItem key={client._id} value={client._id}>
-                                                    <Box>
-                                                        <Typography variant="body1" fontWeight={600}>{client.name}</Typography>
-                                                        <Typography variant="caption" color="text.secondary">{client.email}</Typography>
-                                                    </Box>
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-
-                                    <FormControl fullWidth variant="outlined">
-                                        <InputLabel>Document Type</InputLabel>
-                                        <Select
-                                            value={category}
-                                            onChange={(e) => {
-                                                setCategory(e.target.value as 'ITR' | 'GST' | 'ACCOUNTING' | 'USER_DOCS');
-                                                if (e.target.value !== 'GST') {
-                                                    setMonth('');
-                                                    setDocType('');
-                                                }
-                                            }}
-                                            label="Document Type"
-                                            startAdornment={
-                                                <InputAdornment position="start">
-                                                    <FolderIcon color="action" />
-                                                </InputAdornment>
-                                            }
-                                            sx={{ borderRadius: 3, bgcolor: '#f8fafc' }}
-                                        >
-                                            <MenuItem value="ITR">Income Tax Records</MenuItem>
-                                            <MenuItem value="GST">GST Compliance</MenuItem>
-                                            <MenuItem value="ACCOUNTING">Accounting & Audit</MenuItem>
-                                            <MenuItem value="USER_DOCS">User Documents</MenuItem>
-                                        </Select>
-                                    </FormControl>
-
-                                    {category === 'GST' && (
-                                        <Fade in={category === 'GST'}>
-                                            <Stack spacing={4}>
-                                                <FormControl fullWidth variant="outlined">
-                                                    <InputLabel>Reporting Month</InputLabel>
-                                                    <Select
-                                                        value={month}
-                                                        onChange={(e) => setMonth(e.target.value)}
-                                                        label="Reporting Month"
-                                                        startAdornment={
-                                                            <InputAdornment position="start">
-                                                                <CalendarIcon color="action" />
-                                                            </InputAdornment>
-                                                        }
-                                                        sx={{ borderRadius: 3, bgcolor: '#f8fafc' }}
-                                                    >
-                                                        {['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'].map((m) => (
-                                                            <MenuItem key={m} value={m}>{m}</MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-
-                                                <FormControl fullWidth variant="outlined">
-                                                    <InputLabel>Returns Category</InputLabel>
-                                                    <Select
-                                                        value={docType}
-                                                        onChange={(e) => setDocType(e.target.value)}
-                                                        label="Returns Category"
-                                                        sx={{ borderRadius: 3, bgcolor: '#f8fafc' }}
-                                                    >
-                                                        {['GSTR-1', 'GSTR-2A', 'GSTR-2B', 'GSTR-3B', 'Challan', 'Other'].map((type) => (
-                                                            <MenuItem key={type} value={type}>{type}</MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </Stack>
-                                        </Fade>
-                                    )}
-
-                                    {category !== 'USER_DOCS' && (
-                                        <FormControl fullWidth variant="outlined">
-                                            <InputLabel>Financial Year</InputLabel>
-                                            <Select
-                                                value={year}
-                                                onChange={(e) => setYear(e.target.value)}
-                                                label="Financial Year"
-                                                sx={{ borderRadius: 3, bgcolor: '#f8fafc' }}
-                                            >
-                                                {years.map((y) => (
-                                                    <MenuItem key={y} value={y}>FY {y}-{(parseInt(y) + 1).toString().slice(-2)}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    )}
-                                </Stack>
-                            </CardContent>
-                        </Card>
-
-                        <Paper elevation={0} sx={{
-                            p: 3,
-                            borderRadius: 5,
-                            bgcolor: alpha(theme.palette.success.main, 0.05),
-                            border: '1px dashed',
-                            borderColor: theme.palette.success.main,
-                            display: 'flex',
-                            gap: 2,
-                            alignItems: 'flex-start'
-                        }}>
-                            <Box sx={{
-                                bgcolor: theme.palette.success.main,
-                                color: 'white',
-                                p: 1,
-                                borderRadius: 1.5,
-                                display: 'flex'
-                            }}>
-                                <CloudDoneIcon fontSize="small" />
-                            </Box>
-                            <Box>
-                                <Typography variant="subtitle2" fontWeight={700} color="success.main">
-                                    Google Drive Integration Active
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                    All files uploaded here are automatically synced to your secure Cloud storage for long-term retention.
-                                </Typography>
-                            </Box>
-                        </Paper>
-                    </Stack>
+        <Box sx={{ width: '100%', px: { xs: 2, sm: 4, md: 8 }, py: 3 }}>
+        <Box
+            sx={{
+                width: '100%',
+                maxWidth: 860,
+                mx: 'auto',
+                bgcolor: '#ffffff',
+                borderRadius: '16px',
+                boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+                overflow: 'hidden',
+            }}
+        >
+                {/* Card Header */}
+                <Box sx={{ px: { xs: 3, sm: 4 }, pt: 4, pb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                        <FolderSpecialIcon sx={{ fontSize: 26, color: '#111' }} />
+                        <Typography
+                            sx={{
+                                fontSize: '1.35rem',
+                                fontWeight: 700,
+                                color: '#111',
+                                letterSpacing: '-0.02em',
+                            }}
+                        >
+                            Upload Files
+                        </Typography>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.875rem', color: '#888', ml: 0.5 }}>
+                        Select a client and upload documents to their account.
+                    </Typography>
                 </Box>
 
-                {/* Right Column: File Dropzone and List */}
-                <Box gridColumn={{ xs: 'span 12', lg: 'span 7' }}>
+                <Divider sx={{ mx: { xs: 3, sm: 4 } }} />
+
+                {/* Card Body */}
+                <Box sx={{ px: { xs: 3, sm: 4 }, pt: 3, pb: 4 }}>
                     <Stack spacing={3}>
+
+                        {/* Drag & Drop Zone */}
                         <Box
                             onDragEnter={handleDrag}
                             onDragLeave={handleDrag}
@@ -353,24 +235,22 @@ export const UploadFile: React.FC = () => {
                             onDrop={handleDrop}
                             onClick={() => fileInputRef.current?.click()}
                             sx={{
-                                position: 'relative',
+                                border: '1.5px dashed',
+                                borderColor: dragActive ? '#3b82f6' : '#d1d5db',
+                                borderRadius: '10px',
+                                bgcolor: dragActive ? 'rgba(59,130,246,0.04)' : '#fafafa',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                p: 6,
-                                border: '2px dashed',
-                                borderRadius: 6,
+                                py: 4,
+                                px: 2,
                                 cursor: 'pointer',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                borderColor: dragActive ? 'primary.main' : 'divider',
-                                bgcolor: dragActive ? alpha(theme.palette.primary.main, 0.04) : '#fff',
+                                transition: 'all 0.2s ease',
                                 '&:hover': {
-                                    borderColor: 'primary.main',
-                                    bgcolor: alpha(theme.palette.primary.main, 0.02),
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: '0 15px 35px rgba(0,0,0,0.05)'
-                                }
+                                    borderColor: '#3b82f6',
+                                    bgcolor: 'rgba(59,130,246,0.03)',
+                                },
                             }}
                         >
                             <input
@@ -380,179 +260,302 @@ export const UploadFile: React.FC = () => {
                                 style={{ display: 'none' }}
                                 onChange={handleFileChange}
                             />
-
-                            <Zoom in={true}>
-                                <Box sx={{
-                                    p: 2.5,
+                            <Box
+                                sx={{
+                                    width: 44,
+                                    height: 44,
                                     borderRadius: '50%',
-                                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                    color: 'primary.main',
-                                    mb: 2.5
-                                }}>
-                                    <UploadIcon sx={{ fontSize: 50 }} />
-                                </Box>
-                            </Zoom>
-
-                            <Typography variant="h5" fontWeight={800} color="text.primary" gutterBottom>
-                                {dragActive ? "Release to stage files" : "Drop files to upload"}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-                                Drag and drop files here, or click to browse your system<br />
-                                <Typography variant="caption" sx={{ mt: 1, opacity: 0.7 }}>
-                                    Supports all file types (Max 25MB per file)
-                                </Typography>
-                            </Typography>
-
-                            <Button
-                                variant="outlined"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    fileInputRef.current?.click();
+                                    bgcolor: '#f0f0f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    mb: 1.5,
                                 }}
-                                sx={{ borderRadius: 3, px: 4, py: 1, fontWeight: 700, borderWidth: 2, '&:hover': { borderWidth: 2 } }}
                             >
-                                Select Documents
-                            </Button>
+                                <UploadIcon sx={{ fontSize: 22, color: '#555' }} />
+                            </Box>
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#222', mb: 0.4 }}>
+                                {dragActive ? 'Release to add files' : 'Select a file or drag and drop here'}
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.78rem', color: '#9ca3af' }}>
+                                PDF, DOC, XLS, JPG — Max 25MB per file
+                            </Typography>
                         </Box>
 
+                        {/* Selected Files List */}
                         {selectedFiles.length > 0 && (
-                            <Card sx={{
-                                borderRadius: 5,
-                                boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
-                                border: '1px solid',
-                                borderColor: alpha(theme.palette.divider, 0.5)
-                            }}>
-                                <CardContent sx={{ p: 4 }}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                                        <Box>
-                                            <Typography variant="h6" fontWeight={700}>
-                                                Staged Documents
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Review and initiate deployment
-                                            </Typography>
-                                        </Box>
-                                        <Chip
-                                            label={`${selectedFiles.length} Target Files`}
-                                            color="primary"
-                                            size="small"
-                                            sx={{ fontWeight: 700, borderRadius: 2 }}
-                                        />
-                                    </Stack>
-
-                                    <List disablePadding>
-                                        {selectedFiles.map((item, index) => (
-                                            <Fade in={true} key={item.id} style={{ transitionDelay: `${index * 50}ms` }}>
-                                                <ListItem
-                                                    sx={{
-                                                        px: { xs: 1.5, sm: 2 },
-                                                        py: 2,
-                                                        mb: 1.5,
-                                                        borderRadius: 4,
-                                                        bgcolor: '#f8fafc',
-                                                        border: '1px solid',
-                                                        borderColor: item.status === 'error' ? alpha(theme.palette.error.main, 0.1) : 'transparent',
-                                                        '&:last-child': { mb: 0 }
-                                                    }}
-                                                >
-                                                    <ListItemIcon sx={{ minWidth: { xs: 40, sm: 50 } }}>
-                                                        {item.status === 'uploading' ? (
-                                                            <CircularProgress size={24} thickness={5} />
-                                                        ) : item.status === 'success' ? (
-                                                            <SuccessIcon color="success" />
-                                                        ) : item.status === 'error' ? (
-                                                            <ErrorIcon color="error" />
-                                                        ) : (
-                                                            <FileIcon color="action" />
-                                                        )}
-                                                    </ListItemIcon>
-                                                    <ListItemText
-                                                        sx={{ my: 0, mr: 1, overflow: 'hidden' }}
-                                                        primary={
-                                                            <Typography
-                                                                variant="body2"
-                                                                fontWeight={700}
-                                                                noWrap
-                                                                title={item.file.name}
-                                                                sx={{ color: '#2d3748' }}
-                                                            >
-                                                                {item.file.name}
-                                                            </Typography>
-                                                        }
-                                                        secondary={
-                                                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                                                                <Typography variant="caption" color="text.secondary" noWrap>
-                                                                    {(item.file.size / (1024 * 1024)).toFixed(2)} MB
-                                                                </Typography>
-                                                                {item.message && (
-                                                                    <>
-                                                                        <Divider orientation="vertical" flexItem sx={{ height: 10, alignSelf: 'center' }} />
-                                                                        <Typography variant="caption" color={item.status === 'error' ? 'error.main' : 'success.main'} fontWeight={700} noWrap>
-                                                                            {item.message}
-                                                                        </Typography>
-                                                                    </>
-                                                                )}
-                                                            </Stack>
-                                                        }
-                                                    />
-                                                    <IconButton
-                                                        onClick={() => handleRemoveFile(item.id)}
-                                                        disabled={loading || item.status === 'success'}
-                                                        size="small"
-                                                        sx={{
-                                                            color: 'text.secondary',
-                                                            '&:hover': { color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) },
-                                                            flexShrink: 0
-                                                        }}
-                                                        aria-label="Remove staged file"
+                            <Box
+                                sx={{
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '10px',
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <Box sx={{ px: 2.5, py: 1.5, bgcolor: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#374151' }}>
+                                        Staged Files
+                                    </Typography>
+                                    <Chip
+                                        label={`${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}`}
+                                        size="small"
+                                        sx={{ bgcolor: '#e5e7eb', fontWeight: 600, fontSize: '0.75rem', color: '#374151' }}
+                                    />
+                                </Box>
+                                <Divider />
+                                <Stack divider={<Divider />}>
+                                    {selectedFiles.map((item, index) => (
+                                        <Fade in={true} key={item.id} style={{ transitionDelay: `${index * 40}ms` }}>
+                                            <Box sx={{ px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <Box sx={{ flexShrink: 0 }}>
+                                                    {item.status === 'uploading' ? (
+                                                        <CircularProgress size={20} thickness={5} />
+                                                    ) : item.status === 'success' ? (
+                                                        <SuccessIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                                                    ) : item.status === 'error' ? (
+                                                        <ErrorIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+                                                    ) : (
+                                                        <FileIcon sx={{ fontSize: 20, color: '#9ca3af' }} />
+                                                    )}
+                                                </Box>
+                                                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                                                    <Typography
+                                                        noWrap
+                                                        title={item.file.name}
+                                                        sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}
                                                     >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </ListItem>
-                                            </Fade>
-                                        ))}
-                                    </List>
-
-                                    <Box sx={{ mt: 4 }}>
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            size="large"
-                                            onClick={handleSubmit}
-                                            disabled={loading || selectedFiles.every(f => f.status === 'success')}
-                                            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <UploadIcon />}
-                                            sx={{
-                                                py: 2,
-                                                borderRadius: 4,
-                                                fontSize: '1rem',
-                                                fontWeight: 800,
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                boxShadow: '0 8px 30px rgba(102, 126, 234, 0.3)',
-                                                '&:hover': {
-                                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                                                    transform: 'translateY(-2px)'
-                                                }
-                                            }}
-                                        >
-                                            {loading ? "Processing Queue..." : "Initiate Deployment"}
-                                        </Button>
-                                    </Box>
-                                </CardContent>
-                            </Card>
+                                                        {item.file.name}
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                                                            {(item.file.size / (1024 * 1024)).toFixed(2)} MB
+                                                        </Typography>
+                                                        {item.message && (
+                                                            <>
+                                                                <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: '#d1d5db' }} />
+                                                                <Typography
+                                                                    sx={{
+                                                                        fontSize: '0.75rem',
+                                                                        fontWeight: 600,
+                                                                        color: item.status === 'error' ? '#ef4444' : '#22c55e',
+                                                                    }}
+                                                                >
+                                                                    {item.message}
+                                                                </Typography>
+                                                            </>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                                <IconButton
+                                                    onClick={() => handleRemoveFile(item.id)}
+                                                    disabled={loading || item.status === 'success'}
+                                                    size="small"
+                                                    sx={{
+                                                        color: '#9ca3af',
+                                                        flexShrink: 0,
+                                                        '&:hover': { color: '#ef4444', bgcolor: 'rgba(239,68,68,0.06)' },
+                                                    }}
+                                                    aria-label="Remove file"
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        </Fade>
+                                    ))}
+                                </Stack>
+                            </Box>
                         )}
 
+                        {/* Target Client */}
+                        <Box>
+                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
+                                Target Client <span style={{ color: '#ef4444' }}>*</span>
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    displayEmpty
+                                    value={selectedClient}
+                                    onChange={(e) => setSelectedClient(e.target.value)}
+                                    renderValue={(value) => {
+                                        if (!value) return <span style={{ color: '#9ca3af' }}>Select a client</span>;
+                                        const client = clients.find(c => c._id === value);
+                                        return client ? client.name : value;
+                                    }}
+                                    sx={selectSx}
+                                >
+                                    {loadingClients ? (
+                                        <MenuItem disabled>
+                                            <CircularProgress size={16} sx={{ mr: 1 }} /> Loading...
+                                        </MenuItem>
+                                    ) : clients.map((client) => (
+                                        <MenuItem key={client._id} value={client._id}>
+                                            <Box>
+                                                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{client.name}</Typography>
+                                                <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>{client.email}</Typography>
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+                        {/* Document Type + Financial Year row */}
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                            <Box>
+                                <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
+                                    Document Type <span style={{ color: '#ef4444' }}>*</span>
+                                </Typography>
+                                <FormControl fullWidth size="small">
+                                    <Select
+                                        value={category}
+                                        onChange={(e) => {
+                                            setCategory(e.target.value as 'ITR' | 'GST' | 'ACCOUNTING' | 'USER_DOCS');
+                                            if (e.target.value !== 'GST') {
+                                                setMonth('');
+                                                setDocType('');
+                                            }
+                                        }}
+                                        sx={selectSx}
+                                    >
+                                        <MenuItem value="ITR">Income Tax Records</MenuItem>
+                                        <MenuItem value="GST">GST Compliance</MenuItem>
+                                        <MenuItem value="ACCOUNTING">Accounting & Audit</MenuItem>
+                                        <MenuItem value="USER_DOCS">User Documents</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            {category !== 'USER_DOCS' && (
+                                <Box>
+                                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
+                                        Financial Year
+                                    </Typography>
+                                    <FormControl fullWidth size="small">
+                                        <Select
+                                            value={year}
+                                            onChange={(e) => setYear(e.target.value)}
+                                            sx={selectSx}
+                                        >
+                                            {years.map((y) => (
+                                                <MenuItem key={y} value={y}>FY {y}-{(parseInt(y) + 1).toString().slice(-2)}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+                            )}
+                        </Box>
+
+                        {/* GST-specific fields */}
+                        {category === 'GST' && (
+                            <Fade in={true}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                                    <Box>
+                                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
+                                            Reporting Month
+                                        </Typography>
+                                        <FormControl fullWidth size="small">
+                                            <Select
+                                                displayEmpty
+                                                value={month}
+                                                onChange={(e) => setMonth(e.target.value)}
+                                                renderValue={(value) => value || <span style={{ color: '#9ca3af' }}>Select month</span>}
+                                                sx={selectSx}
+                                            >
+                                                {['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'].map((m) => (
+                                                    <MenuItem key={m} value={m}>{m}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                    <Box>
+                                        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
+                                            Returns Category
+                                        </Typography>
+                                        <FormControl fullWidth size="small">
+                                            <Select
+                                                displayEmpty
+                                                value={docType}
+                                                onChange={(e) => setDocType(e.target.value)}
+                                                renderValue={(value) => value || <span style={{ color: '#9ca3af' }}>Select type</span>}
+                                                sx={selectSx}
+                                            >
+                                                {['GSTR-1', 'GSTR-2A', 'GSTR-2B', 'GSTR-3B', 'Challan', 'Other'].map((type) => (
+                                                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Box>
+                                </Box>
+                            </Fade>
+                        )}
+
+                        {/* Google Drive Badge */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                px: 2,
+                                py: 1.5,
+                                borderRadius: '8px',
+                                bgcolor: '#f0fdf4',
+                                border: '1px solid #bbf7d0',
+                            }}
+                        >
+                            <CloudDoneIcon sx={{ fontSize: 18, color: '#16a34a', flexShrink: 0 }} />
+                            <Typography sx={{ fontSize: '0.8rem', color: '#15803d', fontWeight: 500 }}>
+                                <strong>Google Drive Integration Active</strong> — Files sync automatically to secure cloud storage.
+                            </Typography>
+                        </Box>
+
+                        {/* Error */}
                         {error && (
                             <Alert
                                 severity="error"
                                 icon={<InfoIcon />}
-                                sx={{ borderRadius: 4, fontWeight: 600 }}
+                                sx={{ borderRadius: '8px', fontSize: '0.85rem' }}
                             >
                                 {error}
                             </Alert>
                         )}
+
+                        {/* Action Buttons */}
+                        <Divider />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
+                            <CommonButton
+                                variant="outlined"
+                                onClick={handleReset}
+                                disabled={loading}
+                                sx={{
+                                    borderRadius: '8px',
+                                    px: 3,
+                                    py: 0.9,
+                                    fontSize: '0.875rem',
+                                    color: '#374151',
+                                    borderColor: '#d1d5db',
+                                    '&:hover': { borderColor: '#9ca3af', bgcolor: '#f9fafb' },
+                                }}
+                            >
+                                Cancel
+                            </CommonButton>
+                            <CommonButton
+                                variant="contained"
+                                onClick={handleSubmit}
+                                disabled={selectedFiles.every(f => f.status === 'success')}
+                                loading={loading}
+                                startIcon={<UploadIcon />}
+                                sx={{ boxShadow: 'none' }}
+                            >
+                                Upload Files
+                            </CommonButton>
+                        </Box>
                     </Stack>
                 </Box>
-            </Box>
-        </Container>
+        </Box>
+        </Box>
     );
 };
+
+
+
+
+

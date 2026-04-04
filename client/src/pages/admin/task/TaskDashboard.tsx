@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
     Box, Grid, Paper, Typography, Card, CardContent, Avatar,
-    Chip, Button, LinearProgress, List, ListItem, ListItemText,
+    Chip, LinearProgress, List, ListItem, ListItemText,
     ListItemIcon, Divider, IconButton, Tooltip, Badge,
 } from '@mui/material';
 import {
@@ -28,24 +28,25 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '../../../services/taskService';
 import { useNavigate } from 'react-router-dom';
+import { CommonButton } from '../../../components/common/UIComponents';
 const nowMs = Date.now(); // module-level stable timestamp for day calculations
 import type { Task, Client, User } from '../../../types';
 
 const STATUS_COLORS: Record<string, string> = {
     PENDING: '#94a3b8',
     IN_PROCESS: '#3b82f6',
-    PENDING_FOR_APPROVAL: '#f59e0b',
+    PENDING_FOR_APPROVAL: '#a78bfa',
     APPROVED: '#2dd4bf',
     DONE: '#10b981',
     ON_HOLD: '#8b5cf6',
-    PENDING_FROM_CLIENT: '#f97316',
+    PENDING_FROM_CLIENT: '#f472b6',
     PENDING_FROM_DEPARTMENT: '#ec4899',
     CANCELLED: '#ef4444',
     REJECTED: '#dc2626',
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-    URGENT: '#ef4444', HIGH: '#f59e0b', MEDIUM: '#3b82f6', LOW: '#10b981',
+    URGENT: '#ef4444', HIGH: '#f87171', MEDIUM: '#3b82f6', LOW: '#10b981',
 };
 
 // ─── Stat Card Component ─────────────────────────────────────────────────────
@@ -188,7 +189,7 @@ export const TaskDashboard: React.FC = () => {
     if (isLoading) {
         return (
             <Box sx={{ p: 4 }}>
-                <LinearProgress sx={{ borderRadius: 2, height: 4 }} />
+                <LinearProgress sx={{ borderRadius: '12px', height: 4 }} />
                 <Typography variant="body2" color="text.secondary" mt={2} textAlign="center">Loading dashboard…</Typography>
             </Box>
         );
@@ -200,9 +201,8 @@ export const TaskDashboard: React.FC = () => {
             {/* ── Header ── */}
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
                 <Box>
-                    <Typography variant="h4" fontWeight={900} sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    <Typography variant="h4" fontWeight={900} sx={{ 
+                        color: '#1e293b',
                         lineHeight: 1.2,
                     }}>
                         Task Dashboard
@@ -220,14 +220,13 @@ export const TaskDashboard: React.FC = () => {
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
-                    <Button variant="outlined" onClick={() => navigate('/admin/tasks/approval')} startIcon={<ApprovalIcon />}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: '#f59e0b', color: '#f59e0b', '&:hover': { borderColor: '#d97706', bgcolor: '#fffbeb' } }}>
+                    <CommonButton variant="outlined" onClick={() => navigate('/admin/tasks/approval')} startIcon={<ApprovalIcon />}
+                        sx={{ borderColor: '#f59e0b', color: '#f59e0b', '&:hover': { borderColor: '#d97706', bgcolor: '#fffbeb' } }}>
                         Approvals {stats.pendingApproval > 0 && <Chip label={stats.pendingApproval} size="small" sx={{ ml: 0.5, bgcolor: '#f59e0b', color: '#fff', height: 18, '& .MuiChip-label': { px: 0.75, py: 0, fontSize: '0.7rem', fontWeight: 700 } }} />}
-                    </Button>
-                    <Button variant="contained" onClick={() => navigate('/admin/tasks/ongoing')} startIcon={<ProgressIcon />}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                    </CommonButton>
+                    <CommonButton onClick={() => navigate('/admin/tasks/ongoing')} startIcon={<ProgressIcon />}>
                         View Tasks
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Box>
 
@@ -385,9 +384,9 @@ export const TaskDashboard: React.FC = () => {
                         </List>
                         {upcomingTasks.length > 0 && (
                             <Box sx={{ p: 1.5, borderTop: '1px solid #f0f0f0' }}>
-                                <Button fullWidth size="small" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/ongoing')} sx={{ textTransform: 'none', fontWeight: 600 }}>
+                                <CommonButton fullWidth size="small" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/ongoing')} sx={{ boxShadow: 'none' }}>
                                     View All Tasks
-                                </Button>
+                                </CommonButton>
                             </Box>
                         )}
                     </Paper>
@@ -433,9 +432,9 @@ export const TaskDashboard: React.FC = () => {
                         </List>
                         {overdueTasks.length > 0 && (
                             <Box sx={{ p: 1.5, borderTop: '1px solid #f0f0f0' }}>
-                                <Button fullWidth size="small" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/ongoing')} sx={{ textTransform: 'none', fontWeight: 600, color: '#ef4444' }}>
+                                <CommonButton variant="outlined" fullWidth size="small" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/ongoing')} sx={{ color: '#ef4444', borderColor: 'divider', boxShadow: 'none' }}>
                                     View Ongoing Tasks
-                                </Button>
+                                </CommonButton>
                             </Box>
                         )}
                     </Paper>
@@ -464,10 +463,10 @@ export const TaskDashboard: React.FC = () => {
                                     </React.Fragment>
                                 ))}
                                 <Box sx={{ p: 1.5, borderTop: '1px solid #f0f0f0' }}>
-                                    <Button fullWidth size="small" variant="contained" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/approval')}
-                                        sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#f59e0b', '&:hover': { bgcolor: '#d97706' } }}>
+                                    <CommonButton fullWidth size="small" variant="contained" endIcon={<ArrowIcon />} onClick={() => navigate('/admin/tasks/approval')}
+                                        sx={{ bgcolor: '#f59e0b', '&:hover': { bgcolor: '#d97706' }, boxShadow: 'none' }}>
                                         Go to Approvals
-                                    </Button>
+                                    </CommonButton>
                                 </Box>
                             </Paper>
                         )}
@@ -501,3 +500,8 @@ export const TaskDashboard: React.FC = () => {
 };
 
 export default TaskDashboard;
+
+
+
+
+

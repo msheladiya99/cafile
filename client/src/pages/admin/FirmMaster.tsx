@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, TextField, Button, Select, MenuItem,
+    Box, Paper, Typography, TextField, Select, MenuItem,
     Tabs, Tab, IconButton, Avatar, Snackbar, Alert, CircularProgress,
     Switch, Tooltip, FormControlLabel, Divider, Modal, Fade, Backdrop,
     Grid, RadioGroup,
@@ -25,6 +25,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
 import type { FirmMasterData, IMultiFirmData } from '../../services/firmService';
+import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 interface FieldRowProps { label: string; required?: boolean; children: React.ReactNode }
@@ -51,14 +52,14 @@ const Row: React.FC<FieldRowProps> = ({ label, required, children }) => (
 );
 
 const SectionHead: React.FC<{ icon?: React.ReactNode; title: string }> = ({ icon, title }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0', width: '100%', boxSizing: 'border-box' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: '8px', mb: 1.5, border: '1px solid #e8ecf0', width: '100%', boxSizing: 'border-box' }}>
         {icon && <Box sx={{ color: '#667eea', display: 'flex' }}>{icon}</Box>}
         <Typography fontSize="0.82rem" fontWeight={700} color="#444">{title}</Typography>
     </Box>
 );
 
-const sx = { size: 'small' as const, sx: { '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } } };
-const selSx = { size: 'small' as const, sx: { borderRadius: 1, fontSize: '0.82rem' } };
+const sx = { size: 'small' as const, sx: { '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } } };
+const selSx = { size: 'small' as const, sx: { borderRadius: '8px', fontSize: '0.82rem' } };
 
 interface ImgBoxProps { label: string; url?: string; onUpload: (f: File) => void; onRemove?: () => void; loading?: boolean }
 const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading }) => (
@@ -74,7 +75,7 @@ const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading
                 width: { xs: '100%', sm: 120 }, 
                 height: 100, 
                 border: '2px dashed #ccc', 
-                borderRadius: 1, 
+                borderRadius: '8px', 
                 display: 'flex', 
                 justifyContent: 'center', 
                 alignItems: 'center', 
@@ -106,15 +107,15 @@ const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading
                         </Box>
                     )}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
-                <Button component="label" size="small"
-                    sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, textTransform: 'none', px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', width: '100%' }}>
+                <CommonButton component="label" size="small"
+                    sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap' }}>
                     Choose File
                     <input type="file" hidden accept="image/jpeg,image/png" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
-                </Button>
+                </CommonButton>
                 <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{url ? 'Image set' : 'No file chosen'}</Typography>
             </Box>
-            <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: 1, fontSize: '0.72rem', width: '100%' }}>
+            <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: '8px', fontSize: '0.72rem', width: '100%' }}>
                 <strong>NOTE!</strong> JPEG or PNG Image Format only
             </Box>
         </Box>
@@ -199,7 +200,7 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
 
     return (
         <Box>
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px' }}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                     <Row label="Document Name *">
                         <Select value={docName} onChange={(e) => setDocName(e.target.value as string)} fullWidth displayEmpty {...selSx}>
@@ -212,12 +213,12 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
                     </Row>
                     <Row label="Browse File *">
                         <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden', mb: 0.5 }}>
-                                <Button component="label" size="small"
-                                    sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, textTransform: 'none', px: 1.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap', py: 0.7 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', mb: 0.5 }}>
+                                <CommonButton component="label" size="small"
+                                    sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, px: 1.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap', py: 0.7 }}>
                                     Choose File
                                     <input type="file" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) { setDocFile(f); setDocFileName(f.name); } }} />
-                                </Button>
+                                </CommonButton>
                                 <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{docFileName}</Typography>
                             </Box>
                             <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 0.5, fontSize: '0.72rem', display: 'inline-block' }}>
@@ -226,30 +227,30 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
                         </Box>
                     </Row>
                     <Row label="Description">
-                        <TextField value={docDesc} onChange={(e) => setDocDesc(e.target.value)} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} />
+                        <TextField value={docDesc} onChange={(e) => setDocDesc(e.target.value)} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} />
                     </Row>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={saving}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 3, boxShadow: 'none', fontWeight: 700 }}>
-                        {saving ? <CircularProgress size={16} color="inherit" /> : 'Add Document'}
-                    </Button>
-                    <Button variant="outlined" size="small" color="error" onClick={() => { setDocName(''); setDocNumber(''); setDocDesc(''); setDocFile(null); setDocFileName('No file chosen'); }}
-                        sx={{ textTransform: 'none', borderRadius: 1.5, px: 3, fontWeight: 700 }}>
+                    <CommonButton variant="contained" size="small" onClick={handleSave} loading={saving}
+                        sx={{ bgcolor: '#6366f1', color: 'white', borderRadius: '8px', px: 3, boxShadow: 'none', '&:hover': { bgcolor: '#4f46e5' } }}>
+                        Add Document
+                    </CommonButton>
+                    <CommonButton variant="outlined" size="small" color="error" onClick={() => { setDocName(''); setDocNumber(''); setDocDesc(''); setDocFile(null); setDocFileName('No file chosen'); }}
+                        sx={{ borderRadius: '8px', px: 3 }}>
                         Reset
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Paper>
 
             {/* Document List */}
-            <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Building2 size={16} />
                         <Typography fontWeight={700} fontSize="0.875rem">Firm Document List</Typography>
                     </Box>
                     <Tooltip title="Export to CSV">
-                        <IconButton size="small" onClick={exportExcel} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
+                        <IconButton size="small" onClick={exportExcel} sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px' }}>
                             <Typography fontSize="0.7rem" fontWeight={700}>XLS</Typography>
                         </IconButton>
                     </Tooltip>
@@ -374,43 +375,43 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
 
     return (
         <Box>
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px' }}>
                 <Row label="Currency *">
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Select value={curr.currencyCode} onChange={(e) => handleCurrencySelect(e.target.value as string)} displayEmpty size="small" sx={{ minWidth: 200, borderRadius: 1, fontSize: '0.82rem' }}>
+                        <Select value={curr.currencyCode} onChange={(e) => handleCurrencySelect(e.target.value as string)} displayEmpty size="small" sx={{ minWidth: 200, borderRadius: '8px', fontSize: '0.82rem' }}>
                             <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Currency...</em></MenuItem>
                             {CURRENCIES.map(c => <MenuItem key={c.code} value={c.code} sx={{ fontSize: '0.82rem' }}>{c.code} - {c.name}</MenuItem>)}
                         </Select>
                         <TextField value={curr.rate} onChange={(e) => setCurr(p => ({ ...p, rate: parseFloat(e.target.value) || 0 }))} type="number" size="small"
-                            sx={{ width: 120, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 0, step: 0.01 }} />
-                        <Button size="small" variant="outlined" sx={{ textTransform: 'none', borderRadius: 1, fontSize: '0.8rem', px: 1.5, minWidth: 'auto', color: '#555', borderColor: '#ccc' }}>Rate.</Button>
+                            sx={{ width: 120, '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} inputProps={{ min: 0, step: 0.01 }} />
+                        <CommonButton size="small" variant="outlined" sx={{ borderRadius: '8px', fontSize: '0.8rem', px: 1.5, minWidth: 'auto', color: '#555', borderColor: '#ccc' }}>Rate.</CommonButton>
                         <Tooltip title="Exchange rate relative to the default currency (e.g. INR = 1.00)">
                             <Info size={18} color="#aaa" style={{ cursor: 'pointer' }} />
                         </Tooltip>
                     </Box>
                 </Row>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={saving}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 4, boxShadow: 'none', fontWeight: 700 }}>
-                        {saving ? <CircularProgress size={16} color="inherit" /> : 'Save'}
-                    </Button>
-                    <Button variant="outlined" size="small" color="error" onClick={() => { setCurr(CURR_BLANK); setEditId(null); }}
-                        sx={{ textTransform: 'none', borderRadius: 1.5, px: 4, fontWeight: 700 }}>Cancel</Button>
+                    <CommonButton variant="contained" size="small" onClick={handleSave} loading={saving}
+                        sx={{ boxShadow: 'none' }}>
+                        Save
+                    </CommonButton>
+                    <CommonButton variant="outlined" size="small" color="error" onClick={() => { setCurr(CURR_BLANK); setEditId(null); }}
+                        sx={{ borderRadius: '8px', px: 4 }}>Cancel</CommonButton>
                 </Box>
             </Paper>
 
-            <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <List size={16} />
                         <Typography fontWeight={700} fontSize="0.875rem">Currency List</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                         <Tooltip title="Activity Log">
-                            <Button size="small" variant="contained" sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', fontWeight: 700, fontSize: '0.75rem', borderRadius: 1, boxShadow: 'none', minWidth: 'auto', px: 1.5 }}>Log</Button>
+                            <CommonButton size="small" variant="contained" sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4338ca' }, fontSize: '0.75rem', borderRadius: '8px', boxShadow: 'none', minWidth: 'auto', px: 1.5 }}>Log</CommonButton>
                         </Tooltip>
                         <Tooltip title="Export to Excel/CSV">
-                            <IconButton size="small" onClick={exportCSV} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, width: 28, height: 28 }}>
+                            <IconButton size="small" onClick={exportCSV} sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', width: 28, height: 28 }}>
                                 <FileSpreadsheet size={14} />
                             </IconButton>
                         </Tooltip>
@@ -476,17 +477,17 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
 
     return (
         <Box>
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5, maxWidth: 700 }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px', maxWidth: 700 }}>
                 <Row label="Name *">
                     <TextField value={tax.name} onChange={(e) => setTax(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} />
                 </Row>
                 <Row label="Percentage *">
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Select value={tax.percentageType} onChange={(e) => setTax(p => ({ ...p, percentageType: e.target.value as 'Percentage' | 'Fixed' }))} size="small" sx={{ minWidth: 130, borderRadius: 1, fontSize: '0.82rem' }}>
+                        <Select value={tax.percentageType} onChange={(e) => setTax(p => ({ ...p, percentageType: e.target.value as 'Percentage' | 'Fixed' }))} size="small" sx={{ minWidth: 130, borderRadius: '8px', fontSize: '0.82rem' }}>
                             <MenuItem value="Percentage" sx={{ fontSize: '0.82rem' }}>Percentage</MenuItem>
                             <MenuItem value="Fixed" sx={{ fontSize: '0.82rem' }}>Fixed</MenuItem>
                         </Select>
-                        <TextField value={tax.percentageValue} onChange={(e) => setTax(p => ({ ...p, percentageValue: parseFloat(e.target.value) || 0 }))} type="number" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 0, step: 0.01 }} />
+                        <TextField value={tax.percentageValue} onChange={(e) => setTax(p => ({ ...p, percentageValue: parseFloat(e.target.value) || 0 }))} type="number" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} inputProps={{ min: 0, step: 0.01 }} />
                     </Box>
                 </Row>
                 <Row label="Default">
@@ -495,22 +496,22 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
                 </Row>
                 <Row label="Status">
                     <FormControlLabel
-                        control={<Switch size="small" checked={tax.status} onChange={(e) => setTax(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                        control={<Switch size="small" checked={tax.status} onChange={(e) => setTax(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
                         label={<Typography fontSize="0.8rem" fontWeight={600} color={tax.status ? '#667eea' : 'text.secondary'}>{tax.status ? 'Active' : 'Inactive'}</Typography>}
                     />
                 </Row>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={saving}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 4, boxShadow: 'none', fontWeight: 700 }}>
-                        {saving ? <CircularProgress size={16} color="inherit" /> : 'Save'}
-                    </Button>
-                    <Button variant="outlined" size="small" color="error" onClick={() => { setTax(TAX_BLANK); setEditId(null); }}
-                        sx={{ textTransform: 'none', borderRadius: 1.5, px: 4, fontWeight: 700 }}>Cancel</Button>
+                    <CommonButton variant="contained" size="small" onClick={handleSave} loading={saving}
+                        sx={{ boxShadow: 'none' }}>
+                        Save
+                    </CommonButton>
+                    <CommonButton variant="outlined" size="small" color="error" onClick={() => { setTax(TAX_BLANK); setEditId(null); }}
+                        sx={{ borderRadius: '8px', px: 4 }}>Cancel</CommonButton>
                 </Box>
             </Paper>
 
-            <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Building2 size={16} />
                     <Typography fontWeight={700} fontSize="0.875rem">Tax List</Typography>
                 </Box>
@@ -526,7 +527,7 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{t.percentageType}</td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{t.percentageValue}{t.percentageType === 'Percentage' ? '%' : ''}</td>
                                         <td style={{ padding: '8px 12px' }}>{t.isDefault ? <Box sx={{ color: '#667eea', fontWeight: 700, fontSize: '0.75rem' }}>✔ Default</Box> : '—'}</td>
-                                        <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, bgcolor: t.status ? '#e8f5e9' : '#ffebee', color: t.status ? '#2e7d32' : '#c62828' }}>{t.status ? 'Active' : 'Inactive'}</Box></td>
+                                        <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, bgcolor: t.status ? '#e8f5e9' : '#ffebee', color: t.status ? '#2e7d32' : '#c62828' }}>{t.status ? 'Active' : 'Inactive'}</Box></td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton size="small" onClick={() => { setTax({ name: t.name, percentageType: t.percentageType, percentageValue: t.percentageValue, isDefault: t.isDefault, status: t.status }); setEditId(t._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
                                                 <Pencil size={14} />
@@ -601,14 +602,14 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
 
     return (
         <Box>
-            <Paper sx={{ p: 2, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 2, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', lg: 'row' } }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                             <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
                             <Row label="Firm Name *"><TextField value={mf.firmName} onChange={mff('firmName')} fullWidth {...sx} /></Row>
                             <Row label="Short Name *"><TextField value={mf.shortName || ''} onChange={mff('shortName')} fullWidth {...sx} /></Row>
-                            <Row label="Address *"><TextField value={mf.address || ''} onChange={mff('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} /></Row>
+                            <Row label="Address *"><TextField value={mf.address || ''} onChange={mff('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} /></Row>
                             <Row label="Country *"><Select value={mf.country || ''} onChange={mfsel('country')} fullWidth displayEmpty {...selSx}>{COUNTRY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}</Select></Row>
                             <Row label="State *"><Select value={mf.state || ''} onChange={mfsel('state')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a State...</em></MenuItem>{STATE_LIST.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.82rem' }}>{s}</MenuItem>)}</Select></Row>
                             <Row label="City *"><Select value={mf.city || ''} onChange={mfsel('city')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a City...</em></MenuItem>{CITY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}</Select></Row>
@@ -618,7 +619,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                             <Row label="Email *"><TextField value={mf.email || ''} onChange={mff('email')} type="email" fullWidth {...sx} /></Row>
                             <Row label="Firm Type *"><Select value={mf.firmType || ''} onChange={mfsel('firmType')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>{FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}</Select></Row>
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                             <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
                             <Row label="Bank Name *"><TextField value={mf.bankName || ''} onChange={mff('bankName')} fullWidth {...sx} /></Row>
                             <Row label="Bank Branch *"><TextField value={mf.bankBranch || ''} onChange={mff('bankBranch')} fullWidth {...sx} /></Row>
@@ -629,24 +630,24 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                             <Row label="SWIFT Code"><TextField value={mf.swiftCode || ''} onChange={mff('swiftCode')} fullWidth {...sx} /></Row>
                             <Row label="MICR Code"><TextField value={mf.micrCode || ''} onChange={mff('micrCode')} fullWidth {...sx} /></Row>
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                             <SectionHead title="Support team detail" />
                             <Row label="Email *"><TextField value={mf.supportEmails || ''} onChange={mff('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} /></Row>
                             <Row label="Mobile Number *"><TextField value={mf.supportMobile || ''} onChange={mff('supportMobile')} fullWidth {...sx} /></Row>
                         </Paper>
                     </Box>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                             <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
                                 <FormControlLabel
-                                    control={<Switch size="small" checked={mf.showLogo !== false} onChange={(e) => setMf(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                    control={<Switch size="small" checked={mf.showLogo !== false} onChange={(e) => setMf(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
                                     label={<Typography fontSize="0.75rem" fontWeight={600} color={mf.showLogo !== false ? 'primary' : 'text.secondary'}>{mf.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
                                 />
                             </Box>
                             <ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} onRemove={() => setMf(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                             <SectionHead title="Other Detail" />
                             <Row label="PAN No"><TextField value={mf.panNumber || ''} onChange={mff('panNumber')} fullWidth {...sx} /></Row>
                             <Row label="GSTIN"><TextField value={mf.gstin || ''} onChange={mff('gstin')} fullWidth {...sx} /></Row>
@@ -655,13 +656,13 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                             <Row label="Invoice Prefix *"><TextField value={mf.invoicePrefix || ''} onChange={mff('invoicePrefix')} fullWidth {...sx} /></Row>
                             <Row label="Status">
                                 <FormControlLabel
-                                    control={<Switch size="small" checked={mf.status ?? true} onChange={(e) => setMf(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                    control={<Switch size="small" checked={mf.status ?? true} onChange={(e) => setMf(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
                                     label={<Typography fontSize="0.8rem" fontWeight={600} color={mf.status ? 'primary' : 'text.secondary'}>{mf.status ? 'Active' : 'Inactive'}</Typography>}
                                 />
                             </Row>
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: '8px', mb: 1.5, border: '1px solid #e8ecf0' }}>
                                 <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
                                 <Tooltip title="Custom fields for this firm"><Info size={14} color="#aaa" /></Tooltip>
                             </Box>
@@ -669,23 +670,23 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                                 <Row key={n} label={`Field ${n}`}><TextField value={(mf as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={mff(`extraField${n}` as keyof IMultiFirmData)} fullWidth {...sx} /></Row>
                             ))}
                         </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}><ImgBox label="Firm Sign" url={mf.signImageUrl} onUpload={handleSign} onRemove={() => setMf(p => ({ ...p, signImageUrl: '' }))} loading={signLoading} /></Paper>
+                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}><ImgBox label="Firm Sign" url={mf.signImageUrl} onUpload={handleSign} onRemove={() => setMf(p => ({ ...p, signImageUrl: '' }))} loading={signLoading} /></Paper>
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={saving}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 4, boxShadow: 'none', fontWeight: 700 }}>
-                        {saving ? <CircularProgress size={16} color="inherit" /> : 'Save'}
-                    </Button>
-                    <Button variant="outlined" size="small" color="error" onClick={() => { setMf(MF_BLANK); setEditId(null); }}
-                        sx={{ textTransform: 'none', borderRadius: 1.5, px: 4, fontWeight: 700 }}>Cancel</Button>
+                    <CommonButton variant="contained" size="small" onClick={handleSave} loading={saving}
+                        sx={{ boxShadow: 'none' }}>
+                        Save
+                    </CommonButton>
+                    <CommonButton variant="outlined" size="small" color="error" onClick={() => { setMf(MF_BLANK); setEditId(null); }}
+                        sx={{ borderRadius: '8px', px: 4 }}>Cancel</CommonButton>
                 </Box>
             </Paper>
-            <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Building2 size={16} /><Typography fontWeight={700} fontSize="0.875rem">Multi Firm List</Typography></Box>
-                    <Button size="small" variant="contained" startIcon={<Plus size={18} />} onClick={() => { setMf(MF_BLANK); setEditId(null); }}
-                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', fontWeight: 700, borderRadius: 1.5, fontSize: '0.78rem', boxShadow: 'none' }}>Add New</Button>
+                    <CommonButton size="small" variant="contained" startIcon={<Plus size={18} />} onClick={() => { setMf(MF_BLANK); setEditId(null); }}
+                        sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', fontSize: '0.78rem', boxShadow: 'none' }}>Add New</CommonButton>
                 </Box>
                 {isLoading ? (<Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>)
                     : firms.length === 0 ? (<Box sx={{ p: 2, color: 'text.secondary', fontSize: '0.85rem' }}>Firm Not Found</Box>)
@@ -699,7 +700,7 @@ const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error'
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{firm.firmType || '—'}</td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{firm.city || '—'}</td>
                                         <td style={{ padding: '8px 12px', color: '#666' }}>{firm.mobile || '—'}</td>
-                                        <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: 2, fontSize: '0.72rem', fontWeight: 700, bgcolor: firm.status ? '#e8f5e9' : '#ffebee', color: firm.status ? '#2e7d32' : '#c62828' }}>{firm.status ? 'Active' : 'Inactive'}</Box></td>
+                                        <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, bgcolor: firm.status ? '#e8f5e9' : '#ffebee', color: firm.status ? '#2e7d32' : '#c62828' }}>{firm.status ? 'Active' : 'Inactive'}</Box></td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton size="small" onClick={() => { setMf({ ...MF_BLANK, ...firm }); setEditId(firm._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
                                                 <Pencil size={14} />
@@ -749,7 +750,7 @@ const PartnersTab: React.FC<{
 
     return (
         <Box>
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 1.5 }}>
+            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px' }}>
                 <Typography fontSize="0.9rem" fontWeight={700} color="#444" mb={2}>{editIdx !== null ? 'Edit Partner' : 'Add New Partner'}</Typography>
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 4 }}>
@@ -761,29 +762,29 @@ const PartnersTab: React.FC<{
                         <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                     </Grid>
                     <Grid size={{ xs: 12, md: 4 }}>
-                        <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: 1, textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
+                        <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: '8px', textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
                             <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
                             {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
                                 <Box component="img" src={curr.signatureImageUrl} alt={`Partner signature - ${curr.name}`} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
                             ) : <Camera size={24} color="#ccc" />}
-                            <Button component="label" size="small" variant="outlined" sx={{ textTransform: 'none', py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
+                            <CommonButton component="label" size="small" variant="outlined" sx={{ py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
                                 {curr.signatureImageUrl ? 'Change' : 'Upload'}
                                 <input type="file" hidden accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSignUpload(f); }} />
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Grid>
                 </Grid>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3 }}>
-                    <Button variant="contained" size="small" onClick={handleAdd}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 4, fontWeight: 700 }}>
+                    <CommonButton variant="contained" size="small" onClick={handleAdd}
+                        sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: '8px', px: 4 }}>
                         {editIdx !== null ? 'Update Partner' : 'Add to List'}
-                    </Button>
-                    {editIdx !== null && <Button variant="outlined" size="small" onClick={() => { setCurr(PARTNER_BLANK); setEditIdx(null); }}>Cancel</Button>}
+                    </CommonButton>
+                    {editIdx !== null && <CommonButton variant="outlined" size="small" onClick={() => { setCurr(PARTNER_BLANK); setEditIdx(null); }}>Cancel</CommonButton>}
                 </Box>
             </Paper>
 
-            <Paper sx={{ borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Building2 size={16} />
                     <Typography fontWeight={700} fontSize="0.875rem">Firm Partners List</Typography>
                 </Box>
@@ -875,10 +876,10 @@ export const FirmMasterPage: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 1, sm: 2 }, overflowX: 'hidden' }}>
             {/* Header */}
-            <Paper sx={{ mb: 2, borderRadius: 1.5, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+            <Paper sx={{ mb: 2, borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
                 <Box sx={{ 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                    color: 'white', 
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', 
+                    color: '#1e293b', 
                     px: { xs: 1.5, sm: 2.5 }, 
                     py: 1.5, 
                     display: 'flex', 
@@ -888,9 +889,7 @@ export const FirmMasterPage: React.FC = () => {
                     gap: { xs: 1.5, sm: 0 }
                 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        {(form.showLogo !== false && form.logoUrl)
-                            ? <Avatar src={form.logoUrl} sx={{ width: 36, height: 36, border: '2px solid rgba(255,255,255,0.5)' }} />
-                            : <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 36, height: 36 }}><Building2 size={16} /></Avatar>}
+                        <Avatar sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, width: 36, height: 36 }}><Building2 size={16} /></Avatar>
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
                     </Box>
                     <Box sx={{ 
@@ -899,70 +898,64 @@ export const FirmMasterPage: React.FC = () => {
                         width: { xs: '100%', sm: 'auto' },
                         flexWrap: 'wrap'
                     }}>
-                        <Button variant="contained" size="small"
+                        <CommonButton variant="contained" size="small"
                             onClick={() => setFieldModal(true)}
                             sx={{ 
-                                bgcolor: 'rgba(255,255,255,0.15)', 
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, 
-                                borderRadius: 1.5, 
+                                bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, 
+                                borderRadius: '8px', 
                                 boxShadow: 'none', 
-                                textTransform: 'none', 
                                 fontWeight: 700, 
                                 fontSize: '0.82rem',
                                 flex: { xs: 1, sm: 'none' },
                                 whiteSpace: 'nowrap'
                             }}>
                             Field Master
-                        </Button>
-                        <Button variant="contained" size="small" startIcon={saveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : <Save size={16} />}
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" startIcon={saveMutation.isPending ? null : <Save size={16} />}
                             onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
-                            disabled={saveMutation.isPending}
+                            loading={saveMutation.isPending}
                             sx={{ 
-                                bgcolor: 'rgba(255,255,255,0.22)', 
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, 
-                                borderRadius: 1.5, 
+                                borderRadius: '8px', 
                                 boxShadow: 'none', 
-                                textTransform: 'none', 
                                 fontWeight: 700, 
                                 fontSize: '0.82rem',
                                 flex: { xs: 1, sm: 'none' }
                             }}>
-                            {saveMutation.isPending ? 'Saving...' : 'Save'}
-                        </Button>
-                        <Button variant="outlined" size="small"
+                            Save
+                        </CommonButton>
+                        <CommonButton variant="outlined" size="small"
                             onClick={() => firm && setForm({ ...BLANK, ...firm })}
                             sx={{ 
                                 bgcolor: 'transparent', 
-                                color: 'white', 
-                                borderColor: 'rgba(255,255,255,0.4)', 
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'white' }, 
-                                borderRadius: 1.5, 
-                                textTransform: 'none', 
+                                color: '#6366f1', 
+                                borderColor: '#6366f1', 
+                                '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.05)', borderColor: '#4f46e5' }, 
+                                borderRadius: '8px', 
                                 fontWeight: 700, 
                                 fontSize: '0.82rem',
                                 flex: { xs: 1, sm: 'none' }
                             }}>
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
                 <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto"
-                    sx={{ px: 1, bgcolor: '#fff', borderBottom: '1px solid #eee', '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', minHeight: 40, py: 0.5 }, '& .Mui-selected': { color: '#667eea' }, '& .MuiTabs-indicator': { bgcolor: '#667eea', height: 3 } }}>
+                    sx={{ px: 1, bgcolor: '#fff', borderBottom: '1px solid #eee', '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', minHeight: 40, py: 0.5 }, '& .Mui-selected': { color: '#667eea' }, '& .MuiTabs-indicator': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, height: 3 } }}>
                     {tabs.map((t, i) => <Tab key={i} label={t} />)}
                 </Tabs>
             </Paper>
 
             {tab === 0 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', flexDirection: { xs: 'column', lg: 'row' }, width: '100%', minWidth: 0 }}>
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
                                 <Row label="Firm Name*"><TextField value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
                                 <Row label="Short Name*"><TextField value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
                                 <Row label="Address*">
-                                    <TextField value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} />
+                                    <TextField value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} />
                                 </Row>
                                 <Row label="Country*">
                                     <Select value={form.country || ''} onChange={sel('country')} fullWidth displayEmpty {...selSx}>
@@ -994,7 +987,7 @@ export const FirmMasterPage: React.FC = () => {
                                 </Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
                                 <Row label="Bank Name*"><TextField value={form.bankName || ''} onChange={f('bankName')} fullWidth {...sx} /></Row>
                                 <Row label="Bank Branch*"><TextField value={form.bankBranch || ''} onChange={f('bankBranch')} fullWidth {...sx} /></Row>
@@ -1007,7 +1000,7 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="PAN No*"><TextField value={form.panNumber || ''} onChange={f('panNumber')} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Other Details" />
                                 <Row label="Firm Zone">
                                     <Select value={form.firmZone || ''} onChange={sel('firmZone')} fullWidth displayEmpty {...selSx}>
@@ -1018,14 +1011,14 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="Invoice Prefix*"><TextField value={form.invoicePrefix || ''} onChange={f('invoicePrefix')} fullWidth {...sx} /></Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Invoice & Daily Report Email ID" />
                                 <Row label="Email*">
                                     <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
                                 </Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Support Detail" />
                                 <Row label="Email*">
                                     <TextField value={form.supportEmails || ''} onChange={f('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
@@ -1033,13 +1026,13 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="Mobile Number*"><TextField value={form.supportMobile || ''} onChange={f('supportMobile')} fullWidth {...sx} /></Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Timer Auto Close" />
                                 <Row label="Auto Close Hours">
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#667eea', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#5a6fd6' }, width: 28, height: 28 }}><Plus size={16} /></IconButton>
-                                        <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: 1, fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
-                                        <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: 1, '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
+                                        <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', borderRadius: '8px', width: 28, height: 28 }}><Plus size={16} /></IconButton>
+                                        <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
+                                        <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
                                     </Box>
                                 </Row>
                             </Paper>
@@ -1047,18 +1040,18 @@ export const FirmMasterPage: React.FC = () => {
 
                         {/* RIGHT COLUMN */}
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
                                     <FormControlLabel
-                                        control={<Switch size="small" checked={form.showLogo !== false} onChange={(e) => setForm(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />}
+                                        control={<Switch size="small" checked={form.showLogo !== false} onChange={(e) => setForm(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
                                         label={<Typography fontSize="0.75rem" fontWeight={600} color={form.showLogo !== false ? 'primary' : 'text.secondary'}>{form.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
                                     />
                                 </Box>
                                 <ImgBox label="Firm Logo" url={form.logoUrl} onUpload={handleLogo} onRemove={() => setForm(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Registration Detail" />
                                 <Row label="GSTIN"><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
                                 <Row label="Membership No"><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
@@ -1069,7 +1062,7 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="Licence Authority"><TextField value={form.licenceAuthority || ''} onChange={f('licenceAuthority')} fullWidth {...sx} /></Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, width: '100%', boxSizing: 'border-box' }}>
+                            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Social Networking Detail" />
                                 <Row label="Web Address"><TextField value={form.website || ''} onChange={f('website')} fullWidth {...sx} placeholder="https://..." /></Row>
                                 <Row label="Facebook"><TextField value={form.facebook || ''} onChange={f('facebook')} fullWidth {...sx} /></Row>
@@ -1078,8 +1071,8 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="PMS App URL"><TextField value={form.pmsAppUrl || ''} onChange={f('pmsAppUrl')} fullWidth {...sx} /></Row>
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: 1, mb: 1.5, border: '1px solid #e8ecf0' }}>
+                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: '8px', mb: 1.5, border: '1px solid #e8ecf0' }}>
                                     <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
                                     <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
                                 </Box>
@@ -1090,7 +1083,7 @@ export const FirmMasterPage: React.FC = () => {
                                 ))}
                             </Paper>
 
-                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 1.5 }}>
+                            <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
                                 <ImgBox label="Firm Signature" url={form.signatureImageUrl} onUpload={handleSig} onRemove={() => setForm(p => ({ ...p, signatureImageUrl: '' }))} loading={sigLoading} />
                             </Paper>
                         </Box>
@@ -1100,7 +1093,7 @@ export const FirmMasterPage: React.FC = () => {
 
             {/* ── TAB 1: Partners ── */}
             {tab === 1 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <PartnersTab
                         partners={form.partners || []}
                         onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
@@ -1111,7 +1104,7 @@ export const FirmMasterPage: React.FC = () => {
 
             {/* ── TAB 2: Firm Documents ── */}
             {tab === 2 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <FirmDocumentsTab toast={toast} />
                 </Paper>
             )}
@@ -1123,7 +1116,7 @@ export const FirmMasterPage: React.FC = () => {
 
             {/* ── TAB 4: Tax Detail ── */}
             {tab === 4 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <TaxDetailTab toast={toast} />
                 </Paper>
             )}
@@ -1131,7 +1124,7 @@ export const FirmMasterPage: React.FC = () => {
 
             {/* ── TAB 5: Currency ── */}
             {tab === 5 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <CurrencyTab toast={toast} />
                 </Paper>
             )}
@@ -1139,8 +1132,8 @@ export const FirmMasterPage: React.FC = () => {
 
             {/* ── TAB 6: Invoice ── */}
             {tab === 6 && (
-                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: 1.5, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 1.5, maxWidth: 800 }}>
+                <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '8px', maxWidth: 800 }}>
                         <SectionHead icon={<Receipt size={16} />} title="Invoice Settings" />
                         <Grid container spacing={3}>
                             <Grid size={{ xs: 12, md: 6 }}>
@@ -1184,7 +1177,7 @@ export const FirmMasterPage: React.FC = () => {
                                         onClick={() => setForm(p => ({ ...p, invoiceTemplate: t.id }))}
                                         sx={{
                                             width: 220, cursor: 'pointer', position: 'relative',
-                                            borderRadius: 2.5, overflow: 'hidden', border: '3px solid',
+                                            borderRadius: '12px', overflow: 'hidden', border: '3px solid',
                                             borderColor: form.invoiceTemplate === t.id ? '#667eea' : '#eef2f6',
                                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                             '&:hover': { transform: 'scale(1.02)', boxShadow: '0 12px 24px rgba(0,0,0,0.12)' },
@@ -1193,22 +1186,22 @@ export const FirmMasterPage: React.FC = () => {
                                     >
                                         <Box sx={{ height: 280, bgcolor: t.id === 'template1' ? '#fcfdff' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 1.5, position: 'relative' }}>
                                             <Box sx={{
-                                                width: '100%', height: '100%', bgcolor: 'white', borderRadius: 1.5,
+                                                width: '100%', height: '100%', bgcolor: 'white', borderRadius: '8px',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.06)', p: 1.5,
                                                 display: 'flex', flexDirection: 'column', border: '1px solid #f0f2f5'
                                             }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                                                     <Box sx={{ width: 30, height: 30, borderRadius: '50%', bgcolor: '#e2e8f0' }} />
-                                                    <Box sx={{ width: '40%', height: 12, bgcolor: '#f1f5f9', borderRadius: 1 }} />
+                                                    <Box sx={{ width: '40%', height: 12, bgcolor: '#f1f5f9', borderRadius: '8px' }} />
                                                 </Box>
-                                                <Box sx={{ height: 8, bgcolor: '#f1f5f9', width: '100%', borderRadius: 1, mb: 0.5 }} />
-                                                <Box sx={{ height: 8, bgcolor: '#f1f5f9', width: '90%', borderRadius: 1, mb: 1.5 }} />
+                                                <Box sx={{ height: 8, bgcolor: '#f1f5f9', width: '100%', borderRadius: '8px', mb: 0.5 }} />
+                                                <Box sx={{ height: 8, bgcolor: '#f1f5f9', width: '90%', borderRadius: '8px', mb: 1.5 }} />
 
                                                 <Box sx={{ flex: 1, borderTop: '1px solid #f1f5f9', pt: 1 }}>
                                                     {[1, 2, 3].map(i => (
                                                         <Box key={i} sx={{ display: 'flex', gap: 1, mb: 0.8 }}>
-                                                            <Box sx={{ flex: 1, height: 6, bgcolor: '#f1f5f9', borderRadius: 1 }} />
-                                                            <Box sx={{ width: 30, height: 6, bgcolor: '#f1f5f9', borderRadius: 1 }} />
+                                                            <Box sx={{ flex: 1, height: 6, bgcolor: '#f1f5f9', borderRadius: '8px' }} />
+                                                            <Box sx={{ width: 30, height: 6, bgcolor: '#f1f5f9', borderRadius: '8px' }} />
                                                         </Box>
                                                     ))}
                                                 </Box>
@@ -1220,28 +1213,28 @@ export const FirmMasterPage: React.FC = () => {
                                                         bgcolor: t.id === 'template2' ? '#667eea' : 
                                                                  t.id === 'template3' ? '#1e293b' : 
                                                                  t.id === 'template4' ? '#4338ca' : '#cbd5e1', 
-                                                        borderRadius: 1, 
+                                                        borderRadius: '8px', 
                                                         opacity: 0.8,
                                                         border: t.id === 'template4' ? '1px solid #b45309' : 'none'
                                                     }} />
                                                 </Box>
                                             </Box>
 
-                                            <Button
+                                            <CommonButton
                                                 size="small"
                                                 variant="contained"
                                                 onClick={(e) => { e.stopPropagation(); setPreviewModal({ open: true, template: t.id }); }}
                                                 sx={{
                                                     position: 'absolute', bottom: 10, bgcolor: 'rgba(255,255,255,0.95)', color: '#667eea',
-                                                    '&:hover': { bgcolor: 'white' }, borderRadius: 1.5, textTransform: 'none',
+                                                    '&:hover': { bgcolor: 'white' }, borderRadius: '8px',
                                                     fontWeight: 700, fontSize: '0.7rem', px: 1, py: 0.2, backdropFilter: 'blur(4px)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                                 }}
                                             >
                                                 Preview
-                                            </Button>
+                                            </CommonButton>
 
                                             {form.invoiceTemplate === t.id && (
-                                                <Box sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#667eea', color: 'white', borderRadius: '50%', p: 0.3, boxShadow: '0 2px 8px rgba(102,126,234,0.4)' }}>
+                                                <Box sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', borderRadius: '50%', p: 0.3, boxShadow: '0 2px 8px rgba(102,126,234,0.4)' }}>
                                                     <Check size={18} />
                                                 </Box>
                                             )}
@@ -1260,7 +1253,7 @@ export const FirmMasterPage: React.FC = () => {
                         </RadioGroup>
                     </Paper>
 
-                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 1.5, maxWidth: 800 }}>
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '8px', maxWidth: 800 }}>
                         <SectionHead title="Invoice Terms & Conditions" />
                         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
                             These terms will be displayed at the bottom of every invoice generated.
@@ -1273,7 +1266,7 @@ export const FirmMasterPage: React.FC = () => {
                                 placeholder="e.g.\n1. Payment is due within 15 days.\n2. Please include invoice number in payment notes.\n..."
                                 value={form.invoiceTerms || ''}
                                 onChange={f('invoiceTerms')}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5, fontSize: '0.85rem', bgcolor: '#fafafa' } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.85rem', bgcolor: '#fafafa' } }}
                             />
                         </Box>
                     </Paper>
@@ -1283,15 +1276,15 @@ export const FirmMasterPage: React.FC = () => {
             {/* Save / Cancel Footer (Only for tabs that modify firm-wide record) */}
             {(tab === 0 || tab === 1 || tab === 6) && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3, mb: 4 }}>
-                    <Button variant="contained" size="small" onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
-                        disabled={saveMutation.isPending}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 4, boxShadow: 'none', fontWeight: 700 }}>
-                        {saveMutation.isPending ? 'Saving...' : 'Save'}
-                    </Button>
-                    <Button variant="outlined" size="small" onClick={() => firm && setForm({ ...BLANK, ...firm })}
-                        sx={{ textTransform: 'none', borderRadius: 1.5, px: 4, color: '#ef4444', borderColor: '#ef4444', '&:hover': { bgcolor: '#fff5f5', borderColor: '#dc2626' }, fontWeight: 700 }}>
+                    <CommonButton variant="contained" size="small" onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
+                        loading={saveMutation.isPending}
+                        sx={{ boxShadow: 'none' }}>
+                        Save
+                    </CommonButton>
+                    <CommonButton variant="outlined" size="small" onClick={() => firm && setForm({ ...BLANK, ...firm })}
+                        sx={{ color: '#ef4444', borderColor: '#ef4444', '&:hover': { bgcolor: '#fff5f5', borderColor: '#dc2626' } }}>
                         Cancel
-                    </Button>
+                    </CommonButton>
                 </Box>
             )}
 
@@ -1310,7 +1303,7 @@ export const FirmMasterPage: React.FC = () => {
                 <Fade in={fieldModal}>
                     <Box sx={{
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        width: 400, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 24, p: 4, outline: 'none'
+                        width: 400, bgcolor: 'background.paper', borderRadius: '12px', boxShadow: 24, p: 4, outline: 'none'
                     }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                             <Building2 size={24} color="#667eea" />
@@ -1329,21 +1322,21 @@ export const FirmMasterPage: React.FC = () => {
                                         placeholder={`Field ${i + 1} Name`}
                                         value={(form.extraFieldLabels && form.extraFieldLabels[i]) || ''}
                                         onChange={(e) => updateLabel(i, e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                     />
                                 </Box>
                             ))}
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 4 }}>
-                            <Button onClick={() => setFieldModal(false)} sx={{ textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
-                            <Button
+                            <CommonButton onClick={() => setFieldModal(false)} variant="text">Cancel</CommonButton>
+                            <CommonButton
                                 variant="contained"
                                 onClick={() => saveMutation.mutate(form)}
-                                disabled={saveMutation.isPending}
-                                sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textTransform: 'none', borderRadius: 1.5, px: 3, fontWeight: 700 }}
+                                loading={saveMutation.isPending}
+                                sx={{ borderRadius: '8px', px: 3 }}
                             >
-                                {saveMutation.isPending ? 'Updating...' : 'Update Labels'}
-                            </Button>
+                                Update Labels
+                            </CommonButton>
                         </Box>
                     </Box>
                 </Fade>
@@ -1360,7 +1353,7 @@ export const FirmMasterPage: React.FC = () => {
                 <Fade in={previewModal.open}>
                     <Box sx={{
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        width: { xs: '95%', sm: 650 }, bgcolor: '#cbd5e1', borderRadius: 2, boxShadow: 24, p: 2, outline: 'none',
+                        width: { xs: '95%', sm: 650 }, bgcolor: '#cbd5e1', borderRadius: '12px', boxShadow: 24, p: 2, outline: 'none',
                         maxHeight: '90vh', overflowY: 'auto'
                     }}>
                         {/* THE INVOICE PAPER */}
@@ -1451,7 +1444,7 @@ export const FirmMasterPage: React.FC = () => {
                                             justifyContent: 'space-between', 
                                             bgcolor: '#f8fafc', 
                                             p: 1, 
-                                            borderRadius: 1,
+                                            borderRadius: '8px',
                                             borderLeft: previewModal.template === 'template4' ? '4px solid #b45309' : 'none'
                                         }}>
                                             <Typography fontWeight={800} fontSize="0.95rem">GRAND TOTAL</Typography>
@@ -1472,7 +1465,7 @@ export const FirmMasterPage: React.FC = () => {
                                             {form.invoiceTerms || '1. Interest @ 18% will be charged if not paid within 30 days.\n2. Subject to Mumbai Jurisdiction.\n3. This is a computer generated invoice.'}
                                         </Typography>
 
-                                        <Box sx={{ mt: 3, p: 1.5, border: '1px dashed #cbd5e1', borderRadius: 1, bgcolor: '#f8fafc' }}>
+                                        <Box sx={{ mt: 3, p: 1.5, border: '1px dashed #cbd5e1', borderRadius: '8px', bgcolor: '#f8fafc' }}>
                                             <Typography fontSize="0.7rem" fontWeight={800} color="text.secondary" gutterBottom>BANK DETAILS</Typography>
                                             <Typography fontSize="0.75rem"><strong>{form.bankName}</strong></Typography>
                                             <Typography fontSize="0.75rem">A/c No: {form.accountNumber} | IFSC: {form.ifscCode}</Typography>
@@ -1489,14 +1482,14 @@ export const FirmMasterPage: React.FC = () => {
 
                         {/* Modal Footer */}
                         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                            <Button
+                            <CommonButton
                                 variant="contained"
                                 color="inherit"
                                 onClick={() => setPreviewModal({ ...previewModal, open: false })}
-                                sx={{ borderRadius: 10, px: 4, textTransform: 'none', fontWeight: 700, bgcolor: 'white', color: '#1e293b' }}
+                                sx={{ borderRadius: '8px', px: 4, bgcolor: 'white', color: '#1e293b' }}
                             >
                                 Close Preview
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Box>
                 </Fade>
@@ -1504,3 +1497,8 @@ export const FirmMasterPage: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+
