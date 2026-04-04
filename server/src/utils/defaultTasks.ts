@@ -1,13 +1,13 @@
-/**
+﻿/**
  * 30 Default CA Task Templates
- * ─────────────────────────────────────────────────────────────────────────────
+ * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
  * These are seeded into every new firm at creation time.
  * Grouped by category for automatic category creation.
  */
 
 export interface DefaultTask {
     taskName: string;
-    category: string;       // category name — auto-created if not exists
+    category: string;       // category name ΓÇö auto-created if not exists
     categoryColor: string;  // color for the category
     mode: string;
     frequency?: string;
@@ -29,9 +29,9 @@ export const DEFAULT_TASK_CATEGORIES: { name: string; color: string }[] = [
 ];
 
 export const DEFAULT_TASKS: DefaultTask[] = [
-    // ── Income Tax ────────────────────────────────────────────────────────────
+    // ΓöÇΓöÇ Income Tax ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
-        taskName: 'ITR Filing — Individual',
+        taskName: 'ITR Filing ΓÇö Individual',
         category: 'Income Tax', categoryColor: '#3b82f6',
         mode: 'Offline', frequency: 'Yearly', dueDays: 31,
         estimatedHours: 3, recurringTask: true,
@@ -40,7 +40,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         udin: false,
     },
     {
-        taskName: 'ITR Filing — Business / Firm',
+        taskName: 'ITR Filing ΓÇö Business / Firm',
         category: 'Income Tax', categoryColor: '#3b82f6',
         mode: 'Offline', frequency: 'Yearly', dueDays: 31,
         estimatedHours: 5, recurringTask: true,
@@ -49,7 +49,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         udin: false,
     },
     {
-        taskName: 'ITR Filing — Company',
+        taskName: 'ITR Filing ΓÇö Company',
         category: 'Income Tax', categoryColor: '#3b82f6',
         mode: 'Offline', frequency: 'Yearly', dueDays: 31,
         estimatedHours: 8, recurringTask: true,
@@ -72,7 +72,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         mode: 'Online', frequency: 'Quarterly', dueDays: 31,
         estimatedHours: 3, recurringTask: true,
         typeOfClient: ['Individual', 'Firm', 'Company'],
-        description: 'Prepare and file TDS returns — 24Q (salary) and 26Q (non-salary).',
+        description: 'Prepare and file TDS returns ΓÇö 24Q (salary) and 26Q (non-salary).',
         udin: false,
     },
     {
@@ -84,14 +84,14 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         description: 'Certificate for foreign remittance under FEMA/Income Tax.',
         udin: true,
     },
-    // ── GST ──────────────────────────────────────────────────────────────────
+    // ΓöÇΓöÇ GST ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
         taskName: 'GSTR-1 Filing',
         category: 'GST', categoryColor: '#10b981',
         mode: 'Online', frequency: 'Monthly', dueDays: 11,
         estimatedHours: 2, recurringTask: true,
         typeOfClient: ['Individual', 'Firm', 'Company'],
-        description: 'File outward supply details — GSTR-1 by 11th of each month.',
+        description: 'File outward supply details ΓÇö GSTR-1 by 11th of each month.',
         udin: false,
     },
     {
@@ -109,7 +109,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         mode: 'Online', frequency: 'Yearly', dueDays: 31,
         estimatedHours: 6, recurringTask: true,
         typeOfClient: ['Individual', 'Firm', 'Company'],
-        description: 'Annual GST return filing — GSTR-9.',
+        description: 'Annual GST return filing ΓÇö GSTR-9.',
         udin: false,
     },
     {
@@ -139,7 +139,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         description: 'Prepare and submit reply to GST department notices.',
         udin: false,
     },
-    // ── Accounting ────────────────────────────────────────────────────────────
+    // ΓöÇΓöÇ Accounting ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
         taskName: 'Monthly Bookkeeping',
         category: 'Accounting', categoryColor: '#8b5cf6',
@@ -176,7 +176,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         description: 'Process monthly payroll, salary slips, PF/ESI workings.',
         udin: false,
     },
-    // ── ROC / Company Law ─────────────────────────────────────────────────────
+    // ΓöÇΓöÇ ROC / Company Law ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
         taskName: 'Annual Return Filing (MGT-7)',
         category: 'ROC / Company Law', categoryColor: '#f59e0b',
@@ -196,7 +196,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         udin: false,
     },
     {
-        taskName: 'ROC Compliance — LLP (Form 8 & 11)',
+        taskName: 'ROC Compliance ΓÇö LLP (Form 8 & 11)',
         category: 'ROC / Company Law', categoryColor: '#f59e0b',
         mode: 'Online', frequency: 'Yearly', dueDays: 30,
         estimatedHours: 3, recurringTask: true,
@@ -210,7 +210,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         mode: 'Online', dueDays: 15,
         estimatedHours: 6, recurringTask: false,
         typeOfClient: ['Company'],
-        description: 'New Private Limited Company incorporation — SPICe+ filing.',
+        description: 'New Private Limited Company incorporation ΓÇö SPICe+ filing.',
         udin: false,
     },
     {
@@ -222,7 +222,7 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         description: 'Annual DIR-3 KYC filing for all directors / designated partners.',
         udin: false,
     },
-    // ── Audit ─────────────────────────────────────────────────────────────────
+    // ΓöÇΓöÇ Audit ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
         taskName: 'Tax Audit (Form 3CA-3CD / 3CB-3CD)',
         category: 'Audit', categoryColor: '#ef4444',
@@ -256,10 +256,10 @@ export const DEFAULT_TASKS: DefaultTask[] = [
         mode: 'Online', frequency: 'Yearly', dueDays: 31,
         estimatedHours: 10, recurringTask: true,
         typeOfClient: ['Individual', 'Firm', 'Company'],
-        description: 'Reconciliation statement and audit certification — GSTR-9C.',
+        description: 'Reconciliation statement and audit certification ΓÇö GSTR-9C.',
         udin: true,
     },
-    // ── Other Compliance ──────────────────────────────────────────────────────
+    // ΓöÇΓöÇ Other Compliance ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     {
         taskName: 'PF / ESIC Monthly Return',
         category: 'Other Compliance', categoryColor: '#64748b',
