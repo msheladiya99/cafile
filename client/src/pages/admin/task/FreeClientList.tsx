@@ -55,8 +55,8 @@ export const FreeClientList: React.FC = () => {
         <Box sx={{ p: 0 }}>
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -131,8 +131,8 @@ export const FreeClientList: React.FC = () => {
                 </Box>
             </Paper>
 
-            <Paper sx={{ border: '1px solid #e0e0e0', borderRadius: 2, overflow: 'hidden' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
+            <Paper sx={{ border: '1px solid #e0e0e0', borderRadius: '12px', overflow: 'hidden' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#1e293b' }}>
                     <Box display="flex" alignItems="center" gap={1}>
                         <ListIcon fontSize="small" />
                         <Typography fontWeight="600">List</Typography>
@@ -177,3 +177,8 @@ export const FreeClientList: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

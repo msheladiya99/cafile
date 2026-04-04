@@ -30,7 +30,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { clientGroupService } from '../../../services/clientGroupService';
-import { PageHeader, PageContainer, ContentContainer, Section, FilterRow as FormRow } from '../../../components/common/UIComponents';
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow as FormRow, CommonButton } from '../../../components/common/UIComponents';
 
 
 export const AddGroupList: React.FC = () => {
@@ -183,12 +183,12 @@ export const AddGroupList: React.FC = () => {
                 title="Client Groups"
                 actions={
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button variant="contained" size="small" onClick={handleSave} disabled={createGroupMutation.isPending || updateGroupMutation.isPending} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
-                            {createGroupMutation.isPending || updateGroupMutation.isPending ? 'Saving...' : (isEditing ? 'Update Group' : 'Save Group')}
-                        </Button>
-                        <Button variant="contained" size="small" onClick={handleCancel} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}>
+                        <CommonButton onClick={handleSave} loading={createGroupMutation.isPending || updateGroupMutation.isPending} size="small">
+                            {isEditing ? 'Update Group' : 'Save Group'}
+                        </CommonButton>
+                        <CommonButton onClick={handleCancel} size="small" sx={{ bgcolor: '#475569', '&:hover': { bgcolor: '#334155' } }}>
                             {isEditing ? 'Cancel Edit' : 'Clear Form'}
-                        </Button>
+                        </CommonButton>
                     </Box>
                 }
             />
@@ -208,7 +208,7 @@ export const AddGroupList: React.FC = () => {
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -221,7 +221,7 @@ export const AddGroupList: React.FC = () => {
                                     multiline
                                     rows={3}
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -232,7 +232,7 @@ export const AddGroupList: React.FC = () => {
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -243,7 +243,7 @@ export const AddGroupList: React.FC = () => {
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -254,7 +254,7 @@ export const AddGroupList: React.FC = () => {
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -267,7 +267,7 @@ export const AddGroupList: React.FC = () => {
                                     multiline
                                     rows={2}
                                     size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </FormRow>
 
@@ -283,7 +283,7 @@ export const AddGroupList: React.FC = () => {
                     {/* Group List */}
                     <Box sx={{ flex: 1 }}>
                         <Section title="Group List" icon={<FormatListBulletedIcon />}>
-                            <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                            <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow sx={{ bgcolor: '#f1f5f9' }}>
@@ -356,7 +356,7 @@ export const AddGroupList: React.FC = () => {
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px' }}>
                     {snackbar.message}
                 </Alert>
             </Snackbar>
@@ -365,7 +365,7 @@ export const AddGroupList: React.FC = () => {
                 open={confirmDialog.open}
                 onClose={closeConfirm}
                 PaperProps={{
-                    sx: { borderRadius: 2, minWidth: { xs: 300, sm: 400 } }
+                    sx: { borderRadius: '12px', minWidth: { xs: 300, sm: 400 } }
                 }}
             >
                 <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Group</DialogTitle>
@@ -384,4 +384,9 @@ export const AddGroupList: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+
 

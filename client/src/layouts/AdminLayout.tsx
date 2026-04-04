@@ -14,7 +14,6 @@ import ListItemText from '@mui/material/ListItemText';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -33,9 +32,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import GppGoodIcon from '@mui/icons-material/GppGood';
 import { useAuth } from '../contexts/AuthContext';
-import settingsService from '../services/settingsService';
-import firmService from '../services/firmService';
-import { useQuery } from '@tanstack/react-query';
+
 import AccountMenu from '../components/common/AccountMenu';
 
 const drawerWidth = 240;
@@ -49,21 +46,8 @@ export const AdminLayout: React.FC = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
-    // Fetch firm details and settings using React Query
-    const { data: firm } = useQuery({
-        queryKey: ['firm'],
-        queryFn: firmService.getFirm,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    });
+    const companyName = 'CA Admin Panel';
 
-    const { data: settings } = useQuery({
-        queryKey: ['settings'],
-        queryFn: settingsService.getSettings,
-        staleTime: 5 * 60 * 1000,
-    });
-
-    const companyName = firm?.firmName || settings?.companyName || 'CA Admin Panel';
-    const logoUrl = (firm?.showLogo !== false && (firm?.logoUrl || settings?.logoUrl)) ? (firm?.logoUrl || settings?.logoUrl) : null;
     const handleMenuToggle = (text: string) => {
         setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
     };
@@ -212,9 +196,17 @@ export const AdminLayout: React.FC = () => {
     };
 
     const drawerContent = (
-        <>
-            <Toolbar />
-            <Box sx={{ overflow: 'auto', mt: 2, '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Sidebar Header (Logo / Brand) */}
+            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center' }}>
+                <AccountBalance sx={{ mr: 1.5, color: '#1a1a1a' }} />
+                <Typography variant="h6" noWrap sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1a1a1a' }}>
+                    {companyName}
+                </Typography>
+            </Box>
+
+            {/* Navigation Menu */}
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none', px: 1 }}>
                 <List>
                     {menuItems.map((item) => (
                         <React.Fragment key={item.text}>
@@ -224,18 +216,21 @@ export const AdminLayout: React.FC = () => {
                                         <ListItemButton
                                             onClick={() => handleMenuToggle(item.text)}
                                             sx={{
-                                                borderRadius: 1.5,
+                                                borderRadius: '24px',
                                                 py: 1,
+                                                color: '#333',
+                                                '&:hover': { background: 'rgba(255,255,255,0.4)' },
                                                 ...(item.children.some(c => location.pathname === c.path) && {
-                                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
-                                                    color: '#667eea',
+                                                    background: '#ffffff',
+                                                    color: '#000',
+                                                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                                                     '& .MuiListItemIcon-root': {
-                                                        color: '#667eea',
+                                                        color: '#000',
                                                     },
                                                 }),
                                             }}
                                         >
-                                            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                                            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
                                             <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
                                             {openMenus[item.text] ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
                                         </ListItemButton>
@@ -264,11 +259,14 @@ export const AdminLayout: React.FC = () => {
                                                                                 onClick={() => handleMenuItemClick(subChild.path)}
                                                                                 sx={{
                                                                                     py: 0.6,
-                                                                                    borderRadius: 1.5,
+                                                                                    borderRadius: '24px',
+                                                                                    color: '#444',
+                                                                                    '&:hover': { background: 'rgba(255,255,255,0.4)' },
                                                                                     '&.Mui-selected': {
-                                                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                                        color: 'white',
-                                                                                        '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)' },
+                                                                                        background: '#ffffff',
+                                                                                        color: '#000',
+                                                                                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                                                                                        '&:hover': { background: '#ffffff' },
                                                                                     },
                                                                                 }}
                                                                             >
@@ -286,12 +284,15 @@ export const AdminLayout: React.FC = () => {
                                                                 onClick={() => handleMenuItemClick(child.path!)}
                                                                 sx={{
                                                                     py: 0.6,
-                                                                    borderRadius: 1.5,
+                                                                    borderRadius: '24px',
+                                                                    color: '#444',
+                                                                    '&:hover': { background: 'rgba(255,255,255,0.4)' },
                                                                     '&.Mui-selected': {
-                                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                        color: 'white',
+                                                                        background: '#ffffff',
+                                                                        color: '#000',
+                                                                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                                                                         '&:hover': {
-                                                                            background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                                                                            background: '#ffffff',
                                                                         },
                                                                     },
                                                                 }}
@@ -311,21 +312,24 @@ export const AdminLayout: React.FC = () => {
                                         selected={location.pathname === item.path}
                                         onClick={() => handleMenuItemClick(item.path!)}
                                         sx={{
-                                            borderRadius: 1.5,
+                                            borderRadius: '24px',
                                             py: 1,
+                                            color: '#333',
+                                            '&:hover': { background: 'rgba(255,255,255,0.4)' },
                                             '&.Mui-selected': {
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                color: 'white',
+                                                background: '#ffffff',
+                                                color: '#000',
+                                                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                                                 '& .MuiListItemIcon-root': {
-                                                    color: 'white',
+                                                    color: '#000',
                                                 },
                                                 '&:hover': {
-                                                    background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
+                                                    background: '#ffffff',
                                                 },
                                             },
                                         }}
                                     >
-                                        <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                                        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
                                         <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
                                     </ListItemButton>
                                 </ListItem>
@@ -334,86 +338,59 @@ export const AdminLayout: React.FC = () => {
                     ))}
                 </List>
             </Box>
-        </>
+
+            {/* Account Settings at Bottom */}
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', cursor: 'pointer', '&:hover': { background: 'rgba(0,0,0,0.02)' } }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                <Avatar
+                    sx={{ width: 36, height: 36, bgcolor: '#222', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' }}
+                >
+                    {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
+                </Avatar>
+                <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden' }}>
+                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                        {user?.name || user?.username}
+                    </Typography>
+                    <Typography variant="caption" noWrap sx={{ color: '#666', textTransform: 'capitalize' }}>
+                        {user?.role?.toLowerCase() || 'User'}
+                    </Typography>
+                </Box>
+            </Box>
+             <AccountMenu
+                anchorEl={anchorEl}
+                open={anchorEl !== null}
+                onClose={() => setAnchorEl(null)}
+                user={user}
+                logout={logout}
+                remainingTime={remainingTime}
+            />
+        </Box>
     );
 
     return (
         <Box sx={{ display: 'flex' }}>
+            {/* Mobile Only AppBar */}
             <AppBar
                 position="fixed"
                 sx={{
+                    display: { xs: 'flex', md: 'none' },
                     zIndex: (theme) => theme.zIndex.drawer + 1,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#ffffff',
+                    color: '#1a1a1a',
+                    boxShadow: 'none',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)',
                 }}
             >
                 <Toolbar>
-                    {isMobile && (
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            edge="start"
-                            onClick={handleDrawerToggle}
-                            sx={{ mr: 2 }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                    )}
-                    {logoUrl ? (
-                        <Box
-                            component="img"
-                            src={logoUrl}
-                            alt={`${companyName} Logo`}
-                            sx={{
-                                height: 32,
-                                width: 'auto',
-                                mr: 2,
-                                display: { xs: 'none', sm: 'block' },
-                                borderRadius: 1.5,
-                                objectFit: 'contain',
-                                bgcolor: 'white',
-                                p: 0.5
-                            }}
-                        />
-                    ) : (
-                        <AccountBalance sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }} />
-                    )}
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                        {companyName}
-                    </Typography>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
-                        {user?.name || user?.username}
-                    </Typography>
-                    <Tooltip title="Account settings">
-                        <IconButton
-                            onClick={(e) => setAnchorEl(e.currentTarget)}
-                            size="small"
-                            sx={{ ml: 2 }}
-                            aria-controls={anchorEl ? 'account-menu' : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={anchorEl ? 'true' : undefined}
-                        >
-                            <Avatar
-                                sx={{
-                                    width: 32,
-                                    height: 32,
-                                    bgcolor: 'white',
-                                    color: '#667eea',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.875rem'
-                                }}
-                            >
-                                {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
-                            </Avatar>
-                        </IconButton>
-                    </Tooltip>
-                    <AccountMenu
-                        anchorEl={anchorEl}
-                        open={anchorEl !== null}
-                        onClose={() => setAnchorEl(null)}
-                        user={user}
-                        logout={logout}
-                        remainingTime={remainingTime}
-                    />
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <AccountBalance sx={{ color: '#1a1a1a', ml: 0.5 }} />
                 </Toolbar>
             </AppBar>
 
@@ -430,8 +407,8 @@ export const AdminLayout: React.FC = () => {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        background: 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
-                        borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+                        background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
+                        borderRight: 'none',
                     },
                 }}
             >
@@ -448,8 +425,8 @@ export const AdminLayout: React.FC = () => {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        background: 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
-                        borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+                        background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
+                        borderRight: 'none',
                     },
                 }}
             >
@@ -466,7 +443,7 @@ export const AdminLayout: React.FC = () => {
                     width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` }
                 }}
             >
-                <Toolbar />
+                <Toolbar sx={{ display: { md: 'none' } }} />
                 <Outlet />
             </Box>
         </Box>

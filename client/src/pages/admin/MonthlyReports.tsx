@@ -9,7 +9,6 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Button,
     CircularProgress,
 } from '@mui/material';
 import {
@@ -27,6 +26,7 @@ import { billingService } from '../../services/billingService';
 import type { Invoice } from '../../services/billingService';
 import { reminderService } from '../../services/reminderService';
 import type { Client, Reminder } from '../../types';
+import { CommonButton } from '../../components/common/UIComponents';
 
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -163,29 +163,23 @@ Generated on: ${new Date().toLocaleString()}
                 mb={4}
             >
                 <Box>
-                    <Typography variant="h4" fontWeight="800" sx={{ background: 'linear-gradient(45deg, #1e293b, #334155)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
+                    <Typography variant="h4" fontWeight="800" color="#1e293b" sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
                         Monthly Intelligence
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Comprehensive insights into office performance
                     </Typography>
                 </Box>
-                <Button
+                <CommonButton
                     variant="contained"
                     startIcon={<DownloadIcon />}
                     onClick={handleDownloadReport}
                     sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        textTransform: 'none',
-                        px: 3,
-                        py: 1,
-                        borderRadius: 2,
                         width: { xs: '100%', sm: 'auto' },
-                        boxShadow: '0 4px 12px rgba(118, 75, 162, 0.3)'
                     }}
                 >
                     Download Summary
-                </Button>
+                </CommonButton>
             </Box>
 
             {/* Period Selector */}
@@ -220,7 +214,7 @@ Generated on: ${new Date().toLocaleString()}
                     <CardContent sx={{ pt: 4 }}>
                         <Typography variant="body2" color="text.secondary" fontWeight="600">NEW CLIENTS</Typography>
                         <Typography variant="h3" fontWeight="800" sx={{ my: 1 }}>{report.summary.newClients}</Typography>
-                        <Typography variant="caption" sx={{ bgcolor: '#f3e8ff', color: '#9d4edd', px: 1, py: 0.5, borderRadius: 1, fontWeight: 700 }}>
+                        <Typography variant="caption" sx={{ bgcolor: '#f3e8ff', color: '#9d4edd', px: 1, py: 0.5, borderRadius: '8px', fontWeight: 700 }}>
                             Joined this month
                         </Typography>
                     </CardContent>
@@ -234,7 +228,7 @@ Generated on: ${new Date().toLocaleString()}
                     <CardContent sx={{ pt: 4 }}>
                         <Typography variant="body2" color="text.secondary" fontWeight="600">FILES PROCESSED</Typography>
                         <Typography variant="h3" fontWeight="800" sx={{ my: 1 }}>{report.summary.filesUploaded}</Typography>
-                        <Typography variant="caption" sx={{ bgcolor: '#e0f2fe', color: '#0284c7', px: 1, py: 0.5, borderRadius: 1, fontWeight: 700 }}>
+                        <Typography variant="caption" sx={{ bgcolor: '#e0f2fe', color: '#0284c7', px: 1, py: 0.5, borderRadius: '8px', fontWeight: 700 }}>
                             Uploaded securely
                         </Typography>
                     </CardContent>
@@ -273,7 +267,7 @@ Generated on: ${new Date().toLocaleString()}
 
                 {/* 5. Physical File Registry */}
                 <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', position: 'relative', overflow: 'visible', gridColumn: { md: 'span 2', lg: 'span 2' } }}>
-                    <Box sx={{ position: 'absolute', top: -10, right: 20, bgcolor: '#667eea', p: 1.5, borderRadius: 3, boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)' }}>
+                    <Box sx={{ position: 'absolute', top: -10, right: 20, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, p: 1.5, borderRadius: 3, boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)' }}>
                         <InventoryIcon sx={{ color: 'white' }} />
                     </Box>
                     <CardContent sx={{ pt: 4 }}>
@@ -303,3 +297,8 @@ Generated on: ${new Date().toLocaleString()}
         </Box>
     );
 };
+
+
+
+
+

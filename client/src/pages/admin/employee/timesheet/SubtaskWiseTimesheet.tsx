@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import {
     Box, Paper, Typography, MenuItem, Select, FormControl,
-    Button, TextField, CircularProgress, Grid, Chip, Avatar,
+    TextField, CircularProgress, Grid, Chip, Avatar,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Accordion, AccordionSummary, AccordionDetails, Tooltip, Alert, LinearProgress
 } from '@mui/material';
+import { CommonButton } from '../../../../components/common/UIComponents';
 import {
     FormatListBulleted as ListIcon, Clear as ClearIcon,
     Search as SearchIcon,
@@ -16,21 +17,22 @@ import { adminService } from '../../../../services/adminService';
 import { clientGroupService } from '../../../../services/clientGroupService';
 import { staffService } from '../../../../services/staffService';
 import { taskService } from '../../../../services/taskService';
+import type { Client, User, Task } from '../../../../types';
 import { masterService } from '../../../../services/masterService';
 
 const fmtHours = (h: number) => (h === 0 ? '0h' : h < 1 ? `${Math.round(h * 60)}m` : `${h.toFixed(1)}h`);
 const fmtDate = (dt: string | Date | undefined) => dt ? new Date(dt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const statusColor: Record<string, string> = {
-    PENDING: '#f59e0b', IN_PROCESS: '#3b82f6', PENDING_FOR_APPROVAL: '#8b5cf6',
+    PENDING: '#6366f1', IN_PROCESS: '#3b82f6', PENDING_FOR_APPROVAL: '#8b5cf6',
     APPROVED: '#10b981', DONE: '#22c55e', CANCELLED: '#ef4444',
-    ON_HOLD: '#6b7280', REJECTED: '#dc2626', PENDING_FROM_CLIENT: '#f97316',
+    ON_HOLD: '#6b7280', REJECTED: '#dc2626', PENDING_FROM_CLIENT: '#ec4899',
     PENDING_FROM_DEPARTMENT: '#e879f9'
 };
-const priorityColor: Record<string, string> = { LOW: '#22c55e', MEDIUM: '#f59e0b', HIGH: '#ef4444', URGENT: '#dc2626' };
+const priorityColor: Record<string, string> = { LOW: '#22c55e', MEDIUM: '#0ea5e9', HIGH: '#ef4444', URGENT: '#dc2626' };
 
 // Subtask category colours (cycle through)
-const categoryColors = ['#667eea', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#f97316', '#06b6d4'];
+const categoryColors = ['#667eea', '#4f46e5', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
 interface FilterState {
     groupName: string; clientName: string; task: string; frequency: string;
@@ -42,15 +44,34 @@ const empty: FilterState = {
     subTask: '', year: '', employee: '', status: '', dateFrom: '', dateTo: ''
 };
 
+interface TimesheetSubtaskRow {
+    taskId: string;
+    taskTitle: string;
+    category: string;
+    totalHours: number;
+    estimatedHours: number;
+    progressPercentage: number;
+    targetDate: string;
+    taskStatus: string;
+    taskPriority: string;
+    isOverdue: boolean;
+    frequency?: string;
+    timerRunning?: boolean;
+    client?: Client;
+    clientGroup?: { _id: string; groupName: string };
+    assignedTo: User[];
+    checklist: { text: string; completed: boolean }[];
+}
+
 export const SubtaskWiseTimesheet: React.FC = () => {
     const [filterData, setFilterData] = useState<FilterState>(empty);
     const [activeFilters, setActiveFilters] = useState<FilterState | null>(null);
 
-    const { data: clients = [], isLoading: loadingClients } = useQuery({ queryKey: ['clients'], queryFn: adminService.getClients });
-    const { data: groups = [], isLoading: loadingGroups } = useQuery({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
-    const { data: staff = [], isLoading: loadingStaff } = useQuery({ queryKey: ['staff'], queryFn: staffService.getStaff });
-    const { data: tasks = [], isLoading: loadingTasks } = useQuery({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
-    const { data: subMasters = [], isLoading: loadingSubMasters } = useQuery({ queryKey: ['subMasters'], queryFn: masterService.getSubMasters });
+    const { data: clients = [], isLoading: loadingClients } = useQuery<Client[]>({ queryKey: ['clients'], queryFn: adminService.getClients });
+    const { data: groups = [], isLoading: loadingGroups } = useQuery<{ _id: string; groupName: string }[]>({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
+    const { data: staff = [], isLoading: loadingStaff } = useQuery<User[]>({ queryKey: ['staff'], queryFn: staffService.getStaff });
+    const { data: tasks = [], isLoading: loadingTasks } = useQuery<Task[]>({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
+    const { data: subMasters = [], isLoading: loadingSubMasters } = useQuery<{ _id: string; name: string }[]>({ queryKey: ['subMasters'], queryFn: () => masterService.getSubMasters() as unknown as Promise<{ _id: string; name: string }[]> });
 
     const frequencies = ['One Time', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
     const years = ['2023-2024', '2024-2025', '2025-2026', '2026-2027'];
@@ -76,31 +97,31 @@ export const SubtaskWiseTimesheet: React.FC = () => {
         view: 'subtask' as const
     }), []);
 
-    const { data: timesheetData, isLoading: loadingSheet, error } = useQuery({
+    const { data: timesheetData, isLoading: loadingSheet, error } = useQuery<{ rows: TimesheetSubtaskRow[] }>({
         queryKey: ['timesheet-subtask', activeFilters],
-        queryFn: () => taskService.getTimesheet(buildParams(activeFilters!)),
+        queryFn: () => taskService.getTimesheet(buildParams(activeFilters!)) as Promise<{ rows: TimesheetSubtaskRow[] }>,
         enabled: !!activeFilters
     });
 
-    const sheet = timesheetData as any;
-    const allRows: any[] = sheet?.rows || [];
+    const sheet = timesheetData as { rows: TimesheetSubtaskRow[] };
+    const allRows = sheet?.rows || [];
 
     // Group tasks by their category (used as "subtask" grouping since tasks don't have subTask field directly)
     // If a subMaster filter is selected, filter by matching checklist items
     const selectedSubMaster = activeFilters?.subTask
-        ? (subMasters as any[]).find((sm: any) => sm._id === activeFilters.subTask)
+        ? (subMasters as { _id: string; name: string }[]).find(sm => sm._id === activeFilters.subTask)
         : null;
 
     const filteredRows = selectedSubMaster
-        ? allRows.filter((r: any) =>
-            (r.checklist || []).some((c: any) =>
+        ? allRows.filter((r: TimesheetSubtaskRow) =>
+            (r.checklist || []).some(c =>
                 c.text?.toLowerCase().includes(selectedSubMaster.name?.toLowerCase())
             )
         )
         : allRows;
 
     // Group by category
-    const grouped: Record<string, any[]> = {};
+    const grouped: Record<string, TimesheetSubtaskRow[]> = {};
     for (const row of filteredRows) {
         const key = row.category || 'OTHER';
         if (!grouped[key]) grouped[key] = [];
@@ -108,14 +129,14 @@ export const SubtaskWiseTimesheet: React.FC = () => {
     }
     const groupKeys = Object.keys(grouped).sort();
 
-    const totalActualHours = filteredRows.reduce((s: number, r: any) => s + (r.totalHours || 0), 0);
-    const totalEstHours = filteredRows.reduce((s: number, r: any) => s + (r.estimatedHours || 0), 0);
+    const totalActualHours = filteredRows.reduce((s: number, r: TimesheetSubtaskRow) => s + (r.totalHours || 0), 0);
+    const totalEstHours = filteredRows.reduce((s: number, r: TimesheetSubtaskRow) => s + (r.estimatedHours || 0), 0);
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <SubtaskIcon />
                         <Typography variant="h5" fontWeight="600">Subtask Wise Timesheet</Typography>
@@ -139,15 +160,15 @@ export const SubtaskWiseTimesheet: React.FC = () => {
             </Paper>
 
             {/* Filters */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Grid container spacing={2.5} alignItems="flex-end">
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Group Name</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.groupName} onChange={handleChange('groupName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Groups</MenuItem>
                                 {loadingGroups ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    groups.map((g: any) => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
+                                    groups.map((g: { _id: string; groupName: string }) => <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -155,10 +176,10 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Client</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.clientName} onChange={handleChange('clientName')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Clients</MenuItem>
                                 {loadingClients ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    clients.map((c: any) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+                                    clients.map((c: Client) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -166,10 +187,10 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Task</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.task} onChange={handleChange('task')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Tasks</MenuItem>
                                 {loadingTasks ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    tasks.map((t: any) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
+                                    tasks.map((t: Task) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -177,7 +198,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Frequency</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Frequencies</MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
                             </Select>
@@ -187,10 +208,10 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Sub Task</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.subTask} onChange={handleChange('subTask')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.subTask} onChange={handleChange('subTask')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Sub Tasks</MenuItem>
                                 {loadingSubMasters ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    (subMasters as any[]).map((sm: any) => <MenuItem key={sm._id} value={sm._id}>{sm.name}</MenuItem>)}
+                                    (subMasters as { _id: string; name: string }[]).map(sm => <MenuItem key={sm._id} value={sm._id}>{sm.name}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -198,7 +219,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Year</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Years</MenuItem>
                                 {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                             </Select>
@@ -208,10 +229,10 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Employee</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Employees</MenuItem>
                                 {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    staff.map((s: any) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
+                                    staff.map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -219,7 +240,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Status</Typography>
                         <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: 1.5 }}>
+                            <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Statuses</MenuItem>
                                 {statuses.map(s => <MenuItem key={s} value={s}>{s.replace(/_/g, ' ')}</MenuItem>)}
                             </Select>
@@ -229,32 +250,31 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Date Range</Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateFrom} onChange={handleChange('dateFrom')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                             <Box sx={{ px: 1, color: 'text.secondary', fontSize: 12, whiteSpace: 'nowrap' }}>to</Box>
-                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                            <TextField size="small" type="date" value={filterData.dateTo} onChange={handleChange('dateTo')} fullWidth sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Box>
                     </Grid>
 
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-                            <Button variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />} sx={{ borderRadius: 1.5 }}>Clear</Button>
-                            <Button variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}
-                                sx={{ borderRadius: 1.5, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                            <CommonButton variant="outlined" color="error" onClick={handleClear} startIcon={<ClearIcon />}>Clear</CommonButton>
+                            <CommonButton onClick={handleSearch} startIcon={<SearchIcon />} variant="contained">
                                 Search
-                            </Button>
+                            </CommonButton>
                         </Box>
                     </Grid>
                 </Grid>
             </Paper>
 
             {/* Results */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ListIcon fontSize="small" />
                     <Typography variant="h6" fontWeight="600">Subtask Wise Summary</Typography>
                     {filteredRows.length > 0 && (
                         <Chip label={`${groupKeys.length} categories · ${filteredRows.length} tasks`} size="small"
-                            sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }} />
+                            sx={{ ml: 1, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 600 }} />
                     )}
                 </Box>
 
@@ -287,13 +307,13 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     <Box sx={{ p: 2 }}>
                         {groupKeys.map((category, catIdx) => {
                             const catRows = grouped[category];
-                            const catActual = catRows.reduce((s: number, r: any) => s + (r.totalHours || 0), 0);
-                            const catEst = catRows.reduce((s: number, r: any) => s + (r.estimatedHours || 0), 0);
+                            const catActual = catRows.reduce((s: number, r: TimesheetSubtaskRow) => s + (r.totalHours || 0), 0);
+                            const catEst = catRows.reduce((s: number, r: TimesheetSubtaskRow) => s + (r.estimatedHours || 0), 0);
                             const color = categoryColors[catIdx % categoryColors.length];
 
                             return (
                                 <Accordion key={category} defaultExpanded={catIdx === 0}
-                                    sx={{ mb: 1.5, borderRadius: 2, '&:before': { display: 'none' }, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                                    sx={{ mb: 1.5, borderRadius: '12px', '&:before': { display: 'none' }, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}
                                         sx={{ bgcolor: color + '15', borderLeft: `4px solid ${color}`, '&:hover': { bgcolor: color + '22' } }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, mr: 2, flexWrap: 'wrap' }}>
@@ -334,7 +354,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {catRows.map((row: any, idx: number) => (
+                                                    {catRows.map((row: TimesheetSubtaskRow, idx: number) => (
                                                         <TableRow key={row.taskId}
                                                             sx={{ '&:hover': { bgcolor: '#f5f7ff' }, borderLeft: row.isOverdue ? `3px solid #ef4444` : `3px solid ${color}40` }}>
                                                             <TableCell sx={{ fontSize: 11, color: 'text.secondary' }}>{idx + 1}</TableCell>
@@ -355,16 +375,16 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                                                             </TableCell>
                                                             <TableCell>
                                                                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                                    {(row.assignedTo as any[])?.slice(0, 2).map((u: any) => (
+                                                                    {row.assignedTo?.slice(0, 2).map((u: User) => (
                                                                         <Tooltip key={u._id} title={u.name || u.username}>
                                                                             <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: color }}>
                                                                                 {(u.name || u.username || '?')[0].toUpperCase()}
                                                                             </Avatar>
                                                                         </Tooltip>
                                                                     ))}
-                                                                    {(row.assignedTo as any[])?.length > 2 && (
+                                                                    {row.assignedTo?.length > 2 && (
                                                                         <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: '#764ba2' }}>
-                                                                            +{(row.assignedTo as any[]).length - 2}
+                                                                            +{row.assignedTo.length - 2}
                                                                         </Avatar>
                                                                     )}
                                                                 </Box>
@@ -425,7 +445,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                         })}
 
                         {/* Grand Total */}
-                        <Box sx={{ mt: 2, p: 2, background: 'linear-gradient(135deg, #667eea11 0%, #764ba211 100%)', borderRadius: 2, border: '1px solid #667eea33', display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        <Box sx={{ mt: 2, p: 2, background: 'linear-gradient(135deg, #667eea11 0%, #764ba211 100%)', borderRadius: '12px', border: '1px solid #667eea33', display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                             <Box>
                                 <Typography fontSize={12} color="text.secondary">Total Tasks</Typography>
                                 <Typography fontSize={18} fontWeight={700} color="#667eea">{filteredRows.length}</Typography>
@@ -451,3 +471,8 @@ export const SubtaskWiseTimesheet: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

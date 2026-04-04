@@ -4,7 +4,6 @@ import {
     Typography,
     Box,
     Paper,
-    Button,
     Table,
     TableBody,
     TableCell,
@@ -53,6 +52,7 @@ import type { ClientGroup } from '../../services/clientGroupService';
 import { generateInvoicePDF } from '../../utils/invoiceGenerator';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@mui/material';
+import { CommonButton } from '../../components/common/UIComponents';
 
 // --- Sub-components ---
 
@@ -111,7 +111,7 @@ const PaymentHistoryDialog: React.FC<{
                     ) : (
                         <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', mb: 2 }}>No payments recorded yet.</Typography>
                     )}
-                    <Box display="flex" justifyContent="space-between" sx={{ bgcolor: '#f0f4ff', p: 1.5, borderRadius: 2 }}>
+                    <Box display="flex" justifyContent="space-between" sx={{ bgcolor: '#f0f4ff', p: 1.5, borderRadius: '12px' }}>
                         <Typography variant="body2" fontWeight={600}>Total Paid: ₹{(invoice?.paidAmount || 0).toLocaleString()}</Typography>
                         <Typography variant="body2" fontWeight={600} color="error">Balance: ₹{(invoice?.balanceAmount || 0).toLocaleString()}</Typography>
                     </Box>
@@ -126,7 +126,7 @@ const PaymentHistoryDialog: React.FC<{
                         fullWidth
                         value={amount}
                         onChange={(e) => setAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                        InputProps={{ sx: { borderRadius: 2 } }}
+                        InputProps={{ sx: { borderRadius: '12px' } }}
                     />
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 6 }}>
@@ -137,7 +137,7 @@ const PaymentHistoryDialog: React.FC<{
                                 InputLabelProps={{ shrink: true }}
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                InputProps={{ sx: { borderRadius: 2 } }}
+                                InputProps={{ sx: { borderRadius: '12px' } }}
                             />
                         </Grid>
                         <Grid size={{ xs: 6 }}>
@@ -147,7 +147,7 @@ const PaymentHistoryDialog: React.FC<{
                                 fullWidth
                                 value={method}
                                 onChange={(e) => setMethod(e.target.value)}
-                                InputProps={{ sx: { borderRadius: 2 } }}
+                                InputProps={{ sx: { borderRadius: '12px' } }}
                             >
                                 {['CASH', 'BANK_TRANSFER', 'UPI', 'CHEQUE', 'OTHER'].map((m) => (
                                     <MenuItem key={m} value={m}>{m.replace('_', ' ')}</MenuItem>
@@ -162,15 +162,15 @@ const PaymentHistoryDialog: React.FC<{
                         rows={2}
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        InputProps={{ sx: { borderRadius: 2 } }}
+                        InputProps={{ sx: { borderRadius: '12px' } }}
                     />
                 </Box>
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
-                <Button onClick={onClose} sx={{ borderRadius: 2, color: 'text.secondary' }}>Close</Button>
-                <Button onClick={handleSubmit} variant="contained" disabled={!amount || Number(amount) <= 0} sx={{ borderRadius: 2, boxShadow: 'none' }}>
+                <CommonButton onClick={onClose} variant="text" sx={{ borderRadius: '12px', color: 'text.secondary' }}>Close</CommonButton>
+                <CommonButton onClick={handleSubmit} variant="contained" disabled={!amount || Number(amount) <= 0} sx={{ borderRadius: '12px', boxShadow: 'none' }}>
                     Add Payment
-                </Button>
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );
@@ -222,7 +222,7 @@ const ServiceDialog: React.FC<{
                             variant="outlined"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
@@ -234,7 +234,7 @@ const ServiceDialog: React.FC<{
                             variant="outlined"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -245,7 +245,7 @@ const ServiceDialog: React.FC<{
                             variant="outlined"
                             value={formData.basePrice}
                             onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -256,7 +256,7 @@ const ServiceDialog: React.FC<{
                             variant="outlined"
                             value={formData.category}
                             onChange={(e) => setFormData({ ...formData, category: e.target.value as 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER' })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         >
                             <MenuItem value="ITR">ITR</MenuItem>
                             <MenuItem value="GST">GST</MenuItem>
@@ -267,15 +267,15 @@ const ServiceDialog: React.FC<{
                 </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 1 }}>
-                <Button onClick={onClose} sx={{ borderRadius: 2, color: 'text.secondary' }}>Cancel</Button>
-                <Button
+                <CommonButton onClick={onClose} variant="text" sx={{ borderRadius: '12px', color: 'text.secondary' }}>Cancel</CommonButton>
+                <CommonButton
                     onClick={() => onSubmit(formData)}
                     variant="contained"
                     color="primary"
-                    sx={{ borderRadius: 2, px: 3, boxShadow: 'none' }}
+                    sx={{ borderRadius: '12px', px: 3, boxShadow: 'none' }}
                 >
                     {initialData ? 'Update' : 'Save'}
-                </Button>
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );
@@ -375,7 +375,7 @@ const InvoiceDialog: React.FC<{
                             fullWidth
                             value={formData.billingType}
                             onChange={(e) => setFormData({ ...formData, billingType: e.target.value as 'SINGLE_CLIENT' | 'CLIENT_GROUP', clientId: '', clientGroupId: '' })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                             disabled={!!initialData}
                         >
                             <MenuItem value="SINGLE_CLIENT">Single Client</MenuItem>
@@ -389,7 +389,7 @@ const InvoiceDialog: React.FC<{
                             fullWidth
                             value={formData.firmId}
                             onChange={(e) => setFormData({ ...formData, firmId: e.target.value })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                             disabled={!!initialData}
                         >
                             <MenuItem value="">Primary Firm</MenuItem>
@@ -406,7 +406,7 @@ const InvoiceDialog: React.FC<{
                                 fullWidth
                                 value={formData.clientId}
                                 onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                                InputProps={{ sx: { borderRadius: 2 } }}
+                                InputProps={{ sx: { borderRadius: '12px' } }}
                                 disabled={!!initialData} // Lock client on edit
                             >
                                 {clients.map(c => (
@@ -424,7 +424,7 @@ const InvoiceDialog: React.FC<{
                                     fullWidth
                                     value={formData.clientGroupId}
                                     onChange={(e) => setFormData({ ...formData, clientGroupId: e.target.value })}
-                                    InputProps={{ sx: { borderRadius: 2 } }}
+                                    InputProps={{ sx: { borderRadius: '12px' } }}
                                     disabled={!!initialData} // Lock group on edit
                                 >
                                     {clientGroups.map((g: ClientGroup) => (
@@ -434,7 +434,7 @@ const InvoiceDialog: React.FC<{
                             </Grid>
                             {formData.clientGroupId && (
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                    <Box sx={{ p: 1.5, bgcolor: '#f8fafc', borderRadius: '12px', border: '1px solid', borderColor: 'divider', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                         <Typography variant="caption" color="primary" fontWeight={700} sx={{ display: 'block', mb: 0.5 }}>
                                             Associated Clients:
                                         </Typography>
@@ -460,7 +460,7 @@ const InvoiceDialog: React.FC<{
                             value={formData.invoiceNumber}
                             onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
                             placeholder="Auto-generated if empty"
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                             disabled={!!initialData}
                         />
                     </Grid>
@@ -472,7 +472,7 @@ const InvoiceDialog: React.FC<{
                             InputLabelProps={{ shrink: true }}
                             value={formData.dueDate}
                             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
 
@@ -534,14 +534,14 @@ const InvoiceDialog: React.FC<{
                                 </IconButton>
                             </Box>
                         ))}
-                        <Button
+                        <CommonButton
                             startIcon={<AddIcon />}
                             onClick={addItem}
                             variant="outlined"
-                            sx={{ borderRadius: 2, textTransform: 'none', borderStyle: 'dashed' }}
+                            sx={{ borderRadius: '12px', textTransform: 'none', borderStyle: 'dashed' }}
                         >
                             Add Item
-                        </Button>
+                        </CommonButton>
                     </Grid>
 
                     <Grid size={{ xs: 12 }}>
@@ -556,7 +556,7 @@ const InvoiceDialog: React.FC<{
                                     sx={{ width: 100 }}
                                     value={formData.tax}
                                     onChange={(e) => setFormData({ ...formData, tax: parseFloat(e.target.value) || 0 })}
-                                    InputProps={{ sx: { borderRadius: 1.5 } }}
+                                    InputProps={{ sx: { borderRadius: '8px' } }}
                                 />
                             </Box>
                             <Typography variant="h5" color="primary" fontWeight={700} sx={{ mt: 1 }}>Total: ₹{total}</Typography>
@@ -565,16 +565,16 @@ const InvoiceDialog: React.FC<{
                 </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 1 }}>
-                <Button onClick={onClose} sx={{ borderRadius: 2, color: 'text.secondary' }}>Cancel</Button>
-                <Button
+                <CommonButton onClick={onClose} variant="text" sx={{ borderRadius: '12px', color: 'text.secondary' }}>Cancel</CommonButton>
+                <CommonButton
                     onClick={() => onSubmit({ ...formData, subtotal, totalAmount: total, balanceAmount: total })}
                     variant="contained"
                     color="primary"
                     disabled={(!formData.clientId && !formData.clientGroupId) || formData.items.length === 0}
-                    sx={{ borderRadius: 2, px: 3, boxShadow: 'none' }}
+                    sx={{ borderRadius: '12px', px: 3, boxShadow: 'none' }}
                 >
                     {initialData ? 'Update Invoice' : 'Generate Invoice'}
-                </Button>
+                </CommonButton>
             </DialogActions>
         </Dialog>
     );
@@ -598,15 +598,15 @@ const DeleteConfirmationDialog: React.FC<{
             <Typography variant="body1" color="text.secondary">{content}</Typography>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
-            <Button onClick={onClose} sx={{ borderRadius: 2, color: 'text.secondary' }}>Cancel</Button>
-            <Button
+            <CommonButton onClick={onClose} variant="text" sx={{ borderRadius: '12px', color: 'text.secondary' }}>Cancel</CommonButton>
+            <CommonButton
                 onClick={onConfirm}
                 color="error"
                 variant="contained"
-                sx={{ borderRadius: 2, px: 3, boxShadow: 'none' }}
+                sx={{ borderRadius: '12px', px: 3, boxShadow: 'none' }}
             >
                 Delete
-            </Button>
+            </CommonButton>
         </DialogActions>
     </Dialog>
 );
@@ -829,8 +829,8 @@ export const Billing: React.FC = () => {
 
     return (
         <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 2, sm: 3 } }}>
-            <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', mb: 3 }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper elevation={0} sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', mb: 3 }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>
                         <Typography variant="h5" fontWeight="600">Billing & Invoicing</Typography>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
@@ -838,29 +838,27 @@ export const Billing: React.FC = () => {
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
+                        <CommonButton
                             variant="contained"
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => setInvoiceDialogOpen(true)}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
                         >
                             New Invoice
-                        </Button>
-                        <Button
+                        </CommonButton>
+                        <CommonButton
                             variant="contained"
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
                         >
                             Add Service
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
             </Paper>
 
-            <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 4 }}>
+            <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 4 }}>
                 {/* Summary Cards */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                 {[
@@ -934,14 +932,13 @@ export const Billing: React.FC = () => {
                 </Tabs>
 
                 <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
-                    <Button
+                    <CommonButton
                         fullWidth
                         variant="outlined"
                         startIcon={<ServiceIcon />}
                         onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
                         sx={{
-                            borderRadius: 2,
-                            textTransform: 'none',
+                            borderRadius: '12px',
                             borderColor: '#e0e0e0',
                             color: 'text.primary',
                             '&:hover': { borderColor: '#bdbdbd', bgcolor: '#f5f5f5' },
@@ -949,23 +946,16 @@ export const Billing: React.FC = () => {
                         }}
                     >
                         Manage Services
-                    </Button>
-                    <Button
+                    </CommonButton>
+                    <CommonButton
                         fullWidth
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setInvoiceDialogOpen(true)}
-                        sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            textTransform: 'none',
-                            borderRadius: 2,
-                            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                            '&:hover': { boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)' },
-                            whiteSpace: 'nowrap'
-                        }}
+                        sx={{ whiteSpace: 'nowrap' }}
                     >
                         New Invoice
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Box>
 
@@ -1023,7 +1013,7 @@ export const Billing: React.FC = () => {
                                                     label={inv.status}
                                                     size="small"
                                                     color={getStatusColor(inv.status)}
-                                                    sx={{ borderRadius: 1.5, fontWeight: 600, height: 24 }}
+                                                    sx={{ borderRadius: '8px', fontWeight: 600, height: 24 }}
                                                 />
                                                 <Typography variant="caption" color="text.secondary" fontWeight={500}>
                                                     Due: {new Date(inv.dueDate).toLocaleDateString()}
@@ -1085,7 +1075,7 @@ export const Billing: React.FC = () => {
                                                         label={inv.status}
                                                         size="small"
                                                         color={getStatusColor(inv.status)}
-                                                        sx={{ fontWeight: 600, borderRadius: 2 }}
+                                                        sx={{ fontWeight: 600, borderRadius: '12px' }}
                                                     />
                                                 </TableCell>
                                                 <TableCell align="right">
@@ -1118,7 +1108,7 @@ export const Billing: React.FC = () => {
                                                 <Chip
                                                     label={service.category}
                                                     size="small"
-                                                    sx={{ mt: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontSize: '0.7rem', fontWeight: 600 }}
+                                                    sx={{ mt: 0.5, borderRadius: '8px', bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontSize: '0.7rem', fontWeight: 600 }}
                                                 />
                                             </Box>
                                             <Stack direction="row" spacing={0}>
@@ -1171,7 +1161,7 @@ export const Billing: React.FC = () => {
                                         <TableRow key={service._id} sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s' }}>
                                             <TableCell sx={{ fontWeight: 600, color: '#2c3e50' }}>{service.name}</TableCell>
                                             <TableCell>
-                                                <Chip label={service.category} size="small" sx={{ borderRadius: 1.5, bgcolor: '#f5f5f5', fontWeight: 500 }} />
+                                                <Chip label={service.category} size="small" sx={{ borderRadius: '8px', bgcolor: '#f5f5f5', fontWeight: 500 }} />
                                             </TableCell>
                                             <TableCell sx={{ fontWeight: 600 }}>₹{service.basePrice.toLocaleString()}</TableCell>
                                             <TableCell sx={{ maxWidth: 350, color: 'text.secondary' }}>
@@ -1240,7 +1230,7 @@ export const Billing: React.FC = () => {
                         overflow: 'visible',
                         filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                         mt: 1.5,
-                        borderRadius: 2,
+                        borderRadius: '12px',
                         minWidth: 180
                     },
                 }}
@@ -1278,3 +1268,8 @@ export const Billing: React.FC = () => {
         </Container>
     );
 };
+
+
+
+
+

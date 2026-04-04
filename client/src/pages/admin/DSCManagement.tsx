@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Chip, Button, IconButton, TextField, MenuItem, Select,
+    TableHead, TableRow, Chip, IconButton, TextField, MenuItem, Select,
     Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel,
     CircularProgress, Avatar, Tooltip, LinearProgress, Alert,
     InputAdornment, Card, CardContent
@@ -23,6 +23,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { dscService, type DSCRecord } from '../../services/dscService';
 import { adminService } from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -79,7 +80,7 @@ function PasswordModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: 
 
             <DialogContent sx={{ pt: 3 }}>
                 {step === 'warn' && (
-                    <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+                    <Alert severity="warning" sx={{ mb: 2, borderRadius: '12px' }}>
                         <Typography variant="body2" fontWeight={600}>Security Warning</Typography>
                         <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 13 }}>
                             <li>This action will be logged with your name, time & IP</li>
@@ -98,7 +99,7 @@ function PasswordModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: 
 
                 {step === 'show' && (
                     <Box>
-                        <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', mb: 2 }}>
+                        <Paper variant="outlined" sx={{ p: 2.5, borderRadius: '12px', bgcolor: '#f8fafc', mb: 2 }}>
                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                                 <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
                                     DSC Password
@@ -122,26 +123,26 @@ function PasswordModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: 
                         <LinearProgress
                             variant="determinate"
                             value={(countdown / 10) * 100}
-                            sx={{ borderRadius: 2, height: 6, bgcolor: '#e2e8f0', '& .MuiLinearProgress-bar': { bgcolor: '#ef4444' } }}
+                            sx={{ borderRadius: '12px', height: 6, bgcolor: '#e2e8f0', '& .MuiLinearProgress-bar': { bgcolor: '#ef4444' } }}
                         />
                     </Box>
                 )}
             </DialogContent>
 
             <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-                <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
+                <CommonButton onClick={onClose} variant="outlined" sx={{ borderRadius: '12px' }}>
                     {step === 'show' ? 'Close' : 'Cancel'}
-                </Button>
+                </CommonButton>
                 {step === 'warn' && (
-                    <Button onClick={() => setStep('reveal')} variant="contained" color="error" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+                    <CommonButton onClick={() => setStep('reveal')} variant="contained" color="error" sx={{ borderRadius: '12px' }}>
                         I Understand, Continue
-                    </Button>
+                    </CommonButton>
                 )}
                 {step === 'reveal' && (
-                    <Button onClick={handleReveal} disabled={loading} variant="contained"
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                        {loading ? <CircularProgress size={18} color="inherit" /> : '🔓 Reveal Password'}
-                    </Button>
+                    <CommonButton onClick={handleReveal} loading={loading} variant="contained"
+                        sx={{ borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: 'error.main', '&:hover': { bgcolor: '#fef2f2' } }}>
+                        🔓 Reveal Password
+                    </CommonButton>
                 )}
             </DialogActions>
         </Dialog>
@@ -170,7 +171,7 @@ function AuditModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: str
                 ) : (
                     <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
                         {[...(data?.auditLog || [])].reverse().map((log: { action: string; accessedBy?: { name?: string }; accessedAt: string; ipAddress: string }, i: number) => (
-                            <Paper key={i} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc' }}>
+                            <Paper key={i} variant="outlined" sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc' }}>
                                 <Box display="flex" justifyContent="space-between" alignItems="center">
                                     <Typography variant="body2" fontWeight={700}>{log.accessedBy?.name || 'Unknown'}</Typography>
                                     <Chip label={log.action} size="small" color={ACTION_COLOR[log.action] || 'default'} sx={{ fontWeight: 700, fontSize: '0.65rem' }} />
@@ -184,7 +185,7 @@ function AuditModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: str
                 )}
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>Close</Button>
+                <CommonButton onClick={onClose} variant="outlined" sx={{ borderRadius: '12px' }}>Close</CommonButton>
             </DialogActions>
         </Dialog>
     );
@@ -235,7 +236,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
 
     return (
         <Dialog open onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, maxHeight: '92vh' } }}>
-            <DialogTitle sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', fontWeight: 700, py: 2 }}>
+            <DialogTitle sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 700, py: 2 }}>
                 {isEdit ? '✏️ Edit DSC' : '➕ Add New DSC'}
                 <Typography variant="body2" sx={{ opacity: 0.8, fontWeight: 400, mt: 0.25 }}>Digital Signature Certificate</Typography>
             </DialogTitle>
@@ -247,7 +248,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                         <FormControl fullWidth size="small">
                             <InputLabel>Select Client *</InputLabel>
                             <Select value={form.clientId} label="Select Client *" required
-                                onChange={e => set('clientId', e.target.value)} sx={{ borderRadius: 2 }}>
+                                onChange={e => set('clientId', e.target.value)} sx={{ borderRadius: '12px' }}>
                                 {(clients as { _id: string; name: string; panNumber?: string }[]).map(c => (
                                     <MenuItem key={c._id} value={c._id}>
                                         {c.name}{c.panNumber ? ` — ${c.panNumber}` : ''}
@@ -260,20 +261,20 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                         <Box display="flex" gap={2} sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                             <TextField size="small" label="DSC Number *" required placeholder="e.g. DSC123456"
                                 value={form.dscNumber} onChange={e => set('dscNumber', e.target.value)}
-                                fullWidth InputProps={{ sx: { borderRadius: 2 } }} />
+                                fullWidth InputProps={{ sx: { borderRadius: '12px' } }} />
                             <TextField size="small" label="Holder Name *" required placeholder="Name as on DSC"
                                 value={form.holderName} onChange={e => set('holderName', e.target.value)}
-                                fullWidth InputProps={{ sx: { borderRadius: 2 } }} />
+                                fullWidth InputProps={{ sx: { borderRadius: '12px' } }} />
                         </Box>
 
                         {/* Issue Date | Expiry Date */}
                         <Box display="flex" gap={2} sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                             <TextField size="small" label="Issue Date *" type="date" required fullWidth
                                 value={form.issueDate} onChange={e => set('issueDate', e.target.value)}
-                                InputLabelProps={{ shrink: true }} InputProps={{ sx: { borderRadius: 2 } }} />
+                                InputLabelProps={{ shrink: true }} InputProps={{ sx: { borderRadius: '12px' } }} />
                             <TextField size="small" label="Expiry Date *" type="date" required fullWidth
                                 value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)}
-                                InputLabelProps={{ shrink: true }} InputProps={{ sx: { borderRadius: 2 } }} />
+                                InputLabelProps={{ shrink: true }} InputProps={{ sx: { borderRadius: '12px' } }} />
                         </Box>
 
                         {/* DSC Class | DSC Type */}
@@ -281,7 +282,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                             <FormControl size="small" fullWidth>
                                 <InputLabel>DSC Class</InputLabel>
                                 <Select value={form.dscClass} label="DSC Class"
-                                    onChange={e => set('dscClass', e.target.value)} sx={{ borderRadius: 2 }}>
+                                    onChange={e => set('dscClass', e.target.value)} sx={{ borderRadius: '12px' }}>
                                     <MenuItem value="">None</MenuItem>
                                     <MenuItem value="Class 1">Class 1</MenuItem>
                                     <MenuItem value="Class 2">Class 2</MenuItem>
@@ -291,7 +292,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                             <FormControl size="small" fullWidth>
                                 <InputLabel>DSC Type</InputLabel>
                                 <Select value={form.dscType} label="DSC Type"
-                                    onChange={e => set('dscType', e.target.value)} sx={{ borderRadius: 2 }}>
+                                    onChange={e => set('dscType', e.target.value)} sx={{ borderRadius: '12px' }}>
                                     <MenuItem value="">None</MenuItem>
                                     <MenuItem value="Signing">Signing</MenuItem>
                                     <MenuItem value="Encryption">Encryption</MenuItem>
@@ -304,14 +305,14 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                         <Box display="flex" gap={2} sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                             <TextField size="small" label="Issuing Authority" placeholder="e.g. eMudhra, Sify, NSDL"
                                 value={form.issuingAuthority} onChange={e => set('issuingAuthority', e.target.value)}
-                                fullWidth InputProps={{ sx: { borderRadius: 2 } }} />
+                                fullWidth InputProps={{ sx: { borderRadius: '12px' } }} />
                             <TextField size="small" label="Purpose" placeholder="e.g. Income Tax, MCA"
                                 value={form.purpose} onChange={e => set('purpose', e.target.value)}
-                                fullWidth InputProps={{ sx: { borderRadius: 2 } }} />
+                                fullWidth InputProps={{ sx: { borderRadius: '12px' } }} />
                         </Box>
 
                         {/* Password — full width */}
-                        <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: '#fffbeb', borderColor: '#fde68a' }}>
+                        <Paper variant="outlined" sx={{ p: 2.5, borderRadius: '12px', bgcolor: '#fffbeb', borderColor: '#fde68a' }}>
                             <Typography variant="caption" fontWeight={700} color="#92400e"
                                 sx={{ textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 1.5 }}>
                                 🔐 DSC Password (AES-256 Encrypted)
@@ -319,7 +320,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                             <TextField fullWidth size="small" type="password"
                                 value={form.dscPassword} onChange={e => set('dscPassword', e.target.value)}
                                 placeholder={isEdit ? 'Leave blank to keep existing password' : 'Enter DSC password to store securely'}
-                                InputProps={{ sx: { borderRadius: 2, bgcolor: 'white' } }} />
+                                InputProps={{ sx: { borderRadius: '12px', bgcolor: 'white' } }} />
                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                                 Password is encrypted using AES-256-CBC and stored securely. Only Admin/Manager can view it.
                             </Typography>
@@ -328,11 +329,10 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-                    <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>Cancel</Button>
-                    <Button type="submit" variant="contained" disabled={saving}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                        {saving ? <CircularProgress size={18} color="inherit" /> : isEdit ? 'Update DSC' : 'Add DSC'}
-                    </Button>
+                    <CommonButton onClick={onClose} variant="outlined" sx={{ borderRadius: '12px' }}>Cancel</CommonButton>
+                    <CommonButton type="submit" variant="contained" loading={saving} sx={{ borderRadius: '12px' }}>
+                        {isEdit ? 'Update DSC' : 'Add DSC'}
+                    </CommonButton>
                 </DialogActions>
             </form>
         </Dialog>
@@ -393,8 +393,8 @@ export const DSCManagement: React.FC = () => {
         <Box sx={{ minHeight: '100vh', bgcolor: '#f5f7fa' }}>
             {/* ── Page Header ── */}
             <Paper elevation={0} sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white', borderRadius: '0 0 16px 16px', px: 3, py: 2.5, mb: 3
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b', borderRadius: '0 0 16px 16px', px: 3, py: 2.5, mb: 3
             }}>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2}>
                     <Box>
@@ -406,15 +406,15 @@ export const DSCManagement: React.FC = () => {
                         </Typography>
                     </Box>
                     <Box display="flex" gap={1.5} flexWrap="wrap">
-                        <Button variant="outlined" startIcon={<DownloadIcon />}
+                        <CommonButton variant="outlined" startIcon={<DownloadIcon />}
                             onClick={() => dscService.exportCSV().catch(() => toast.error('Export failed'))}
-                            sx={{ borderRadius: 2, textTransform: 'none', color: 'white', borderColor: 'rgba(255,255,255,0.4)', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                            sx={{ borderRadius: '12px' }}>
                             Export CSV
-                        </Button>
-                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setEditItem(null); setShowForm(true); }}
-                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, bgcolor: 'white', color: '#667eea', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" startIcon={<AddIcon />} onClick={() => { setEditItem(null); setShowForm(true); }}
+                            sx={{ borderRadius: '12px' }}>
                             Add DSC
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
             </Paper>
@@ -423,7 +423,7 @@ export const DSCManagement: React.FC = () => {
                 {/* ── Stat Cards ── */}
                 <Grid container spacing={2.5} sx={{ mb: 3 }}>
                     {statCards.map(c => (
-                        <Grid item xs={6} sm={3} key={c.label}>
+                        <Grid key={c.label} size={{ xs: 6, sm: 3 }}>
                             <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
                                 <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
                                     <Avatar sx={{ background: c.bg, width: 48, height: 48, boxShadow: `0 4px 12px ${c.color}40` }}>
@@ -441,14 +441,14 @@ export const DSCManagement: React.FC = () => {
 
                 {/* ── Expiring Soon Widget ── */}
                 {(dashboard?.upcoming || []).length > 0 && (
-                    <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+                    <Alert severity="warning" sx={{ mb: 3, borderRadius: '12px' }}>
                         <Typography variant="subtitle2" fontWeight={700} mb={1}>⏰ Expiring in Next 30 Days</Typography>
                         <Grid container spacing={1}>
                             {dashboard!.upcoming.map(d => {
                                 const days = daysUntil(d.expiryDate);
                                 return (
-                                    <Grid item xs={12} sm={6} md={4} key={d._id}>
-                                        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Grid key={d._id} size={{ xs: 12, sm: 6, md: 4 }}>
+                                        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <Box>
                                                 <Typography variant="body2" fontWeight={700}>{(d.clientId as { name?: string })?.name || d.holderName}</Typography>
                                                 <Typography variant="caption" color="text.secondary" fontFamily="monospace">{d.dscNumber}</Typography>
@@ -468,11 +468,11 @@ export const DSCManagement: React.FC = () => {
                 <Paper elevation={1} sx={{ borderRadius: 3, p: 2, mb: 2.5, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                     <TextField size="small" placeholder="Search by DSC number, holder or client..."
                         value={search} onChange={e => setSearch(e.target.value)}
-                        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: 2 } }}
+                        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: '12px' } }}
                         sx={{ flex: 1, minWidth: 220 }} />
                     <FormControl size="small" sx={{ minWidth: 160 }}>
                         <InputLabel>Status</InputLabel>
-                        <Select value={statusFilter} label="Status" onChange={e => setStatusFilter(e.target.value)} sx={{ borderRadius: 2 }}>
+                        <Select value={statusFilter} label="Status" onChange={e => setStatusFilter(e.target.value)} sx={{ borderRadius: '12px' }}>
                             <MenuItem value="">All Statuses</MenuItem>
                             <MenuItem value="active">✅ Active</MenuItem>
                             <MenuItem value="expiring_soon">⚠️ Expiring Soon</MenuItem>
@@ -550,11 +550,11 @@ export const DSCManagement: React.FC = () => {
                                                 <Typography variant="caption" color="text.secondary">{dsc.dscType || ''}</Typography>
                                             </TableCell>
                                             <TableCell>
-                                                <Button size="small" variant="outlined" startIcon={<LockIcon sx={{ fontSize: '14px !important' }} />}
+                                                <CommonButton size="small" variant="outlined" startIcon={<LockIcon sx={{ fontSize: '14px !important' }} />}
                                                     onClick={() => setPwdItem(dsc)}
-                                                    sx={{ borderRadius: 1.5, textTransform: 'none', fontSize: '0.72rem', fontWeight: 700, borderColor: '#fde68a', color: '#92400e', bgcolor: '#fffbeb', '&:hover': { bgcolor: '#fef3c7' } }}>
+                                                    sx={{ borderRadius: '8px', fontSize: '0.72rem', borderColor: '#fde68a', color: '#92400e', bgcolor: '#fffbeb', '&:hover': { bgcolor: '#fef3c7' } }}>
                                                     View
-                                                </Button>
+                                                </CommonButton>
                                             </TableCell>
                                             <TableCell>
                                                 <Box display="flex" gap={0.5}>
@@ -603,11 +603,11 @@ export const DSCManagement: React.FC = () => {
                     <Typography variant="body2" color="error" mt={1}>This action cannot be undone.</Typography>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setDeleteConfirm(null)} sx={{ borderRadius: 2, textTransform: 'none' }}>Cancel</Button>
-                    <Button variant="contained" color="error" onClick={() => deleteMutation.mutate(deleteConfirm!._id)}
-                        disabled={deleteMutation.isPending} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
-                        {deleteMutation.isPending ? <CircularProgress size={18} color="inherit" /> : 'Delete'}
-                    </Button>
+                    <CommonButton onClick={() => setDeleteConfirm(null)} sx={{ borderRadius: '12px' }} variant="text">Cancel</CommonButton>
+                    <CommonButton variant="contained" color="error" onClick={() => deleteMutation.mutate(deleteConfirm!._id)}
+                        loading={deleteMutation.isPending} sx={{ borderRadius: '12px' }}>
+                        Delete
+                    </CommonButton>
                 </DialogActions>
             </Dialog>
         </Box>
@@ -615,3 +615,8 @@ export const DSCManagement: React.FC = () => {
 };
 
 export default DSCManagement;
+
+
+
+
+

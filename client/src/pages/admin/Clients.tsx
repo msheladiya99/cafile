@@ -3,7 +3,6 @@ import {
     Box,
     Paper,
     Typography,
-    Button,
     TextField,
     Dialog,
     DialogTitle,
@@ -41,7 +40,7 @@ import {
     Group as ClientsIcon,
     Search as SearchIcon
 } from '@mui/icons-material';
-import { PageHeader, PageContainer, ContentContainer, Section } from '../../components/common/UIComponents';
+import { PageHeader, PageContainer, ContentContainer, Section, CommonButton } from '../../components/common/UIComponents';
 import { adminService } from '../../services/adminService';
 import type { Client, CreateClientResponse } from '../../types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -158,18 +157,16 @@ export const Clients: React.FC = () => {
             <PageHeader
                 title="Clients"
                 actions={
-                    <Button
+                    <CommonButton
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setOpenDialog(true)}
                         sx={{
                             backgroundColor: 'rgba(255,255,255,0.2)',
                             color: 'white',
-                            borderRadius: 2,
+                            borderRadius: '12px',
                             px: 3,
                             py: 0.8,
-                            textTransform: 'none',
-                            fontWeight: 600,
                             boxShadow: 'none',
                             '&:hover': {
                                 backgroundColor: 'rgba(255,255,255,0.3)',
@@ -178,7 +175,7 @@ export const Clients: React.FC = () => {
                         }}
                     >
                         Add New Client
-                    </Button>
+                    </CommonButton>
                 }
             />
 
@@ -196,7 +193,7 @@ export const Clients: React.FC = () => {
                                 <SearchIcon sx={{ color: 'text.secondary', mr: 1.5 }} />
                             ),
                             sx: {
-                                borderRadius: 1.5,
+                                borderRadius: '8px',
                                 bgcolor: '#fff',
                             }
                         }}
@@ -350,7 +347,7 @@ export const Clients: React.FC = () => {
                                     >
                                         <Box display="flex" alignItems="center" gap={2} mb={2}>
                                             <Box sx={{
-                                                width: 48, height: 48, borderRadius: 2,
+                                                width: 48, height: 48, borderRadius: '12px',
                                                 bgcolor: '#e8eaf6', display: 'flex',
                                                 alignItems: 'center', justifyContent: 'center',
                                                 color: '#1a237e', fontWeight: 800, fontSize: '1.2rem'
@@ -400,31 +397,31 @@ export const Clients: React.FC = () => {
                                         </Box>
 
                                         <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={1}>
-                                            <Button
+                                            <CommonButton
                                                 variant="outlined"
                                                 size="small"
                                                 onClick={() => handleViewCredentials(client._id)}
-                                                sx={{ borderRadius: 1.5, py: 1, textTransform: 'none', fontWeight: 700, borderColor: '#e2e8f0', color: '#1a73e8' }}
+                                                sx={{ borderRadius: '8px', py: 1, borderColor: '#e2e8f0', color: '#1a73e8' }}
                                             >
                                                 Details
-                                            </Button>
-                                            <Button
+                                            </CommonButton>
+                                            <CommonButton
                                                 variant="outlined"
                                                 size="small"
                                                 onClick={() => handleResetPassword(client._id)}
-                                                sx={{ borderRadius: 1.5, py: 1, textTransform: 'none', fontWeight: 700, borderColor: '#e2e8f0', color: '#f57c00' }}
+                                                sx={{ borderRadius: '8px', py: 1, borderColor: '#e2e8f0', color: '#f57c00' }}
                                             >
                                                 Reset
-                                            </Button>
-                                            <Button
+                                            </CommonButton>
+                                            <CommonButton
                                                 variant="outlined"
                                                 size="small"
                                                 color="error"
                                                 onClick={() => handleDeleteClient(client._id, client.name)}
-                                                sx={{ borderRadius: 1.5, py: 1, textTransform: 'none', fontWeight: 700, borderColor: '#fee2e2' }}
+                                                sx={{ borderRadius: '8px', py: 1, borderColor: '#fee2e2' }}
                                             >
                                                 Delete
-                                            </Button>
+                                            </CommonButton>
                                         </Box>
                                     </Paper>
                                 ))
@@ -449,13 +446,13 @@ export const Clients: React.FC = () => {
                             </Typography>
                         </DialogTitle>
                         <DialogContent>
-                            {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+                            {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>{error}</Alert>}
                             {success && credentials && (
-                                <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                                <Alert severity="success" sx={{ mb: 2, borderRadius: '12px' }}>
                                     <Typography variant="body2" fontWeight="700" gutterBottom>
                                         Client Created Successfully!
                                     </Typography>
-                                    <Box sx={{ mt: 2, p: 2, background: 'rgba(0,0,0,0.04)', borderRadius: 2 }}>
+                                    <Box sx={{ mt: 2, p: 2, background: 'rgba(0,0,0,0.04)', borderRadius: '12px' }}>
                                         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                                             <Typography variant="body2"><strong>Username:</strong> {credentials.username}</Typography>
                                             <IconButton size="small" onClick={() => copyToClipboard(credentials.username)}><CopyIcon fontSize="small" /></IconButton>
@@ -471,17 +468,17 @@ export const Clients: React.FC = () => {
                                 <TextField
                                     fullWidth label="Client Name" margin="dense"
                                     value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                 />
                                 <TextField
                                     fullWidth label="Email" type="email" margin="dense"
                                     value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                 />
                                 <TextField
                                     fullWidth label="Phone" margin="dense"
                                     value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    required sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                 />
                                 <Divider sx={{ my: 3 }} />
                                 <Typography variant="subtitle2" color="text.secondary" fontWeight="800" mb={1}>
@@ -491,33 +488,33 @@ export const Clients: React.FC = () => {
                                     <TextField
                                         label="PAN" fullWidth
                                         value={formData.panNumber} onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
-                                        inputProps={{ maxLength: 10 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        inputProps={{ maxLength: 10 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                     />
                                     <TextField
                                         label="Aadhar" fullWidth
                                         value={formData.aadharNumber} onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
-                                        inputProps={{ maxLength: 12 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                        inputProps={{ maxLength: 12 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                     />
                                 </Stack>
                                 <TextField
                                     fullWidth label="GSTIN" margin="normal"
                                     value={formData.gstNumber} onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
-                                    inputProps={{ maxLength: 15 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                                    inputProps={{ maxLength: 15 }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                 />
                             </Box>
                         </DialogContent>
                         <DialogActions sx={{ p: 3 }}>
-                            <Button onClick={handleCloseDialog} sx={{ fontWeight: 600, color: 'text.secondary' }}>Cancel</Button>
-                            <Button
+                            <CommonButton onClick={handleCloseDialog} sx={{ color: 'text.secondary' }}>Cancel</CommonButton>
+                            <CommonButton
                                 onClick={handleSubmit}
                                 variant="contained"
                                 sx={{
                                     background: 'linear-gradient(45deg, #1a237e 30%, #534bae 90%)',
-                                    borderRadius: 2, px: 4, textTransform: 'none', fontWeight: 700
+                                    borderRadius: '12px', px: 4
                                 }}
                             >
                                 Create Client
-                            </Button>
+                            </CommonButton>
                         </DialogActions>
                     </Dialog>
 
@@ -533,7 +530,7 @@ export const Clients: React.FC = () => {
                         <DialogContent>
                             {viewingCredentials && (
                                 <Stack spacing={2} sx={{ mt: 1 }}>
-                                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc' }}>
+                                    <Paper variant="outlined" sx={{ p: 2, borderRadius: '12px', bgcolor: '#f8fafc' }}>
                                         <Typography variant="caption" color="text.secondary" fontWeight="700">USERNAME</Typography>
                                         <Box display="flex" justifyContent="space-between" alignItems="center">
                                             <Typography variant="h6" fontWeight="700">{viewingCredentials.username}</Typography>
@@ -542,18 +539,18 @@ export const Clients: React.FC = () => {
                                     </Paper>
 
                                     {viewingCredentials.password ? (
-                                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#f0fdf4', borderColor: '#bcf0da' }}>
+                                        <Paper variant="outlined" sx={{ p: 2, borderRadius: '12px', bgcolor: '#f0fdf4', borderColor: '#bcf0da' }}>
                                             <Typography variant="caption" color="#15803d" fontWeight="700">NEW PASSWORD</Typography>
                                             <Box display="flex" justifyContent="space-between" alignItems="center">
                                                 <Typography variant="h6" fontWeight="700" color="#166534">{viewingCredentials.password}</Typography>
                                                 <IconButton size="small" onClick={() => copyToClipboard(viewingCredentials.password!)}><CopyIcon fontSize="small" /></IconButton>
                                             </Box>
-                                            <Alert severity="info" color="success" sx={{ mt: 1, borderRadius: 1.5, py: 0 }}>
+                                            <Alert severity="info" color="success" sx={{ mt: 1, borderRadius: '8px', py: 0 }}>
                                                 Provide this to the client immediately.
                                             </Alert>
                                         </Paper>
                                     ) : (
-                                        <Alert severity="info" sx={{ borderRadius: 2 }}>
+                                        <Alert severity="info" sx={{ borderRadius: '12px' }}>
                                             {viewingCredentials.note}
                                         </Alert>
                                     )}
@@ -561,7 +558,7 @@ export const Clients: React.FC = () => {
                             )}
                         </DialogContent>
                         <DialogActions sx={{ p: 2 }}>
-                            <Button onClick={() => setOpenCredentialsDialog(false)} sx={{ fontWeight: 700 }}>Close</Button>
+                            <CommonButton onClick={() => setOpenCredentialsDialog(false)}>Close</CommonButton>
                         </DialogActions>
                     </Dialog>
                 </Section>
@@ -569,3 +566,8 @@ export const Clients: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+

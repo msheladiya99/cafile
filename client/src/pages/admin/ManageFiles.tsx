@@ -20,7 +20,6 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    Button,
     CircularProgress,
     useTheme,
     useMediaQuery,
@@ -51,7 +50,7 @@ import {
 import { adminService } from '../../services/adminService';
 import { Helmet } from 'react-helmet-async';
 import type { Client, FileData } from '../../types';
-import { PageHeader, PageContainer, ContentContainer, Section } from '../../components/common/UIComponents';
+import { PageHeader, PageContainer, ContentContainer, Section, CommonButton } from '../../components/common/UIComponents';
 
 export const ManageFiles: React.FC = () => {
     const [clients, setClients] = useState<Client[]>([]);
@@ -360,21 +359,21 @@ export const ManageFiles: React.FC = () => {
                             inputProps={{ 'aria-label': 'Search files by name' }}
                             InputProps={{
                                 startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                                sx: { borderRadius: 1.5 }
+                                sx: { borderRadius: '8px' }
                             }}
                         />
                     </Stack>
                     {selectedFileIds.length > 0 && (
                         <Box mt={2} display="flex" justifyContent="flex-end">
-                            <Button
+                            <CommonButton
                                 variant="contained"
                                 color="error"
                                 startIcon={<DeleteIcon />}
                                 onClick={handleBulkDelete}
-                                sx={{ borderRadius: 2 }}
+                                sx={{ borderRadius: '12px' }}
                             >
                                 Delete Selected ({selectedFileIds.length})
-                            </Button>
+                            </CommonButton>
                         </Box>
                     )}
                 </Section>
@@ -388,7 +387,7 @@ export const ManageFiles: React.FC = () => {
                         <Box>
                             {/* Breadcrumbs for Context */}
                             {selectedClient && (
-                                <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, bgcolor: 'background.paper' }} elevation={0} variant="outlined">
+                                <Paper sx={{ p: 1.5, mb: 2, borderRadius: '12px', bgcolor: 'background.paper' }} elevation={0} variant="outlined">
                                     <Breadcrumbs separator={<NavigateNextIcon fontSize="small" color="action" />} aria-label="breadcrumb">
                                         <Stack direction="row" alignItems="center" gap={0.5} color="text.secondary">
                                             <HomeIcon fontSize="small" />
@@ -482,7 +481,7 @@ export const ManageFiles: React.FC = () => {
                                                                                     size="small"
                                                                                     color={getCategoryColor(file.category)}
                                                                                     variant="outlined"
-                                                                                    sx={{ height: 20, fontSize: '0.65rem', borderRadius: 1 }}
+                                                                                    sx={{ height: 20, fontSize: '0.65rem', borderRadius: '8px' }}
                                                                                 />
                                                                                 <Typography variant="caption" color="text.secondary">
                                                                                     • {new Date(file.uploadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -508,7 +507,7 @@ export const ManageFiles: React.FC = () => {
                                 open={Boolean(anchorEl)}
                                 onClose={handleMenuClose}
                                 PaperProps={{
-                                    sx: { width: 180, borderRadius: 2 }
+                                    sx: { width: 180, borderRadius: '12px' }
                                 }}
                                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
@@ -608,7 +607,7 @@ export const ManageFiles: React.FC = () => {
                                                         label={file.category}
                                                         color={getCategoryColor(file.category)}
                                                         size="small"
-                                                        sx={{ borderRadius: 1.5, fontWeight: 600 }}
+                                                        sx={{ borderRadius: '8px', fontWeight: 600 }}
                                                     />
                                                 </TableCell>
                                                 <TableCell>
@@ -617,7 +616,7 @@ export const ManageFiles: React.FC = () => {
                                                             label={`FY ${file.year}-${(parseInt(file.year) + 1).toString().slice(-2)}`}
                                                             size="small"
                                                             variant="outlined"
-                                                            sx={{ borderRadius: 1.5 }}
+                                                            sx={{ borderRadius: '8px' }}
                                                         />
                                                     ) : (
                                                         <Typography variant="body2" color="text.secondary">-</Typography>
@@ -674,20 +673,20 @@ export const ManageFiles: React.FC = () => {
                         />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setEditDialog(false)}>Cancel</Button>
-                        <Button
+                        <CommonButton onClick={() => setEditDialog(false)} variant="outlined" sx={{ bgcolor: 'transparent', color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' } }}>Cancel</CommonButton>
+                        <CommonButton
                             onClick={handleSaveEdit}
-                            variant="contained"
-                            sx={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                textTransform: 'none',
-                            }}
                         >
                             Save
-                        </Button>
+                        </CommonButton>
                     </DialogActions>
                 </Dialog>
             </ContentContainer>
         </PageContainer>
     );
 };
+
+
+
+
+

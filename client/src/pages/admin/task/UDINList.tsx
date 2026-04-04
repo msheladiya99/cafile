@@ -51,8 +51,8 @@ export const UDINList: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -117,11 +117,11 @@ export const UDINList: React.FC = () => {
             </Paper>
 
             {/* List Section */}
-            <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                    color: '#1e293b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
@@ -130,7 +130,7 @@ export const UDINList: React.FC = () => {
                         <ListIcon fontSize="small" />
                         <Typography fontWeight="500">List</Typography>
                     </Box>
-                    <IconButton size="small" sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
+                    <IconButton size="small" sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, borderRadius: '8px' }}>
                         <ExcelIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -151,3 +151,8 @@ export const UDINList: React.FC = () => {
 };
 
 export default UDINList;
+
+
+
+
+
