@@ -4,7 +4,6 @@ import {
     Paper,
     Typography,
     TextField,
-    Button,
     Switch,
     Tabs,
     Tab,
@@ -42,6 +41,10 @@ import { adminService } from '../../../services/adminService';
 import { API_URL } from '../../../services/api';
 import type { CreateClientData, User, CreateClientResponse } from '../../../types';
 import { BulkImportModal } from './BulkImportModal';
+import { PageHeader, PageContainer, Section as SharedSection, FilterRow as SharedFormRow, CommonButton } from '../../../components/common/UIComponents';
+
+const FormRow = SharedFormRow;
+const Section = SharedSection;
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -68,56 +71,6 @@ function CustomTabPanel(props: TabPanelProps) {
         </div>
     );
 }
-
-interface FormRowProps {
-    label: string;
-    required?: boolean;
-    children?: React.ReactNode;
-    helperText?: string;
-}
-
-const FormRow = ({ label, required, children, helperText }: FormRowProps) => {
-    // Type checking for child element to safely access props
-    const childIsElement = React.isValidElement(children);
-    return (
-        <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
-                <Typography sx={{ width: { xs: '100%', sm: '160px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, pt: { xs: 0, sm: childIsElement && (children as React.ReactElement<{ multiline?: boolean }>).props.multiline ? 1 : 0 }, flexShrink: 0 }}>
-                    {label} {required && <span style={{ color: 'red' }}>*</span>}
-                </Typography>
-                <Box sx={{ flex: 1, width: '100%' }}>
-                    {children}
-                </Box>
-            </Box>
-            {helperText && (
-                <Box sx={{ display: 'flex', mt: 0.5 }}>
-                    <Box sx={{ width: { xs: 0, sm: '160px' }, display: { xs: 'none', sm: 'block' }, flexShrink: 0 }} />
-                    <Typography variant="caption" sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1, py: 0.3, borderRadius: 1, display: 'inline-block', fontSize: '0.75rem' }}>
-                        <strong style={{ marginRight: '4px' }}>NOTE!</strong> {helperText}
-                    </Typography>
-                </Box>
-            )}
-        </Box>
-    );
-};
-
-interface SectionProps {
-    title: string;
-    icon: React.ReactElement<{ sx?: Record<string, unknown> }>;
-    children?: React.ReactNode;
-}
-
-const Section = ({ title, icon, children }: SectionProps) => (
-    <Paper variant="outlined" sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
-        <Box sx={{ bgcolor: '#f5f7fa', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-            {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
-            <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
-        </Box>
-        <Box sx={{ p: 2, bgcolor: '#ffffff' }}>
-            {children}
-        </Box>
-    </Paper>
-);
 
 interface MasterModalProps {
     open: boolean;
@@ -165,8 +118,8 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSavin
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
-            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '12px' } }}>
+            <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.1rem' }}>{title}</Typography>
                 <IconButton onClick={onClose} size="small" sx={{ color: 'white' }} disabled={isSaving}>
                     <CloseIcon />
@@ -178,13 +131,13 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSavin
                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', fontWeight: 500 }}>
                             Name <span style={{ color: 'red' }}>*</span>
                         </Typography>
-                        <TextField fullWidth size="small" value={name} onChange={e => setName(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                        <TextField fullWidth size="small" value={name} onChange={e => setName(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'flex-start' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, mb: 3 }}>
                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', pt: 1, fontWeight: 500 }}>
                             Description
                         </Typography>
-                        <TextField fullWidth size="small" multiline rows={3} value={description} onChange={e => setDescription(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                        <TextField fullWidth size="small" multiline rows={3} value={description} onChange={e => setDescription(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, mb: 3 }}>
                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.9rem', fontWeight: 500 }}>
@@ -196,28 +149,28 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSavin
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                        <Button variant="contained" onClick={handleSave} disabled={isSaving} sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, fontWeight: 600 }}>
-                            {isSaving ? 'Saving...' : editingId ? 'Update' : 'Save'}
-                        </Button>
-                        <Button variant="contained" onClick={handleCancel} disabled={isSaving} sx={{ bgcolor: '#fb7165', '&:hover': { bgcolor: '#eb6155' }, px: 3, py: 0.5, textTransform: 'none', borderRadius: 2, boxShadow: 'none', fontWeight: 600 }}>
+                        <CommonButton onClick={handleSave} loading={isSaving} size="small" sx={{ boxShadow: 'none' }}>
+                            {editingId ? 'Update' : 'Save'}
+                        </CommonButton>
+                        <CommonButton variant="outlined" onClick={handleCancel} disabled={isSaving} size="small" sx={{ boxShadow: 'none' }}>
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
 
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <FormatListBulletedIcon fontSize="small" />
                     <Typography variant="subtitle1" fontWeight="600" sx={{ fontSize: '1rem' }}>List</Typography>
                 </Box>
                 <Box sx={{ p: 2 }}>
                     {dataList.length === 0 ? (
-                        <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+                        <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                             <Typography variant="body2" color="text.secondary">{itemName} Not Found</Typography>
                         </Box>
                     ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: '200px', overflowY: 'auto' }}>
                             {dataList.map(item => (
-                                <Box key={item._id} sx={{ p: 1.2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box key={item._id} sx={{ p: 1.2, border: '1px solid', borderColor: 'divider', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box>
                                         <Typography variant="body2" fontWeight="600" color="text.primary">{item.name}</Typography>
                                         <Typography variant="caption" sx={{ color: item.status ? 'success.main' : 'error.main', fontWeight: 600 }}>{item.status ? 'Active' : 'Inactive'}</Typography>
@@ -778,50 +731,33 @@ export const ClientMaster: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: { xs: 1.5, md: 3 }, overflowX: 'hidden' }}>
-            {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                    color: 'white', 
-                    px: { xs: 2, sm: 3 }, 
-                    py: 2.5, 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between', 
-                    alignItems: { xs: 'flex-start', sm: 'center' }, 
-                    gap: 2.5 
-                }}>
-                    <Typography variant="h5" fontWeight="700" sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, letterSpacing: '-0.02em' }}>Client Master</Typography>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1.5, 
-                        flexWrap: 'wrap', 
-                        width: { xs: '100%', sm: 'auto' },
-                        '& .MuiButton-root': { 
-                            flex: { xs: '1 1 calc(50% - 12px)', sm: 'none' },
-                            minWidth: { xs: 'fit-content', sm: 'auto' }
-                        }
-                    }}>
-                        <Button variant="contained" size="small" onClick={() => setBulkImportOpen(true)} 
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
+        <PageContainer>
+            <PageHeader
+                title="Client Master"
+                actions={
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                        <CommonButton variant="contained" size="small" onClick={() => setBulkImportOpen(true)} 
+                            sx={{ boxShadow: 'none' }}>
                             Import Excel
-                        </Button>
-                        <Button variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} 
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} 
+                            sx={{ boxShadow: 'none' }}>
                             Add IT Status
-                        </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/master')}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')}
+                            sx={{ boxShadow: 'none' }}>
                             Add New
-                        </Button>
-                        <Button variant="contained" size="small" onClick={() => navigate('/admin/client/list')} 
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 600, fontSize: '0.8rem' }}>
+                        </CommonButton>
+                        <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/list')} 
+                            sx={{ boxShadow: 'none' }}>
                             List
-                        </Button>
+                        </CommonButton>
                     </Box>
-                </Box>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fff', px: 1 }}>
+                }
+            />
+
+            <Paper sx={{ mb: 4, borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', overflow: 'hidden', bgcolor: '#fff' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 1 }}>
                     <Tabs
                         value={tabValue}
                         onChange={handleTabChange}
@@ -831,14 +767,14 @@ export const ClientMaster: React.FC = () => {
                             '& .MuiTab-root': { 
                                 textTransform: 'none', 
                                 fontWeight: 700, 
-                                fontSize: '0.82rem', 
-                                color: 'text.secondary', 
-                                minHeight: 48,
+                                fontSize: '0.875rem', 
+                                color: '#64748b', 
+                                minHeight: 56,
                                 px: { xs: 2, sm: 4 }
                             },
-                            '& .Mui-selected': { color: '#667eea !important' },
+                            '& .Mui-selected': { color: '#6366f1 !important' },
                             '& .MuiTabs-indicator': { 
-                                bgcolor: '#667eea', 
+                                bgcolor: '#6366f1', 
                                 height: 3, 
                                 borderRadius: '3px 3px 0 0' 
                             }
@@ -852,7 +788,7 @@ export const ClientMaster: React.FC = () => {
                 </Box>
             </Paper>
 
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', pt: 0 }}>
+            <Paper sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', overflow: 'hidden', pt: 0 }}>
 
                 <CustomTabPanel value={tabValue} index={0}>
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, px: { xs: 1.5, md: 3 }, pb: 3, pt: { xs: 2, md: 3 } }}>
@@ -861,10 +797,10 @@ export const ClientMaster: React.FC = () => {
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
                                 <FormRow label="Client Name" required>
-                                    <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Client Code">
-                                    <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Group Name" required>
                                     <Select
@@ -874,7 +810,7 @@ export const ClientMaster: React.FC = () => {
                                         name="groupName"
                                         value={formData.groupName || ''}
                                         onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.groupName ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.groupName ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Group...</MenuItem>
                                         {groups.map((group) => (
@@ -892,7 +828,7 @@ export const ClientMaster: React.FC = () => {
                                         name="itStatus"
                                         value={formData.itStatus || ''}
                                         onChange={(e) => setFormData(prev => ({ ...prev, itStatus: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.itStatus ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.itStatus ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a IT Status...</MenuItem>
                                         {itStatuses.map((it) => (
@@ -916,7 +852,7 @@ export const ClientMaster: React.FC = () => {
                                                 {...params}
                                                 placeholder="Choose a Master type..."
                                                 sx={{
-                                                    '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                    '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                                                     '& input::placeholder': { color: 'text.secondary', opacity: 1 }
                                                 }}
                                             />
@@ -939,7 +875,7 @@ export const ClientMaster: React.FC = () => {
                                                 {...params}
                                                 placeholder="Choose a Sub Master..."
                                                 sx={{
-                                                    '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                    '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                                                     '& input::placeholder': { color: 'text.secondary', opacity: 1 }
                                                 }}
                                             />
@@ -947,13 +883,13 @@ export const ClientMaster: React.FC = () => {
                                     />
                                 </FormRow>
                                 <FormRow label="Birth Date">
-                                    <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                    <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                             </Section>
 
                             <Section title="Primary Contact Detail" icon={<ContactPhoneIcon />}>
                                 <FormRow label="Address" required>
-                                    <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Country" required>
                                     <Select
@@ -963,7 +899,7 @@ export const ClientMaster: React.FC = () => {
                                         name="country"
                                         value={formData.country}
                                         onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-                                        sx={{ borderRadius: 1.5, color: formData.country ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.country ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Country...</MenuItem>
                                         <MenuItem value="India">India</MenuItem>
@@ -977,7 +913,7 @@ export const ClientMaster: React.FC = () => {
                                         name="state"
                                         value={formData.state}
                                         onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-                                        sx={{ borderRadius: 1.5, color: formData.state ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.state ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a State...</MenuItem>
                                         <MenuItem value="Gujarat">Gujarat</MenuItem>
@@ -994,7 +930,7 @@ export const ClientMaster: React.FC = () => {
                                         name="city"
                                         value={formData.city}
                                         onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                                        sx={{ borderRadius: 1.5, color: formData.city ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.city ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a City...</MenuItem>
                                         <MenuItem value="Surat">Surat</MenuItem>
@@ -1004,13 +940,13 @@ export const ClientMaster: React.FC = () => {
                                     </Select>
                                 </FormRow>
                                 <FormRow label="Postal Code">
-                                    <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Mobile Number" required helperText="Separate multiple Mobile with &quot;,&quot; (Comma).">
-                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Email" required helperText="Separate multiple Email with &quot;,&quot; (Comma).">
-                                    <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
 
@@ -1023,7 +959,7 @@ export const ClientMaster: React.FC = () => {
                                         name="currency"
                                         value={formData.currency}
                                         onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value as string }))}
-                                        sx={{ borderRadius: 1.5, color: formData.currency ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.currency ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Currency...</MenuItem>
                                         <MenuItem value="INR">Indian Rupee (INR)</MenuItem>
@@ -1031,32 +967,32 @@ export const ClientMaster: React.FC = () => {
                                     </Select>
                                 </FormRow>
                                 <FormRow label="PAN No">
-                                    <TextField name="panNumber" value={formData.panNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="panNumber" value={formData.panNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="GSTIN">
-                                    <TextField name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Aadhar No.">
-                                    <TextField name="aadharNumber" value={formData.aadharNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="aadharNumber" value={formData.aadharNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Incorporation Date">
                                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                        <TextField name="incorporationDateFrom" value={formData.incorporationDateFrom} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                        <TextField name="incorporationDateFrom" value={formData.incorporationDateFrom} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                         <Typography color="text.secondary">To</Typography>
-                                        <TextField name="incorporationDateTo" value={formData.incorporationDateTo} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} InputLabelProps={{ shrink: true }} />
+                                        <TextField name="incorporationDateTo" value={formData.incorporationDateTo} onChange={handleInputChange} type="date" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                     </Box>
                                 </FormRow>
                                 <FormRow label="Licence No">
-                                    <TextField name="licenceNo" value={formData.licenceNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="licenceNo" value={formData.licenceNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Licence Authority">
-                                    <TextField name="licenceAuthority" value={formData.licenceAuthority} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="licenceAuthority" value={formData.licenceAuthority} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="TRN No">
-                                    <TextField name="trnNo" value={formData.trnNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="trnNo" value={formData.trnNo} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Description">
-                                    <TextField name="description" value={formData.description} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="description" value={formData.description} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Support Employee">
                                     <Select
@@ -1066,7 +1002,7 @@ export const ClientMaster: React.FC = () => {
                                         name="supportEmployee"
                                         value={formData.supportEmployee}
                                         onChange={(e) => setFormData(prev => ({ ...prev, supportEmployee: e.target.value }))}
-                                        sx={{ borderRadius: 1.5, color: formData.supportEmployee ? 'text.primary' : 'text.secondary' }}
+                                        sx={{ borderRadius: '8px', color: formData.supportEmployee ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                         {staffList.filter(user => user.role !== 'CLIENT').map(user => (
@@ -1088,7 +1024,7 @@ export const ClientMaster: React.FC = () => {
                         <Box sx={{ flex: 10 }}>
                             <Section title="Profile Image" icon={<ImageIcon />}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
-                                    <Box sx={{ width: { xs: '100%', sm: 130 }, height: 110, border: '2px dashed #ccc', borderRadius: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
+                                    <Box sx={{ width: { xs: '100%', sm: 130 }, height: 110, border: '2px dashed #ccc', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#fafafa', overflow: 'hidden', position: 'relative' }}>
                                         {profileImage ? (
                                             <img src={URL.createObjectURL(profileImage)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                         ) : (formData?.profileImageUrl || clientToEdit?.profileImageUrl) && clientToEdit?._id ? (
@@ -1120,17 +1056,17 @@ export const ClientMaster: React.FC = () => {
                                             </IconButton>
                                         )}
                                     </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%' }}>
-                                        <Button component="label" size="small"
-                                            sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, textTransform: 'none', px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap', fontWeight: 600 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', width: '100%' }}>
+                                        <CommonButton component="label" size="small"
+                                            sx={{ bgcolor: '#f1f5f9', color: '#555', borderRadius: 0, px: 1.5, py: 0.5, borderRight: '1px solid #ccc', fontSize: '0.78rem', minWidth: 90, whiteSpace: 'nowrap' }}>
                                             Choose File
                                             <input type="file" hidden accept="image/jpeg, image/png" onChange={(e) => setProfileImage(e.target.files?.[0] || null)} />
-                                        </Button>
+                                        </CommonButton>
                                         <Typography variant="caption" sx={{ px: 1, color: 'text.secondary', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {profileImage ? profileImage.name : formData.profileImageUrl ? 'Image already set' : 'No file chosen'}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: 1, fontSize: '0.72rem', width: '100%' }}>
+                                    <Box sx={{ bgcolor: '#fee2e2', color: '#ef4444', px: 1.5, py: 0.5, borderRadius: '8px', fontSize: '0.72rem', width: '100%' }}>
                                         <strong>NOTE!</strong> JPEG or PNG Image Format only
                                     </Box>
                                 </Box>
@@ -1144,7 +1080,7 @@ export const ClientMaster: React.FC = () => {
                                         name="financialYear"
                                         value={formData.financialYear}
                                         onChange={(e) => setFormData(prev => ({ ...prev, financialYear: e.target.value }))}
-                                        sx={{ borderRadius: 1.5 }}
+                                        sx={{ borderRadius: '8px' }}
                                     >
                                         <MenuItem value="april-march">April-March</MenuItem>
                                         <MenuItem value="jan-dec">Jan-Dec</MenuItem>
@@ -1154,16 +1090,16 @@ export const ClientMaster: React.FC = () => {
 
                             <Section title="Alternate Contact" icon={<ContactMailIcon />}>
                                 <FormRow label="Address">
-                                    <TextField name="altAddress" value={formData.altAddress} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="altAddress" value={formData.altAddress} onChange={handleInputChange} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Phone(M)">
-                                    <TextField name="altPhoneM" value={formData.altPhoneM} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="altPhoneM" value={formData.altPhoneM} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Phone(L)">
-                                    <TextField name="altPhoneL" value={formData.altPhoneL} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="altPhoneL" value={formData.altPhoneL} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="FAX">
-                                    <TextField name="altFax" value={formData.altFax} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                    <TextField name="altFax" value={formData.altFax} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
 
@@ -1172,7 +1108,7 @@ export const ClientMaster: React.FC = () => {
                                     const fieldName = `extraField${num}` as keyof CreateClientData;
                                     return (
                                         <FormRow key={num} label={`Field ${num}`}>
-                                            <TextField name={fieldName} value={formData[fieldName]} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                            <TextField name={fieldName} value={formData[fieldName]} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                         </FormRow>
                                     );
                                 })}
@@ -1180,26 +1116,26 @@ export const ClientMaster: React.FC = () => {
 
                             {id && (
                                 <Section title="Login Security" icon={<GridViewIcon />}>
-                                    <Box sx={{ bgcolor: '#fffbeb', p: 2, borderRadius: 2, border: '1px solid #fef3c7', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    <Box sx={{ bgcolor: '#fffbeb', p: 2, borderRadius: '12px', border: '1px solid #fef3c7', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                         <Box>
                                             <Typography variant="body2" sx={{ color: '#92400e', fontWeight: 600 }}>Reset Portal Password</Typography>
                                             <Typography sx={{ color: '#b45309', fontSize: '0.75rem' }}>A new secure password will be generated and emailed to the client.</Typography>
                                         </Box>
-                                        <Button
+                                        <CommonButton
                                             variant="contained"
                                             color="warning"
                                             size="small"
                                             fullWidth
-                                            sx={{ textTransform: 'none', borderRadius: 1.5, fontWeight: 600, boxShadow: 'none' }}
+                                            sx={{ borderRadius: '8px', boxShadow: 'none' }}
                                             onClick={() => {
                                                 if (window.confirm('Reset this client\'s password and send email?')) {
                                                     resetClientPasswordMutation.mutate();
                                                 }
                                             }}
-                                            disabled={resetClientPasswordMutation.isPending}
+                                            loading={resetClientPasswordMutation.isPending}
                                         >
-                                            {resetClientPasswordMutation.isPending ? 'Resetting...' : 'Reset & Send Email'}
-                                        </Button>
+                                            Reset & Send Email
+                                        </CommonButton>
                                     </Box>
                                 </Section>
                             )}
@@ -1212,7 +1148,7 @@ export const ClientMaster: React.FC = () => {
                 <CustomTabPanel value={tabValue} index={1}>
                     <Box sx={{ p: { xs: 1.5, md: 3 }, pt: { xs: 2, md: 3 } }}>
                         {/* Multiple Contact Form */}
-                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                             <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
                                 <GridViewIcon sx={{ width: 20, height: 20, color: '#1e293b' }} />
                                 <Typography variant="subtitle2" fontWeight="700" color="#1e293b">Client Multiple Contact</Typography>
@@ -1226,25 +1162,25 @@ export const ClientMaster: React.FC = () => {
 
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Name <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="name" value={contactForm.name} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="name" value={contactForm.name} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Designation <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="designation" value={contactForm.designation} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="designation" value={contactForm.designation} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Mobile <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="mobile" value={contactForm.mobile} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="mobile" value={contactForm.mobile} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Email <span style={{ color: 'red' }}>*</span></Typography>
-                                        <TextField name="email" value={contactForm.email} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="email" value={contactForm.email} onChange={handleContactFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'flex-start' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, pt: { sm: 1 } }}>Description</Typography>
-                                        <TextField name="description" value={contactForm.description} onChange={handleContactFormChange} multiline rows={2} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="description" value={contactForm.description} onChange={handleContactFormChange} multiline rows={2} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '120px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Status</Typography>
@@ -1256,19 +1192,19 @@ export const ClientMaster: React.FC = () => {
                                 </Box>
 
                                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                    <Button variant="contained" onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
+                                    <CommonButton onClick={handleAddContactForm} sx={{ bgcolor: '#4fc3f7', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1 }}>
                                         {isEditingContact ? 'Update' : 'Save'}
-                                    </Button>
-                                    <Button variant="contained" onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
+                                    </CommonButton>
+                                    <CommonButton onClick={handleCancelContactForm} sx={{ bgcolor: '#ff5252', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1 }}>
                                         {isEditingContact ? 'Cancel Edit' : 'Cancel'}
-                                    </Button>
+                                    </CommonButton>
                                 </Box>
                             </Box>
                         </Paper>
 
                         {/* Contacts List Section */}
-                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
                                 <Typography variant="subtitle1" fontWeight="600">Multiple Contact List</Typography>
                             </Box>
@@ -1278,14 +1214,14 @@ export const ClientMaster: React.FC = () => {
                                 ) : (
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                         {formData.multipleContacts.map((contact, index) => (
-                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <Box>
                                                     <Typography variant="subtitle2" fontWeight="600">{contact.name} <span style={{ fontWeight: 400, color: 'gray' }}>- {contact.designation}</span></Typography>
                                                     <Typography variant="body2" color="text.secondary">{contact.mobile} | {contact.email}</Typography>
                                                     {contact.description && <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>{contact.description}</Typography>}
                                                 </Box>
                                                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                                    <Typography variant="caption" sx={{ bgcolor: contact.status ? '#e8f5e9' : '#ffebee', color: contact.status ? 'success.main' : 'error.main', px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600 }}>{contact.status ? 'Active' : 'Inactive'}</Typography>
+                                                    <Typography variant="caption" sx={{ bgcolor: contact.status ? '#e8f5e9' : '#ffebee', color: contact.status ? 'success.main' : 'error.main', px: 1.5, py: 0.5, borderRadius: '8px', fontWeight: 600 }}>{contact.status ? 'Active' : 'Inactive'}</Typography>
                                                     <IconButton
                                                         size="small"
                                                         sx={{ color: 'primary.main', bgcolor: 'rgba(25, 118, 210, 0.04)', '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' } }}
@@ -1314,7 +1250,7 @@ export const ClientMaster: React.FC = () => {
                 <CustomTabPanel value={tabValue} index={2}>
                     <Box sx={{ p: { xs: 1.5, md: 3 }, pt: { xs: 2, md: 3 } }}>
                         {/* Legal Document Form */}
-                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                        <Paper elevation={0} variant="outlined" sx={{ mb: 4, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                             <Box sx={{ bgcolor: '#f8fafc', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" fontWeight="700" color="#1e293b" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <span>📄</span> Legal Document
@@ -1342,7 +1278,7 @@ export const ClientMaster: React.FC = () => {
                                                     {...params}
                                                     placeholder="Choose a Type..."
                                                     sx={{
-                                                        '& .MuiOutlinedInput-root': { borderRadius: 1.5 },
+                                                        '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                                                         '& input::placeholder': { color: 'text.secondary', opacity: 1 }
                                                     }}
                                                 />
@@ -1353,16 +1289,16 @@ export const ClientMaster: React.FC = () => {
 
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Description</Typography>
-                                        <TextField name="description" value={legalForm.description} onChange={handleLegalFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }} />
+                                        <TextField name="description" value={legalForm.description} onChange={handleLegalFormChange} fullWidth size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
                                         <Typography sx={{ width: { xs: '100%', sm: '130px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>Browse Document <span style={{ color: 'red' }}>*</span></Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: 1.5, overflow: 'hidden', width: '100%', flex: 1 }}>
-                                            <Button component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, textTransform: 'none', px: 2, py: 0.5, borderRight: '1px solid #ccc', fontWeight: 500, whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '8px', overflow: 'hidden', width: '100%', flex: 1 }}>
+                                            <CommonButton component="label" sx={{ bgcolor: '#f1f5f9', color: 'text.primary', borderRadius: 0, px: 2, py: 0.5, borderRight: '1px solid #ccc', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                                                 Choose File
                                                 <input type="file" hidden onChange={e => setLegalForm(prev => ({ ...prev, file: e.target.files?.[0] || null }))} />
-                                            </Button>
+                                            </CommonButton>
                                             <Typography variant="body2" color="text.secondary" sx={{ px: 2, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
                                                 {legalForm.file ? legalForm.file.name : 'No file chosen'}
                                             </Typography>
@@ -1371,19 +1307,19 @@ export const ClientMaster: React.FC = () => {
                                 </Box>
 
                                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                    <Button variant="contained" onClick={handleAddLegalForm} sx={{ bgcolor: '#4fc3f7', color: 'white', '&:hover': { bgcolor: '#29b6f6' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
+                                    <CommonButton onClick={handleAddLegalForm} sx={{ boxShadow: 'none' }}>
                                         Save
-                                    </Button>
-                                    <Button variant="contained" onClick={handleCancelLegalForm} sx={{ bgcolor: '#ff5252', color: 'white', '&:hover': { bgcolor: '#ff1744' }, px: 4, py: 1, textTransform: 'none', borderRadius: 1.5, boxShadow: 'none', fontWeight: 700 }}>
+                                    </CommonButton>
+                                    <CommonButton variant="outlined" onClick={handleCancelLegalForm} sx={{ boxShadow: 'none' }}>
                                         Cancel
-                                    </Button>
+                                    </CommonButton>
                                 </Box>
                             </Box>
                         </Paper>
 
                         {/* Legal Document List Section */}
-                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                            <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden' }}>
+                            <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <FormatListBulletedIcon sx={{ width: 22, height: 22 }} />
                                 <Typography variant="subtitle1" fontWeight="600">Legal Document List</Typography>
                             </Box>
@@ -1393,7 +1329,7 @@ export const ClientMaster: React.FC = () => {
                                 ) : (
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                         {formData.legalDocuments.map((doc: { documentName: string; description?: string; fileName: string }, index: number) => (
-                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <Box key={index} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                 <Box>
                                                     <Typography variant="subtitle2" fontWeight="600">{doc.documentName}</Typography>
                                                     <Typography variant="body2" color="text.secondary">File: {doc.fileName}</Typography>
@@ -1433,22 +1369,21 @@ export const ClientMaster: React.FC = () => {
 
                 <Divider sx={{ mt: 2 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, p: 3, bgcolor: '#f8fafc', borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Button
-                        variant="contained"
+                    <CommonButton
                         onClick={handleSaveClient}
-                        disabled={createClientMutation.isPending || updateClientMutation.isPending}
-                        sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 4, py: 1, textTransform: 'none', borderRadius: 2, fontWeight: 600, fontSize: '1.05rem' }}
+                        loading={createClientMutation.isPending || updateClientMutation.isPending}
+                        sx={{ boxShadow: 'none' }}
                     >
-                        {createClientMutation.isPending || updateClientMutation.isPending ? 'Saving...' : 'Save Client'}
-                    </Button>
-                    <Button
+                        Save Client
+                    </CommonButton>
+                    <CommonButton
                         variant="outlined"
                         onClick={() => navigate('/admin/client/list')}
                         disabled={createClientMutation.isPending || updateClientMutation.isPending}
-                        sx={{ px: 4, py: 1, textTransform: 'none', borderRadius: 2, color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' }, fontWeight: 600, fontSize: '1.05rem' }}
+                        sx={{ boxShadow: 'none' }}
                     >
                         Cancel
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Paper>
 
@@ -1485,8 +1420,13 @@ export const ClientMaster: React.FC = () => {
                 showSnackbar={showSnackbar}
             />
             <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: 2 }}>{snackbar.message}</Alert>
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px' }}>{snackbar.message}</Alert>
             </Snackbar>
-        </Box>
+        </PageContainer>
     );
 };
+
+
+
+
+

@@ -68,8 +68,8 @@ export const ApprovedTaskList: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -186,11 +186,11 @@ export const ApprovedTaskList: React.FC = () => {
             </Paper>
 
             {/* Results List Section */}
-            <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                    color: '#1e293b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
@@ -220,3 +220,8 @@ export const ApprovedTaskList: React.FC = () => {
 };
 
 export default ApprovedTaskList;
+
+
+
+
+

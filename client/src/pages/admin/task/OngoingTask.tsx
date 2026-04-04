@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
     Box, Paper, Typography, MenuItem, Select, Grid, Table, TableBody,
     TableCell, TableContainer, TableRow, TableHead, CircularProgress,
-    Chip, Avatar, AvatarGroup, Tooltip, IconButton, TextField, Button,
+    Chip, Avatar, AvatarGroup, Tooltip, IconButton, TextField,
     Dialog, DialogTitle, DialogContent, DialogActions, Divider, List,
     ListItem, ListItemText, Checkbox, FormControl,
     LinearProgress, Alert, Badge, InputAdornment, useMediaQuery, useTheme,
@@ -37,6 +37,7 @@ import { taskService } from '../../../services/taskService';
 import { useAuth } from '../../../contexts/AuthContext';
 import type { TaskMasterData, Client, User, Task, TaskStatus } from '../../../types';
 import { AddTaskModal } from './AddTaskModal';
+import { CommonButton } from '../../../components/common/UIComponents';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     PENDING:                  { label: 'To Do',               color: '#64748b', bg: '#f1f5f9', icon: <PendingIcon fontSize="inherit" /> },
@@ -210,21 +211,21 @@ export const OngoingTask: React.FC = () => {
 
                 {/* Header */}
                 <DialogTitle sx={{ p: 0 }}>
-                    <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', px: 3, py: 2, color: 'white' }}>
+                    <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', px: 3, py: 2, color: '#1e293b' }}>
                         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                             <Box flex={1} mr={2}>
                                 <Typography variant="h6" fontWeight={800} lineHeight={1.2}>{currentTask.title}</Typography>
                                 <Box display="flex" gap={1} mt={1} flexWrap="wrap">
-                                    <Chip label={cfg.label} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.22)', color: 'white', fontWeight: 700, fontSize: '0.7rem' }} />
-                                    {currentTask.isOverdue && <Chip label="⚠ Overdue" size="small" sx={{ bgcolor: '#ef444430', color: '#fca5a5', fontWeight: 700, fontSize: '0.7rem' }} />}
+                                    <Chip label={cfg.label} size="small" sx={{ bgcolor: cfg.bg, color: cfg.color, fontWeight: 700, fontSize: '0.7rem', border: `1px solid ${cfg.color}30` }} />
+                                    {currentTask.isOverdue && <Chip label="⚠ Overdue" size="small" sx={{ bgcolor: '#fee2e2', color: '#dc2626', fontWeight: 700, fontSize: '0.7rem' }} />}
                                     {(currentTask as Task & { frequency?: string }).frequency && (
-                                        <Chip label={(currentTask as Task & { frequency?: string }).frequency} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.7rem' }} />
+                                        <Chip label={(currentTask as Task & { frequency?: string }).frequency} size="small" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontSize: '0.7rem' }} />
                                     )}
                                     <Chip label={`⏱ ${timeH}h / ${currentTask.estimatedHours || 1}h`} size="small"
-                                        sx={{ bgcolor: timeH > (currentTask.estimatedHours || 1) ? '#fee2e230' : 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.7rem' }} />
+                                        sx={{ bgcolor: timeH > (currentTask.estimatedHours || 1) ? '#fee2e2' : '#f1f5f9', color: timeH > (currentTask.estimatedHours || 1) ? '#ef4444' : '#64748b', fontSize: '0.7rem' }} />
                                 </Box>
                             </Box>
-                            <IconButton size="small" onClick={() => setProcessingTask(null)} sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.15)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
+                            <IconButton size="small" onClick={() => setProcessingTask(null)} sx={{ color: 'text.secondary', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}>
                                 <CloseIcon fontSize="small" />
                             </IconButton>
                         </Box>
@@ -281,7 +282,7 @@ export const OngoingTask: React.FC = () => {
                         {/* LEFT PANEL */}
                         <Grid size={{ xs: 12, md: 7 }} sx={{ p: 3, borderRight: '1px solid #f0f0f0' }}>
                             {/* Task Info */}
-                            <Box sx={{ bgcolor: '#f8fafc', borderRadius: 2, p: 2, mb: 2.5, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                            <Box sx={{ bgcolor: '#f8fafc', borderRadius: '12px', p: 2, mb: 2.5, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                                 <Box>
                                     <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>Client</Typography>
                                     <Typography variant="body2" fontWeight={700}>{(currentTask.clientId as Client)?.name || 'Internal'}</Typography>
@@ -317,17 +318,17 @@ export const OngoingTask: React.FC = () => {
 
                             {/* Status Alerts */}
                             {currentTask.status === 'PENDING_FOR_APPROVAL' && (
-                                <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+                                <Alert severity="info" sx={{ mb: 2, borderRadius: '12px' }}>
                                     ⏳ Submitted for approval — awaiting manager review on the <strong>Task Approval</strong> page.
                                 </Alert>
                             )}
                             {currentTask.status === 'APPROVED' && (
-                                <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                                <Alert severity="success" sx={{ mb: 2, borderRadius: '12px' }}>
                                     ✅ Task <strong>approved</strong>! Click <strong>"Mark as Done"</strong> below to complete it.
                                 </Alert>
                             )}
                             {currentTask.status === 'REJECTED' && (
-                                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                                <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>
                                     ❌ Task <strong>rejected</strong>. Check the activity log for feedback, then fix and resubmit.
                                 </Alert>
                             )}
@@ -339,45 +340,50 @@ export const OngoingTask: React.FC = () => {
                                 </Typography>
                                 <Box display="flex" gap={1} flexWrap="wrap">
                                     {/* Timer */}
-                                    <Button size="small" variant="contained"
+                                    <CommonButton size="small" variant="contained"
                                         startIcon={isTimerRunning ? <StopIcon /> : <TimerIcon />}
                                         color={isTimerRunning ? 'error' : 'success'}
+                                        loading={isTimerRunning ? stopTimerMutation.isPending : startTimerMutation.isPending}
                                         onClick={() => isTimerRunning ? stopTimerMutation.mutate(currentTask._id) : startTimerMutation.mutate(currentTask._id)}
-                                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
-                                        {isTimerRunning ? '⏹ Stop Timer' : '▶ Start Timer'}
-                                    </Button>
+                                        sx={{ borderRadius: '12px' }}>
+                                        {isTimerRunning ? 'Stop Timer' : 'Start Timer'}
+                                    </CommonButton>
 
                                     {currentTask.status === 'PENDING' && (
-                                        <Button size="small" variant="outlined" color="primary"
+                                        <CommonButton size="small" variant="outlined" color="primary"
+                                            loading={updateStatusMutation.isPending}
                                             onClick={() => updateStatusMutation.mutate({ taskId: currentTask._id, status: 'IN_PROCESS' })}
-                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+                                            sx={{ borderRadius: '12px' }}>
                                             Start Working
-                                        </Button>
+                                        </CommonButton>
                                     )}
 
                                     {currentTask.status === 'IN_PROCESS' && (
-                                        <Button size="small" variant="contained"
+                                        <CommonButton size="small" variant="contained"
                                             startIcon={<SubmitIcon />}
+                                            loading={updateStatusMutation.isPending}
                                             onClick={() => { updateStatusMutation.mutate({ taskId: currentTask._id, status: 'PENDING_FOR_APPROVAL' }); toast.success('Sent for manager approval!'); }}
-                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, bgcolor: '#f59e0b', '&:hover': { bgcolor: '#d97706' } }}>
+                                            sx={{ borderRadius: '12px', bgcolor: '#f59e0b', '&:hover': { bgcolor: '#d97706' } }}>
                                             Submit for Approval
-                                        </Button>
+                                        </CommonButton>
                                     )}
 
                                     {(currentTask.status === 'IN_PROCESS' || currentTask.status === 'PENDING_FOR_APPROVAL') && (
-                                        <Button size="small" variant="outlined" color="warning"
+                                        <CommonButton size="small" variant="outlined" color="warning"
+                                            loading={updateStatusMutation.isPending}
                                             onClick={() => updateStatusMutation.mutate({ taskId: currentTask._id, status: 'ON_HOLD' })}
-                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+                                            sx={{ borderRadius: '12px' }}>
                                             Put On Hold
-                                        </Button>
+                                        </CommonButton>
                                     )}
 
                                     {isAdmin && currentTask.status === 'PENDING_FOR_APPROVAL' && (
-                                        <Button size="small" variant="contained" color="success"
+                                        <CommonButton size="small" variant="contained" color="success"
+                                            loading={updateStatusMutation.isPending}
                                             onClick={() => updateStatusMutation.mutate({ taskId: currentTask._id, status: 'APPROVED' })}
-                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
-                                            ✅ Approve Now
-                                        </Button>
+                                            sx={{ borderRadius: '12px' }}>
+                                            Approve Now
+                                        </CommonButton>
                                     )}
                                 </Box>
                             </Box>
@@ -397,7 +403,7 @@ export const OngoingTask: React.FC = () => {
                                         value={currentTask.status}
                                         onChange={e => updateStatusMutation.mutate({ taskId: currentTask._id, status: e.target.value as TaskStatus })}
                                         disabled={updateStatusMutation.isPending}
-                                        sx={{ borderRadius: 2 }}>
+                                        sx={{ borderRadius: '12px' }}>
                                         {Object.entries(STATUS_CONFIG)
                                             // Employees cannot directly set APPROVED, DONE, CANCELLED, REJECTED
                                             .filter(([val]) => isEmployee ? !adminOnlyStatuses.includes(val as TaskStatus) : true)
@@ -439,7 +445,7 @@ export const OngoingTask: React.FC = () => {
                                 <List dense disablePadding>
                                     {(currentTask.checklist || []).map(item => (
                                         <ListItem key={item.id} dense disablePadding sx={{
-                                            borderRadius: 2, mb: 0.5, px: 1,
+                                            borderRadius: '12px', mb: 0.5, px: 1,
                                             bgcolor: item.completed ? '#f0fdf4' : '#f8fafc',
                                             border: '1px solid', borderColor: item.completed ? '#bbf7d0' : '#e2e8f0',
                                             '&:hover': { borderColor: '#667eea20', bgcolor: '#f5f7ff' }
@@ -473,7 +479,7 @@ export const OngoingTask: React.FC = () => {
                             <Box sx={{
                                 flex: 1,
                                 overflowY: 'auto', minHeight: 200, maxHeight: 360,
-                                border: '1px solid #e2e8f0', borderRadius: 2,
+                                border: '1px solid #e2e8f0', borderRadius: '12px',
                                 bgcolor: 'white', p: 1.5, mb: 1.5
                             }}>
                                 {(currentTask.comments || []).length === 0 ? (
@@ -486,7 +492,7 @@ export const OngoingTask: React.FC = () => {
                                         <Box key={comment.id} sx={{ mb: 2 }}>
                                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.25}>
                                                 <Box display="flex" alignItems="center" gap={0.75}>
-                                                    <Avatar sx={{ width: 22, height: 22, fontSize: '0.6rem', bgcolor: '#667eea' }}>
+                                                    <Avatar sx={{ width: 22, height: 22, fontSize: '0.6rem', bgcolor: '#6366f1' }}>
                                                         {(comment.userName || '?').charAt(0).toUpperCase()}
                                                     </Avatar>
                                                     <Typography variant="caption" fontWeight={800}>{comment.userName}</Typography>
@@ -509,39 +515,42 @@ export const OngoingTask: React.FC = () => {
                                 placeholder="Add a note or update..."
                                 value={newComment}
                                 onChange={e => setNewComment(e.target.value)}
-                                size="small" sx={{ mb: 1, bgcolor: 'white', borderRadius: 2 }} />
-                            <Button fullWidth variant="contained" startIcon={<SubmitIcon />}
+                                size="small" sx={{ mb: 1, bgcolor: 'white', borderRadius: '12px' }} />
+                            <CommonButton fullWidth variant="contained" startIcon={<SubmitIcon />}
                                 onClick={() => addCommentMutation.mutate({ taskId: currentTask._id, text: newComment })}
-                                disabled={!newComment.trim() || addCommentMutation.isPending}
-                                sx={{ bgcolor: '#764ba2', '&:hover': { bgcolor: '#667eea' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                                loading={addCommentMutation.isPending}
+                                disabled={!newComment.trim()}
+                                sx={{ bgcolor: '#764ba2', '&:hover': { bgcolor: '#6366f1' }, borderRadius: '12px' }}>
                                 Post Activity
-                            </Button>
+                            </CommonButton>
                         </Grid>
                     </Grid>
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2.5, borderTop: '1px solid #e2e8f0', gap: 1 }}>
-                    <Button onClick={() => setProcessingTask(null)} color="inherit" sx={{ textTransform: 'none', fontWeight: 600 }}>
+                    <CommonButton onClick={() => setProcessingTask(null)} variant="outlined" sx={{ bgcolor: 'transparent', color: 'text.secondary', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' } }}>
                         Close
-                    </Button>
+                    </CommonButton>
                     <Box flex={1} />
                     {currentTask.status === 'IN_PROCESS' && (
-                        <Button variant="outlined" color="warning" startIcon={<SubmitIcon />}
+                        <CommonButton variant="outlined" color="warning" startIcon={<SubmitIcon />}
+                            loading={updateStatusMutation.isPending}
                             onClick={() => { updateStatusMutation.mutate({ taskId: currentTask._id, status: 'PENDING_FOR_APPROVAL' }); toast.success('Task sent to manager for approval!'); setProcessingTask(null); }}
-                            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+                            sx={{ borderRadius: '12px' }}>
                             Submit for Approval
-                        </Button>
+                        </CommonButton>
                     )}
-                    <Button variant="contained" startIcon={<DoneIcon />}
-                        disabled={(currentTask.status !== 'APPROVED' && !isAdmin) || updateStatusMutation.isPending}
+                    <CommonButton variant="contained" startIcon={<DoneIcon />}
+                        loading={updateStatusMutation.isPending}
+                        disabled={(currentTask.status !== 'APPROVED' && !isAdmin)}
                         onClick={() => { updateStatusMutation.mutate({ taskId: currentTask._id, status: 'DONE' }); setProcessingTask(null); }}
                         sx={{
-                            textTransform: 'none', fontWeight: 700, borderRadius: 2,
+                            borderRadius: '12px',
                             bgcolor: currentTask.status === 'APPROVED' || isAdmin ? '#10b981' : undefined,
                             '&:hover': { bgcolor: '#059669' }
                         }}>
                         Mark as Done
-                    </Button>
+                    </CommonButton>
                 </DialogActions>
             </Dialog>
         );
@@ -552,12 +561,12 @@ export const OngoingTask: React.FC = () => {
             {/* ── Header ── */}
             <Paper elevation={0} sx={{
                 px: { xs: 2.5, sm: 3 }, py: { xs: 2.5, sm: 2 },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white', borderRadius: '12px 12px 0 0',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b', borderRadius: '12px 12px 0 0',
                 display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2,
             }}>
                 <Box display="flex" alignItems="center" gap={1.5}>
-                    <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <OngoingIcon />
                     </Box>
                     <Box>
@@ -571,7 +580,7 @@ export const OngoingTask: React.FC = () => {
                         value={search} onChange={e => setSearch(e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }} /></InputAdornment> }}
                         sx={{
-                            width: { xs: '100%', sm: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2,
+                            width: { xs: '100%', sm: 220 }, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '12px',
                             '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' } },
                             '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
                         }} />
@@ -583,15 +592,13 @@ export const OngoingTask: React.FC = () => {
                     <Tooltip title="Refresh">
                         <IconButton onClick={() => refetch()} sx={{ color: 'white' }}><RefreshIcon /></IconButton>
                     </Tooltip>
-                    <Button 
-                        variant="contained" 
-                        size="small" 
+                    <CommonButton 
                         startIcon={<AddIcon />}
                         onClick={() => setIsAddModalOpen(true)}
-                        sx={{ ml: { xs: 0, sm: 1 }, textTransform: 'none', fontWeight: 700, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
+                        sx={{ ml: { xs: 0, sm: 1 }, bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
                     >
                         Add Task
-                    </Button>
+                    </CommonButton>
                 </Box>
             </Paper>
 
@@ -629,7 +636,7 @@ export const OngoingTask: React.FC = () => {
                         ].map(({ label, value, set, items }) => (
                             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 1.5 }} key={label}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>{label}</Typography>
-                                <Select size="small" fullWidth displayEmpty value={value} onChange={e => set(e.target.value)} sx={{ mt: 0.5, borderRadius: 2 }}>
+                                <Select size="small" fullWidth displayEmpty value={value} onChange={e => set(e.target.value)} sx={{ mt: 0.5, borderRadius: '12px' }}>
                                     <MenuItem value=""><em>All {label}s</em></MenuItem>
                                     {items.map((item: { v: string; l: string }) => <MenuItem key={item.v} value={item.v}>{item.l}</MenuItem>)}
                                 </Select>
@@ -672,7 +679,7 @@ export const OngoingTask: React.FC = () => {
                                     : task.progressPercentage || 0;
 
                                 return (
-                                    <Paper key={task._id} sx={{ p: 2, borderRadius: 2, border: '1px solid #e0e0e0', boxShadow: 'none', position: 'relative', ...(task.isOverdue && task.status !== 'DONE' ? { bgcolor: '#fff5f5' } : {}) }}>
+                                    <Paper key={task._id} sx={{ p: 2, borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: 'none', position: 'relative', ...(task.isOverdue && task.status !== 'DONE' ? { bgcolor: '#fff5f5' } : {}) }}>
                                         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                                             <Box>
                                                 <Typography variant="body2" fontWeight={700} color="#667eea">
@@ -720,20 +727,16 @@ export const OngoingTask: React.FC = () => {
                                         <Box display="flex" justifyContent="space-between" alignItems="center" pt={1.5} borderTop="1px solid #f0f0f0">
                                             <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.62rem' } }}>
                                                 {(task.assignedTo as User[] || []).map((u: User) => (
-                                                    <Avatar key={u._id} sx={{ bgcolor: '#667eea' }}>
+                                                    <Avatar key={u._id} sx={{ bgcolor: '#6366f1' }}>
                                                         {(u.name || u.username || '?').charAt(0).toUpperCase()}
                                                     </Avatar>
                                                 ))}
                                             </AvatarGroup>
-                                            <Button size="small" variant="contained"
+                                            <CommonButton size="small"
                                                 onClick={() => setProcessingTask(task)}
-                                                sx={{
-                                                    fontSize: '0.75rem', py: 0.5, px: 2, textTransform: 'none', fontWeight: 700,
-                                                    borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    boxShadow: '0 2px 8px rgba(102,126,234,0.35)',
-                                                }}>
+                                            >
                                                 Process Task
-                                            </Button>
+                                            </CommonButton>
                                         </Box>
                                     </Paper>
                                 );
@@ -831,7 +834,7 @@ export const OngoingTask: React.FC = () => {
                                                 <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.62rem' } }}>
                                                     {(task.assignedTo as User[] || []).map((u: User) => (
                                                         <Tooltip key={u._id} title={u.name || u.username}>
-                                                            <Avatar sx={{ bgcolor: '#667eea' }}>
+                                                            <Avatar sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
                                                                 {(u.name || u.username || '?').charAt(0).toUpperCase()}
                                                             </Avatar>
                                                         </Tooltip>
@@ -839,16 +842,16 @@ export const OngoingTask: React.FC = () => {
                                                 </AvatarGroup>
                                             </TableCell>
                                             <TableCell>
-                                                <Button size="small" variant="contained"
+                                                <CommonButton size="small"
                                                     onClick={() => setProcessingTask(task)}
                                                     sx={{
-                                                        fontSize: '0.72rem', py: 0.4, px: 1.5, textTransform: 'none', fontWeight: 700,
-                                                        borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        fontSize: '0.72rem', py: 0.4, px: 1.5,
+                                                        bgcolor: '#ffffff', color: '#6366f1', borderBottom: '1px solid #e2e8f0',
                                                         boxShadow: '0 2px 8px rgba(102,126,234,0.35)',
-                                                        '&:hover': { boxShadow: '0 4px 16px rgba(102,126,234,0.5)' }
+                                                        '&:hover': { boxShadow: '0 4px 16px rgba(102,126,234,0.5)', bgcolor: '#f8fafc' }
                                                     }}>
                                                     Process
-                                                </Button>
+                                                </CommonButton>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -877,3 +880,8 @@ export const OngoingTask: React.FC = () => {
 };
 
 export default OngoingTask;
+
+
+
+
+

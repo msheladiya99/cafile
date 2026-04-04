@@ -131,8 +131,8 @@ export const TaskCycleDetail: React.FC = () => {
             {/* Header */}
             <Paper elevation={0} sx={{
                 p: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                color: '#1e293b',
                 borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -265,7 +265,7 @@ export const TaskCycleDetail: React.FC = () => {
                         <Box display="flex" justifyContent="center" mt={1}>
                             <Button variant="contained" startIcon={<SearchIcon />}
                                 onClick={handleSearch} disabled={isFetching}
-                                sx={{ bgcolor: '#667eea', px: 4, '&:hover': { bgcolor: '#764ba2' } }}>
+                                sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, px: 4 }}>
                                 {isFetching ? 'Searching...' : 'Search Task Cycle'}
                             </Button>
                         </Box>
@@ -285,11 +285,11 @@ export const TaskCycleDetail: React.FC = () => {
             </Paper>
 
             {/* Job List */}
-            <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
+                    color: '#1e293b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -403,3 +403,8 @@ export const TaskCycleDetail: React.FC = () => {
 };
 
 export default TaskCycleDetail;
+
+
+
+
+

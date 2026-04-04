@@ -52,13 +52,13 @@ export const EmployeeLoginDetail: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header Section */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                     <Typography variant="h5" fontWeight="600">Login Log Detail</Typography>
                 </Box>
             </Paper>
 
-            <Paper sx={{ p: 3, mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
+            <Paper sx={{ p: 3, mb: 4, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
                 <Grid container spacing={3} alignItems="center">
                     <Grid size={{ xs: 12, md: 4 }}>
                         <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} gap={{ xs: 0.5, md: 2 }}>
@@ -68,7 +68,7 @@ export const EmployeeLoginDetail: React.FC = () => {
                                     displayEmpty
                                     value={selectedEmployee}
                                     onChange={(e) => setSelectedEmployee(e.target.value)}
-                                    sx={{ borderRadius: 1.5 }}
+                                    sx={{ borderRadius: '8px' }}
                                 >
                                     <MenuItem value="" disabled>Choose Employee...</MenuItem>
                                     {!isLoadingStaff && staffMembers.map((staff: { _id: string, name?: string, username: string }) => (
@@ -91,11 +91,11 @@ export const EmployeeLoginDetail: React.FC = () => {
                                     size="small"
                                     value={dateFrom}
                                     onChange={(e) => setDateFrom(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Grid>
                             <Grid size={{ xs: 2, md: 'auto' }} sx={{ display: 'flex', justifyContent: 'center' }}>
-                                <Box sx={{ bgcolor: '#f0f0f0', px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1, fontSize: '0.8rem' }}>
+                                <Box sx={{ bgcolor: '#f0f0f0', px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: '8px', fontSize: '0.8rem' }}>
                                     To
                                 </Box>
                             </Grid>
@@ -106,7 +106,7 @@ export const EmployeeLoginDetail: React.FC = () => {
                                     size="small"
                                     value={dateTo}
                                     onChange={(e) => setDateTo(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Grid>
                             <Grid size={{ xs: 12, md: 'auto' }}>
@@ -126,8 +126,8 @@ export const EmployeeLoginDetail: React.FC = () => {
             </Paper>
 
             {/* List Section */}
-            <Paper sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Paper sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ListIcon fontSize="small" />
                         <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.25rem' }}>List</Typography>
@@ -168,3 +168,8 @@ export const EmployeeLoginDetail: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

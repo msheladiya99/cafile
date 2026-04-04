@@ -3,7 +3,6 @@ import {
     Box,
     Paper,
     Typography,
-    Button,
     TextField,
     MenuItem,
     Switch,
@@ -36,6 +35,7 @@ import type { ServiceItem } from '../../../services/billingService';
 import type { TaskMasterData, User, Subtask } from '../../../types';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { CommonButton } from '../../../components/common/UIComponents';
 
 interface TaskCategoryData { _id: string; name: string; color: string; }
 
@@ -283,15 +283,15 @@ export const TaskMaster: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 }, position: 'relative' }}>
             {view === 'list' ? (
-                <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 3 }}>
-                    <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: { xs: 2, sm: 2.5 }, color: 'white', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
-                        <Typography variant="h5" fontWeight="600" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Task List</Typography>
-                        <Button size="small" fullWidth={isMobile} variant="contained" onClick={() => { resetForm(); setView('form'); }} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', px: 3, '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, borderRadius: 2, boxShadow: 'none' }}>
+                <Paper elevation={0} variant="outlined" sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', mb: 3 }}>
+                    <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', p: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
+                        <Typography variant="h5" fontWeight="600" color="#1e293b" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Task List</Typography>
+                        <CommonButton size="small" fullWidth={isMobile} onClick={() => { resetForm(); setView('form'); }}>
                             Add New
-                        </Button>
+                        </CommonButton>
                     </Box>
 
-                <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 3, mx: { xs: 1, sm: 2 }, borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 3, mx: { xs: 1, sm: 2 }, borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
                     <Grid container spacing={4}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} mb={2} alignItems={isMobile ? 'flex-start' : 'center'} gap={isMobile ? 1 : 0}>
@@ -425,7 +425,7 @@ export const TaskMaster: React.FC = () => {
                     </Grid>
                 </Paper>
 
-                <Box sx={{ mx: { xs: 0, sm: 2 }, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', p: 1.5, display: 'flex', alignItems: 'center', color: 'white', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}>
+                <Box sx={{ mx: { xs: 0, sm: 2 }, bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', p: 1.5, display: 'flex', alignItems: 'center', color: '#1e293b', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}>
                     <ListIcon sx={{ mr: 1 }} />
                     <Typography fontWeight="bold">Task List</Typography>
                 </Box>
@@ -433,7 +433,7 @@ export const TaskMaster: React.FC = () => {
                     {isMobile ? (
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: '#f8fafc' }}>
                             {filteredTaskMasters.length > 0 ? filteredTaskMasters.map((tm: TaskMasterData) => (
-                                <Paper key={tm._id} variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                <Paper key={tm._id} variant="outlined" sx={{ p: 2, borderRadius: '12px', bgcolor: 'white', position: 'relative', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                         <Box>
                                             <Typography variant="subtitle1" fontWeight="700" color="primary.main">{tm.taskName}</Typography>
@@ -465,7 +465,7 @@ export const TaskMaster: React.FC = () => {
                                     <Divider sx={{ my: 1 }} />
                                     
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                                        <Button
+                                        <CommonButton
                                             size="small"
                                             variant="outlined"
                                             color="primary"
@@ -479,12 +479,13 @@ export const TaskMaster: React.FC = () => {
                                             }}
                                         >
                                             Edit
-                                        </Button>
-                                        <Button
+                                        </CommonButton>
+                                        <CommonButton
                                             size="small"
                                             variant="outlined"
                                             color="error"
                                             startIcon={<DeleteIcon />}
+                                            loading={deleteMutation.isPending}
                                             onClick={() => {
                                                 const id = tm._id;
                                                 if (id && window.confirm('Delete this task master?')) {
@@ -493,7 +494,7 @@ export const TaskMaster: React.FC = () => {
                                             }}
                                         >
                                             Delete
-                                        </Button>
+                                        </CommonButton>
                                     </Box>
                                 </Paper>
                             )) : (
@@ -532,7 +533,7 @@ export const TaskMaster: React.FC = () => {
                                         <TableRow key={tm._id} hover>
                                             <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 0 }}>{tm.taskName}</TableCell>
                                             <TableCell>
-                                                {tm.category ? (typeof tm.category === 'object' ? (tm.category as any).name : taskCategories.find((c: any) => c._id === tm.category)?.name || '-') : '-'}
+                                                {tm.category ? (typeof tm.category === 'object' ? (tm.category as TaskCategoryData).name : taskCategories.find((c: TaskCategoryData) => c._id === tm.category)?.name || '-') : '-'}
                                             </TableCell>
                                             <TableCell>{tm.typeOfClient?.join(', ') || '-'}</TableCell>
                                             <TableCell>{tm.frequency || '-'}</TableCell>
@@ -548,7 +549,7 @@ export const TaskMaster: React.FC = () => {
                                                 }).filter(Boolean).join(', ') || '-'}
                                             </TableCell>
                                             <TableCell>
-                                                {tm.workingUser ? (typeof tm.workingUser === 'object' ? (tm.workingUser as any).name || (tm.workingUser as any).username : staff.find((s: any) => s._id === tm.workingUser)?.name || staff.find((s: any) => s._id === tm.workingUser)?.username || '-') : '-'}
+                                                {tm.workingUser ? (typeof tm.workingUser === 'object' ? (tm.workingUser as User).name || (tm.workingUser as User).username : staff.find((s: User) => s._id === tm.workingUser)?.name || staff.find((s: User) => s._id === tm.workingUser)?.username || '-') : '-'}
                                             </TableCell>
                                             <TableCell sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tm.description || '-'}</TableCell>
                                             <TableCell>
@@ -598,35 +599,33 @@ export const TaskMaster: React.FC = () => {
 
 
             {/* Premium Header */}
-            <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', mb: 3, boxShadow: '0 8px 32px rgba(102,126,234,0.18)', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', mb: 3, boxShadow: '0 8px 32px rgba(102,126,234,0.18)', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
                 <Box sx={{ px: { xs: 2, md: 3 }, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box display="flex" alignItems="center" gap={2}>
-                        <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
                             <AddIcon sx={{ color: 'white', fontSize: 24 }} />
                         </Box>
                         <Box>
-                            <Typography variant="h5" fontWeight={800} color="white" sx={{ letterSpacing: '-0.3px' }}>
+                            <Typography variant="h5" fontWeight={800} color="#111827" sx={{ letterSpacing: '-0.3px' }}>
                                 {formData._id ? 'Edit Task Master' : 'Add New Task'}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)' }}>Define task templates for your firm</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Define task templates for your firm</Typography>
                         </Box>
                     </Box>
                     <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-                        <Button size="small" onClick={() => { setView('form'); resetForm(); }}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2, border: '1px solid rgba(255,255,255,0.25)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
+                        <CommonButton size="small" onClick={() => { setView('form'); resetForm(); }}>
                             + Add New
-                        </Button>
-                        <Button size="small" onClick={() => setView('list')}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2, border: '1px solid rgba(255,255,255,0.25)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }}>
+                        </CommonButton>
+                        <CommonButton variant="outlined" size="small" onClick={() => setView('list')}>
                             View List
-                        </Button>
+                        </CommonButton>
                     </Box>
                 </Box>
                 <Box sx={{ height: 3, background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%)' }} />
             </Paper>
 
-            {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
-            {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{success}</Alert>}
+            {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ mb: 2, borderRadius: '12px' }}>{success}</Alert>}
 
             <form onSubmit={handleSubmit}>
                 <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 360px' }} gap={3} alignItems="flex-start">
@@ -634,21 +633,21 @@ export const TaskMaster: React.FC = () => {
 
                 {/* Task Identity Card */}
                 <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.07)', border: '1px solid #e8eaf0' }}>
-                    <Box sx={{ px: 3, py: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Typography fontWeight={700} color="white" fontSize={15}>📋 Task Identity</Typography>
+                    <Box sx={{ px: 3, py: 2, bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Typography fontWeight={700} color="#1e293b" fontSize={15}>📋 Task Identity</Typography>
                     </Box>
                     <Box sx={{ p: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
                         <TextField label="Task Name *" variant="outlined" value={formData.taskName}
                             onChange={(e) => setFormData({ ...formData, taskName: e.target.value })}
                             required size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         />
                         <TextField select label="Mode *" variant="outlined"
                             value={formData.mode === 'Recurring' ? 'Recurrence' : formData.mode}
                             onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
                             required size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value="One Time">⏱ One Time</MenuItem>
@@ -660,7 +659,7 @@ export const TaskMaster: React.FC = () => {
                             value={typeof formData.category === 'object' && formData.category !== null ? (formData.category as { _id: string })._id : (formData.category || '')}
                             onChange={(e) => setFormData({ ...formData, category: e.target.value || undefined })}
                             size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value=""><em>— No Category —</em></MenuItem>
@@ -677,7 +676,7 @@ export const TaskMaster: React.FC = () => {
                         <TextField select label="Type of Client" variant="outlined" value={formData.typeOfClient || []}
                             onChange={(e) => setFormData({ ...formData, typeOfClient: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[] })}
                             size="small" SelectProps={{ multiple: true }}
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value="Individual">Individual</MenuItem>
@@ -692,7 +691,7 @@ export const TaskMaster: React.FC = () => {
                         <TextField select label="Department *" variant="outlined" value={formData.department}
                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                             required size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value="GST">GST</MenuItem>
@@ -707,7 +706,7 @@ export const TaskMaster: React.FC = () => {
                         <TextField select label="Period (Frequency)" variant="outlined" value={formData.frequency || ''}
                             onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                             size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value=""><em>— Select Period —</em></MenuItem>
@@ -723,37 +722,37 @@ export const TaskMaster: React.FC = () => {
                         <TextField label="Due Days" type="number" variant="outlined" value={formData.dueDays || ''}
                             onChange={(e) => setFormData({ ...formData, dueDays: parseInt(e.target.value) || 0 })}
                             size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         />
 
-                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Recurring Task</Typography>
                                 <Typography variant="body2" fontWeight={500}>{formData.recurringTask ? 'Yes' : 'No'}</Typography>
                             </Box>
                             <Switch checked={!!formData.recurringTask} onChange={(e) => setFormData({ ...formData, recurringTask: e.target.checked })}
-                                sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />
+                                sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />
                         </Box>
 
                         <TextField label="Recurring Days" type="number" variant="outlined" value={formData.recurringDays || ''}
                             onChange={(e) => setFormData({ ...formData, recurringDays: parseInt(e.target.value) || 0 })}
                             size="small" disabled={!formData.recurringTask}
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         />
 
                         <TextField label="Tags (comma separated)" variant="outlined" value={formData.tags?.join(', ') || ''}
                             onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
                             size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         />
 
                         <TextField select label="Users" variant="outlined" value={(formData.users || []).map(u => typeof u === 'object' ? (u as { _id: string })._id : u)}
                             onChange={(e) => setFormData({ ...formData, users: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[] })}
                             size="small" SelectProps={{ multiple: true }}
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             {staff.map((s: User) => (
@@ -764,7 +763,7 @@ export const TaskMaster: React.FC = () => {
                         <TextField select label="Working User" variant="outlined" value={typeof formData.workingUser === 'object' && formData.workingUser !== null ? (formData.workingUser as { _id: string })._id : (formData.workingUser || '')}
                             onChange={(e) => setFormData({ ...formData, workingUser: e.target.value })}
                             size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value=""><em>— Auto Select / Open —</em></MenuItem>
@@ -777,7 +776,7 @@ export const TaskMaster: React.FC = () => {
                             value={typeof formData.reportingManager === 'object' && formData.reportingManager !== null ? (formData.reportingManager as { _id: string })._id : (formData.reportingManager || '')}
                             onChange={(e) => setFormData({ ...formData, reportingManager: e.target.value })}
                             required size="small"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
                             <MenuItem value=""><em>— Select Reporting Manager —</em></MenuItem>
@@ -791,13 +790,13 @@ export const TaskMaster: React.FC = () => {
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 size="small"
-                                InputProps={{ sx: { borderRadius: 2, bgcolor: '#fafbff' } }}
+                                InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                                 sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                             />
                         </Box>
 
                         {/* Status card */}
-                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Status</Typography>
                                 <Typography variant="body2" fontWeight={500}>{formData.status === 'Active' ? 'Visible & usable' : 'Hidden / inactive'}</Typography>
@@ -808,13 +807,13 @@ export const TaskMaster: React.FC = () => {
                         </Box>
 
                         {/* UDIN card */}
-                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ p: 2, borderRadius: '12px', bgcolor: '#fafbff', border: '1px solid #e8eaf0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">UDIN Required</Typography>
                                 <Typography variant="body2" fontWeight={500}>{formData.udin ? 'Yes — generates UDIN' : 'No UDIN needed'}</Typography>
                             </Box>
                             <Switch checked={!!formData.udin} onChange={(e) => setFormData({ ...formData, udin: e.target.checked })}
-                                sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#667eea' } }} />
+                                sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />
                         </Box>
                     </Box>
                 </Paper>
@@ -856,13 +855,13 @@ export const TaskMaster: React.FC = () => {
                         {/* HSN & Hours — always visible */}
                         <TextField label="HSN/SAC Code" variant="outlined" value={formData.hsnSac}
                             onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-                            size="small" InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                            size="small" InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                         />
                         <TextField label="Auto Billing Amount (₹)" type="number" variant="outlined"
                             value={formData.billingAmount || ''}
                             onChange={(e) => setFormData({ ...formData, billingAmount: parseFloat(e.target.value) || 0 })}
-                            placeholder="0.00" size="small" InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                            placeholder="0.00" size="small" InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                         />
                         <TextField label="Estimated Hours per Task" type="number" variant="outlined"
@@ -870,7 +869,7 @@ export const TaskMaster: React.FC = () => {
                             onChange={(e) => setFormData({ ...formData, estimatedHours: parseFloat(e.target.value) || 1 })}
                             size="small" inputProps={{ min: 0.5, step: 0.5 }}
                             helperText="Used for efficiency & time tracking reports"
-                            InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                            InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                         />
 
@@ -880,7 +879,7 @@ export const TaskMaster: React.FC = () => {
                                 <TextField label="Auto Billing Amount (₹)" type="number" variant="outlined"
                                     value={formData.billingAmount || ''}
                                     onChange={(e) => setFormData({ ...formData, billingAmount: parseFloat(e.target.value) || 0 })}
-                                    placeholder="0.00" size="small" InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                                    placeholder="0.00" size="small" InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                                     sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                                 />
                                 <TextField select label="Link to Billing Service Library" variant="outlined" size="small" value=""
@@ -888,7 +887,7 @@ export const TaskMaster: React.FC = () => {
                                         const service = services.find(s => s._id === e.target.value);
                                         if (service) setFormData({ ...formData, billingAmount: service.basePrice, taskName: formData.taskName || service.name, description: formData.description || service.description });
                                     }}
-                                    InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                                    InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                                     sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                                 >
                                     <MenuItem value=""><em>— Choose from Service Library —</em></MenuItem>
@@ -901,7 +900,7 @@ export const TaskMaster: React.FC = () => {
                                         value={typeof formData.multiFirmId === 'object' && formData.multiFirmId !== null ? (formData.multiFirmId as { _id: string })._id : (formData.multiFirmId || '')}
                                         onChange={(e) => setFormData({ ...formData, multiFirmId: e.target.value || undefined })}
                                         helperText="Which firm's letterhead to use for auto-generated invoices"
-                                        InputProps={{ sx: { borderRadius: 2, bgcolor: '#f0fdf8' } }}
+                                        InputProps={{ sx: { borderRadius: '12px', bgcolor: '#f0fdf8' } }}
                                         sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#10b981' }, '&.Mui-focused fieldset': { borderColor: '#10b981', borderWidth: 2 } } }}
                                     >
                                         <MenuItem value=""><em>Main Firm (Default)</em></MenuItem>
@@ -912,7 +911,7 @@ export const TaskMaster: React.FC = () => {
                                 </Box>
                             </>
                         ) : (
-                            <Box sx={{ gridColumn: { xs: '1', md: '1 / span 2' }, p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ gridColumn: { xs: '1', md: '1 / span 2' }, p: 2.5, borderRadius: '12px', bgcolor: '#f8fafc', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <Typography fontSize={16}>🚫</Typography>
                                 </Box>
@@ -927,35 +926,35 @@ export const TaskMaster: React.FC = () => {
 
                 {/* Save / Cancel */}
                 <Box display="flex" gap={2}>
-                    <Button type="submit" variant="contained" fullWidth
-                        disabled={createMutation.isPending || updateMutation.isPending}
-                        sx={{ py: 1.5, borderRadius: 2.5, textTransform: 'none', fontWeight: 700, fontSize: 15, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', boxShadow: '0 4px 20px rgba(102,126,234,0.4)', '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #653d96 100%)', transform: 'translateY(-1px)' }, transition: 'all 0.2s ease' }}>
-                        {createMutation.isPending || updateMutation.isPending ? 'Saving...' : (formData._id ? '✔ Update Task' : '✔ Save Task')}
-                    </Button>
-                    <Button variant="outlined" onClick={resetForm}
-                        sx={{ py: 1.5, borderRadius: 2.5, px: 4, textTransform: 'none', fontWeight: 600, borderColor: '#d0d3e8', color: '#667eea', '&:hover': { borderColor: '#667eea', bgcolor: 'rgba(102,126,234,0.06)' } }}>
+                    <CommonButton type="submit" variant="contained" fullWidth
+                        loading={createMutation.isPending || updateMutation.isPending}
+                        sx={{ py: 1.5, borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(102,126,234,0.4)', '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #653d96 100%)', transform: 'translateY(-1px)' }, transition: 'all 0.2s ease' }}>
+                        {formData._id ? '✔ Update Task' : '✔ Save Task'}
+                    </CommonButton>
+                    <CommonButton variant="outlined" onClick={resetForm}
+                        sx={{ py: 1.5, borderRadius: '12px', px: 4, borderColor: '#d0d3e8', color: '#667eea', '&:hover': { borderColor: '#667eea', bgcolor: 'rgba(102,126,234,0.06)' } }}>
                         Reset
-                    </Button>
+                    </CommonButton>
                 </Box>
                 </Box>{/* end left column */}
 
                 {/* RIGHT COLUMN: Subtasks */}
                 <Box>
                 <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.07)', border: '1px solid #e8eaf0', position: { lg: 'sticky' }, top: { lg: 20 } }}>
-                    <Box sx={{ px: 3, py: 2, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ px: 3, py: 2, background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography fontWeight={700} color="white" fontSize={15}>📝 Subtasks ({formData.subtasks?.length || 0})</Typography>
-                        <Button variant="contained" size="small" startIcon={<AddIcon />}
+                        <CommonButton variant="contained" size="small" startIcon={<AddIcon />}
                             onClick={() => setIsSubtaskModalOpen(true)}
-                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', fontWeight: 600, borderRadius: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.35)' }, boxShadow: 'none' }}>
+                            sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}>
                             Add Step
-                        </Button>
+                        </CommonButton>
                     </Box>
                     <Box sx={{ p: 2, maxHeight: 480, overflowY: 'auto' }}>
                         {formData.subtasks && formData.subtasks.length > 0 ? (
                             <Box display="flex" flexDirection="column" gap={1.5}>
                                 {formData.subtasks.map((st, i) => (
-                                    <Box key={i} sx={{ p: 2, borderRadius: 2, border: '1px solid #f0f0f0', bgcolor: 'white', display: 'flex', alignItems: 'flex-start', gap: 1.5, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', '&:hover': { borderColor: '#f59e0b', boxShadow: '0 2px 8px rgba(245,158,11,0.12)' }, transition: 'all 0.2s ease' }}>
-                                        <Box sx={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box key={i} sx={{ p: 2, borderRadius: '12px', border: '1px solid #f0f0f0', bgcolor: 'white', display: 'flex', alignItems: 'flex-start', gap: 1.5, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', '&:hover': { borderColor: '#6366f1', boxShadow: '0 2px 8px rgba(99,102,241,0.12)' }, transition: 'all 0.2s ease' }}>
+                                        <Box sx={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <Typography fontSize={11} fontWeight={700} color="white">{st.activityOrder || i + 1}</Typography>
                                         </Box>
                                         <Box flex={1}>
@@ -982,7 +981,7 @@ export const TaskMaster: React.FC = () => {
 
                 {/* Subtask Modal - Premium Amber */}
                 <Dialog open={isSubtaskModalOpen} onClose={() => setIsSubtaskModalOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
-                    <DialogTitle sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+                    <DialogTitle sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
                         <Box display="flex" alignItems="center" gap={1.5}>
                             <Typography fontSize={18}>📝</Typography>
                             <Typography variant="h6" fontWeight={700}>Add Subtask Step</Typography>
@@ -1081,19 +1080,19 @@ export const TaskMaster: React.FC = () => {
                         </Grid>
                     </DialogContent>
                     <DialogActions sx={{ p: 2.5, px: 3, gap: 1.5, justifyContent: 'center' }}>
-                        <Button
+                        <CommonButton
                             variant="contained"
                             onClick={handleAddSubtask}
                             disabled={!subtaskInput.name || !subtaskInput.predefinedEmployee}
-                            sx={{ minWidth: 140, py: 1.2, borderRadius: 2, textTransform: 'none', fontWeight: 700, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 14px rgba(245,158,11,0.35)', '&:hover': { background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' } }}
+                            sx={{ minWidth: 140, py: 1.2, borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', boxShadow: '0 4px 14px rgba(99,102,241,0.35)', '&:hover': { background: 'linear-gradient(135deg, #4338ca 0%, #3730a3 100%)' } }}
                         >
                             ✔ Add Step
-                        </Button>
-                        <Button variant="outlined" onClick={() => setIsSubtaskModalOpen(false)}
-                            sx={{ minWidth: 100, py: 1.2, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                        </CommonButton>
+                        <CommonButton variant="outlined" onClick={() => setIsSubtaskModalOpen(false)}
+                            sx={{ minWidth: 100, py: 1.2, borderRadius: '12px' }}
                         >
                             Cancel
-                        </Button>
+                        </CommonButton>
                     </DialogActions>
                 </Dialog>
             </form>
@@ -1104,3 +1103,8 @@ export const TaskMaster: React.FC = () => {
 };
 
 export default TaskMaster;
+
+
+
+
+

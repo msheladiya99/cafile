@@ -70,15 +70,15 @@ export const Form108: React.FC = () => {
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
             {/* Header */}
-            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 3, py: 2 }}>
+            <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2 }}>
                     <Typography variant="h5" fontWeight="600">Form 108</Typography>
                     <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.3 }}>Monthly Employee Attendance Summary</Typography>
                 </Box>
             </Paper>
 
             {/* Filters */}
-            <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <Paper sx={{ p: 3, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                 <Grid container spacing={3} alignItems="center">
                     <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '60px', flexShrink: 0 }}>
@@ -88,7 +88,7 @@ export const Form108: React.FC = () => {
                             fullWidth size="small" displayEmpty
                             value={year}
                             onChange={(e) => setYear(e.target.value as string)}
-                            sx={{ borderRadius: 1.5 }}
+                            sx={{ borderRadius: '8px' }}
                         >
                             {years.map(y => (
                                 <MenuItem key={y} value={String(y)}>{y}</MenuItem>
@@ -104,7 +104,7 @@ export const Form108: React.FC = () => {
                             fullWidth size="small" displayEmpty
                             value={selectedEmployee}
                             onChange={(e) => setSelectedEmployee(e.target.value as string)}
-                            sx={{ borderRadius: 1.5 }}
+                            sx={{ borderRadius: '8px' }}
                         >
                             <MenuItem value="" disabled>Choose Employee...</MenuItem>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -121,7 +121,7 @@ export const Form108: React.FC = () => {
                             disabled={isLoading}
                             startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <CalculateIcon />}
                             fullWidth
-                            sx={{ bgcolor: '#667eea', color: 'white', textTransform: 'none', py: 1, borderRadius: 1.5, boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', py: 1, borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
                         >
                             {isLoading ? 'Calculating...' : 'Calculate'}
                         </Button>
@@ -130,8 +130,8 @@ export const Form108: React.FC = () => {
             </Paper>
 
             {/* Results Table */}
-            <Paper sx={{ borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                <Box sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Paper sx={{ borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ListIcon fontSize="small" />
                     <Typography variant="subtitle2" fontWeight="700">Time Spent in Year</Typography>
                     {summaryData && (
@@ -169,7 +169,7 @@ export const Form108: React.FC = () => {
                                             <TableCell sx={{ fontWeight: 600 }}>{row.month}</TableCell>
                                             <TableCell>
                                                 {row.calculatedDays > 0 ? (
-                                                    <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                    <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                                         {row.totalHours}
                                                     </Box>
                                                 ) : (
@@ -178,7 +178,7 @@ export const Form108: React.FC = () => {
                                             </TableCell>
                                             <TableCell>
                                                 {row.calculatedDays > 0 ? (
-                                                    <Box component="span" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 600 }}>
+                                                    <Box component="span" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                                         {row.calculatedDays} day{row.calculatedDays !== 1 ? 's' : ''}
                                                     </Box>
                                                 ) : (
@@ -191,12 +191,12 @@ export const Form108: React.FC = () => {
                                     <TableRow sx={{ bgcolor: '#f0f4ff', borderTop: '2px solid #667eea' }}>
                                         <TableCell sx={{ fontWeight: 700, color: '#4527a0' }}>Total</TableCell>
                                         <TableCell>
-                                            <Box component="span" sx={{ bgcolor: '#667eea', color: '#fff', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 700 }}>
+                                            <Box component="span" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: '#fff', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700 }}>
                                                 {totalHoursAll}
                                             </Box>
                                         </TableCell>
                                         <TableCell>
-                                            <Box component="span" sx={{ bgcolor: '#43a047', color: '#fff', px: 1.5, py: 0.3, borderRadius: 1, fontSize: '0.85rem', fontWeight: 700 }}>
+                                            <Box component="span" sx={{ bgcolor: '#43a047', color: '#fff', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700 }}>
                                                 {totalDays} days
                                             </Box>
                                         </TableCell>
@@ -210,3 +210,8 @@ export const Form108: React.FC = () => {
         </Box>
     );
 };
+
+
+
+
+

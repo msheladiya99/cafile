@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     Box,
-    Button,
+    Typography,
     Select,
     MenuItem,
     Table,
@@ -14,7 +14,6 @@ import {
     useMediaQuery,
     useTheme,
     Paper,
-    Typography,
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -25,8 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { staffService } from '../../../services/staffService';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
-import { PageHeader, PageContainer, ContentContainer, Section, FilterRow } from '../../../components/common/UIComponents';
-
+import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
 
 export const EmployeeList: React.FC = () => {
     const theme = useTheme();
@@ -82,14 +80,14 @@ export const EmployeeList: React.FC = () => {
             <PageHeader
                 title="Employee List"
                 actions={
-                    <Button
+                    <CommonButton
                         variant="contained"
                         size="small"
                         onClick={() => navigate('/admin/employee/master')}
-                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, textTransform: 'none', borderRadius: 2, boxShadow: 'none' }}
+                        sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
                     >
-                        Add New
-                    </Button>
+                        + Add New
+                    </CommonButton>
                 }
             />
 
@@ -106,7 +104,7 @@ export const EmployeeList: React.FC = () => {
                                     displayEmpty
                                     value={filterDesignation}
                                     onChange={(e) => setFilterDesignation(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterDesignation ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterDesignation ? 'inherit' : 'text.secondary' }}
                                 >
                                     <MenuItem value="">Choose a Designation...</MenuItem>
                                     <MenuItem value="Staff">Staff</MenuItem>
@@ -124,7 +122,7 @@ export const EmployeeList: React.FC = () => {
                                     size="small"
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value)}
-                                    sx={{ borderRadius: 1.5 }}
+                                    sx={{ borderRadius: '8px' }}
                                 >
                                     <MenuItem value="all">All Employee</MenuItem>
                                     <MenuItem value="active">Active</MenuItem>
@@ -136,7 +134,7 @@ export const EmployeeList: React.FC = () => {
                 </Section>
 
                 {/* List Section */}
-                <Section title="Employee List" icon={<FormatListBulletedIcon />}>
+                <Section title="Employee List" icon={<FormatListBulletedIcon />} noPad>
                     {isMobile ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
                             {isLoading ? (
@@ -149,14 +147,14 @@ export const EmployeeList: React.FC = () => {
                                 </Box>
                             ) : (
                                 employees.map((emp) => (
-                                    <Paper key={emp.id} sx={{ p: 2, borderRadius: 2, border: '1px solid #e0e0e0', boxShadow: 'none' }}>
+                                    <Paper key={emp.id} sx={{ p: 2, borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: 'none' }}>
                                         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                                             <Box>
                                                 <Typography variant="body1" fontWeight={700} color="#334155">{emp.name}</Typography>
                                                 <Typography variant="body2" color="#667eea" fontWeight={600}>Code: {emp.code || '---'}</Typography>
                                             </Box>
                                             <Box sx={{
-                                                display: 'inline-flex', alignItems: 'center', px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.75rem', fontWeight: 600,
+                                                display: 'inline-flex', alignItems: 'center', px: 1.5, py: 0.5, borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
                                                 bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee', color: emp.status === 'Active' ? 'success.main' : 'error.main'
                                             }}>
                                                 {emp.status}
@@ -225,7 +223,7 @@ export const EmployeeList: React.FC = () => {
                                                     alignItems: 'center',
                                                     px: 1.5,
                                                     py: 0.5,
-                                                    borderRadius: 2,
+                                                    borderRadius: '12px',
                                                     fontSize: '0.75rem',
                                                     fontWeight: 600,
                                                     bgcolor: emp.status === 'Active' ? '#e8f5e9' : '#ffebee',
@@ -265,3 +263,8 @@ export const EmployeeList: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+

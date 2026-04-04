@@ -113,7 +113,7 @@ export const ClientContactDetail: React.FC = () => {
                                     displayEmpty
                                     value={filterGroup}
                                     onChange={(e) => setFilterGroup(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterGroup ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterGroup ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
@@ -130,7 +130,7 @@ export const ClientContactDetail: React.FC = () => {
                                     displayEmpty
                                     value={filterClient}
                                     onChange={(e) => setFilterClient(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterClient ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterClient ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
@@ -151,7 +151,7 @@ export const ClientContactDetail: React.FC = () => {
                                     displayEmpty
                                     value={filterSubMaster}
                                     onChange={(e) => setFilterSubMaster(e.target.value)}
-                                    sx={{ borderRadius: 1.5, color: filterSubMaster ? 'inherit' : 'text.secondary' }}
+                                    sx={{ borderRadius: '8px', color: filterSubMaster ? 'inherit' : 'text.secondary' }}
                                     inputProps={{ 'aria-label': 'Sub Master' }}
                                 >
                                     <MenuItem value="">Choose a Sub Master...</MenuItem>
@@ -166,7 +166,7 @@ export const ClientContactDetail: React.FC = () => {
                                         size="small"
                                         value={filterSearchType}
                                         onChange={(e) => setFilterSearchType(e.target.value)}
-                                        sx={{ width: { xs: '100%', sm: '150px' }, borderRadius: 1.5 }}
+                                        sx={{ width: { xs: '100%', sm: '150px' }, borderRadius: '8px' }}
                                         inputProps={{ 'aria-label': 'Search Category' }}
                                     >
                                         <MenuItem value="name">By Contact Name</MenuItem>
@@ -179,7 +179,7 @@ export const ClientContactDetail: React.FC = () => {
                                         placeholder="Enter name..."
                                         value={filterSearchText}
                                         onChange={(e) => setFilterSearchText(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                         inputProps={{ 'aria-label': 'Search Text' }}
                                     />
                                 </Box>
@@ -221,7 +221,7 @@ export const ClientContactDetail: React.FC = () => {
                                 ];
 
                                 return allContacts.map((contact, idx) => (
-                                    <Card key={`${client._id}-${idx}`} variant="outlined" sx={{ borderRadius: 2, borderColor: 'divider' }}>
+                                    <Card key={`${client._id}-${idx}`} variant="outlined" sx={{ borderRadius: '12px', borderColor: 'divider' }}>
                                         <CardContent sx={{ p: 2 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                                                 <Box>
@@ -241,7 +241,7 @@ export const ClientContactDetail: React.FC = () => {
                                                     <Box sx={{
                                                         px: 1,
                                                         py: 0.2,
-                                                        borderRadius: 1,
+                                                        borderRadius: '8px',
                                                         fontSize: '0.65rem',
                                                         fontWeight: 700,
                                                         textTransform: 'uppercase',
@@ -323,7 +323,7 @@ export const ClientContactDetail: React.FC = () => {
                                                         display: 'inline-flex',
                                                         px: 1.2,
                                                         py: 0.4,
-                                                        borderRadius: 2,
+                                                        borderRadius: '12px',
                                                         fontSize: '0.7rem',
                                                         fontWeight: 600,
                                                         bgcolor: contact.status ? '#e8f5e9' : '#ffebee',
@@ -344,3 +344,8 @@ export const ClientContactDetail: React.FC = () => {
         </PageContainer>
     );
 };
+
+
+
+
+
