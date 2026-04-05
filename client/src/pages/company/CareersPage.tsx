@@ -62,6 +62,41 @@ const CareersPage: React.FC = () => {
                 <title>Careers at My CA File | Jobs in CA SaaS Startup India</title>
                 <meta name="description" content="Join My CA File — India's leading CA practice management SaaS. We're hiring engineers, designers, and growth specialists. Remote-first, equity, and fast growth." />
                 <link rel="canonical" href="https://mycafile.in/careers" />
+                
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Careers at My CA File | Grow with us" />
+                <meta property="og:description" content="Join our remote-first team building the future of CA practice software in India. Engineering, Growth, and Success roles." />
+                <meta property="og:url" content="https://mycafile.in/careers" />
+                <meta property="og:image" content="https://mycafile.in/og-careers.png" />
+                
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Careers at My CA File | Jobs in India" />
+                <meta name="twitter:description" content="Join our remote-first team building the future of CA practice software in India." />
+                <meta name="twitter:image" content="https://mycafile.in/og-careers.png" />
+
+                {/* Structured Data: BreadcrumbList */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "Careers",
+                                "item": "https://mycafile.in/careers"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
 
             <SiteNavbar />
