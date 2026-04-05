@@ -326,7 +326,6 @@ export const LandingPage = () => {
       </Helmet>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .lp-btn-primary { background: linear-gradient(135deg, #7c3aed, #9333ea); color: #fff; border: none; border-radius: 50px; padding: 14px 28px; font-size: 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity 0.2s, transform 0.2s; }
         .lp-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
