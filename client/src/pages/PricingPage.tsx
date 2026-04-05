@@ -125,6 +125,80 @@ export const PricingPage = () => {
                 <meta name="description" content="Affordable pricing for the best CA practice management software in India. Free trial available for small firms. Scale up to Enterprise and Cloud plans for large firms." />
                 <meta name="keywords" content="CA software price, practice management software cost, My CA File plans, CA office software India pricing" />
                 <link rel="canonical" href="https://mycafile.in/pricing" />
+
+                {/* Structured Data: Product & Offers */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "Product",
+                        "name": "My CA File Practice Management Software",
+                        "description": "Premium CA Office Management Software for Indian Chartered Accountants. Manage ITR, GST, and team workflows.",
+                        "brand": {
+                            "@type": "Brand",
+                            "name": "My CA File"
+                        },
+                        "offers": [
+                            {
+                                "@type": "Offer",
+                                "name": "Starter Plan",
+                                "price": "0",
+                                "priceCurrency": "INR",
+                                "availability": "https://schema.org/InStock",
+                                "url": "https://mycafile.in/pricing"
+                            },
+                            {
+                                "@type": "Offer",
+                                "name": "Professional Plan",
+                                "price": "4999",
+                                "priceCurrency": "INR",
+                                "availability": "https://schema.org/InStock",
+                                "url": "https://mycafile.in/pricing"
+                            },
+                            {
+                                "@type": "Offer",
+                                "name": "Enterprise Plan",
+                                "price": "6999",
+                                "priceCurrency": "INR",
+                                "availability": "https://schema.org/InStock",
+                                "url": "https://mycafile.in/pricing"
+                            },
+                            {
+                                "@type": "Offer",
+                                "name": "Enterprise Cloud Plan",
+                                "price": "9999",
+                                "priceCurrency": "INR",
+                                "availability": "https://schema.org/InStock",
+                                "url": "https://mycafile.in/pricing"
+                            }
+                        ]
+                    }
+                `}
+                </script>
+
+                {/* Structured Data: BreadcrumbList */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "Pricing",
+                                "item": "https://mycafile.in/pricing"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
             <SiteNavbar />
             
