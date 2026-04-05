@@ -121,7 +121,10 @@ export const PricingPage = () => {
     return (
         <Box sx={{ bgcolor: colors.bg, minHeight: '100vh', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <Helmet>
-                <title>Pricing | Clear & Transparent</title>
+                <title>Pricing Plans for CA Office Management Software | My CA File</title>
+                <meta name="description" content="Affordable pricing for the best CA practice management software in India. Free trial available for small firms. Scale up to Enterprise and Cloud plans for large firms." />
+                <meta name="keywords" content="CA software price, practice management software cost, My CA File plans, CA office software India pricing" />
+                <link rel="canonical" href="https://mycafile.in/pricing" />
             </Helmet>
             <SiteNavbar />
             

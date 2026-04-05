@@ -824,9 +824,15 @@ export const EmployeeMaster: React.FC = () => {
                                         InputProps={{
                                             endAdornment: (
                                                 <InputAdornment position="end">
-                                                    <IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
-                                                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                                                    </IconButton>
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => setShowPassword(!showPassword)} 
+                                                    edge="end"
+                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                    title={showPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                                </IconButton>
                                                 </InputAdornment>
                                             ),
                                         }}
@@ -973,7 +979,13 @@ export const EmployeeMaster: React.FC = () => {
                                                 {selectedFile ? selectedFile.name : (documentForm.fileName || 'No file chosen')}
                                             </Typography>
                                             {selectedFile && (
-                                                <IconButton size="small" onClick={() => setSelectedFile(null)} sx={{ mr: 0.5 }}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => setSelectedFile(null)} 
+                                                    sx={{ mr: 0.5 }}
+                                                    aria-label="Remove selected file"
+                                                    title="Remove selected file"
+                                                >
                                                     <CloseIcon fontSize="small" />
                                                 </IconButton>
                                             )}
@@ -1090,7 +1102,12 @@ export const EmployeeMaster: React.FC = () => {
                                     <FormatListBulletedIcon fontSize="small" />
                                     <Typography variant="body2" fontWeight={600}>Document List</Typography>
                                 </Box>
-                                <IconButton size="small" sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, borderRadius: '8px' }}>
+                                <IconButton 
+                                    size="small" 
+                                    aria-label="Export document list"
+                                    title="Export document list"
+                                    sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }, borderRadius: '8px' }}
+                                >
                                     <GetAppIcon fontSize="small" />
                                 </IconButton>
                             </Box>
@@ -1121,16 +1138,37 @@ export const EmployeeMaster: React.FC = () => {
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                                     {doc.driveWebViewLink && (
-                                                        <CommonButton size="small" variant="outlined" component="a" href={doc.driveWebViewLink} target="_blank" startIcon={<Visibility sx={{ fontSize: 16 }} />} sx={{ height: 28, fontSize: '0.75rem' }}>
+                                                        <CommonButton 
+                                                            size="small" 
+                                                            variant="outlined" 
+                                                            component="a" 
+                                                            href={doc.driveWebViewLink} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            startIcon={<Visibility sx={{ fontSize: 16 }} />} 
+                                                            sx={{ height: 28, fontSize: '0.75rem' }}
+                                                        >
                                                             View
                                                         </CommonButton>
                                                     )}
                                                 </Box>
                                                 <Box sx={{ display: 'flex', gap: 1 }}>
-                                                    <IconButton size="small" onClick={() => handleEditDocument(doc)} sx={{ color: '#667eea', bgcolor: alpha('#667eea', 0.1) }}>
+                                                    <IconButton 
+                                                        size="small" 
+                                                        onClick={() => handleEditDocument(doc)} 
+                                                        aria-label="Edit document"
+                                                        title="Edit document"
+                                                        sx={{ color: '#667eea', bgcolor: alpha('#667eea', 0.1) }}
+                                                    >
                                                         <EditIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
-                                                    <IconButton size="small" onClick={() => handleDeleteDocument(doc._id || doc.id!)} sx={{ color: '#ff6c60', bgcolor: alpha('#ff6c60', 0.1) }}>
+                                                    <IconButton 
+                                                        size="small" 
+                                                        onClick={() => handleDeleteDocument(doc._id || doc.id!)} 
+                                                        aria-label="Delete document"
+                                                        title="Delete document"
+                                                        sx={{ color: '#ff6c60', bgcolor: alpha('#ff6c60', 0.1) }}
+                                                    >
                                                         <DeleteIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
                                                 </Box>
@@ -1160,14 +1198,35 @@ export const EmployeeMaster: React.FC = () => {
                                                     <TableCell align="center">
                                                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                                                             {doc.driveWebViewLink && (
-                                                                <IconButton size="small" component="a" href={doc.driveWebViewLink} target="_blank" sx={{ color: '#4caf50', p: 0.5 }}>
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    component="a" 
+                                                                    href={doc.driveWebViewLink} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    aria-label="View document"
+                                                                    title="View document"
+                                                                    sx={{ color: '#4caf50', p: 0.5 }}
+                                                                >
                                                                     <Visibility fontSize="inherit" />
                                                                 </IconButton>
                                                             )}
-                                                            <IconButton size="small" onClick={() => handleEditDocument(doc)} sx={{ color: '#667eea', p: 0.5 }}>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                onClick={() => handleEditDocument(doc)} 
+                                                                aria-label="Edit document"
+                                                                title="Edit document"
+                                                                sx={{ color: '#667eea', p: 0.5 }}
+                                                            >
                                                                 <EditIcon sx={{ fontSize: 16 }} />
                                                             </IconButton>
-                                                            <IconButton size="small" onClick={() => handleDeleteDocument(doc._id || doc.id!)} sx={{ color: '#ff6c60', p: 0.5 }}>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                onClick={() => handleDeleteDocument(doc._id || doc.id!)} 
+                                                                aria-label="Delete document"
+                                                                title="Delete document"
+                                                                sx={{ color: '#ff6c60', p: 0.5 }}
+                                                            >
                                                                 <DeleteIcon sx={{ fontSize: 16 }} />
                                                             </IconButton>
                                                         </Box>
@@ -1460,7 +1519,13 @@ export const EmployeeMaster: React.FC = () => {
                     <Typography variant="subtitle1" fontWeight={600}>
                         {editingDesignationId ? 'Edit Designation' : 'Add Designation'}
                     </Typography>
-                    <IconButton size="small" onClick={() => setOpenDesignationDialog(false)} sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}>
+                    <IconButton 
+                        size="small" 
+                        onClick={() => setOpenDesignationDialog(false)} 
+                        aria-label="Close dialog"
+                        title="Close dialog"
+                        sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}
+                    >
                         <CloseIcon fontSize="small" />
                     </IconButton>
                 </Box>
@@ -1536,7 +1601,12 @@ export const EmployeeMaster: React.FC = () => {
                                 <CommonButton size="small" onClick={handleAddNewDesignation} sx={{ color: 'white', fontSize: '0.8rem', minWidth: 'auto', p: 0 }}>
                                     ADD NEW
                                 </CommonButton>
-                                <IconButton size="small" sx={{ bgcolor: 'white', color: '#667eea', p: 0.3, borderRadius: '8px', '&:hover': { bgcolor: '#f1f5f9' } }}>
+                                <IconButton 
+                                    size="small" 
+                                    aria-label="Export designation list"
+                                    title="Export designation list"
+                                    sx={{ bgcolor: 'white', color: '#667eea', p: 0.3, borderRadius: '8px', '&:hover': { bgcolor: '#f1f5f9' } }}
+                                >
                                     <GetAppIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
                             </Box>
@@ -1562,10 +1632,22 @@ export const EmployeeMaster: React.FC = () => {
                                             </TableCell>
                                             <TableCell align="center" sx={{ borderBottom: '1px solid #e2e8f0', p: 0.5 }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                                                    <IconButton size="small" onClick={() => handleEditDesignation(row.id)} sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', p: 0.5, borderRadius: '8px' }}>
+                                                    <IconButton 
+                                                        size="small" 
+                                                        onClick={() => handleEditDesignation(row.id)} 
+                                                        aria-label="Edit designation"
+                                                        title="Edit designation"
+                                                        sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', p: 0.5, borderRadius: '8px' }}
+                                                    >
                                                         <EditIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
-                                                    <IconButton size="small" onClick={() => handleDeleteDesignation(row.id)} sx={{ bgcolor: '#ff6c60', color: 'white', p: 0.5, borderRadius: '8px', '&:hover': { bgcolor: '#e56156' } }}>
+                                                    <IconButton 
+                                                        size="small" 
+                                                        onClick={() => handleDeleteDesignation(row.id)} 
+                                                        aria-label="Delete designation"
+                                                        title="Delete designation"
+                                                        sx={{ bgcolor: '#ff6c60', color: 'white', p: 0.5, borderRadius: '8px', '&:hover': { bgcolor: '#e56156' } }}
+                                                    >
                                                         <DeleteIcon sx={{ fontSize: 16 }} />
                                                     </IconButton>
                                                 </Box>
@@ -1591,7 +1673,13 @@ export const EmployeeMaster: React.FC = () => {
                     <Typography variant="subtitle1" fontWeight={600}>
                         Employee Extra Fields
                     </Typography>
-                    <IconButton size="small" onClick={() => setOpenFieldMasterDialog(false)} sx={{ color: 'inherit', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}>
+                    <IconButton 
+                        size="small" 
+                        onClick={() => setOpenFieldMasterDialog(false)} 
+                        aria-label="Close dialog"
+                        title="Close dialog"
+                        sx={{ color: 'inherit', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}
+                    >
                         <CloseIcon fontSize="small" />
                     </IconButton>
                 </Box>

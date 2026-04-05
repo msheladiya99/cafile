@@ -88,6 +88,8 @@ const AboutPage = lazy(() => import('./pages/company/AboutPage'));
 const CareersPage = lazy(() => import('./pages/company/CareersPage'));
 const ContactPage = lazy(() => import('./pages/company/ContactPage'));
 const PressPage = lazy(() => import('./pages/company/PressPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/company/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/company/TermsOfServicePage'));
 
 
 const LoadingScreen = () => (
@@ -247,6 +249,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/press" element={<PressPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
 
         <Route path="/" element={isAuthenticated ? <Navigate to={getHomePath()} replace /> : (isSuperAdminDomain() ? <LandingPage /> : <Navigate to="/login" replace />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
