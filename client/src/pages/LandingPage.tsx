@@ -387,7 +387,7 @@ export const LandingPage = () => {
           <div className="lp-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
             <button className="lp-nav-link" onClick={() => scrollTo('features')}>Features</button>
             <button className="lp-nav-link" onClick={() => scrollTo('pricing')}>Our Services</button>
-            <button className="lp-nav-link" onClick={() => scrollTo('pricing')}>Pricing</button>
+            <button className="lp-nav-link" onClick={() => window.location.href = '/pricing'}>Pricing</button>
             <button className="lp-nav-link" onClick={() => scrollTo('faq')}>FAQ</button>
             <button
               style={{ background: 'none', border: '1.5px solid #d1d5db', borderRadius: 50, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151', transition: 'border-color 0.2s, color 0.2s' }}
@@ -469,7 +469,7 @@ export const LandingPage = () => {
           ].map(item => (
             <button 
               key={item.label} 
-              onClick={() => scrollTo(item.id)}
+              onClick={() => { if (item.id === 'pricing') { window.location.href = '/pricing'; } else { scrollTo(item.id); } }}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 4px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', color: '#374151' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -912,7 +912,7 @@ export const LandingPage = () => {
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Product</h4>
               {[
                 { label: 'Features', action: () => scrollTo('features') },
-                { label: 'Pricing', action: () => scrollTo('pricing') },
+                { label: 'Pricing', action: () => window.location.href = '/pricing' },
                 { label: 'FAQ', action: () => scrollTo('faq') },
                 { label: 'Login', action: () => window.location.href = '/login' },
               ].map(l => (
