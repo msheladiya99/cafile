@@ -2,15 +2,7 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 
 // ─── Icons (inline SVGs) ────────────────────────────────────────────────────
-const FileIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-    <polyline points="10 9 9 9 8 9" />
-  </svg>
-);
+
 const UsersIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
@@ -137,11 +129,7 @@ const XIcon = () => (
         <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
-const SearchIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-);
+
 const InboxIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
@@ -365,11 +353,16 @@ export const LandingPage = () => {
           .lp-hero-btns { flex-direction: column !important; align-items: center !important; }
           .lp-pricing-grid { grid-template-columns: 1fr !important; }
           .lp-pricing-popular { transform: scale(1) !important; }
-          .lp-step-grid { grid-template-columns: 1fr !important; }
-          .lp-firms { flex-wrap: wrap !important; }
+          .lp-step-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .lp-step-connector { display: none !important; }
+          .lp-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .lp-firms { flex-wrap: wrap !important; gap: 24px !important; justify-content: center !important; }
           .lp-nav-desktop { display: none !important; }
           .lp-nav-mobile { display: flex !important; margin-left: auto; }
           .mobile-menu-card { max-width: 320px !important; }
+          .lp-footer-grid { grid-template-columns: 1fr !important; gap: 48px !important; text-align: center !important; }
+          .lp-footer-logo-box { justify-content: center !important; }
+          .lp-footer-desc { margin: 0 auto !important; }
         }
         .nav-item-active { background: rgba(0,0,0,0.03); border-radius: 12px; }
       `}</style>
@@ -384,17 +377,15 @@ export const LandingPage = () => {
             MyCAFile
           </div>
           <div className="lp-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <button className="lp-nav-link" onClick={() => scrollTo('features')}>Features</button>
-            <button className="lp-nav-link" onClick={() => scrollTo('pricing')}>Our Services</button>
-            <button className="lp-nav-link" onClick={() => window.location.href = '/pricing'}>Pricing</button>
+            <button className="lp-nav-link" style={{ position: 'relative', zIndex: 105 }} onClick={() => scrollTo('features')}>Features</button>
+            <button className="lp-nav-link" style={{ position: 'relative', zIndex: 105 }} onClick={() => scrollTo('pricing')}>Our Services</button>
+            <a href="/pricing" className="lp-nav-link" style={{ textDecoration: 'none', position: 'relative', zIndex: 105 }}>Pricing</a>
             <button className="lp-nav-link" onClick={() => scrollTo('faq')}>FAQ</button>
-            <button
-              style={{ background: 'none', border: '1.5px solid #d1d5db', borderRadius: 50, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151', transition: 'border-color 0.2s, color 0.2s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#7c3aed'; (e.currentTarget as HTMLButtonElement).style.color = '#7c3aed'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLButtonElement).style.color = '#374151'; }}
-              onClick={() => window.location.href = '/superadmin'}
-            >Login</button>
-            <button className="lp-btn-primary" style={{ padding: '10px 24px', fontSize: 14, transform: 'none', boxShadow: 'none' }} onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
+            <a href="/superadmin" style={{ background: 'none', border: '1.5px solid #d1d5db', borderRadius: 50, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151', textDecoration: 'none', transition: 'border-color 0.2s, color 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#7c3aed'; (e.currentTarget as HTMLAnchorElement).style.color = '#7c3aed'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLAnchorElement).style.color = '#374151'; }}
+            >Login</a>
+            <a href="/contact" className="lp-btn-primary" style={{ padding: '10px 24px', fontSize: 14, transform: 'none', boxShadow: 'none', textDecoration: 'none' }}>Start Free Trial</a>
           </div>
 
           <div className="lp-nav-mobile" style={{ display: 'none', gap: 12 }}>
@@ -430,17 +421,18 @@ export const LandingPage = () => {
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           maxHeight: '100vh',
           overflowY: 'auto',
+          pointerEvents: isMenuOpen ? 'auto' : 'none',
         }}
       >
         {/* Header Profile with Close Icon */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-              <FileIcon />
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(124,58,237,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/faviconca.webp" style={{ width: 32, height: 32, objectFit: 'contain' }} alt="MyCAFile" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontWeight: 800, fontSize: 16, color: '#111827' }}>MyCAFile</span>
-              <span style={{ fontSize: 12, color: '#9ca3af' }}>Firm Plan</span>
+              <span style={{ fontWeight: 800, fontSize: 17, color: '#111827', letterSpacing: '-0.3px' }}>MyCAFile</span>
+              <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600 }}>CA Management</span>
             </div>
           </div>
           <button onClick={() => setIsMenuOpen(false)} style={{ background: '#f5f5f5', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111827' }}>
@@ -448,31 +440,26 @@ export const LandingPage = () => {
           </button>
         </div>
 
-        {/* Search Device */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
-            <SearchIcon />
-          </div>
-          <input 
-            placeholder="Search service" 
-            style={{ width: '100%', background: '#f5f5f5', border: 'none', borderRadius: 12, padding: '12px 12px 12px 40px', fontSize: 14, color: '#111827', outline: 'none' }} 
-          />
-        </div>
-
         {/* Main List */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <a href="/pricing" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 4px', color: '#374151' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ color: '#7c3aed' }}><BellIcon /></div>
+                <span style={{ fontWeight: 600, fontSize: 15 }}>Pricing Plans</span>
+              </div>
+              <ChevronDownSmallIcon />
+          </a>
           {[
             { label: 'Platform Features', icon: <InboxIcon />, id: 'features' },
-            { label: 'Pricing Plans', icon: <BellIcon />, id: 'pricing' },
             { label: 'Help & FAQ', icon: <HelpIcon />, id: 'faq' },
           ].map(item => (
             <button 
               key={item.label} 
-              onClick={() => { if (item.id === 'pricing') { window.location.href = '/pricing'; } else { scrollTo(item.id); } }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 4px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', color: '#374151' }}
+              onClick={() => scrollTo(item.id)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 4px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', color: '#374151' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                {item.icon}
+                <div style={{ color: '#7c3aed' }}>{item.icon}</div>
                 <span style={{ fontWeight: 600, fontSize: 15 }}>{item.label}</span>
               </div>
               <ChevronDownSmallIcon />
@@ -480,29 +467,25 @@ export const LandingPage = () => {
           ))}
         </div>
 
-        <div style={{ height: 1.5, background: '#f5f5f5', width: '100%' }} />
-        
         <div style={{ flex: 1 }} />
 
-        {/* Bottom Profile / Login */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #7c3aed, #9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>A</div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Guest User</span>
-              <span onClick={() => window.location.href = '/superadmin'} style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, cursor: 'pointer' }}>Login to Dashboard</span>
-            </div>
-          </div>
-          <ChevronDownSmallIcon />
+        {/* CTAs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <a
+            href="/superadmin"
+            className="lp-btn-secondary" 
+            style={{ width: '100%', justifyContent: 'center', padding: '16px', borderRadius: 16, fontSize: 15, textDecoration: 'none' }} 
+          >
+            Login to Dashboard
+          </a>
+          <a
+            href="/contact"
+            className="lp-btn-primary" 
+            style={{ width: '100%', justifyContent: 'center', padding: '16px', borderRadius: 16, fontSize: 15, textDecoration: 'none' }} 
+          >
+            Start Free Trial
+          </a>
         </div>
-
-        <button 
-          className="lp-btn-primary" 
-          style={{ width: '100%', justifyContent: 'center', padding: '16px', borderRadius: 16, marginTop: 12 }} 
-          onClick={() => window.location.href = '/contact'}
-        >
-          Start Free Trial
-        </button>
       </div>
 
       {/* Backdrop */}
@@ -677,13 +660,13 @@ export const LandingPage = () => {
               { num: 3, icon: <ClipboardCheckIcon />, title: 'Track & Comply', desc: 'Monitor deadlines, tasks, and filing status effortlessly.' },
             ].map((s, i, arr) => (
               <div key={s.num} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
-                {/* Connector line (hidden on mobile via lp-step-grid media query) */}
+                {/* Connector line (hidden on mobile) */}
                 {i < arr.length - 1 && (
-                  <div style={{
+                  <div className="lp-step-connector" style={{
                     position: 'absolute',
                     top: 32,
-                    left: '62%',
-                    width: '76%',
+                    left: '60%',
+                    width: '80%',
                     height: 2,
                     background: 'linear-gradient(to right, rgba(124,58,237,0.35), transparent)',
                     zIndex: 0
@@ -734,7 +717,7 @@ export const LandingPage = () => {
             </div>
             <div style={{ background: '#fff', padding: 32 }}>
               {/* Stats Row */}
-              <div className="lp-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 32 }}>
+              <div className="lp-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 32 }}>
                 {[{ n: '124', l: 'Active Clients' }, { n: '1,847', l: 'Documents' }, { n: '312', l: 'Filings Done' }, { n: '98%', l: 'Compliance' }].map(s => (
                   <div key={s.l} style={{ background: '#f9fafb', borderRadius: 12, padding: '20px 16px', textAlign: 'center', border: '1px solid #e5e7eb' }}>
                     <div style={{ fontSize: 30, fontWeight: 800, color: '#111827' }}>{s.n}</div>
@@ -897,15 +880,15 @@ export const LandingPage = () => {
       {/* ── FOOTER ──────────────────────────────────────── */}
       <footer style={{ background: '#111827', color: '#9ca3af', padding: '60px 24px 32px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
+          <div className="lp-footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 16 }}>
+              <div className="lp-footer-logo-box" style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 16 }}>
                 <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                 </div>
                 MyCAFile
               </div>
-              <p style={{ fontSize: 14, lineHeight: 1.7, maxWidth: 280 }}>Practice management software built for Indian CA firms. Simple, secure, and smart.</p>
+              <p className="lp-footer-desc" style={{ fontSize: 14, lineHeight: 1.7, maxWidth: 280 }}>Practice management software built for Indian CA firms. Simple, secure, and smart.</p>
             </div>
             <div>
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Product</h4>

@@ -119,7 +119,7 @@ export const PricingPage = () => {
 
 
     return (
-        <Box sx={{ bgcolor: colors.bg, minHeight: '100vh', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
+        <Box sx={{ bgcolor: colors.bg, minHeight: '100vh', width: '100%', overflowX: 'hidden', fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif' }}>
             <Helmet>
                 <title>Pricing Plans for CA Office Management Software | My CA File</title>
                 <meta name="description" content="Affordable pricing for the best CA practice management software in India. Free trial available for small firms. Scale up to Enterprise and Cloud plans for large firms." />
@@ -225,13 +225,14 @@ export const PricingPage = () => {
                             Transparent pricing with no hidden fees. Start free, scale as you grow.
                         </Typography>
                         
-                        <Box display="inline-flex" alignItems="center" justifyContent="center" mt={5} sx={{ bgcolor: '#f1f5f9', p: 0.5, borderRadius: '50px' }}>
+                        <Box display="inline-flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems="center" justifyContent="center" mt={5} sx={{ bgcolor: '#f1f5f9', p: 0.5, borderRadius: { xs: '20px', sm: '50px' }, width: { xs: '100%', sm: 'auto' }, gap: { xs: 1, sm: 0 } }}>
                             <Button 
                                 onClick={() => setWithCloud(false)}
                                 sx={{ 
-                                    borderRadius: '50px', px: 4, py: 1, textTransform: 'none', fontWeight: 'bold',
+                                    borderRadius: '50px', px: 4, py: 1, textTransform: 'none', fontWeight: 'bold', border: 'none',
                                     color: !withCloud ? '#000' : colors.textSub,
                                     bgcolor: !withCloud ? '#fff' : 'transparent',
+                                    width: { xs: '100%', sm: 'auto' },
                                     boxShadow: !withCloud ? '0 2px 10px rgba(0,0,0,0.05)' : 'none',
                                     '&:hover': { bgcolor: !withCloud ? '#fff' : 'transparent' }
                                 }}
@@ -241,9 +242,10 @@ export const PricingPage = () => {
                             <Button 
                                 onClick={() => setWithCloud(true)}
                                 sx={{ 
-                                    borderRadius: '50px', px: 4, py: 1, textTransform: 'none', fontWeight: 'bold',
+                                    borderRadius: '50px', px: 4, py: 1, textTransform: 'none', fontWeight: 'bold', border: 'none',
                                     color: withCloud ? '#000' : colors.textSub,
                                     bgcolor: withCloud ? '#fff' : 'transparent',
+                                    width: { xs: '100%', sm: 'auto' },
                                     boxShadow: withCloud ? '0 2px 10px rgba(0,0,0,0.05)' : 'none',
                                     '&:hover': { bgcolor: withCloud ? '#fff' : 'transparent' }
                                 }}
@@ -263,7 +265,7 @@ export const PricingPage = () => {
                             const bgCol = isHi ? `linear-gradient(to bottom, #9333ea, #7e22ce)` : '#fff';
                             
                             return (
-                                <Grid size={{ xs: 12, md: 4 }} key={plan.name}>
+                                <Grid size={{ xs: 12, md: 4 }} key={plan.name} sx={{ mt: { xs: plan.badge ? 4 : 0, md: plan.badge ? -2 : 0 } }}>
                                     <Card sx={{ 
                                         height: '100%', 
                                         display: 'flex', flexDirection: 'column', 
@@ -431,8 +433,8 @@ export const PricingPage = () => {
                     <Box mt={16} position="relative">
                         <Box sx={{
                             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                            width: 600, height: 600, bgcolor: alpha(colors.primary, 0.03),
-                            borderRadius: '50%', filter: 'blur(150px)', pointerEvents: 'none'
+                            width: { xs: 300, md: 600 }, height: { xs: 300, md: 600 }, bgcolor: alpha(colors.primary, 0.03),
+                            borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0
                         }} />
 
                         <Box position="relative" maxWidth="lg" mx="auto">
@@ -454,9 +456,10 @@ export const PricingPage = () => {
                                 borderRadius: '16px', 
                                 boxShadow: '0 4px 20px rgba(0,0,0,0.02)', 
                                 bgcolor: '#fff',
-                                overflow: 'hidden'
+                                overflowX: 'auto',
+                                WebkitOverflowScrolling: 'touch'
                             }}>
-                                <Table>
+                                <Table sx={{ minWidth: 800 }}>
                                     <TableHead>
                                         <TableRow sx={{ bgcolor: '#f8fafc' }}>
                                             <TableCell sx={{ borderBottom: `1px solid ${colors.border}`, py: 2.5, pl: 4, width: '40%' }}>
@@ -525,13 +528,13 @@ export const PricingPage = () => {
                     <Box mt={20} mb={10} position="relative" sx={{ overflow: 'hidden' }}>
                         <Box sx={{
                             position: 'absolute', bottom: 0, left: '33%', transform: 'translateX(-50%)',
-                            width: 500, height: 500, bgcolor: alpha(colors.primary, 0.04),
-                            borderRadius: '50%', filter: 'blur(120px)', pointerEvents: 'none'
+                            width: { xs: 250, md: 500 }, height: { xs: 250, md: 500 }, bgcolor: alpha(colors.primary, 0.04),
+                            borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0
                         }} />
                         <Box sx={{
                             position: 'absolute', top: 0, right: '25%', transform: 'translateX(50%)',
-                            width: 400, height: 400, bgcolor: alpha(colors.secondary, 0.04),
-                            borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none'
+                            width: { xs: 200, md: 400 }, height: { xs: 200, md: 400 }, bgcolor: alpha(colors.secondary, 0.04),
+                            borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0
                         }} />
 
                         <Box position="relative" maxWidth="lg" mx="auto">
@@ -594,7 +597,7 @@ export const PricingPage = () => {
                                     <Typography variant="body1" color={colors.textSub} mb={4} maxWidth={450}>
                                         Join thousands of teams already building with us.
                                     </Typography>
-                                    <Box display="flex" gap={2}>
+                                    <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} width={{ xs: '100%', sm: 'auto' }}>
                                         <Button disableRipple variant="contained" sx={{ 
                                             background: `linear-gradient(to right, ${colors.primary}, #60a5fa)`, 
                                             color: '#fff', borderRadius: '12px', px: 4, py: 1.5, 
