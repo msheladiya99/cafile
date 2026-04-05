@@ -323,7 +323,6 @@ export const EmpTaskSchedule: React.FC = () => {
 
     // Build lookup maps
     const staffMap = useMemo(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const m: Record<string, string> = {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         staff.forEach((s: any) => { m[s._id] = s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.username; });
@@ -535,7 +534,7 @@ export const EmpTaskSchedule: React.FC = () => {
                         <ListIcon fontSize="small" />
                         <Typography variant="h6" fontWeight="700" sx={{ fontSize: '1rem' }}>Job List</Typography>
                     </Box>
-                    <Chip label={`${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`} size="small" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 700 }} />
+                    <Chip label={`${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`} size="small" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 700 }} />
                 </Box>
 
                 {loadingTasks ? (

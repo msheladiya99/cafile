@@ -12,12 +12,14 @@ import ScrollToTop from './components/ScrollToTop';
 import WhatsAppButton from './components/WhatsAppButton';
 
 // Core layouts and pages
-const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
+import { Login } from './pages/Login';
+import { AdminLayout } from './layouts/AdminLayout';
+import { AdminDashboard } from './pages/admin/Dashboard';
 
 // Lazy load other layouts and secondary pages
-const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
-const ClientLayout = lazy(() => import('./layouts/ClientLayout').then(module => ({ default: module.ClientLayout })));
+// Secondary layouts - kept as lazy if they are rarely the first landing page
+import { ClientLayout } from './layouts/ClientLayout';
+import { ClientDashboard } from './pages/client/Dashboard';
 const SuperAdminLayout = lazy(() => import('./layouts/SuperAdminLayout').then(module => ({ default: module.SuperAdminLayout })));
 
 // Lazy load route pages
@@ -60,7 +62,6 @@ const TaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/Ta
 const AddAttendance = lazy(() => import('./pages/admin/employee/attendance/AddAttendance').then(module => ({ default: module.AddAttendance })));
 const AttendanceList = lazy(() => import('./pages/admin/employee/attendance/AttendanceList').then(module => ({ default: module.AttendanceList })));
 const Form108 = lazy(() => import('./pages/admin/employee/Form108').then(module => ({ default: module.Form108 })));
-const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.ClientDashboard })));
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));

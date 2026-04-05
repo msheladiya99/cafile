@@ -1,9 +1,8 @@
 User-agent: *
 Allow: /
-Disallow: /login
-Disallow: /superadmin
-Disallow: /super-admin/
-Disallow: /super_admin
 Disallow: /admin/
 Disallow: /client/
-Sitemap: https://mycafile.in/sitemap.xml
+Disallow: /super-admin/
+Disallow: /api/
+
+Sitemap: https://www.mycafile.in/sitemap.xml

@@ -1,35 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
-import { CommonButton } from '../../components/common/UIComponents';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import Avatar from '@mui/material/Avatar';
-import PeopleIcon from '@mui/icons-material/People';
-import UploadIcon from '@mui/icons-material/CloudUpload';
-import TrendingUp from '@mui/icons-material/TrendingUp';
-import EventIcon from '@mui/icons-material/Event';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import PieChartIcon from '@mui/icons-material/PieChart';
+import {
+    Box, Paper, Typography, List, ListItem, ListItemText, ListItemIcon, 
+    Chip, Grid, Tooltip, IconButton, TextField, Avatar, Skeleton
+} from '@mui/material';
+import {
+    People as PeopleIcon,
+    CloudUpload as UploadIcon,
+    TrendingUp,
+    Event as EventIcon,
+    ChevronLeft as ChevronLeftIcon,
+    ChevronRight as ChevronRightIcon,
+    Add as AddIcon,
+    Delete as DeleteIcon,
+    CheckCircle as CheckCircleIcon,
+    RadioButtonUnchecked as UncheckedIcon,
+    Assignment as AssignmentIcon,
+    PieChart as PieChartIcon
+} from '@mui/icons-material';
 
+import { CommonButton } from '../../components/common/UIComponents';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
-import Skeleton from '@mui/material/Skeleton';
+import { adminService } from '../../services/adminService';
 
 interface ToDoItem {
     id: number;
@@ -60,11 +53,7 @@ export const AdminDashboard: React.FC = () => {
 
     const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
         queryKey: ['admin-dashboard-stats'],
-        queryFn: async () => {
-            const api = await import('../../services/api').then(m => m.default);
-            const res = await api.get('/admin/dashboard');
-            return res.data;
-        },
+        queryFn: adminService.getDashboardStats,
         staleTime: 2 * 60 * 1000, // 2 minutes
     });
 
@@ -235,10 +224,10 @@ export const AdminDashboard: React.FC = () => {
                         }}
                     >
                         <Box mb={2.5} display="flex" alignItems="center" justifyContent="space-between">
-                            <IconButton onClick={handlePrevMonth} size="small" aria-label="Previous month">
+                            <IconButton onClick={handlePrevMonth} size="small" aria-label="View previous month">
                                 <ChevronLeftIcon />
                             </IconButton>
-                            <Box textAlign="center" onClick={handleToday} sx={{ cursor: 'pointer' }}>
+                            <Box textAlign="center" onClick={handleToday} sx={{ cursor: 'pointer' }} role="button" aria-label="Reset calendar to today" tabIndex={0}>
                                 <Typography
                                     variant="body2"
                                     color="text.secondary"
@@ -261,7 +250,7 @@ export const AdminDashboard: React.FC = () => {
                                     GST Filing Deadlines
                                 </Typography>
                             </Box>
-                            <IconButton onClick={handleNextMonth} size="small" aria-label="Next month">
+                            <IconButton onClick={handleNextMonth} size="small" aria-label="View next month">
                                 <ChevronRightIcon />
                             </IconButton>
                         </Box>
@@ -504,8 +493,12 @@ export const AdminDashboard: React.FC = () => {
                             gridTemplateColumns: 'repeat(2, 1fr)',
                             gap: { xs: 2, md: 2 }
                         }}>
-                            <Box
+                             <Box
                                 onClick={() => navigate('/admin/clients')}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Add a new client"
+                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/clients')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
                                     borderRadius: 3.5,
@@ -541,8 +534,12 @@ export const AdminDashboard: React.FC = () => {
                                 </Box>
                             </Box>
 
-                            <Box
+                             <Box
                                 onClick={() => navigate('/admin/reminders')}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Go to reminders"
+                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/reminders')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
                                     borderRadius: 3.5,
@@ -579,8 +576,12 @@ export const AdminDashboard: React.FC = () => {
                             </Box>
 
                             {/* Upload Action */}
-                            <Box
+                             <Box
                                 onClick={() => navigate('/admin/upload')}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Upload files"
+                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/upload')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
                                     borderRadius: 3.5,
@@ -617,8 +618,12 @@ export const AdminDashboard: React.FC = () => {
                             </Box>
 
                             {/* Invoice Action */}
-                            <Box
+                             <Box
                                 onClick={() => navigate('/admin/billing')}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Go to billing"
+                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/billing')}
                                 sx={{
                                     p: { xs: 2, md: 2 },
                                     borderRadius: 3.5,
