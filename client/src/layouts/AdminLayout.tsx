@@ -1,35 +1,27 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
-import Avatar from '@mui/material/Avatar';
-import Collapse from '@mui/material/Collapse';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import UploadIcon from '@mui/icons-material/CloudUpload';
-import FolderIcon from '@mui/icons-material/Folder';
-import ReminderIcon from '@mui/icons-material/NotificationsActive';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import MenuIcon from '@mui/icons-material/Menu';
-import ReportsIcon from '@mui/icons-material/Assessment';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import BusinessIcon from '@mui/icons-material/Business';
-import PersonIcon from '@mui/icons-material/Person';
-import GppGoodIcon from '@mui/icons-material/GppGood';
+import {
+    Box, Drawer, AppBar, Toolbar, List, Typography, IconButton, 
+    ListItem, ListItemButton, ListItemIcon, ListItemText, 
+    useMediaQuery, Avatar, Collapse, useTheme
+} from '@mui/material';
+import {
+    Dashboard as DashboardIcon,
+    People as PeopleIcon,
+    CloudUpload as UploadIcon,
+    Folder as FolderIcon,
+    NotificationsActive as ReminderIcon,
+    Receipt as ReceiptIcon,
+    Menu as MenuIcon,
+    Assessment as ReportsIcon,
+    Inventory as InventoryIcon,
+    Assignment as AssignmentIcon,
+    ExpandLess,
+    ExpandMore,
+    Business as BusinessIcon,
+    Person as PersonIcon,
+    GppGood as GppGoodIcon
+} from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 import AccountMenu from '../components/common/AccountMenu';
