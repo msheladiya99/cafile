@@ -31,7 +31,7 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600,
-    sourcemap: false,
+    sourcemap: true,
   },
   esbuild: {
     drop: ['console', 'debugger'],
