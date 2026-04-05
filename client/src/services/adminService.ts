@@ -3,6 +3,12 @@ import type { Client, CreateClientData, CreateClientResponse, FileData, User } f
 
 export type { Client, CreateClientData, CreateClientResponse, FileData };
 
+export interface DashboardStats {
+    clientCount: number;
+    reminders: unknown[];
+    [key: string]: unknown;
+}
+
 export const adminService = {
     createClient: async (data: CreateClientData): Promise<CreateClientResponse> => {
         const response = await api.post('/admin/create-client', data);
@@ -180,6 +186,10 @@ export const adminService = {
     },
     getSubMasters: async (): Promise<{ _id: string; name: string }[]> => {
         const response = await api.get('/admin/sub-master');
+        return response.data;
+    },
+    getDashboardStats: async (): Promise<DashboardStats> => {
+        const response = await api.get('/admin/dashboard');
         return response.data;
     },
 };

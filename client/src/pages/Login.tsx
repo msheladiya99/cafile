@@ -9,6 +9,7 @@ import {
     Checkbox,
     FormControlLabel,
     Link,
+    CircularProgress,
 } from '@mui/material';
 import { Building2, Shield, Users, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,11 +23,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import { getSubdomain } from '../utils/subdomain';
-import { CommonButton } from '../components/common/UIComponents';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, logout: contextLogout } = useAuth();
     const queryClient = useQueryClient();
     const subdomain = getSubdomain();
 
@@ -65,12 +65,21 @@ export const Login: React.FC = () => {
 
         try {
             const data = await authService.login({ username, password });
+            
+             // 1. Check subdomain BEFORE updating context state
+            if (!subdomain && data.user.role !== 'SUPER_ADMIN') {
+                setError('Staff login is only available through your firm\'s unique subdomain.');
+                contextLogout();
+                setLoading(false);
+                return;
+            }
+
+            // 2. Clear old cache and update global auth state
+            queryClient.clear();
             login(data.token, data.user);
 
-            queryClient.clear();
-
+            // 3. Background prefetching (don't block navigation)
             const prefetchPromises: Promise<unknown>[] = [];
-
              if (data.user.role === 'SUPER_ADMIN') {
                 setLoadingMessage('Fetching global analytics...');
                 prefetchPromises.push(queryClient.prefetchQuery({
@@ -86,34 +95,18 @@ export const Login: React.FC = () => {
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['settings'], queryFn: settingsService.getSettings }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['clients'], queryFn: adminService.getClients }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['upcoming-reminders'], queryFn: reminderService.getUpcomingReminders }));
+                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['admin-dashboard-stats'], queryFn: adminService.getDashboardStats }));
             } else if (data.user.role === 'CLIENT') {
                 setLoadingMessage('Accessing client portal...');
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['firm'], queryFn: firmService.getFirm }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-stats'], queryFn: clientService.getStats }));
                 prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-reminders'], queryFn: clientService.getReminders }));
             }
+            
+            // Start prefetching in background
+            Promise.all(prefetchPromises).catch(err => console.error('Prefetch error:', err));
 
-            const delayPromise = new Promise(resolve => setTimeout(resolve, 600));
-
-            const preloadComponent = () => {
-                if (data.user.role === 'SUPER_ADMIN') {
-                    import('../pages/super-admin/Dashboard');
-                } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
-                    import('../pages/admin/Dashboard');
-                } else {
-                    import('../pages/client/Dashboard');
-                }
-            };
-            preloadComponent();
-
-            await Promise.all([...prefetchPromises, delayPromise]);
-
-            if (!subdomain && data.user.role !== 'SUPER_ADMIN') {
-                setError('Staff login is only available through your firm\'s unique subdomain.');
-                authService.logout();
-                return;
-            }
-
+            // 4. Instant navigation - AppRoutes will handle most of this via context, but explicit navigate ensures it
             if (data.user.role === 'SUPER_ADMIN') {
                 navigate('/super-admin/dashboard');
             } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
