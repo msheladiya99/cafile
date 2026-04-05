@@ -121,7 +121,7 @@ export const Form108: React.FC = () => {
                             disabled={isLoading}
                             startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <CalculateIcon />}
                             fullWidth
-                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', py: 1, borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#5a6fd6' } }}
+                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', py: 1, borderRadius: '8px', boxShadow: 'none' }}
                         >
                             {isLoading ? 'Calculating...' : 'Calculate'}
                         </Button>

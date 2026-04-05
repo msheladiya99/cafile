@@ -5,7 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['pdfjs-dist'],
+    include: [
+      'pdfjs-dist',
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'lucide-react'
+    ],
   },
   build: {
     commonjsOptions: {
