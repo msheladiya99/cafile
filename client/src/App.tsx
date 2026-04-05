@@ -11,15 +11,15 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import WhatsAppButton from './components/WhatsAppButton';
 
-// Core layouts and pages
-import { Login } from './pages/Login';
-import { AdminLayout } from './layouts/AdminLayout';
-import { AdminDashboard } from './pages/admin/Dashboard';
+// Lazy load core pages
+const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
+const AdminLayout = lazy(() => import('./layouts/AdminLayout').then(module => ({ default: module.AdminLayout })));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(module => ({ default: module.AdminDashboard })));
 
 // Lazy load other layouts and secondary pages
-// Secondary layouts - kept as lazy if they are rarely the first landing page
-import { ClientLayout } from './layouts/ClientLayout';
-import { ClientDashboard } from './pages/client/Dashboard';
+// Lazy load other layouts and secondary pages
+const ClientLayout = lazy(() => import('./layouts/ClientLayout').then(module => ({ default: module.ClientLayout })));
+const ClientDashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.ClientDashboard })));
 const SuperAdminLayout = lazy(() => import('./layouts/SuperAdminLayout').then(module => ({ default: module.SuperAdminLayout })));
 
 // Lazy load route pages
@@ -68,11 +68,11 @@ const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ de
 const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(module => ({ default: module.DSCManagement })));
 
 // Main Entry Pages
-import { LandingPage } from './pages/LandingPage';
-import GSTSoftwarePage from './pages/seo/GSTSoftwarePage';
-import ITRSoftwarePage from './pages/seo/ITRSoftwarePage';
-import CAPracticeManagementPage from './pages/seo/CAPracticeManagementPage';
-import PricingPage from './pages/PricingPage';
+const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
+const GSTSoftwarePage = lazy(() => import('./pages/seo/GSTSoftwarePage'));
+const ITRSoftwarePage = lazy(() => import('./pages/seo/ITRSoftwarePage'));
+const CAPracticeManagementPage = lazy(() => import('./pages/seo/CAPracticeManagementPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // Super Admin & Company Pages
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));

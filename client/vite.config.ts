@@ -20,18 +20,13 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split MUI core and icons separately — icons alone are ~2MB
-          'vendor-mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'vendor-mui-icons': ['@mui/icons-material'],
-          // Router and helmet are needed on first paint
-          'vendor-router': ['react-router-dom', 'react-helmet-async'],
-          // Data fetching libraries
-          'vendor-query': ['@tanstack/react-query', 'axios'],
-          // Animation library (not needed on login)
-          'vendor-motion': ['framer-motion'],
-          // PDF viewer loaded only on file pages
-          'vendor-pdf': ['pdfjs-dist'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@mui/icons-material')) return 'vendor-mui-icons';
+            if (id.includes('pdfjs-dist')) return 'vendor-pdf';
+            // Let everything else be handled by Vite's automatic chunking 
+            // for better tree-shaking efficacy on the initial bundle.
+          }
         },
       },
     },
