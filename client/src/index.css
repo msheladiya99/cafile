@@ -1,4 +1,4 @@
-@import "@fontsource-variable/inter";
+/* Fonts are now loaded via high-priority <link> in index.html to avoid critical path request chaining */
 
 * {
   margin: 0;
