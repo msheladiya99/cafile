@@ -830,29 +830,46 @@ export const Billing: React.FC = () => {
     return (
         <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 2, sm: 3 } }}>
             <Paper elevation={0} sx={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)', mb: 3 }}>
-                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ 
+                    bgcolor: '#ffffff', 
+                    borderBottom: '1px solid #e2e8f0', 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2.5, 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: 2
+                }}>
                     <Box>
-                        <Typography variant="h5" fontWeight="600">Billing & Invoicing</Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                            Manage your client invoices, services, and track payments efficiently.
+                        <Typography variant="h5" fontWeight="800" sx={{ color: '#1e293b', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>Billing & Invoicing</Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                            Manage invoices, services, and track payments efficiently.
                         </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1.5, 
+                        width: { xs: '100%', sm: 'auto' },
+                        '& > button': { flex: { xs: 1, sm: 'initial' } }
+                    }}>
                         <CommonButton
-                            variant="contained"
+                            variant="outlined"
                             size="small"
-                            startIcon={<AddIcon />}
-                            onClick={() => setInvoiceDialogOpen(true)}
+                            startIcon={<ServiceIcon />}
+                            onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
+                            sx={{ borderRadius: '12px', py: 1 }}
                         >
-                            New Invoice
+                            Services
                         </CommonButton>
                         <CommonButton
                             variant="contained"
                             size="small"
                             startIcon={<AddIcon />}
-                            onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
+                            onClick={() => setInvoiceDialogOpen(true)}
+                            sx={{ borderRadius: '12px', py: 1 }}
                         >
-                            Add Service
+                            New Invoice
                         </CommonButton>
                     </Box>
                 </Box>
@@ -866,30 +883,32 @@ export const Billing: React.FC = () => {
                     { title: 'Pending Payments', value: `₹${pendingAmount.toLocaleString()}`, color: '#ef5350', icon: <DeleteIcon sx={{ opacity: 0.8 }} /> },
                     { title: 'Active Services', value: activeServices, color: '#66bb6a', icon: <ServiceIcon sx={{ opacity: 0.8 }} /> },
                 ].map((stat, index) => (
-                    <Grid size={{ xs: 12, sm: 4 }} key={index}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                         <Paper sx={{
-                            p: 3,
+                            p: { xs: 2.5, md: 3 },
                             borderRadius: 4,
                             boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                             background: '#fff',
-                            transition: 'transform 0.2s',
-                            '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 25px rgba(0,0,0,0.08)' }
+                            border: '1px solid #f1f5f9',
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 30px rgba(0,0,0,0.1)', borderColor: alpha(stat.color, 0.3) }
                         }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                <Box sx={{ width: '100%' }}>
-                                    <Typography variant="subtitle2" color="text.secondary" fontWeight={600} gutterBottom>
-                                        {stat.title.toUpperCase()}
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ letterSpacing: 1, display: 'block', mb: 0.5 }}>
+                                        {stat.title}
                                     </Typography>
-                                    <Typography variant="h4" fontWeight={700} sx={{ color: '#2c3e50' }}>
-                                        {isLoading ? <Skeleton width="60%" /> : stat.value}
+                                    <Typography variant="h4" fontWeight={800} sx={{ color: '#1e293b', fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
+                                        {isLoading ? <Skeleton width={80} /> : stat.value}
                                     </Typography>
                                 </Box>
                                 <Box sx={{
                                     p: 1.5,
-                                    borderRadius: 3,
-                                    bgcolor: `${stat.color}15`,
+                                    borderRadius: '20px',
+                                    bgcolor: alpha(stat.color, 0.1),
                                     color: stat.color,
-                                    flexShrink: 0
+                                    display: 'flex',
+                                    '& svg': { fontSize: { xs: 24, md: 28 } }
                                 }}>
                                     {stat.icon}
                                 </Box>
@@ -905,23 +924,24 @@ export const Billing: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: { xs: 'stretch', md: 'center' },
                 mb: 3,
-                gap: 2
+                gap: 2.5
             }}>
                 <Tabs
                     value={activeTab}
                     onChange={(_: React.SyntheticEvent, val: number) => setActiveTab(val)}
-                    variant="standard"
+                    variant={isMobile ? "fullWidth" : "standard"}
                     sx={{
                         width: { xs: '100%', md: 'auto' },
                         borderBottom: { xs: 1, md: 'none' },
                         borderColor: { xs: 'divider', md: 'transparent' },
                         '& .MuiTab-root': {
-                            fontWeight: 600,
+                            fontWeight: 700,
                             textTransform: 'none',
-                            fontSize: '1rem',
+                            fontSize: { xs: '0.9rem', md: '1rem' },
                             minWidth: { xs: 'auto', md: 100 },
                             mr: { xs: 0, md: 2 },
                             flex: { xs: 1, md: 'none' },
+                            py: 1.5
                         },
                         '& .Mui-selected': { color: '#667eea' },
                         '& .MuiTabs-indicator': { backgroundColor: '#667eea', height: 3, borderRadius: 3 }
@@ -931,7 +951,12 @@ export const Billing: React.FC = () => {
                     <Tab label="Services Library" />
                 </Tabs>
 
-                <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 1.5, 
+                    width: { xs: '100%', md: 'auto' } 
+                }}>
                     <CommonButton
                         fullWidth
                         variant="outlined"
@@ -939,9 +964,11 @@ export const Billing: React.FC = () => {
                         onClick={() => { setEditingService(null); setServiceDialogOpen(true); }}
                         sx={{
                             borderRadius: '12px',
-                            borderColor: '#e0e0e0',
-                            color: 'text.primary',
-                            '&:hover': { borderColor: '#bdbdbd', bgcolor: '#f5f5f5' },
+                            borderColor: '#e2e8f0',
+                            color: '#475569',
+                            fontWeight: 600,
+                            py: { xs: 1.2, sm: 1 },
+                            '&:hover': { borderColor: '#cbd5e1', bgcolor: '#f8fafc' },
                             whiteSpace: 'nowrap'
                         }}
                     >
@@ -952,7 +979,13 @@ export const Billing: React.FC = () => {
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setInvoiceDialogOpen(true)}
-                        sx={{ whiteSpace: 'nowrap' }}
+                        sx={{ 
+                            borderRadius: '12px',
+                            fontWeight: 600,
+                            py: { xs: 1.2, sm: 1 },
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)' 
+                        }}
                     >
                         New Invoice
                     </CommonButton>
@@ -969,10 +1002,21 @@ export const Billing: React.FC = () => {
                     isMobile ? (
                         <Box sx={{ p: 2, bgcolor: '#f8fafc' }}>
                             {isLoading ? (
-                                [1, 2, 3].map((i) => <Skeleton key={i} height={150} sx={{ mb: 2, borderRadius: 3 }} />)
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {[1, 2, 3].map((i) => <Skeleton key={i} height={150} sx={{ borderRadius: 3 }} />)}
+                                </Box>
                             ) : invoices.length === 0 ? (
-                                <Box display="flex" flexDirection="column" alignItems="center" py={4}>
-                                    <Typography color="text.secondary" variant="subtitle1">No invoices found</Typography>
+                                <Box textAlign="center" py={8} px={2}>
+                                    <Box sx={{ 
+                                        width: 64, height: 64, borderRadius: '50%', bgcolor: '#f1f5f9', 
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 
+                                    }}>
+                                        <PaymentIcon sx={{ fontSize: 32, color: '#94a3b8' }} />
+                                    </Box>
+                                    <Typography variant="h6" fontWeight={700} color="#334155">No Invoices Found</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 240, mx: 'auto', mt: 0.5 }}>
+                                        You haven't generated any invoices yet. Start by creating one to track your billing.
+                                    </Typography>
                                 </Box>
                             ) : (
                                 invoices.map((inv) => (
@@ -1038,15 +1082,26 @@ export const Billing: React.FC = () => {
                                     {isLoading ? (
                                         [1, 2, 3, 4, 5].map((i) => (
                                             <TableRow key={i}>
-                                                <TableCell colSpan={9}><Skeleton height={40} /></TableCell>
+                                                <TableCell colSpan={10}><Skeleton height={40} /></TableCell>
                                             </TableRow>
                                         ))
                                     ) : invoices.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
-                                                <Box display="flex" flexDirection="column" alignItems="center">
-                                                    <Typography color="text.secondary" variant="h6">No invoices found</Typography>
-                                                    <Typography color="text.disabled" variant="body2">Create your first invoice to get started</Typography>
+                                            <TableCell colSpan={10} align="center" sx={{ py: 12 }}>
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                    <Box sx={{ 
+                                                        width: 80, height: 80, borderRadius: '50%', bgcolor: '#f8fafc', 
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 
+                                                    }}>
+                                                        <PaymentIcon sx={{ fontSize: 40, color: '#e2e8f0' }} />
+                                                    </Box>
+                                                    <Typography variant="h5" fontWeight={700} color="#475569">No billing records yet</Typography>
+                                                    <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 400 }}>
+                                                        Stay organized by creating and tracking professional invoices for your clients.
+                                                    </Typography>
+                                                    <CommonButton variant="contained" startIcon={<AddIcon />} onClick={() => setInvoiceDialogOpen(true)} sx={{ mt: 3, borderRadius: '12px' }}>
+                                                        Create First Invoice
+                                                    </CommonButton>
                                                 </Box>
                                             </TableCell>
                                         </TableRow>

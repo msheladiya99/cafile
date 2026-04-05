@@ -64,26 +64,28 @@ const StatCard = ({ title, count, icon, color, gradient, subtitle, onClick }: St
         transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
         '&:hover': onClick ? { transform: 'translateY(-4px)', boxShadow: `0 12px 35px ${color}30`, border: `1.5px solid ${color}60` } : {},
     }}>
-        <CardContent sx={{ p: 2.5 }}>
+    <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
             <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                 <Box>
-                    <Typography variant="caption" sx={{ color: `${color}`, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: '0.68rem' }}>
+                    <Typography variant="caption" sx={{ color: `${color}`, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', fontSize: { xs: '0.62rem', sm: '0.68rem' } }}>
                         {title}
                     </Typography>
-                    <Typography variant="h3" fontWeight={800} sx={{ color: gradient ? '#fff' : '#1e293b', lineHeight: 1.1, mt: 0.5 }}>
+                    <Typography variant="h3" fontWeight={800} sx={{ color: gradient ? '#fff' : '#1e293b', lineHeight: 1.1, mt: 0.5, fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' } }}>
                         {count}
                     </Typography>
                     {subtitle && (
-                        <Typography variant="caption" sx={{ color: `${color}99`, mt: 0.5, display: 'block' }}>{subtitle}</Typography>
+                        <Typography variant="caption" sx={{ color: `${color}99`, mt: 0.5, display: 'block', fontSize: '0.6rem' }}>{subtitle}</Typography>
                     )}
                 </Box>
                 <Avatar sx={{
                     bgcolor: gradient ? 'rgba(255,255,255,0.25)' : `${color}20`,
                     color: gradient ? '#fff' : color,
-                    width: 48, height: 48,
+                    width: { xs: 32, sm: 40, md: 48 }, height: { xs: 32, sm: 40, md: 48 },
                     boxShadow: `0 4px 14px ${color}40`,
                 }}>
-                    {icon}
+                    {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ sx?: object }>, { 
+                        sx: { fontSize: { xs: 18, sm: 22, md: 24 } } 
+                    }) : icon}
                 </Avatar>
             </Box>
         </CardContent>
@@ -105,8 +107,8 @@ const NavTile = ({ label, path, icon, color, badge }: { label: string; path: str
                     <span />
                 </Badge>
             )}
-            <Box mb={0.5} sx={{ fontSize: 24 }}>{icon}</Box>
-            <Typography variant="caption" fontWeight={700} display="block" sx={{ fontSize: '0.72rem' }}>{label}</Typography>
+            <Box mb={0.5} sx={{ fontSize: { xs: 20, md: 24 } }}>{icon}</Box>
+            <Typography variant="caption" fontWeight={700} display="block" sx={{ fontSize: { xs: '0.65rem', sm: '0.72rem' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</Typography>
         </Box>
     );
 };
@@ -199,20 +201,42 @@ export const TaskDashboard: React.FC = () => {
         <Box sx={{ p: { xs: 1.5, md: 3 }, bgcolor: '#f0f2f8', minHeight: '100vh' }}>
 
             {/* ── Header ── */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between', 
+                alignItems: { xs: 'flex-start', sm: 'center' }, 
+                mb: 3, 
+                gap: 2.5 
+            }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={900} sx={{ 
-                        color: '#1e293b',
-                        lineHeight: 1.2,
-                    }}>
+                    <Typography 
+                        variant="h4" 
+                        fontWeight={900} 
+                        sx={{ 
+                            color: '#1e293b',
+                            lineHeight: 1.2,
+                            fontSize: { xs: '1.75rem', sm: '2.125rem' }
+                        }}
+                    >
                         Task Dashboard
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mt={0.25}>{today}</Typography>
                 </Box>
-                <Box display="flex" gap={1.5} flexWrap="wrap">
+                <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1.5, 
+                    width: { xs: '100%', sm: 'auto' },
+                    justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                    flexWrap: 'nowrap',
+                    overflowX: 'auto',
+                    pb: { xs: 1, sm: 0 }, // Add padding for scrollbar on mobile if needed
+                    '::-webkit-scrollbar': { display: 'none' } // Hide scrollbar for cleaner look
+                }}>
                     <Tooltip title="Refresh data">
                         <IconButton onClick={handleRefresh} sx={{
                             bgcolor: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                            flexShrink: 0,
                             '&:hover': { bgcolor: '#f0f0ff' },
                             animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
                             '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } }
@@ -220,11 +244,30 @@ export const TaskDashboard: React.FC = () => {
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
-                    <CommonButton variant="outlined" onClick={() => navigate('/admin/tasks/approval')} startIcon={<ApprovalIcon />}
-                        sx={{ borderColor: '#f59e0b', color: '#f59e0b', '&:hover': { borderColor: '#d97706', bgcolor: '#fffbeb' } }}>
+                    <CommonButton 
+                        variant="outlined" 
+                        onClick={() => navigate('/admin/tasks/approval')} 
+                        startIcon={<ApprovalIcon />}
+                        sx={{ 
+                            borderColor: '#f59e0b', 
+                            color: '#f59e0b', 
+                            flexShrink: 0,
+                            whiteSpace: 'nowrap',
+                            minWidth: 'auto',
+                            '&:hover': { borderColor: '#d97706', bgcolor: '#fffbeb' } 
+                        }}
+                    >
                         Approvals {stats.pendingApproval > 0 && <Chip label={stats.pendingApproval} size="small" sx={{ ml: 0.5, bgcolor: '#f59e0b', color: '#fff', height: 18, '& .MuiChip-label': { px: 0.75, py: 0, fontSize: '0.7rem', fontWeight: 700 } }} />}
                     </CommonButton>
-                    <CommonButton onClick={() => navigate('/admin/tasks/ongoing')} startIcon={<ProgressIcon />}>
+                    <CommonButton 
+                        onClick={() => navigate('/admin/tasks/ongoing')} 
+                        startIcon={<ProgressIcon />}
+                        sx={{ 
+                            flexShrink: 0,
+                            whiteSpace: 'nowrap',
+                            minWidth: 'auto'
+                        }}
+                    >
                         View Tasks
                     </CommonButton>
                 </Box>
@@ -302,7 +345,7 @@ export const TaskDashboard: React.FC = () => {
 
                 {/* Pie Chart */}
                 <Grid size={{ xs: 12, md: 5 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, height: '100%', minHeight: 320 }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, height: '100%', minHeight: { xs: 280, sm: 320 } }}>
                         <Typography variant="subtitle1" fontWeight={800} mb={2}>Task Status Distribution</Typography>
                         {pieData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={260}>
@@ -325,7 +368,7 @@ export const TaskDashboard: React.FC = () => {
 
                 {/* Priority Chart */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, height: '100%', minHeight: 320 }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, height: '100%', minHeight: { xs: 260, sm: 320 } }}>
                         <Typography variant="subtitle1" fontWeight={800} mb={2}>Priority Breakdown</Typography>
                         <ResponsiveContainer width="100%" height={260}>
                             <BarChart data={priorityData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
@@ -349,7 +392,7 @@ export const TaskDashboard: React.FC = () => {
                 {/* Upcoming this week */}
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Paper sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
-                        <Box sx={{ p: 2, background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ p: { xs: 1.5, sm: 2 }, background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box display="flex" alignItems="center" gap={1}>
                                 <CalendarIcon fontSize="small" />
                                 <Typography fontWeight={700}>Upcoming (7 Days)</Typography>
@@ -395,7 +438,7 @@ export const TaskDashboard: React.FC = () => {
                 {/* Overdue Tasks */}
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Paper sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
-                        <Box sx={{ p: 2, background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ p: { xs: 1.5, sm: 2 }, background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box display="flex" alignItems="center" gap={1}>
                                 <OverdueIcon fontSize="small" />
                                 <Typography fontWeight={700}>Overdue Tasks</Typography>
