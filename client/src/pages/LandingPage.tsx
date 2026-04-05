@@ -345,7 +345,7 @@ export const LandingPage = () => {
         .lp-pricing-btn-white { width: 100%; border: none; border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: #fff; color: #7c3aed; transition: opacity 0.2s; }
         .lp-pricing-btn-white:hover { opacity: 0.9; }
         nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-bottom: none; }
-        .lp-footer-link { color: #9ca3af; font-size: 14px; background: none; border: none; cursor: pointer; padding: 2px 0; transition: color 0.2s; }
+        .lp-footer-link { color: #9ca3af; font-size: 14px; background: none; border: none; cursor: pointer; padding: 2px 0; transition: color 0.2s; text-align: inherit; width: 100%; display: block; }
         .lp-footer-link:hover { color: #7c3aed; }
         @media (max-width: 768px) {
           .lp-grid-3 { grid-template-columns: 1fr !important; }
@@ -360,9 +360,11 @@ export const LandingPage = () => {
           .lp-nav-desktop { display: none !important; }
           .lp-nav-mobile { display: flex !important; margin-left: auto; }
           .mobile-menu-card { max-width: 320px !important; }
-          .lp-footer-grid { grid-template-columns: 1fr !important; gap: 48px !important; text-align: center !important; }
-          .lp-footer-logo-box { justify-content: center !important; }
-          .lp-footer-desc { margin: 0 auto !important; }
+          .lp-footer-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 40px !important; text-align: left !important; }
+          .lp-footer-grid > :first-of-type { grid-column: span 2 !important; margin-bottom: 8px !important; }
+          .lp-footer-contact { grid-column: span 2 !important; margin-top: 10px !important; }
+          .lp-footer-logo-box { justify-content: flex-start !important; }
+          .lp-footer-desc { margin: 0 !important; }
         }
         .nav-item-active { background: rgba(0,0,0,0.03); border-radius: 12px; }
       `}</style>
@@ -916,13 +918,13 @@ export const LandingPage = () => {
                 </div>
               ))}
             </div>
-            <div>
+            <div className="lp-footer-contact">
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Contact</h4>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
-                <MailIcon /><span style={{ fontSize: 14 }}>support@mycafile.in</span>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14, color: '#9ca3af' }}>
+                <MailIcon size={18} /><span style={{ fontSize: 14 }}>support@mycafile.in</span>
               </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <PhoneIcon /><span style={{ fontSize: 14 }}>+91 9537994439</span>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: '#9ca3af' }}>
+                <PhoneIcon size={18} /><span style={{ fontSize: 14 }}>+91 9537994439</span>
               </div>
             </div>
           </div>
