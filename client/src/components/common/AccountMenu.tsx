@@ -18,7 +18,9 @@ import {
     LogoutOutlined as LogoutIcon,
     Star as StarIcon,
     ExtensionOutlined as IntegrationsIcon,
-    GroupsOutlined as CommunityIcon
+    GroupsOutlined as CommunityIcon,
+    MonetizationOnOutlined as PlansIcon,
+    CreditCardOutlined as BillingIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -178,6 +180,24 @@ const AccountMenu: React.FC<AccountMenuProps> = ({
                     </ListItemIcon>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>Settings</Typography>
                 </MenuItem>
+
+                {(!user?.role || user?.role === 'ADMIN') && (
+                    <>
+                        <MenuItem onClick={() => { onClose(); navigate('/pricing'); }} sx={{ borderRadius: '12px', py: 1 }}>
+                            <ListItemIcon>
+                                <PlansIcon fontSize="small" />
+                            </ListItemIcon>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>Plans</Typography>
+                        </MenuItem>
+                        <MenuItem onClick={() => { onClose(); navigate('/admin/billing'); }} sx={{ borderRadius: '12px', py: 1 }}>
+                            <ListItemIcon>
+                                <BillingIcon fontSize="small" />
+                            </ListItemIcon>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>Billing</Typography>
+                        </MenuItem>
+                    </>
+                )}
+
 
                 <MenuItem onClick={() => { onClose(); toast.success('Community feature coming soon!'); }} sx={{ borderRadius: '12px', py: 1 }}>
                     <ListItemIcon>

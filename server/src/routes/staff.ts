@@ -157,7 +157,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
         const { Plan } = await import('../models/Plan');
         const plan = await Plan.findOne({ name: firm.plan });
-        const staffLimit = plan ? plan.staffLimit : 5;
+        const staffLimit = plan ? plan.limits.staff : 5;
 
         // General staff limit
         if (staffLimit > 0 && staffLimit < 99999) {
@@ -168,7 +168,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
 
             if (currentStaffCount >= staffLimit) {
-                res.status(400).json({ message: `Staff limit reached for your ${plan?.displayName || firm.plan} plan.` });
+                res.status(400).json({ message: `Staff limit reached for your ${plan?.name || firm.plan} plan.` });
                 return;
             }
         }

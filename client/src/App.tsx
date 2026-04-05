@@ -71,6 +71,7 @@ import { LandingPage } from './pages/LandingPage';
 import GSTSoftwarePage from './pages/seo/GSTSoftwarePage';
 import ITRSoftwarePage from './pages/seo/ITRSoftwarePage';
 import CAPracticeManagementPage from './pages/seo/CAPracticeManagementPage';
+import PricingPage from './pages/PricingPage';
 
 // Super Admin & Company Pages
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
@@ -240,6 +241,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/gst-software-india" element={<GSTSoftwarePage />} />
         <Route path="/itr-filing-software" element={<ITRSoftwarePage />} />
         <Route path="/ca-practice-management" element={<CAPracticeManagementPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/contact" element={<ContactPage />} />

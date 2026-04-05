@@ -19,7 +19,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import UploadIcon from '@mui/icons-material/CloudUpload';
 import FolderIcon from '@mui/icons-material/Folder';
-import AccountBalance from '@mui/icons-material/AccountBalance';
 import ReminderIcon from '@mui/icons-material/NotificationsActive';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -198,8 +197,8 @@ export const AdminLayout: React.FC = () => {
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             {/* Sidebar Header (Logo / Brand) */}
-            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center' }}>
-                <AccountBalance sx={{ mr: 1.5, color: '#1a1a1a' }} />
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
+                <img src="/faviconca.webp" alt="Logo" style={{ width: 32, height: 32, marginRight: '12px', objectFit: 'contain' }} />
                 <Typography variant="h6" noWrap sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1a1a1a' }}>
                     {companyName}
                 </Typography>
@@ -390,7 +389,7 @@ export const AdminLayout: React.FC = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <AccountBalance sx={{ color: '#1a1a1a', ml: 0.5 }} />
+                    <img src="/faviconca.webp" alt="Logo" style={{ width: 28, height: 28, marginLeft: '8px', objectFit: 'contain' }} />
                 </Toolbar>
             </AppBar>
 
