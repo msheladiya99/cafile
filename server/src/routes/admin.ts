@@ -132,13 +132,13 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         // Enforce client limit
         const firm = await Firm.findById(firmId);
         const { Plan } = await import('../models/Plan');
-        const plan = await Plan.findOne({ name: firm?.plan });
-        const clientLimit = plan ? plan.clientLimit : 10;
+        const plan = firm?.plan ? await Plan.findOne({ name: { $regex: new RegExp(`^${firm.plan}$`, 'i') } }) : null;
+        const clientLimit = plan ? plan.limits.clients : 10;
         
         if (clientLimit > 0 && clientLimit < 99999) {
             const currentClientsCount = await Client.countDocuments({ firmId });
             if (currentClientsCount >= clientLimit) {
-                res.status(400).json({ message: `Client limit reached for your ${plan?.displayName || firm?.plan} plan. Please upgrade to add more clients.` });
+                res.status(400).json({ message: `Client limit reached for your ${plan?.name || firm?.plan} plan. Please upgrade to add more clients.` });
                 return;
             }
         }
@@ -260,8 +260,8 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
 
         const firm = await Firm.findById(firmId);
         const { Plan } = await import('../models/Plan');
-        const plan = await Plan.findOne({ name: firm?.plan });
-        const clientLimit = plan ? plan.clientLimit : 10;
+        const plan = firm?.plan ? await Plan.findOne({ name: { $regex: new RegExp(`^${firm.plan}$`, 'i') } }) : null;
+        const clientLimit = plan ? plan.limits.clients : 10;
         let currentClientsCount = await Client.countDocuments({ firmId });
 
         for (let i = 0; i < clients.length; i++) {
@@ -269,7 +269,7 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
 
             if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
                 results.failed++;
-                results.errors.push(`Row ${i + 1}: Client limit reached for your ${plan?.displayName || firm?.plan} plan`);
+                results.errors.push(`Row ${i + 1}: Client limit reached for your ${plan?.name || firm?.plan} plan`);
                 continue;
             }
 

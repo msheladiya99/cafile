@@ -28,6 +28,7 @@ import taskMasterRoutes from './routes/taskMaster';
 import taskApplicabilityRoutes from './routes/taskApplicability';
 import taskCategoryRoutes from './routes/taskCategory';
 import dscRoutes from './routes/dsc';
+import subscriptionRoutes from './routes/subscriptions';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -121,6 +122,7 @@ app.use('/api/task-master', taskMasterRoutes);
 app.use('/api/task-applicability', taskApplicabilityRoutes);
 app.use('/api/task-category', taskCategoryRoutes);
 app.use('/api/dsc', dscRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 
 // Health check
@@ -160,8 +162,11 @@ const startServer = async () => {
     }
 };
 
+import { startSubscriptionCronJob } from './utils/subscriptionCron';
+
 startServer();
 startDSCCronJob();
+startSubscriptionCronJob();
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {

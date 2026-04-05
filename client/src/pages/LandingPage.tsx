@@ -213,6 +213,7 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
 export const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [withCloud, setWithCloud] = useState(false);
 
   useEffect(() => {
     // Satisfy linter and handle fast transition
@@ -315,8 +316,8 @@ export const LandingPage = () => {
       <nav>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 22, color: '#7c3aed', letterSpacing: '-0.5px' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-              <FileIcon />
+            <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             </div>
             MyCAFile
           </div>
@@ -747,7 +748,7 @@ export const LandingPage = () => {
       <section id="pricing" style={{ padding: '112px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1024, margin: '0 auto' }}>
           {/* Header */}
-          <div style={{ textAlign: 'center', maxWidth: 672, margin: '0 auto 64px' }}>
+          <div style={{ textAlign: 'center', maxWidth: 672, margin: '0 auto 40px' }}>
             <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#7c3aed', marginBottom: 16 }}>Pricing</p>
             <h2 className="lp-section-title" style={{ marginBottom: 16 }}>Simple, transparent pricing</h2>
             <p style={{ fontSize: 18, color: '#6b7280' }}>
@@ -755,79 +756,58 @@ export const LandingPage = () => {
             </p>
           </div>
 
-          <div className="lp-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'flex-start' }}>
-            {/* Free */}
-            <div style={{ background: '#fff', border: '1px solid rgba(229,231,235,0.6)', borderRadius: 24, padding: 32, position: 'relative' }}>
-              <div style={{ marginBottom: 24 }}>
-                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#111827', marginBottom: 4 }}>Free</h3>
-                <p style={{ color: '#6b7280', fontSize: 14 }}>Get started with the basics</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
-                <span style={{ fontSize: 36, fontWeight: 800, color: '#111827' }}>₹0</span>
-                <span style={{ color: '#6b7280', fontSize: 14 }}> forever</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-                {['10 clients', 'Basic document storage', 'Email support'].map(f => (
-                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#7c3aed' }}>
-                      <CheckIcon size={12} />
-                    </div>
-                    <span style={{ fontSize: 14, color: '#374151' }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="lp-pricing-btn-outline" onClick={() => window.location.href = '/login'}>Get Started Free</button>
+          {/* Toggle Button */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 56 }}>
+            <div style={{ background: '#f3f4f6', borderRadius: 50, padding: 4, display: 'inline-flex', gap: 4 }}>
+               <button onClick={() => setWithCloud(false)} style={{ background: !withCloud ? '#fff' : 'transparent', color: !withCloud ? '#111827' : '#6b7280', padding: '10px 24px', borderRadius: 50, border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: !withCloud ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>Without Cloud</button>
+               <button onClick={() => setWithCloud(true)} style={{ background: withCloud ? '#fff' : 'transparent', color: withCloud ? '#7c3aed' : '#6b7280', padding: '10px 24px', borderRadius: 50, border: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: withCloud ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>With Cloud ☁️</button>
             </div>
+          </div>
 
-            {/* Starter - Popular */}
-            <div style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', borderRadius: 24, padding: 32, position: 'relative', transform: 'scale(1.04)', zIndex: 10, boxShadow: '0 20px 60px rgba(124,58,237,0.3)' }}>
-              <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: '#f59e0b', color: '#fff', borderRadius: 50, padding: '4px 16px', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-                <SparklesIcon /> Most Popular
-              </div>
-              <div style={{ marginBottom: 24 }}>
-                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 4 }}>Starter</h3>
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>Perfect for growing firms</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
-                <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.4)', textDecoration: 'line-through' }}>₹2,999</span>
-                <span style={{ fontSize: 36, fontWeight: 800, color: '#fff' }}>₹999</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}> /year</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-                {['100 clients', 'Unlimited documents', 'GST & IT tracking', 'Client portal', 'Priority support'].map(f => (
-                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
-                      <CheckIcon size={12} />
+          <div className="lp-pricing-grid" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 24, alignItems: 'flex-start' }}>
+            {[
+                { name: 'Starter', target: 'Get started with the basics', price: 0, interval: 'forever', features: ['10 clients', '1 staff user', 'Task Management', 'Client Management'], highlight: false, withCloud: false },
+                { name: 'Professional', target: 'For simple workflows', price: 4999, interval: '/year', features: ['300 clients', '2 staff users', 'Basic Billing', 'Limited Auto Task', 'Email Reminders'], highlight: false, withCloud: false },
+                { name: 'Enterprise', target: 'Perfect for growing firms', price: 6999, interval: '/year', features: ['1000 clients', '10 staff users', 'Full Billing System', 'Auto Task Generator', 'SMS Reminders'], highlight: true, withCloud: false },
+                { name: 'Pro Cloud', target: 'Cloud integrated tasks', price: 6499, interval: '/year', features: ['500 clients', '5 staff users', 'Cloud Storage (100GB)', 'Advanced Billing'], highlight: false, withCloud: true },
+                { name: 'Enterprise Cloud', target: 'For large corporate scale', price: 9999, interval: '/year', features: ['1000 clients', '10 staff users', 'Cloud Storage (300GB)', 'Dedicated Database'], highlight: true, withCloud: true }
+            ]
+            .filter(plan => plan.withCloud === withCloud)
+            .map(plan => (
+                <div key={plan.name} style={{ 
+                    flex: '1 1 300px', maxWidth: '340px',
+                    ...(plan.highlight ? {
+                      background: 'linear-gradient(135deg, #7c3aed, #9333ea)', borderRadius: 24, padding: 32, position: 'relative', transform: 'scale(1.04)', zIndex: 10, boxShadow: '0 20px 60px rgba(124,58,237,0.3)'
+                    } : {
+                      background: '#fff', border: '1px solid rgba(229,231,235,0.6)', borderRadius: 24, padding: 32, position: 'relative'
+                    })
+                }}>
+                  {plan.highlight && (
+                    <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: '#f59e0b', color: '#fff', borderRadius: 50, padding: '4px 16px', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                      <SparklesIcon /> Most Popular
                     </div>
-                    <span style={{ fontSize: 14, color: '#fff' }}>{f}</span>
+                  )}
+                  <div style={{ marginBottom: 24 }}>
+                    <h3 style={{ fontWeight: 700, fontSize: 20, color: plan.highlight ? '#fff' : '#111827', marginBottom: 4 }}>{plan.name}</h3>
+                    <p style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#6b7280', fontSize: 14 }}>{plan.target}</p>
                   </div>
-                ))}
-              </div>
-              <button className="lp-pricing-btn-white" onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
-            </div>
-
-            {/* Pro */}
-            <div style={{ background: '#fff', border: '1px solid rgba(229,231,235,0.6)', borderRadius: 24, padding: 32, position: 'relative' }}>
-              <div style={{ marginBottom: 24 }}>
-                <h3 style={{ fontWeight: 700, fontSize: 20, color: '#111827', marginBottom: 4 }}>Pro</h3>
-                <p style={{ color: '#6b7280', fontSize: 14 }}>For large practices</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
-                <span style={{ fontSize: 36, fontWeight: 800, color: '#111827' }}>₹2,499</span>
-                <span style={{ color: '#6b7280', fontSize: 14 }}>/year</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-                {['Unlimited clients', 'Unlimited documents', 'All features', 'Team management', 'Dedicated support', 'Custom branding'].map(f => (
-                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#7c3aed' }}>
-                      <CheckIcon size={12} />
-                    </div>
-                    <span style={{ fontSize: 14, color: '#374151' }}>{f}</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 24 }}>
+                    <span style={{ fontSize: 36, fontWeight: 800, color: plan.highlight ? '#fff' : '#111827' }}>₹{plan.price.toLocaleString()}</span>
+                    <span style={{ color: plan.highlight ? 'rgba(255,255,255,0.7)' : '#6b7280', fontSize: 14 }}> {plan.interval}</span>
                   </div>
-                ))}
-              </div>
-              <button className="lp-pricing-btn-outline" onClick={() => window.location.href = '/contact'}>Start Free Trial</button>
-            </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                    {plan.features.map(f => (
+                      <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: plan.highlight ? 'rgba(255,255,255,0.2)' : 'rgba(124,58,237,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: plan.highlight ? '#fff' : '#7c3aed' }}>
+                          <CheckIcon size={12} />
+                        </div>
+                        <span style={{ fontSize: 14, color: plan.highlight ? '#fff' : '#374151' }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button className={plan.highlight ? 'lp-pricing-btn-white' : 'lp-pricing-btn-outline'} onClick={() => window.location.href = '/login'}>{plan.price === 0 ? 'Get Started Free' : 'Choose Plan'}</button>
+                </div>
+            ))}
           </div>
         </div>
       </section>
@@ -858,8 +838,8 @@ export const LandingPage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 16 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                  <FileIcon />
+                <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                 </div>
                 MyCAFile
               </div>

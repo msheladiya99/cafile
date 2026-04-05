@@ -262,12 +262,23 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             return res.status(500).json({ message: 'Google Drive initialization failed.', error: (driveError as Error).message });
         }
 
+        let selectedPlan = await Plan.findOne({ name: planType });
+        if (!selectedPlan) {
+             selectedPlan = await Plan.findOne({ name: 'Free' }); 
+        }
+
         // 1. Save Firm in Master Database
         const firm = await Firm.create({
             firmName,
             subdomain: finalSubdomain,
             email: adminEmail,
-            plan: planType?.toLowerCase() || 'trial',
+            subscription: {
+                planId: selectedPlan?._id,
+                status: 'active',
+                startDate: new Date(),
+                // Super admin creation gives 1 year by default
+                endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+            },
             status: 'active',
             mobile: mobileNumber,
             googleDriveRootFolderId,
@@ -636,17 +647,7 @@ router.get('/security-logs', async (req, res: Response) => {
 // Plans
 router.get('/plans', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
     try {
-        let plans = await Plan.find().sort({ createdAt: 1 });
-        if (plans.length === 0) {
-            const defaultPlans = [
-                { name: 'trial', displayName: 'Trial', price: 'Free', staffLimit: 3, clientLimit: 10, storageGB: 1, tasks: 'Unlimited', isActive: true },
-                { name: 'basic', displayName: 'Basic', price: '₹999/mo', staffLimit: 5, clientLimit: 100, storageGB: 10, tasks: 'Unlimited', isActive: true },
-                { name: 'professional', displayName: 'Professional', price: '₹2,999/mo', staffLimit: 20, clientLimit: 500, storageGB: 100, tasks: 'Unlimited', isActive: true },
-                { name: 'enterprise', displayName: 'Enterprise', price: 'Custom', staffLimit: 99999, clientLimit: 99999, storageGB: 1024, tasks: 'Unlimited', isActive: true }
-            ];
-            await Plan.insertMany(defaultPlans);
-            plans = await Plan.find().sort({ createdAt: 1 });
-        }
+        const plans = await Plan.find().sort({ createdAt: 1 });
         res.json(plans);
     } catch (error) {
         console.error('Get plans error:', error);
@@ -656,9 +657,9 @@ router.get('/plans', authenticate, requireSuperAdmin, async (req: any, res: Resp
 
 router.put('/plans/:id', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
     try {
-        const { displayName, price, staffLimit, clientLimit, storageGB, tasks } = req.body;
+        const { yearlyPrice, limits, features } = req.body;
         const plan = await Plan.findByIdAndUpdate(req.params.id, {
-            displayName, price, staffLimit, clientLimit, storageGB, tasks
+            yearlyPrice, limits, features
         }, { new: true });
         if (!plan) return res.status(404).json({ message: 'Plan not found' });
         res.json(plan);

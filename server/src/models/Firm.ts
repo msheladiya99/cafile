@@ -1,10 +1,27 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IFirmSubscription {
+    planId: mongoose.Types.ObjectId;
+    status: 'active' | 'past_due' | 'unpaid' | 'cancelled' | 'expired' | 'trialing';
+    startDate: Date;
+    endDate: Date;
+    razorpaySubscriptionId?: string;
+    razorpayCustomerId?: string;
+}
+
+export interface IFirmAddon {
+    addonId: mongoose.Types.ObjectId;
+    quantity: number;
+    purchaseDate: Date;
+    expiryDate: Date;
+    razorpaySubscriptionId?: string;
+}
+
 export interface IFirm extends Document {
     firmName: string;
     subdomain: string;
     email: string;
-    plan: 'trial' | 'basic' | 'professional' | 'enterprise';
+    plan: string; // The name of the Plan (e.g. Free, Basic, Pro)
     status: 'active' | 'suspended';
     mobile?: string;
     logo?: string;
@@ -14,6 +31,11 @@ export interface IFirm extends Document {
     dbType: 'default' | 'personal';
     mongoUri?: string;
     dbName?: string;
+    
+    // SaaS Subscription System
+    subscription?: IFirmSubscription;
+    addons: IFirmAddon[];
+    
     createdAt: Date;
     updatedAt: Date;
 }
@@ -40,8 +62,7 @@ const firmSchema = new Schema<IFirm>(
         },
         plan: {
             type: String,
-            enum: ['trial', 'basic', 'professional', 'enterprise'],
-            default: 'trial'
+            default: 'Starter' // Reference to Plan.name
         },
         status: {
             type: String,
@@ -58,9 +79,8 @@ const firmSchema = new Schema<IFirm>(
         },
         maxAdmins: {
             type: Number,
-            default: 5,
-            min: 1,
-            max: 5
+            default: 1, // Defaulting to Free plan
+            min: 1
         },
         dbType: {
             type: String,
@@ -68,7 +88,28 @@ const firmSchema = new Schema<IFirm>(
             default: 'default'
         },
         mongoUri: String,
-        dbName: String
+        dbName: String,
+        
+        // SaaS Fields
+        subscription: {
+            planId: { type: Schema.Types.ObjectId, ref: 'Plan' },
+            status: { 
+                type: String, 
+                enum: ['active', 'past_due', 'unpaid', 'cancelled', 'expired', 'trialing'],
+                default: 'trialing'
+            },
+            startDate: Date,
+            endDate: Date,
+            razorpaySubscriptionId: String,
+            razorpayCustomerId: String
+        },
+        addons: [{
+            addonId: { type: Schema.Types.ObjectId, ref: 'Addon' },
+            quantity: { type: Number, default: 1 },
+            purchaseDate: { type: Date, default: Date.now },
+            expiryDate: Date,
+            razorpaySubscriptionId: String
+        }]
     },
     { timestamps: true }
 );
@@ -77,4 +118,3 @@ const firmSchema = new Schema<IFirm>(
 firmSchema.index({ subdomain: 1, status: 1 });
 
 export const Firm = mongoose.model<IFirm>('Firm', firmSchema);
-
