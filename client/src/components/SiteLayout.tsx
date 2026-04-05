@@ -100,8 +100,8 @@ export const SiteFooter: React.FC = () => {
                         © 2026 My CA File. All rights reserved. Made with ❤️ for CA firms in India.
                     </Typography>
                     <Stack direction="row" spacing={4}>
-                        <Typography variant="caption" onClick={() => navigate('/press')} sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Privacy Policy</Typography>
-                        <Typography variant="caption" onClick={() => navigate('/press')} sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Terms of Service</Typography>
+                        <Typography variant="caption" onClick={() => navigate('/privacy-policy')} sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Privacy Policy</Typography>
+                        <Typography variant="caption" onClick={() => navigate('/terms-of-service')} sx={{ color: '#94a3b8', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Terms of Service</Typography>
                     </Stack>
                 </Box>
             </Container>

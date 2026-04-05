@@ -199,7 +199,12 @@ export const AllTaskUpdate: React.FC = () => {
                                         <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
                                     ))}
                                 </Select>
-                                <IconButton size="small" sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#7cb342' } }}>
+                                <IconButton 
+                                    size="small" 
+                                    sx={{ bgcolor: '#8bc34a', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#7cb342' } }}
+                                    aria-label="View task details"
+                                    title="View task details"
+                                >
                                     <TaskDetailsIcon fontSize="small" />
                                 </IconButton>
                             </Box>

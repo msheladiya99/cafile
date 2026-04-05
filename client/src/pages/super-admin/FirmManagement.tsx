@@ -251,6 +251,8 @@ const FirmManagement: React.FC = () => {
                                                     size="small" 
                                                     onClick={() => navigate(`/super-admin/firms/${firm._id}`)}
                                                     sx={{ bgcolor: '#f1f5f9', color: '#1e293b', '&:hover': { bgcolor: '#e2e8f0' } }}
+                                                    aria-label="View firm details"
+                                                    title="View firm details"
                                                 >
                                                     <ViewIcon fontSize="small" />
                                                 </IconButton>
@@ -262,6 +264,8 @@ const FirmManagement: React.FC = () => {
                                                         color: firm.status === 'active' ? '#f43f5e' : '#10b981',
                                                         '&:hover': { opacity: 0.8 }
                                                     }}
+                                                    aria-label={firm.status === 'active' ? 'Suspend firm' : 'Activate firm'}
+                                                    title={firm.status === 'active' ? 'Suspend firm' : 'Activate firm'}
                                                 >
                                                     {firm.status === 'active' ? <BlockIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
                                                 </IconButton>
@@ -269,6 +273,8 @@ const FirmManagement: React.FC = () => {
                                                     size="small" 
                                                     onClick={() => handleDelete(firm._id)}
                                                     sx={{ bgcolor: '#fdf2f2', color: '#e11d48', '&:hover': { bgcolor: '#fee2e2' } }}
+                                                    aria-label="Delete firm"
+                                                    title="Delete firm"
                                                 >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>

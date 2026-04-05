@@ -191,14 +191,26 @@ export const TaskCategoryPage: React.FC = () => {
                                         />
                                     </TableCell>
                                     <TableCell align="right">
-                                        <IconButton size="small" color="primary" onClick={() => handleOpen(cat)}>
+                                        <IconButton 
+                                            size="small" 
+                                            color="primary" 
+                                            onClick={() => handleOpen(cat)}
+                                            aria-label="Edit category"
+                                            title="Edit category"
+                                        >
                                             <EditIcon fontSize="small" />
                                         </IconButton>
-                                        <IconButton size="small" color="error" onClick={() => {
-                                            if (window.confirm(`Delete category "${cat.name}"?`)) {
-                                                deleteMutation.mutate(cat._id);
-                                            }
-                                        }}>
+                                        <IconButton 
+                                            size="small" 
+                                            color="error" 
+                                            onClick={() => {
+                                                if (window.confirm(`Delete category "${cat.name}"?`)) {
+                                                    deleteMutation.mutate(cat._id);
+                                                }
+                                            }}
+                                            aria-label="Delete category"
+                                            title="Delete category"
+                                        >
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     </TableCell>

@@ -225,7 +225,13 @@ export const OngoingTask: React.FC = () => {
                                         sx={{ bgcolor: timeH > (currentTask.estimatedHours || 1) ? '#fee2e2' : '#f1f5f9', color: timeH > (currentTask.estimatedHours || 1) ? '#ef4444' : '#64748b', fontSize: '0.7rem' }} />
                                 </Box>
                             </Box>
-                            <IconButton size="small" onClick={() => setProcessingTask(null)} sx={{ color: 'text.secondary', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}>
+                            <IconButton 
+                                size="small" 
+                                onClick={() => setProcessingTask(null)} 
+                                aria-label="Close task details"
+                                title="Close task details"
+                                sx={{ color: 'text.secondary', bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }}
+                            >
                                 <CloseIcon fontSize="small" />
                             </IconButton>
                         </Box>
@@ -585,12 +591,22 @@ export const OngoingTask: React.FC = () => {
                             '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
                         }} />
                     <Tooltip title="Toggle Filters">
-                        <IconButton onClick={() => setShowFilters(s => !s)} sx={{ color: 'white', bgcolor: showFilters ? 'rgba(255,255,255,0.2)' : 'transparent' }}>
+                        <IconButton 
+                            onClick={() => setShowFilters(s => !s)} 
+                            aria-label="Toggle task filters"
+                            sx={{ color: 'white', bgcolor: showFilters ? 'rgba(255,255,255,0.2)' : 'transparent' }}
+                        >
                             <Badge badgeContent={activeFilters} color="error"><FilterIcon /></Badge>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Refresh">
-                        <IconButton onClick={() => refetch()} sx={{ color: 'white' }}><RefreshIcon /></IconButton>
+                        <IconButton 
+                            onClick={() => refetch()} 
+                            aria-label="Refresh job list"
+                            sx={{ color: 'white' }}
+                        >
+                            <RefreshIcon />
+                        </IconButton>
                     </Tooltip>
                     <CommonButton 
                         startIcon={<AddIcon />}
@@ -661,7 +677,13 @@ export const OngoingTask: React.FC = () => {
                         <ListIcon fontSize="small" sx={{ color: '#667eea' }} />
                         <Typography fontWeight={700} color="#334155">Job List ({filteredTasks.length})</Typography>
                     </Box>
-                    <IconButton size="small"><ExpandMoreIcon /></IconButton>
+                    <IconButton 
+                        size="small" 
+                        aria-label="View more details"
+                        title="View more details"
+                    >
+                        <ExpandMoreIcon />
+                    </IconButton>
                 </Box>
 
                 {isMobile ? (

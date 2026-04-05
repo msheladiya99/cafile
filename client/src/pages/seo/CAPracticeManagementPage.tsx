@@ -50,15 +50,68 @@ export const CAPracticeManagementPage: React.FC = () => {
                 <meta name="keywords" content="CA practice management software, CA office management software India, practice management for chartered accountants, best CA software India, CA firm management tool" />
                 <link rel="canonical" href="https://mycafile.in/ca-practice-management" />
                 
-                <meta property="og:type" content="article" />
+                <meta property="og:type" content="website" />
                 <meta property="og:title" content="CA Practice Management Software India | My CA File" />
                 <meta property="og:description" content="The #1 practice management software for CA firms in India. Clients, compliance, billing, and team — all in one place." />
                 <meta property="og:url" content="https://mycafile.in/ca-practice-management" />
                 <meta property="og:image" content="https://mycafile.in/og-practice.png" />
                 
-                <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:title" content="CA Practice Management Software India | My CA File" />
-                <meta property="twitter:description" content="The #1 practice management software for CA firms in India. Clients, compliance, billing, and team — all in one place." />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="CA Practice Management Software India | My CA File" />
+                <meta name="twitter:description" content="The #1 practice management software for CA firms in India. Clients, compliance, billing, and team — all in one place." />
+                <meta name="twitter:image" content="https://mycafile.in/og-practice.png" />
+
+                {/* Structured Data: FAQPage */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        "mainEntity": [
+                            {
+                                "@type": "Question",
+                                "name": "What is CA practice management software?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "CA practice management software helps Chartered Accountant firms organize their clients, compliance tasks, documents, billing, and team workflows in one place — replacing spreadsheets and fragmented tools."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Is My CA File suitable for small CA firms?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Absolutely. My CA File is designed to scale — from solo practitioners with 20 clients to large firms with partners and 1000+ clients."
+                                }
+                            }
+                        ]
+                    }
+                `}
+                </script>
+
+                {/* Structured Data: BreadcrumbList */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "CA Practice Management",
+                                "item": "https://mycafile.in/ca-practice-management"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
 
             <SiteNavbar />

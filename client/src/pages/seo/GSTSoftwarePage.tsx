@@ -42,15 +42,40 @@ export const GSTSoftwarePage: React.FC = () => {
                 <meta name="keywords" content="GST software India, GST management software for CA, GST return tracking, GSTR-1 tracker, CA GST software, GST compliance tool India" />
                 <link rel="canonical" href="https://mycafile.in/gst-software-india" />
                 
-                <meta property="og:type" content="article" />
+                <meta property="og:type" content="website" />
                 <meta property="og:title" content="GST Software for CA Firms India | My CA File" />
                 <meta property="og:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
                 <meta property="og:url" content="https://mycafile.in/gst-software-india" />
                 <meta property="og:image" content="https://mycafile.in/og-gst.png" />
                 
-                <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:title" content="GST Software for CA Firms India | My CA File" />
-                <meta property="twitter:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="GST Software for CA Firms India | My CA File" />
+                <meta name="twitter:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
+                <meta name="twitter:image" content="https://mycafile.in/og-gst.png" />
+
+                {/* Breadcrumb Schema */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "GST Software",
+                                "item": "https://mycafile.in/gst-software-india"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
 
             <SiteNavbar />

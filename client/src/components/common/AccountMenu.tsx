@@ -25,11 +25,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+import type { User } from '../../types';
+
 interface AccountMenuProps {
     anchorEl: HTMLElement | null;
     open: boolean;
     onClose: () => void;
-    user: any;
+    user: User | null;
     logout: () => void;
     remainingTime?: number;
 }
