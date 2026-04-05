@@ -4,8 +4,13 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+
+interface Plan {
+    _id: string;
+    name: string;
+}
 
 const CreateFirm: React.FC = () => {
     const navigate = useNavigate();
@@ -18,12 +23,20 @@ const CreateFirm: React.FC = () => {
         adminName: '',
         adminPassword: '',
         mobileNumber: '',
-        planType: 'Trial',
+        planType: '',
         maxAdmins: 5,
         googleDriveType: 'app' as 'app' | 'personal',
         googleDriveRootFolderId: '',
         dbType: 'default' as 'default' | 'personal',
         mongoUri: ''
+    });
+
+    const { data: plans } = useQuery<Plan[]>({
+        queryKey: ['superadmin_plans'],
+        queryFn: async () => {
+             const res = await api.get('/super-admin/plans');
+             return res.data;
+        }
     });
 
     const createMutation = useMutation({
@@ -100,8 +113,8 @@ const CreateFirm: React.FC = () => {
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField fullWidth select label="Subscription Plan"
                                 value={formData.planType} onChange={e => setFormData({ ...formData, planType: e.target.value })}>
-                                {['Trial', 'Basic', 'Professional', 'Enterprise'].map((option) => (
-                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                {plans?.map((plan) => (
+                                    <MenuItem key={plan._id} value={plan.name}>{plan.name}</MenuItem>
                                 ))}
                             </TextField>
                         </Grid>

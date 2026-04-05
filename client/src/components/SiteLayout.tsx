@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Button, Container, Typography, Stack, Divider, TextField } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { ShieldOutlined } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 export const SiteNavbar: React.FC = () => {
@@ -17,14 +16,15 @@ export const SiteNavbar: React.FC = () => {
                 role="button"
                 aria-label="My CA File - Go to homepage"
             >
-                <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px', display: 'flex' }}>
-                    <ShieldOutlined sx={{ color: 'white', fontSize: 22 }} />
+                <Box sx={{ p: 0.5, display: 'flex', alignItems: 'center' }}>
+                    <img src="/faviconca.webp" alt="Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
                 </Box>
                 <Typography variant="h6" fontWeight={900} color="#1e1b4b" sx={{ letterSpacing: -1 }}>My CA File</Typography>
             </Stack>
             <Stack direction="row" spacing={2} alignItems="center">
                 <Button variant="text" onClick={() => navigate('/')} sx={{ color: '#4b5563', fontWeight: 700, textTransform: 'none', display: { xs: 'none', sm: 'flex' } }}>Home</Button>
                 <Button variant="text" onClick={() => navigate('/ca-practice-management')} sx={{ color: '#4b5563', fontWeight: 700, textTransform: 'none', display: { xs: 'none', md: 'flex' } }}>Features</Button>
+                <Button variant="text" onClick={() => navigate('/pricing')} sx={{ color: '#4b5563', fontWeight: 700, textTransform: 'none', display: { xs: 'none', md: 'flex' } }}>Pricing</Button>
                 <Button variant="contained" onClick={() => navigate('/superadmin')}
                     sx={{ borderRadius: '10px', fontWeight: 800, textTransform: 'none', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', px: 3 }}>
                     Start Free
@@ -50,8 +50,8 @@ export const SiteFooter: React.FC = () => {
                             role="button"
                             aria-label="My CA File - Go to homepage"
                         >
-                            <Box sx={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', p: 0.8, borderRadius: '10px', display: 'flex' }}>
-                                <ShieldOutlined sx={{ color: 'white', fontSize: 20 }} />
+                            <Box sx={{ p: 0.5, display: 'flex', alignItems: 'center' }}>
+                                <img src="/faviconca.webp" alt="Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                             </Box>
                             <Typography variant="h6" fontWeight={900} color="#1e1b4b" sx={{ letterSpacing: -1 }}>My CA File</Typography>
                         </Stack>
