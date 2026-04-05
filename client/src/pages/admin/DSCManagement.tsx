@@ -235,7 +235,7 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
     }
 
     return (
-        <Dialog open onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, maxHeight: '92vh' } }}>
+        <Dialog open onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 }, maxHeight: '92vh', m: { xs: 0, sm: 2 } } }}>
             <DialogTitle sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 700, py: 2 }}>
                 {isEdit ? '✏️ Edit DSC' : '➕ Add New DSC'}
                 <Typography variant="body2" sx={{ opacity: 0.8, fontWeight: 400, mt: 0.25 }}>Digital Signature Certificate</Typography>
@@ -396,23 +396,41 @@ export const DSCManagement: React.FC = () => {
                 bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
                 color: '#1e293b', borderRadius: '0 0 16px 16px', px: 3, py: 2.5, mb: 3
             }}>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'flex-start', sm: 'center' }, 
+                    gap: 2.5 
+                }}>
                     <Box>
-                        <Typography variant="h5" fontWeight={800} display="flex" alignItems="center" gap={1}>
-                            <GppGoodIcon sx={{ fontSize: 28 }} /> DSC Management
+                        <Typography 
+                            variant="h5" 
+                            fontWeight={800} 
+                            display="flex" 
+                            alignItems="center" 
+                            gap={1}
+                            sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+                        >
+                            <GppGoodIcon sx={{ fontSize: { xs: 24, sm: 28 } }} /> DSC Management
                         </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
+                        <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             Digital Signature Certificate — Expiry Tracking & Secure Password Vault
                         </Typography>
                     </Box>
-                    <Box display="flex" gap={1.5} flexWrap="wrap">
+                    <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1.5, 
+                        width: { xs: '100%', sm: 'auto' },
+                        '& > button': { flex: { xs: 1, sm: 'initial' } }
+                    }}>
                         <CommonButton variant="outlined" startIcon={<DownloadIcon />}
                             onClick={() => dscService.exportCSV().catch(() => toast.error('Export failed'))}
-                            sx={{ borderRadius: '12px' }}>
-                            Export CSV
+                            sx={{ borderRadius: '12px', py: 1, px: 2 }}>
+                            Export
                         </CommonButton>
                         <CommonButton variant="contained" startIcon={<AddIcon />} onClick={() => { setEditItem(null); setShowForm(true); }}
-                            sx={{ borderRadius: '12px' }}>
+                            sx={{ borderRadius: '12px', py: 1, px: 2 }}>
                             Add DSC
                         </CommonButton>
                     </Box>
@@ -425,12 +443,17 @@ export const DSCManagement: React.FC = () => {
                     {statCards.map(c => (
                         <Grid key={c.label} size={{ xs: 6, sm: 3 }}>
                             <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-                                <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar sx={{ background: c.bg, width: 48, height: 48, boxShadow: `0 4px 12px ${c.color}40` }}>
-                                        {c.icon}
+                                <CardContent sx={{ p: { xs: 1.5, sm: 2.5 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                                    <Avatar sx={{ 
+                                        background: c.bg, 
+                                        width: { xs: 36, sm: 48 }, 
+                                        height: { xs: 36, sm: 48 }, 
+                                        boxShadow: `0 4px 12px ${c.color}40` 
+                                    }}>
+                                        {React.cloneElement(c.icon as React.ReactElement, { sx: { fontSize: { xs: 18, sm: 24 } } })}
                                     </Avatar>
                                     <Box>
-                                        <Typography variant="h4" fontWeight={800} lineHeight={1}>{c.value}</Typography>
+                                        <Typography variant="h4" fontWeight={800} lineHeight={1} sx={{ fontSize: { xs: '1.25rem', sm: '2.125rem' } }}>{c.value}</Typography>
                                         <Typography variant="caption" color="text.secondary" fontWeight={500}>{c.label}</Typography>
                                     </Box>
                                 </CardContent>
@@ -465,12 +488,20 @@ export const DSCManagement: React.FC = () => {
                 )}
 
                 {/* ── Filters ── */}
-                <Paper elevation={1} sx={{ borderRadius: 3, p: 2, mb: 2.5, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <TextField size="small" placeholder="Search by DSC number, holder or client..."
+                <Paper elevation={1} sx={{ 
+                    borderRadius: 3, 
+                    p: 2, 
+                    mb: 2.5, 
+                    display: 'flex', 
+                    gap: 2, 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' } 
+                }}>
+                    <TextField size="small" placeholder="Search DSC, holder or client..."
                         value={search} onChange={e => setSearch(e.target.value)}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: '12px' } }}
-                        sx={{ flex: 1, minWidth: 220 }} />
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                        sx={{ flex: 1 }} />
+                    <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
                         <InputLabel>Status</InputLabel>
                         <Select value={statusFilter} label="Status" onChange={e => setStatusFilter(e.target.value)} sx={{ borderRadius: '12px' }}>
                             <MenuItem value="">All Statuses</MenuItem>
@@ -481,107 +512,168 @@ export const DSCManagement: React.FC = () => {
                     </FormControl>
                 </Paper>
 
-                {/* ── Table ── */}
-                <Paper elevation={1} sx={{ borderRadius: 3, overflow: 'hidden', mb: 4 }}>
-                    <Box sx={{ px: 2.5, py: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center' }}>
-                        <GppGoodIcon fontSize="small" sx={{ color: '#667eea', mr: 1 }} />
-                        <Typography fontWeight={700} color="#334155">DSC Records ({filtered.length})</Typography>
-                    </Box>
-                    <TableContainer sx={{ maxHeight: 540 }}>
-                        <Table size="small" stickyHeader>
-                            <TableHead>
-                                <TableRow>
-                                    {['#', 'Client', 'Holder / DSC No.', 'Expiry Date', 'Days Left', 'Status', 'Class / Type', 'Password', 'Actions'].map(h => (
-                                        <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5, whiteSpace: 'nowrap' }}>{h}</TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
-                                            <CircularProgress size={28} sx={{ color: '#667eea' }} />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filtered.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
-                                            <GppGoodIcon sx={{ fontSize: 48, color: '#10b981', opacity: 0.4, display: 'block', mx: 'auto', mb: 1 }} />
-                                            <Typography variant="h6" fontWeight={700} color="text.secondary">No DSC Records Found</Typography>
-                                            <Typography variant="body2" color="text.disabled" mt={0.5}>
-                                                {search || statusFilter ? 'Try adjusting your filters.' : 'Add your first DSC record using the button above.'}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filtered.map((dsc, i) => {
-                                    const cfg  = STATUS_CONFIG[dsc.dscStatus] || STATUS_CONFIG.active;
-                                    const days = daysUntil(dsc.expiryDate);
-                                    const client = dsc.clientId as { name?: string; email?: string; panNumber?: string };
-                                    return (
-                                        <TableRow key={dsc._id} hover sx={{ '&:hover': { bgcolor: '#fafbff' } }}>
-                                            <TableCell sx={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem' }}>{i + 1}</TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={600}>{client?.name || '—'}</Typography>
-                                                <Typography variant="caption" color="text.secondary">{client?.panNumber || client?.email || ''}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={600}>{dsc.holderName}</Typography>
-                                                <Typography variant="caption" color="text.secondary" fontFamily="monospace">{dsc.dscNumber}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={600}
-                                                    sx={{ color: days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : days <= 30 ? '#d97706' : 'inherit' }}>
-                                                    {new Date(dsc.expiryDate).toLocaleDateString('en-IN')}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight={800}
-                                                    sx={{ color: days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : days <= 30 ? '#d97706' : '#10b981' }}>
-                                                    {days <= 0 ? 'EXPIRED' : `${days}d`}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip label={cfg.label} size="small"
-                                                    sx={{ color: cfg.color, bgcolor: cfg.bg, border: `1px solid ${cfg.border}`, fontWeight: 700, fontSize: '0.65rem' }} />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="caption" color="text.secondary">{dsc.dscClass || '—'}</Typography>
-                                                <br />
-                                                <Typography variant="caption" color="text.secondary">{dsc.dscType || ''}</Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <CommonButton size="small" variant="outlined" startIcon={<LockIcon sx={{ fontSize: '14px !important' }} />}
-                                                    onClick={() => setPwdItem(dsc)}
-                                                    sx={{ borderRadius: '8px', fontSize: '0.72rem', borderColor: '#fde68a', color: '#92400e', bgcolor: '#fffbeb', '&:hover': { bgcolor: '#fef3c7' } }}>
-                                                    View
-                                                </CommonButton>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box display="flex" gap={0.5}>
-                                                    <Tooltip title="Edit">
-                                                        <IconButton size="small" onClick={() => { setEditItem(dsc); setShowForm(true); }} sx={{ color: '#667eea', '&:hover': { bgcolor: '#ede9fe' } }}>
-                                                            <EditIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Audit Log">
-                                                        <IconButton size="small" onClick={() => setAuditItem(dsc)} sx={{ color: '#64748b', '&:hover': { bgcolor: '#f1f5f9' } }}>
-                                                            <HistoryIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Delete">
-                                                        <IconButton size="small" onClick={() => setDeleteConfirm(dsc)} sx={{ color: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}>
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </Box>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Paper>
+                {/* ── Table (Desktop) & Cards (Mobile) ── */}
+                <Box sx={{ mb: 4 }}>
+                    <Paper elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                        <Box sx={{ px: 2.5, py: 1.5, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center' }}>
+                            <GppGoodIcon fontSize="small" sx={{ color: '#667eea', mr: 1 }} />
+                            <Typography fontWeight={700} color="#334155">DSC Records ({filtered.length})</Typography>
+                        </Box>
+
+                        {isLoading ? (
+                            <Box textAlign="center" py={6}>
+                                <CircularProgress size={28} sx={{ color: '#667eea' }} />
+                                <Typography variant="body2" color="text.secondary" mt={1}>Loading records…</Typography>
+                            </Box>
+                        ) : filtered.length === 0 ? (
+                            <Box textAlign="center" py={8}>
+                                <GppGoodIcon sx={{ fontSize: 48, color: '#10b981', opacity: 0.4, display: 'block', mx: 'auto', mb: 1 }} />
+                                <Typography variant="h6" fontWeight={700} color="text.secondary">No DSC Records Found</Typography>
+                                <Typography variant="body2" color="text.disabled" mt={0.5}>
+                                    {search || statusFilter ? 'Try adjusting your filters.' : 'Add your first DSC record using the button above.'}
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <>
+                                {/* Table View for tablet/desktop */}
+                                <TableContainer sx={{ display: { xs: 'none', md: 'block' }, maxHeight: 540 }}>
+                                    <Table size="small" stickyHeader>
+                                        <TableHead>
+                                            <TableRow>
+                                                {['#', 'Client', 'Holder / DSC No.', 'Expiry Date', 'Days Left', 'Status', 'Class / Type', 'Password', 'Actions'].map(h => (
+                                                    <TableCell key={h} sx={{ fontWeight: 700, bgcolor: '#f8fafc', color: '#475569', fontSize: '0.78rem', py: 1.5, whiteSpace: 'nowrap' }}>{h}</TableCell>
+                                                ))}
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {filtered.map((dsc, i) => {
+                                                const cfg  = STATUS_CONFIG[dsc.dscStatus] || STATUS_CONFIG.active;
+                                                const days = daysUntil(dsc.expiryDate);
+                                                const client = dsc.clientId as { name?: string; email?: string; panNumber?: string };
+                                                return (
+                                                    <TableRow key={dsc._id} hover sx={{ '&:hover': { bgcolor: '#fafbff' } }}>
+                                                        <TableCell sx={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem' }}>{i + 1}</TableCell>
+                                                        <TableCell>
+                                                            <Typography variant="body2" fontWeight={600}>{client?.name || '—'}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">{client?.panNumber || client?.email || ''}</Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography variant="body2" fontWeight={600}>{dsc.holderName}</Typography>
+                                                            <Typography variant="caption" color="text.secondary" fontFamily="monospace">{dsc.dscNumber}</Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography variant="body2" fontWeight={600}
+                                                                sx={{ color: days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : days <= 30 ? '#d97706' : 'inherit' }}>
+                                                                {new Date(dsc.expiryDate).toLocaleDateString('en-IN')}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography variant="body2" fontWeight={800}
+                                                                sx={{ color: days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : days <= 30 ? '#d97706' : '#10b981' }}>
+                                                                {days <= 0 ? 'EXPIRED' : `${days}d`}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip label={cfg.label} size="small"
+                                                                sx={{ color: cfg.color, bgcolor: cfg.bg, border: `1px solid ${cfg.border}`, fontWeight: 700, fontSize: '0.65rem' }} />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Typography variant="caption" color="text.secondary">{dsc.dscClass || '—'}</Typography>
+                                                            <br />
+                                                            <Typography variant="caption" color="text.secondary">{dsc.dscType || ''}</Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <CommonButton size="small" variant="outlined" startIcon={<LockIcon sx={{ fontSize: '14px !important' }} />}
+                                                                onClick={() => setPwdItem(dsc)}
+                                                                sx={{ borderRadius: '8px', fontSize: '0.72rem', borderColor: '#fde68a', color: '#92400e', bgcolor: '#fffbeb', '&:hover': { bgcolor: '#fef3c7' } }}>
+                                                                View
+                                                            </CommonButton>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box display="flex" gap={0.5}>
+                                                                <Tooltip title="Edit">
+                                                                    <IconButton size="small" onClick={() => { setEditItem(dsc); setShowForm(true); }} sx={{ color: '#667eea', '&:hover': { bgcolor: '#ede9fe' } }}>
+                                                                        <EditIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                <Tooltip title="Audit Log">
+                                                                    <IconButton size="small" onClick={() => setAuditItem(dsc)} sx={{ color: '#64748b', '&:hover': { bgcolor: '#f1f5f9' } }}>
+                                                                        <HistoryIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                <Tooltip title="Delete">
+                                                                    <IconButton size="small" onClick={() => setDeleteConfirm(dsc)} sx={{ color: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}>
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+
+                                {/* Card View for Mobile/Tablet */}
+                                <Box sx={{ display: { xs: 'block', md: 'none' }, p: 1.5 }}>
+                                    <Grid container spacing={2}>
+                                        {filtered.map((dsc) => {
+                                            const cfg = STATUS_CONFIG[dsc.dscStatus] || STATUS_CONFIG.active;
+                                            const days = daysUntil(dsc.expiryDate);
+                                            const client = dsc.clientId as { name?: string };
+                                            return (
+                                                <Grid key={dsc._id} size={{ xs: 12, sm: 6 }}>
+                                                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: '#ffffff' }}>
+                                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
+                                                            <Box>
+                                                                <Typography variant="body2" fontWeight={700} color="#1e293b">{client?.name || '—'}</Typography>
+                                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{dsc.holderName}</Typography>
+                                                                <Typography variant="caption" color="text.secondary" fontFamily="monospace" sx={{ letterSpacing: 1 }}>{dsc.dscNumber}</Typography>
+                                                            </Box>
+                                                            <Chip label={cfg.label} size="small"
+                                                                sx={{ color: cfg.color, bgcolor: cfg.bg, border: `1px solid ${cfg.border}`, fontWeight: 700, fontSize: '0.65rem' }} />
+                                                        </Box>
+
+                                                        <Box sx={{ bgcolor: '#f8fafc', p: 1.5, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                                            <Box>
+                                                                <Typography variant="caption" color="text.secondary" display="block">Expiry Date</Typography>
+                                                                <Typography variant="body2" fontWeight={600}>{new Date(dsc.expiryDate).toLocaleDateString('en-IN')}</Typography>
+                                                            </Box>
+                                                            <Box textAlign="right">
+                                                                <Typography variant="caption" color="text.secondary" display="block">Days Left</Typography>
+                                                                <Typography variant="body2" fontWeight={800} color={days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : '#10b981'}>
+                                                                    {days <= 0 ? 'EXPIRED' : `${days}d`}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+
+                                                        <Box display="flex" gap={1}>
+                                                            <CommonButton size="small" fullWidth variant="outlined" startIcon={<LockIcon sx={{ fontSize: 16 }} />}
+                                                                onClick={() => setPwdItem(dsc)}
+                                                                sx={{ borderRadius: '8px', fontSize: '0.75rem', borderColor: '#fde68a', color: '#92400e', bgcolor: '#fffbeb', '&:hover': { bgcolor: '#fef3c7' } }}>
+                                                                View Pass
+                                                            </CommonButton>
+                                                            <IconButton size="small" onClick={() => { setEditItem(dsc); setShowForm(true); }} sx={{ color: '#667eea', bgcolor: '#f5f3ff' }}>
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton size="small" onClick={() => setAuditItem(dsc)} sx={{ color: '#64748b', bgcolor: '#f1f5f9' }}>
+                                                                <HistoryIcon fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton size="small" onClick={() => setDeleteConfirm(dsc)} sx={{ color: '#ef4444', bgcolor: '#fef2f2' }}>
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                    </Paper>
+                                                </Grid>
+                                            );
+                                        })}
+                                    </Grid>
+                                </Box>
+                            </>
+                        )}
+                    </Paper>
+                </Box>
             </Box>
 
             {/* ── Modals ── */}

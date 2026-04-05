@@ -120,16 +120,45 @@ export const AdminDashboard: React.FC = () => {
                 <meta name="description" content="View firm statistics, management tasks, and filing deadlines on your MyCAFile dashboard." />
             </Helmet>
 
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <Box 
+                sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'flex-start', sm: 'center' }, 
+                    gap: { xs: 2.5, sm: 0 },
+                    mb: 4 
+                }}
+            >
                 <Box>
-                    <Typography variant="h4" component="h1" fontWeight="800" sx={{ background: 'linear-gradient(45deg, #2c3e50, #3498db)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <Typography 
+                        variant="h4" 
+                        component="h1" 
+                        fontWeight="800" 
+                        sx={{ 
+                            fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                            background: 'linear-gradient(45deg, #2c3e50, #3498db)', 
+                            WebkitBackgroundClip: 'text', 
+                            WebkitTextFillColor: 'transparent' 
+                        }}
+                    >
                         Dashboard
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         Welcome to your CA Admin Panel
                     </Typography>
                 </Box>
-                <Box display="flex" gap={2} alignItems="center">
+                <Box 
+                    sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'row', sm: 'row' },
+                        flexWrap: 'wrap',
+                        gap: 2, 
+                        alignItems: 'center',
+                        width: { xs: '100%', sm: 'auto' },
+                        justifyContent: { xs: 'space-between', sm: 'flex-end' }
+                    }}
+                >
                     <CommonButton
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -139,8 +168,9 @@ export const AdminDashboard: React.FC = () => {
                             color: '#ffffff',
                             fontWeight: 'bold',
                             borderRadius: '12px',
-                            px: 3,
+                            px: { xs: 2, sm: 3 },
                             py: 1,
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
                             boxShadow: '0 4px 14px 0 rgba(76, 81, 191, 0.39)',
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #434190, #5a67d8)',
@@ -153,9 +183,10 @@ export const AdminDashboard: React.FC = () => {
                     <Chip
                         label="FY 2025-26"
                         sx={{
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             bgcolor: '#1e3a5f',
                             color: '#ffffff',
+                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
                             '& .MuiChip-label': { color: '#ffffff' }
                         }}
                     />
@@ -165,42 +196,42 @@ export const AdminDashboard: React.FC = () => {
             {/* Top Stats Row */}
             <Grid container spacing={2} mb={4}>
                 <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
                             {isLoadingClients ? (
                                 <Skeleton width={60} height={40} />
                             ) : (
-                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44' }}>{clientCount}</Typography>
+                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44', fontSize: { xs: '2rem', sm: '3rem' } }}>{clientCount}</Typography>
                             )}
                         </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: 56, height: 56 }}>
+                        <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <PeopleIcon />
                         </Avatar>
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
                             {isLoadingReminders ? (
                                 <Skeleton width={60} height={40} />
                             ) : (
-                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#b45309' }}>{reminders.length}</Typography>
+                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#b45309', fontSize: { xs: '2rem', sm: '3rem' } }}>{reminders.length}</Typography>
                             )}
                         </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: 56, height: 56 }}>
+                        <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <AssignmentIcon />
                         </Avatar>
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
-                    <Paper sx={{ p: 3, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
-                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#166534' }}>85%</Typography>
+                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#166534', fontSize: { xs: '2rem', sm: '3rem' } }}>85%</Typography>
                         </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: 56, height: 56 }}>
+                        <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <PieChartIcon />
                         </Avatar>
                     </Paper>
@@ -214,7 +245,7 @@ export const AdminDashboard: React.FC = () => {
                 <Grid size={{ xs: 12, md: 6, lg: 4 }} display="flex">
                     <Paper
                         sx={{
-                            p: 3,
+                            p: { xs: 2, sm: 3 },
                             borderRadius: 4,
                             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
                             background: '#ffffff',
@@ -491,7 +522,7 @@ export const AdminDashboard: React.FC = () => {
                         {/* Always 2 Columns for Better Grid */}
                         <Box sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
                             gap: { xs: 2, md: 2 }
                         }}>
                              <Box
@@ -519,12 +550,14 @@ export const AdminDashboard: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    p: 1,
-                                    borderRadius: '12px',
-                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
+                                    p: 1.2,
+                                    borderRadius: '14px',
+                                    bgcolor: 'rgba(99, 102, 241, 0.08)', 
+                                    color: '#6366f1',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.05)'
                                 }}>
                                     <PeopleIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
@@ -560,12 +593,15 @@ export const AdminDashboard: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    p: 1,
-                                    borderRadius: '12px',
-                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
+                                    p: 1.2,
+                                    borderRadius: '14px',
+                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
+                                    color: 'white',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                                 }}>
                                     <EventIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
@@ -602,12 +638,15 @@ export const AdminDashboard: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    p: 1,
-                                    borderRadius: '12px',
-                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
+                                    p: 1.2,
+                                    borderRadius: '14px',
+                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
+                                    color: 'white',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                                 }}>
                                     <UploadIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
@@ -644,12 +683,15 @@ export const AdminDashboard: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{
-                                    p: 1,
-                                    borderRadius: '12px',
-                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' },
+                                    p: 1.2,
+                                    borderRadius: '14px',
+                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
+                                    color: 'white',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center'
+                                    justifyContent: 'center',
+                                    backdropFilter: 'blur(4px)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                                 }}>
                                     <TrendingUp sx={{ fontSize: { xs: 24, md: 28 } }} />
                                 </Box>
@@ -687,7 +729,7 @@ export const AdminDashboard: React.FC = () => {
                         </Box>
 
                         <form onSubmit={handleAddTask}>
-                            <Box display="flex" gap={1} mb={2}>
+                            <Box sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center' }}>
                                 <TextField
                                     fullWidth
                                     variant="outlined"
@@ -696,7 +738,7 @@ export const AdminDashboard: React.FC = () => {
                                     onChange={(e) => setNewTask(e.target.value)}
                                     size="small"
                                     InputProps={{
-                                        sx: { borderRadius: '12px', fontSize: '0.9rem' }
+                                        sx: { borderRadius: '12px', fontSize: '0.9rem', bgcolor: '#f8fafc' }
                                     }}
                                 />
                                 <CommonButton
@@ -705,8 +747,9 @@ export const AdminDashboard: React.FC = () => {
                                     aria-label="Add task"
                                     sx={{
                                         borderRadius: '12px',
-                                        minWidth: 'auto',
-                                        px: 2,
+                                        minWidth: '45px',
+                                        height: '40px',
+                                        p: 0,
                                         background: 'linear-gradient(45deg, #11998e 30%, #38ef7d 90%)',
                                     }}
                                 >
