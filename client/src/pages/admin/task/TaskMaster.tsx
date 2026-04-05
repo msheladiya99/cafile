@@ -560,22 +560,34 @@ export const TaskMaster: React.FC = () => {
                                                 />
                                             </TableCell>
                                             <TableCell align="right" sx={{ position: 'sticky', right: 0, bgcolor: 'background.paper', zIndex: 0 }}>
-                                                <IconButton size="small" onClick={() => {
-                                                    const rm = tm.reportingManager;
-                                                    const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
-                                                    // Normalize mode: convert 'Recurring' to 'Recurrence'
-                                                    const mode = tm.mode === 'Recurring' ? 'Recurrence' : tm.mode;
-                                                    setFormData({ ...tm, reportingManager: rmId, mode });
-                                                    setView('form');
-                                                }} color="primary">
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => {
+                                                        const rm = tm.reportingManager;
+                                                        const rmId = typeof rm === 'object' && rm !== null && '_id' in rm ? (rm as { _id: string })._id : (rm as string | undefined);
+                                                        // Normalize mode: convert 'Recurring' to 'Recurrence'
+                                                        const mode = tm.mode === 'Recurring' ? 'Recurrence' : tm.mode;
+                                                        setFormData({ ...tm, reportingManager: rmId, mode });
+                                                        setView('form');
+                                                    }} 
+                                                    color="primary"
+                                                    aria-label="Edit task template"
+                                                    title="Edit task template"
+                                                >
                                                     <EditIcon fontSize="small" />
                                                 </IconButton>
-                                                <IconButton size="small" onClick={() => {
-                                                    const id = tm._id;
-                                                    if (id && window.confirm('Delete this task master?')) {
-                                                        deleteMutation.mutate(id);
-                                                    }
-                                                }} color="error">
+                                                <IconButton 
+                                                    size="small" 
+                                                    onClick={() => {
+                                                        const id = tm._id;
+                                                        if (id && window.confirm('Delete this task master?')) {
+                                                            deleteMutation.mutate(id);
+                                                        }
+                                                    }} 
+                                                    color="error"
+                                                    aria-label="Delete task template"
+                                                    title="Delete task template"
+                                                >
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
                                             </TableCell>
@@ -961,7 +973,14 @@ export const TaskMaster: React.FC = () => {
                                             <Typography variant="body2" fontWeight={600}>{st.name}</Typography>
                                             {st.designation && <Typography variant="caption" color="text.secondary">{st.designation}</Typography>}
                                         </Box>
-                                        <IconButton size="small" color="error" onClick={() => handleRemoveSubtask(i)} sx={{ '&:hover': { bgcolor: 'rgba(239,68,68,0.1)' } }}>
+                                        <IconButton 
+                                            size="small" 
+                                            color="error" 
+                                            onClick={() => handleRemoveSubtask(i)} 
+                                            sx={{ '&:hover': { bgcolor: 'rgba(239,68,68,0.1)' } }}
+                                            aria-label="Remove subtask"
+                                            title="Remove subtask"
+                                        >
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     </Box>
@@ -986,7 +1005,15 @@ export const TaskMaster: React.FC = () => {
                             <Typography fontSize={18}>📝</Typography>
                             <Typography variant="h6" fontWeight={700}>Add Subtask Step</Typography>
                         </Box>
-                        <IconButton size="small" onClick={() => setIsSubtaskModalOpen(false)} sx={{ color: 'white' }}><CloseIcon fontSize="small" /></IconButton>
+                        <IconButton 
+                            size="small" 
+                            onClick={() => setIsSubtaskModalOpen(false)} 
+                            sx={{ color: 'white' }}
+                            aria-label="Close dialog"
+                            title="Close dialog"
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
                     </DialogTitle>
                     <DialogContent sx={{ p: 3, pt: 4 }}>
                         <Grid container spacing={2}>
@@ -1044,6 +1071,8 @@ export const TaskMaster: React.FC = () => {
                                             size="small"
                                             onClick={() => setSubtaskInput({ ...subtaskInput, activityOrder: Math.max(1, (subtaskInput.activityOrder || 1) - 1) })}
                                             sx={{ border: '1px solid #e0e0e0' }}
+                                            aria-label="Decrease order"
+                                            title="Decrease order"
                                         >
                                             <RemoveIcon fontSize="small" />
                                         </IconButton>
@@ -1057,6 +1086,8 @@ export const TaskMaster: React.FC = () => {
                                             size="small"
                                             onClick={() => setSubtaskInput({ ...subtaskInput, activityOrder: (subtaskInput.activityOrder || 1) + 1 })}
                                             sx={{ border: '1px solid #e0e0e0' }}
+                                            aria-label="Increase order"
+                                            title="Increase order"
                                         >
                                             <AddIcon fontSize="small" />
                                         </IconButton>

@@ -121,7 +121,14 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSavin
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '12px' } }}>
             <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" fontWeight="600" sx={{ fontSize: '1.1rem' }}>{title}</Typography>
-                <IconButton onClick={onClose} size="small" sx={{ color: 'white' }} disabled={isSaving}>
+                <IconButton 
+                    onClick={onClose} 
+                    size="small" 
+                    sx={{ color: 'white' }} 
+                    disabled={isSaving}
+                    aria-label="Close dialog"
+                    title="Close dialog"
+                >
                     <CloseIcon />
                 </IconButton>
             </Box>
@@ -176,10 +183,22 @@ const MasterModal = ({ open, onClose, title, itemName, onSave, onDelete, isSavin
                                         <Typography variant="caption" sx={{ color: item.status ? 'success.main' : 'error.main', fontWeight: 600 }}>{item.status ? 'Active' : 'Inactive'}</Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                        <IconButton size="small" onClick={() => handleEdit(item)} sx={{ color: 'primary.main', bgcolor: 'rgba(102, 126, 234, 0.1)', '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' } }}>
+                                        <IconButton 
+                                            size="small" 
+                                            onClick={() => handleEdit(item)} 
+                                            sx={{ color: 'primary.main', bgcolor: 'rgba(102, 126, 234, 0.1)', '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' } }}
+                                            aria-label={`Edit ${itemName}`}
+                                            title={`Edit ${itemName}`}
+                                        >
                                             <EditIcon fontSize="small" />
                                         </IconButton>
-                                        <IconButton size="small" onClick={() => item._id && onDelete(item._id)} sx={{ color: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.1)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}>
+                                        <IconButton 
+                                            size="small" 
+                                            onClick={() => item._id && onDelete(item._id)} 
+                                            sx={{ color: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.1)', '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' } }}
+                                            aria-label={`Delete ${itemName}`}
+                                            title={`Delete ${itemName}`}
+                                        >
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     </Box>
@@ -1050,6 +1069,7 @@ export const ClientMaster: React.FC = () => {
                                                     '&:hover': { bgcolor: 'white' },
                                                     zIndex: 2
                                                 }}
+                                                aria-label="Remove Image"
                                                 title="Remove Image"
                                             >
                                                 <CloseIcon sx={{ fontSize: 16, color: '#d32f2f' }} />
@@ -1226,6 +1246,7 @@ export const ClientMaster: React.FC = () => {
                                                         size="small"
                                                         sx={{ color: 'primary.main', bgcolor: 'rgba(25, 118, 210, 0.04)', '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' } }}
                                                         onClick={() => handleEditContact(index)}
+                                                        aria-label="Edit Contact"
                                                         title="Edit Contact"
                                                     >
                                                         <EditIcon fontSize="small" />
@@ -1234,6 +1255,7 @@ export const ClientMaster: React.FC = () => {
                                                         size="small"
                                                         sx={{ color: 'error.main', bgcolor: 'rgba(211, 47, 47, 0.04)', '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' } }}
                                                         onClick={() => handleDeleteContact(index)}
+                                                        aria-label="Delete Contact"
                                                         title="Delete Contact"
                                                     >
                                                         <DeleteIcon fontSize="small" />
@@ -1340,7 +1362,8 @@ export const ClientMaster: React.FC = () => {
                                                         size="small"
                                                         color="primary"
                                                         onClick={() => handleDownloadLegalDoc(doc.fileName)}
-                                                        title="Download"
+                                                        aria-label={`Download ${doc.documentName}`}
+                                                        title={`Download ${doc.documentName}`}
                                                     >
                                                         <DownloadIcon fontSize="small" />
                                                     </IconButton>
@@ -1348,7 +1371,8 @@ export const ClientMaster: React.FC = () => {
                                                         size="small"
                                                         color="error"
                                                         onClick={() => handleRemoveLegalForm(index)}
-                                                        title="Delete"
+                                                        aria-label={`Delete ${doc.documentName}`}
+                                                        title={`Delete ${doc.documentName}`}
                                                     >
                                                         <DeleteIcon fontSize="small" />
                                                     </IconButton>

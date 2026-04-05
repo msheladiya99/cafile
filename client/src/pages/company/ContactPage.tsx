@@ -24,8 +24,38 @@ const ContactPage: React.FC = () => {
         <Box sx={{ bgcolor: '#fff', minHeight: '100vh' }}>
             <Helmet>
                 <title>Contact Us | My CA File - CA Practice Management Software</title>
-                <meta name="description" content="Contact the My CA File team. Get a demo, ask a question, or start your free trial. We respond within 24 hours." />
+                <meta name="description" content="Contact the My CA File team. Get a demo, ask a question, or start your free trial. We respond within 24 hours. Support for GST and ITR software integration." />
                 <link rel="canonical" href="https://mycafile.in/contact" />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Contact My CA File | Support & Sales" />
+                <meta property="og:description" content="Have questions about our CA practice management software? Get in touch for a demo or support." />
+                <meta property="og:url" content="https://mycafile.in/contact" />
+                <meta property="og:image" content="https://mycafile.in/og-contact.png" />
+
+                {/* Structured Data: BreadcrumbList */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "Contact",
+                                "item": "https://mycafile.in/contact"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
 
             <SiteNavbar />

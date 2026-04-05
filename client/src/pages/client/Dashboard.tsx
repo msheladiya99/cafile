@@ -47,19 +47,11 @@ export const ClientDashboard: React.FC = () => {
         staleTime: 60000, // 1 minute
     });
 
-    const { data: remindersData = [], isLoading: isLoadingReminders } = useQuery({
-        queryKey: ['client-reminders'],
-        queryFn: clientService.getReminders,
-        staleTime: 60000, // 1 minute
-    });
+    const isLoading = isLoadingStats;
 
-    const reminders = remindersData.filter(r => r.status !== 'COMPLETED');
-    void reminders;
-    const isLoading = isLoadingStats || isLoadingReminders;
-
-    // Process stats
+    interface StatEntry { _id: string; count: number }
     const stats = { ITR: 0, GST: 0, ACCOUNTING: 0 };
-    statsData.forEach((stat: any) => {
+    (statsData as StatEntry[]).forEach((stat) => {
         if (stat._id === 'ITR' || stat._id === 'GST' || stat._id === 'ACCOUNTING') {
             stats[stat._id as keyof typeof stats] = stat.count;
         }
@@ -190,7 +182,7 @@ export const ClientDashboard: React.FC = () => {
             {/* Stats Cards */}
             <Grid container spacing={3} mb={5}>
                 {statCards.map((card, index) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index} {...({ item: true } as any)}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                         <Card
                             sx={{
                                 borderRadius: 4,
@@ -252,7 +244,7 @@ export const ClientDashboard: React.FC = () => {
                         }}
                     >
                         <Box mb={2.5} display="flex" alignItems="center" justifyContent="space-between">
-                            <IconButton onClick={handlePrevMonth} size="small">
+                            <IconButton aria-label="Previous month" onClick={handlePrevMonth} size="small">
                                 <ChevronLeftIcon />
                             </IconButton>
                             <Box textAlign="center" onClick={handleToday} sx={{ cursor: 'pointer' }}>
@@ -278,7 +270,7 @@ export const ClientDashboard: React.FC = () => {
                                     GST Filing Deadlines
                                 </Typography>
                             </Box>
-                            <IconButton onClick={handleNextMonth} size="small">
+                            <IconButton aria-label="Next month" onClick={handleNextMonth} size="small">
                                 <ChevronRightIcon />
                             </IconButton>
                         </Box>
@@ -653,13 +645,17 @@ export const ClientDashboard: React.FC = () => {
                                                 }
                                             }}
                                             secondaryAction={
-                                                <IconButton edge="end" aria-label="delete" onClick={() => deleteTask(task.id)} size="small" color="error">
+                                                <IconButton edge="end" aria-label={`Delete task: ${task.text}`} onClick={() => deleteTask(task.id)} size="small" color="error">
                                                     <DeleteIcon fontSize="small" />
                                                 </IconButton>
                                             }
                                         >
                                             <ListItemIcon sx={{ minWidth: 30 }} onClick={() => toggleTask(task.id)}>
-                                                <IconButton size="small" color={task.completed ? "success" : "default"}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    color={task.completed ? "success" : "default"}
+                                                    aria-label={task.completed ? `Mark "${task.text}" as incomplete` : `Mark "${task.text}" as complete`}
+                                                >
                                                     {task.completed ? <CheckCircleIcon fontSize="small" /> : <UncheckedIcon fontSize="small" />}
                                                 </IconButton>
                                             </ListItemIcon>
