@@ -126,6 +126,17 @@ export const PricingPage = () => {
                 <meta name="keywords" content="CA software price, practice management software cost, My CA File plans, CA office software India pricing" />
                 <link rel="canonical" href="https://mycafile.in/pricing" />
 
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Pricing Plans for CA Office Management Software | My CA File" />
+                <meta property="og:description" content="Transparent, scaling pricing for Indian CA firms. Start for free and grow your practice with automation." />
+                <meta property="og:url" content="https://mycafile.in/pricing" />
+                <meta property="og:image" content="https://mycafile.in/og-pricing.png" />
+                
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="My CA File Pricing | Affordable CA Software" />
+                <meta name="twitter:description" content="Best value practice management software for CA firms in India." />
+                <meta name="twitter:image" content="https://mycafile.in/og-pricing.png" />
+
                 {/* Structured Data: Product & Offers */}
                 <script type="application/ld+json">
                 {`
@@ -207,7 +218,7 @@ export const PricingPage = () => {
                     {/* Header */}
                     <Box textAlign="center" mb={10}>
                         <Chip label={<Typography variant="caption" fontWeight="bold" color={colors.primary}>✨ Pricing plans</Typography>} sx={{ bgcolor: '#eff6ff', mb: 3 }} />
-                        <Typography variant="h2" fontWeight="800" sx={{ color: colors.textMain, fontSize: { xs: '2.5rem', md: '3.8rem' }, letterSpacing: '-1px' }}>
+                        <Typography variant="h1" fontWeight="800" sx={{ color: colors.textMain, fontSize: { xs: '2.5rem', md: '3.8rem' }, letterSpacing: '-1px' }}>
                             Choose your <Box component="span" sx={{ color: colors.primary }}>perfect</Box> plan
                         </Typography>
                         <Typography variant="h6" sx={{ color: colors.textSub, mt: 2, fontWeight: 400 }}>
