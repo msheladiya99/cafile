@@ -40,6 +40,8 @@ import { useQuery } from '@tanstack/react-query';
 import { adminService } from '../../../services/adminService';
 import { staffService } from '../../../services/staffService';
 import { taskService } from '../../../services/taskService';
+import type { User, Task, Client } from '../../../types';
+
 
 // ─── Status config ──────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -83,7 +85,7 @@ const fmtMins = (mins: number) => {
 
 // ─── Expandable row ──────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TaskRow: React.FC<{ task: any; staffMap: Record<string, string>; clientMap: Record<string, string> }> = ({ task, staffMap, clientMap }) => {
+const TaskRow: React.FC<{ task: Task; staffMap: Record<string, string>; clientMap: Record<string, string> }> = ({ task, staffMap, clientMap }) => {
     const [open, setOpen] = useState(false);
     const status = STATUS_CONFIG[task.status] ?? { label: task.status, color: '#374151', bg: '#f3f4f6' };
     const priority = PRIORITY_CONFIG[task.priority] ?? { color: '#6b7280', dot: '#9ca3af' };
@@ -325,20 +327,20 @@ export const EmpTaskSchedule: React.FC = () => {
     const staffMap = useMemo(() => {
         const m: Record<string, string> = {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        staff.forEach((s: any) => { m[s._id] = s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.username; });
+        staff.forEach((s: User) => { m[s._id] = s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.username; });
         return m;
     }, [staff]);
 
     const clientMap = useMemo(() => {
         const m: Record<string, string> = {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clients.forEach((c: any) => { m[c._id] = c.name; });
+        clients.forEach((c: Client) => { m[c._id] = c.name; });
         return m;
     }, [clients]);
 
     // Client-side additional filtering (year / date range)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filteredTasks = useMemo(() => tasks.filter((task: any) => {
+    const filteredTasks = useMemo(() => (tasks as Task[]).filter((task: Task) => {
         // Year filter (FY: e.g. "2024-2025" means Apr 2024 – Mar 2025)
         if (filterData.year) {
             const [startYr] = filterData.year.split('-').map(Number);
@@ -431,7 +433,7 @@ export const EmpTaskSchedule: React.FC = () => {
                                 {loadingClients
                                     ? <MenuItem disabled><CircularProgress size={16} /></MenuItem>
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    : clients.map((c: any) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
+                                    : (clients as Client[]).map((c: Client) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -445,7 +447,7 @@ export const EmpTaskSchedule: React.FC = () => {
                                 {loadingStaff
                                     ? <MenuItem disabled><CircularProgress size={16} /></MenuItem>
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    : staff.map((s: any) => (
+                                    : (staff as User[]).map((s: User) => (
                                         <MenuItem key={s._id} value={s._id}>
                                             {s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()} {s.role ? `(${s.designation ?? s.role})` : ''}
                                         </MenuItem>
@@ -567,7 +569,7 @@ export const EmpTaskSchedule: React.FC = () => {
                             </TableHead>
                             <TableBody>
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {filteredTasks.map((task: any) => (
+                                {filteredTasks.map((task: Task) => (
                                     <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} />
                                 ))}
                             </TableBody>
