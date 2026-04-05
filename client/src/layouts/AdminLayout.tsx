@@ -374,7 +374,7 @@ export const AdminLayout: React.FC = () => {
                 <Toolbar>
                     <IconButton
                         color="inherit"
-                        aria-label="open drawer"
+                        aria-label="Open sidebar menu"
                         edge="start"
                         onClick={handleDrawerToggle}
                         sx={{ mr: 2 }}

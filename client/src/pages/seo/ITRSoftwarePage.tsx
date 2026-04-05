@@ -42,15 +42,40 @@ export const ITRSoftwarePage: React.FC = () => {
                 <meta name="keywords" content="ITR filing software India, income tax return management software, ITR tracker for CA, CA ITR software, best ITR software for chartered accountants" />
                 <link rel="canonical" href="https://mycafile.in/itr-filing-software" />
                 
-                <meta property="og:type" content="article" />
+                <meta property="og:type" content="website" />
                 <meta property="og:title" content="ITR Filing Software for CA Firms India | My CA File" />
                 <meta property="og:description" content="Manage ITR filing for 1000+ clients. Automate deadlines, collect documents, and assign team tasks." />
                 <meta property="og:url" content="https://mycafile.in/itr-filing-software" />
                 <meta property="og:image" content="https://mycafile.in/og-itr.png" />
                 
-                <meta property="twitter:card" content="summary_large_image" />
-                <meta property="twitter:title" content="ITR Filing Software for CA Firms India | My CA File" />
-                <meta property="twitter:description" content="Manage ITR filing for 1000+ clients. Automate deadlines, collect documents, and assign team tasks." />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="ITR Filing Software for CA Firms India | My CA File" />
+                <meta name="twitter:description" content="Manage ITR filing for 1000+ clients. Automate deadlines, collect documents, and assign team tasks." />
+                <meta name="twitter:image" content="https://mycafile.in/og-itr.png" />
+
+                {/* Breadcrumb Schema */}
+                <script type="application/ld+json">
+                {`
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Home",
+                                "item": "https://mycafile.in"
+                            },
+                            {
+                                "@type": "ListItem",
+                                "position": 2,
+                                "name": "ITR Software",
+                                "item": "https://mycafile.in/itr-filing-software"
+                            }
+                        ]
+                    }
+                `}
+                </script>
             </Helmet>
 
             <SiteNavbar />

@@ -89,7 +89,12 @@ export const SuperAdminLayout: React.FC = () => {
                     <Toolbar sx={{ justifyContent: 'space-between', bgcolor: '#fff', borderRadius: '24px', px: 3 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {isMobile && (
-                                <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 1 }}>
+                                <IconButton 
+                                    onClick={() => setMobileOpen(true)} 
+                                    sx={{ mr: 1 }}
+                                    aria-label="Open mobile menu"
+                                    title="Open mobile menu"
+                                >
                                     <MenuIcon />
                                 </IconButton>
                             )}
@@ -142,12 +147,28 @@ export const SuperAdminLayout: React.FC = () => {
                         )}
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <IconButton size="small" sx={{ color: '#94a3b8' }}><SearchIcon /></IconButton>
-                            <IconButton size="small" sx={{ color: '#94a3b8' }}>
+                            <IconButton 
+                                size="small" 
+                                sx={{ color: '#94a3b8' }}
+                                aria-label="Search platform"
+                                title="Search platform"
+                            >
+                                <SearchIcon />
+                            </IconButton>
+                            <IconButton 
+                                size="small" 
+                                sx={{ color: '#94a3b8' }}
+                                aria-label="View messages"
+                                title="View messages"
+                            >
                                 <Badge variant="dot" color="error"><ChatIcon /></Badge>
                             </IconButton>
                             <Tooltip title="Admin Account">
-                                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
+                                <IconButton 
+                                    onClick={(e) => setAnchorEl(e.currentTarget)} 
+                                    size="small"
+                                    aria-label="Open account menu"
+                                >
                                     <Avatar sx={{ width: 32, height: 32, border: '2px solid #f1f5f9', bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800 }}>S</Avatar>
                                 </IconButton>
                             </Tooltip>

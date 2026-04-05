@@ -28,8 +28,8 @@ import type { FirmMasterData, IMultiFirmData } from '../../services/firmService'
 import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-interface FieldRowProps { label: string; required?: boolean; children: React.ReactNode }
-const Row: React.FC<FieldRowProps> = ({ label, required, children }) => (
+interface FieldRowProps { label: string; required?: boolean; children: React.ReactNode; htmlFor?: string }
+const Row: React.FC<FieldRowProps> = ({ label, required, children, htmlFor }) => (
     <Box sx={{ 
         display: 'flex', 
         flexDirection: { xs: 'column', sm: 'row' },
@@ -37,15 +37,20 @@ const Row: React.FC<FieldRowProps> = ({ label, required, children }) => (
         mb: 2, 
         gap: { xs: 0.5, sm: 1.5 } 
     }}>
-        <Typography sx={{ 
-            width: { xs: '100%', sm: 160 }, 
-            flexShrink: 0, 
-            fontSize: '0.82rem', 
-            color: 'text.secondary', 
-            fontWeight: 600,
-            opacity: 0.9
-        }}>
-            {label}{required && <span style={{ color: 'red', marginLeft: '2px' }}>*</span>}
+        <Typography 
+            component="label" 
+            htmlFor={htmlFor}
+            sx={{ 
+                width: { xs: '100%', sm: 160 }, 
+                flexShrink: 0, 
+                fontSize: '0.82rem', 
+                color: 'text.secondary', 
+                fontWeight: 600,
+                opacity: 0.9,
+                cursor: htmlFor ? 'pointer' : 'default'
+            }}
+        >
+            {label}{required && <span aria-hidden="true" style={{ color: 'red', marginLeft: '2px' }}>*</span>}
         </Typography>
         <Box sx={{ flex: 1, width: '100%' }}>{children}</Box>
     </Box>
@@ -86,12 +91,19 @@ const ImgBox: React.FC<ImgBoxProps> = ({ label, url, onUpload, onRemove, loading
                 {loading ? <CircularProgress size={20} /> : url
                     ? (
                         <>
-                            <img src={url} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <img 
+                                src={url} 
+                                alt={label} 
+                                width="120" 
+                                height="100" 
+                                style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                            />
                             {onRemove && (
                                 <IconButton
+                                    aria-label={`Remove ${label}`}
                                     size="small"
                                     onClick={onRemove}
-                                    title="Remove Image"
+                                    title={`Remove ${label}`}
                                     sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.7)', padding: 0.5, '&:hover': { bgcolor: 'white' } }}
                                 >
                                     <X size={14} color="#d32f2f" />
@@ -202,14 +214,14 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
         <Box>
             <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px' }}>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-                    <Row label="Document Name *">
-                        <Select value={docName} onChange={(e) => setDocName(e.target.value as string)} fullWidth displayEmpty {...selSx}>
+                    <Row label="Document Name *" htmlFor="doc-name">
+                        <Select id="doc-name" value={docName} onChange={(e) => setDocName(e.target.value as string)} fullWidth displayEmpty {...selSx}>
                             <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Document...</em></MenuItem>
                             {DOC_TYPES.map(d => <MenuItem key={d} value={d} sx={{ fontSize: '0.82rem' }}>{d}</MenuItem>)}
                         </Select>
                     </Row>
-                    <Row label="Document Number">
-                        <TextField value={docNumber} onChange={(e) => setDocNumber(e.target.value)} fullWidth {...sx} />
+                    <Row label="Document Number" htmlFor="doc-number">
+                        <TextField id="doc-number" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} fullWidth {...sx} />
                     </Row>
                     <Row label="Browse File *">
                         <Box>
@@ -250,7 +262,12 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
                         <Typography fontWeight={700} fontSize="0.875rem">Firm Document List</Typography>
                     </Box>
                     <Tooltip title="Export to CSV">
-                        <IconButton size="small" onClick={exportExcel} sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px' }}>
+                        <IconButton 
+                            aria-label="Export documents to CSV"
+                            size="small" 
+                            onClick={exportExcel} 
+                            sx={{ color: 'white', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px' }}
+                        >
                             <Typography fontSize="0.7rem" fontWeight={700}>XLS</Typography>
                         </IconButton>
                     </Tooltip>
@@ -289,17 +306,24 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
                                                 {doc.fileId && (
                                                     <Tooltip title="Download File">
                                                         <IconButton
+                                                            aria-label="Download document file"
                                                             size="small"
                                                             component="a"
                                                             href={`https://drive.google.com/uc?export=download&id=${doc.fileId}`}
                                                             target="_blank"
+                                                            rel="noopener noreferrer"
                                                             sx={{ color: '#667eea' }}
                                                         >
                                                             <Download size={16} />
                                                         </IconButton>
                                                     </Tooltip>
                                                 )}
-                                                <IconButton size="small" color="error" onClick={() => doc._id && deleteMutation.mutate(doc._id)}>
+                                                <IconButton 
+                                                    aria-label={`Delete ${doc.documentName}`}
+                                                    size="small" 
+                                                    color="error" 
+                                                    onClick={() => doc._id && deleteMutation.mutate(doc._id)}
+                                                >
                                                     <Trash2 size={16} />
                                                 </IconButton>
                                             </Box>
@@ -805,8 +829,22 @@ const PartnersTab: React.FC<{
                                             {p.signatureImageUrl ? <img src={p.signatureImageUrl} style={{ height: 24, objectFit: 'contain' }} alt="sign" /> : '—'}
                                         </td>
                                         <td style={{ padding: '8px 12px' }}>
-                                            <IconButton size="small" onClick={() => { setCurr({ ...PARTNER_BLANK, ...p }); setEditIdx(idx); }} sx={{ color: '#667eea', mr: 0.5 }}><Pencil size={14} /></IconButton>
-                                            <IconButton size="small" color="error" onClick={() => onUpdate(partners.filter((_, i) => i !== idx))}><Trash2 size={16} /></IconButton>
+                                            <IconButton 
+                                                aria-label={`Edit partner ${p.name}`}
+                                                size="small" 
+                                                onClick={() => { setCurr({ ...PARTNER_BLANK, ...p }); setEditIdx(idx); }} 
+                                                sx={{ color: '#667eea', mr: 0.5 }}
+                                            >
+                                                <Pencil size={14} />
+                                            </IconButton>
+                                            <IconButton 
+                                                aria-label={`Delete partner ${p.name}`}
+                                                size="small" 
+                                                color="error" 
+                                                onClick={() => onUpdate(partners.filter((_, i) => i !== idx))}
+                                            >
+                                                <Trash2 size={16} />
+                                            </IconButton>
                                         </td>
                                     </tr>
                                 ))}
@@ -952,35 +990,35 @@ export const FirmMasterPage: React.FC = () => {
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
-                                <Row label="Firm Name*"><TextField value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
-                                <Row label="Short Name*"><TextField value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
-                                <Row label="Address*">
-                                    <TextField value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} />
+                                <Row label="Firm Name*" htmlFor="firm-name"><TextField id="firm-name" value={form.firmName} onChange={f('firmName')} fullWidth {...sx} /></Row>
+                                <Row label="Short Name*" htmlFor="short-name"><TextField id="short-name" value={form.shortName || ''} onChange={f('shortName')} fullWidth {...sx} /></Row>
+                                <Row label="Address*" htmlFor="address">
+                                    <TextField id="address" value={form.address || ''} onChange={f('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} />
                                 </Row>
-                                <Row label="Country*">
-                                    <Select value={form.country || ''} onChange={sel('country')} fullWidth displayEmpty {...selSx}>
+                                <Row label="Country*" htmlFor="country">
+                                    <Select id="country" value={form.country || ''} onChange={sel('country')} fullWidth displayEmpty {...selSx}>
                                         <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Country...</em></MenuItem>
                                         {COUNTRY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
                                     </Select>
                                 </Row>
-                                <Row label="State*">
-                                    <Select value={form.state || ''} onChange={sel('state')} fullWidth displayEmpty {...selSx}>
+                                <Row label="State*" htmlFor="state">
+                                    <Select id="state" value={form.state || ''} onChange={sel('state')} fullWidth displayEmpty {...selSx}>
                                         <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a State...</em></MenuItem>
                                         {STATE_LIST.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.82rem' }}>{s}</MenuItem>)}
                                     </Select>
                                 </Row>
-                                <Row label="City*">
-                                    <Select value={form.city || ''} onChange={sel('city')} fullWidth displayEmpty {...selSx}>
+                                <Row label="City*" htmlFor="city">
+                                    <Select id="city" value={form.city || ''} onChange={sel('city')} fullWidth displayEmpty {...selSx}>
                                         <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a City...</em></MenuItem>
                                         {CITY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}
                                     </Select>
                                 </Row>
-                                <Row label="Postal Code"><TextField value={form.postalCode || ''} onChange={f('postalCode')} fullWidth {...sx} /></Row>
-                                <Row label="Mobile Number*"><TextField value={form.mobile || ''} onChange={f('mobile')} fullWidth {...sx} /></Row>
-                                <Row label="Email*"><TextField value={form.email || ''} onChange={f('email')} type="email" fullWidth {...sx} /></Row>
-                                <Row label="Phone(L)"><TextField value={form.phoneL || ''} onChange={f('phoneL')} fullWidth {...sx} /></Row>
-                                <Row label="Firm Type*">
-                                    <Select value={form.firmType || ''} onChange={sel('firmType')} fullWidth displayEmpty {...selSx}>
+                                <Row label="Postal Code" htmlFor="postal-code"><TextField id="postal-code" value={form.postalCode || ''} onChange={f('postalCode')} fullWidth {...sx} /></Row>
+                                <Row label="Mobile Number*" htmlFor="mobile"><TextField id="mobile" value={form.mobile || ''} onChange={f('mobile')} fullWidth {...sx} /></Row>
+                                <Row label="Email*" htmlFor="email"><TextField id="email" value={form.email || ''} onChange={f('email')} type="email" fullWidth {...sx} /></Row>
+                                <Row label="Phone(L)" htmlFor="phone-l"><TextField id="phone-l" value={form.phoneL || ''} onChange={f('phoneL')} fullWidth {...sx} /></Row>
+                                <Row label="Firm Type*" htmlFor="firm-type">
+                                    <Select id="firm-type" value={form.firmType || ''} onChange={sel('firmType')} fullWidth displayEmpty {...selSx}>
                                         <MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>
                                         {FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}
                                     </Select>
@@ -1028,11 +1066,33 @@ export const FirmMasterPage: React.FC = () => {
 
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Timer Auto Close" />
-                                <Row label="Auto Close Hours">
+                                <Row label="Auto Close Hours" htmlFor="auto-close">
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <IconButton size="small" onClick={() => handleAutoHours(1)} sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', borderRadius: '8px', width: 28, height: 28 }}><Plus size={16} /></IconButton>
-                                        <TextField value={form.autoCloseHours ?? 10} onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))} size="small" type="number" sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} inputProps={{ min: 1, style: { textAlign: 'center' } }} />
-                                        <IconButton size="small" onClick={() => handleAutoHours(-1)} sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}><Minus size={16} /></IconButton>
+                                        <IconButton
+                                            aria-label="Increase auto close hours"
+                                            size="small"
+                                            onClick={() => handleAutoHours(1)}
+                                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', borderRadius: '8px', width: 28, height: 28 }}
+                                        >
+                                            <Plus size={16} />
+                                        </IconButton>
+                                        <TextField
+                                            id="auto-close"
+                                            value={form.autoCloseHours ?? 10}
+                                            onChange={(e) => setForm(p => ({ ...p, autoCloseHours: parseInt(e.target.value) || 10 }))}
+                                            size="small"
+                                            type="number"
+                                            sx={{ width: 70, '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }}
+                                            inputProps={{ min: 1, style: { textAlign: 'center' } }}
+                                        />
+                                        <IconButton
+                                            aria-label="Decrease auto close hours"
+                                            size="small"
+                                            onClick={() => handleAutoHours(-1)}
+                                            sx={{ bgcolor: '#ef4444', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#dc2626' }, width: 28, height: 28 }}
+                                        >
+                                            <Minus size={16} />
+                                        </IconButton>
                                     </Box>
                                 </Row>
                             </Paper>
@@ -1473,7 +1533,17 @@ export const FirmMasterPage: React.FC = () => {
                                     </Grid>
                                     <Grid size={5} sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
                                         <Typography fontSize="0.75rem" fontWeight={600} mb={1}>For {form.firmName}</Typography>
-                                        {form.signatureImageUrl && <Box component="img" src={form.signatureImageUrl} alt={`Authorized Signature for ${form.firmName}`} sx={{ height: 60, width: 'auto', mb: 1 }} />}
+                                        {form.signatureImageUrl && (
+                                            <Box 
+                                                component="img" 
+                                                src={form.signatureImageUrl} 
+                                                alt={`Authorized Signature for ${form.firmName}`} 
+                                                width="120"
+                                                height="60"
+                                                loading="lazy"
+                                                sx={{ height: 60, width: 'auto', mb: 1 }} 
+                                            />
+                                        )}
                                         <Typography fontSize="0.75rem" fontWeight={800}>Authorized Signatory</Typography>
                                     </Grid>
                                 </Grid>
