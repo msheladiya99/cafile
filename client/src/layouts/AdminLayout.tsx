@@ -428,7 +428,7 @@ export const AdminLayout: React.FC = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: { xs: 1, sm: 2, md: 3 },
+                    p: { xs: 2, sm: 2.5, md: 3 },
                     background: '#f5f7fa',
                     minHeight: '100vh',
                     width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` }

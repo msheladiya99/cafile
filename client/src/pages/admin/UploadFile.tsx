@@ -189,7 +189,7 @@ export const UploadFile: React.FC = () => {
     };
 
     return (
-        <Box sx={{ width: '100%', px: { xs: 2, sm: 4, md: 8 }, py: 3 }}>
+        <Box sx={{ width: '100%', px: { xs: 1.5, sm: 4, md: 8 }, py: { xs: 2, sm: 3 } }}>
         <Box
             sx={{
                 width: '100%',
@@ -207,8 +207,8 @@ export const UploadFile: React.FC = () => {
                         <FolderSpecialIcon sx={{ fontSize: 26, color: '#111' }} />
                         <Typography
                             sx={{
-                                fontSize: '1.35rem',
-                                fontWeight: 700,
+                                fontSize: { xs: '1.2rem', sm: '1.35rem' },
+                                fontWeight: 800,
                                 color: '#111',
                                 letterSpacing: '-0.02em',
                             }}
@@ -399,7 +399,7 @@ export const UploadFile: React.FC = () => {
                         </Box>
 
                         {/* Document Type + Financial Year row */}
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
                             <Box>
                                 <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
                                     Document Type <span style={{ color: '#ef4444' }}>*</span>
@@ -447,7 +447,7 @@ export const UploadFile: React.FC = () => {
                         {/* GST-specific fields */}
                         {category === 'GST' && (
                             <Fade in={true}>
-                                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5 }}>
                                     <Box>
                                         <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
                                             Reporting Month
@@ -518,32 +518,43 @@ export const UploadFile: React.FC = () => {
                             </Alert>
                         )}
 
-                        {/* Action Buttons */}
-                        <Divider />
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: { xs: 'column-reverse', sm: 'row' },
+                            justifyContent: 'flex-end', 
+                            gap: 1.5 
+                        }}>
                             <CommonButton
                                 variant="outlined"
+                                fullWidth={true} // isMobile check could be used but fullWidth works well with Box flex
                                 onClick={handleReset}
                                 disabled={loading}
                                 sx={{
-                                    borderRadius: '8px',
+                                    borderRadius: '10px',
                                     px: 3,
-                                    py: 0.9,
+                                    py: 1.2,
                                     fontSize: '0.875rem',
-                                    color: '#374151',
-                                    borderColor: '#d1d5db',
-                                    '&:hover': { borderColor: '#9ca3af', bgcolor: '#f9fafb' },
+                                    color: '#475569',
+                                    borderColor: '#e2e8f0',
+                                    flex: { xs: 1, sm: 'initial' },
+                                    '&:hover': { borderColor: '#cbd5e1', bgcolor: '#f8fafc' },
                                 }}
                             >
                                 Cancel
                             </CommonButton>
                             <CommonButton
                                 variant="contained"
+                                fullWidth={true}
                                 onClick={handleSubmit}
                                 disabled={selectedFiles.every(f => f.status === 'success')}
                                 loading={loading}
                                 startIcon={<UploadIcon />}
-                                sx={{ boxShadow: 'none' }}
+                                sx={{ 
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                    borderRadius: '10px',
+                                    py: 1.2,
+                                    flex: { xs: 1, sm: 'initial' }
+                                }}
                             >
                                 Upload Files
                             </CommonButton>
