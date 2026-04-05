@@ -1,8 +1,10 @@
 User-agent: *
 Allow: /
+Allow: /ca-practice-management
+Allow: /pricing
+Allow: /login
 Disallow: /api/
-Disallow: /admin/
-Disallow: /super-admin/
-Disallow: /superadmin/?*
+Disallow: /admin/config/
+Disallow: /cdn-cgi/
 
 Sitemap: https://www.mycafile.in/sitemap.xml
