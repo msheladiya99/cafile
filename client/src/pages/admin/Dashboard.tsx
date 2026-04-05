@@ -116,7 +116,7 @@ export const AdminDashboard: React.FC = () => {
         <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
             <Helmet>
                 <title>Admin Dashboard | MyCAFile - CA Office Portal</title>
-                <link rel="canonical" href="https://www.mycafile.in/admin/dashboard" />
+                <link rel="canonical" href="https://mycafile.in/admin/dashboard" />
                 <meta name="description" content="View firm statistics, management tasks, and filing deadlines on your MyCAFile dashboard." />
             </Helmet>
 
@@ -135,15 +135,16 @@ export const AdminDashboard: React.FC = () => {
                         startIcon={<AddIcon />}
                         onClick={() => navigate('/admin/clients')}
                         sx={{
-                            backgroundColor: 'rgba(255,255,255,0.2)',
-                            color: 'white',
+                            background: 'linear-gradient(45deg, #4c51bf, #667eea)',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
                             borderRadius: '12px',
                             px: 3,
-                            py: 0.8,
-                            boxShadow: 'none',
+                            py: 1,
+                            boxShadow: '0 4px 14px 0 rgba(76, 81, 191, 0.39)',
                             '&:hover': {
-                                backgroundColor: 'rgba(255,255,255,0.3)',
-                                boxShadow: 'none',
+                                background: 'linear-gradient(45deg, #434190, #5a67d8)',
+                                boxShadow: '0 6px 20px rgba(76, 81, 191, 0.23)',
                             },
                         }}
                     >
