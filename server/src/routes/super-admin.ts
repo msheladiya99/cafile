@@ -13,7 +13,7 @@ import { Plan } from '../models/Plan';
 import { TaskCategory } from '../models/TaskCategory';
 import { TaskMaster } from '../models/TaskMaster';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
-import { getDriveService } from '../services/googleDrive';
+import { getDriveService, getServiceAccountDriveService } from '../services/googleDrive';
 import { encrypt } from '../utils/encryption';
 import { getTenantConnection, getModelFromConnection, rawUserSchema } from '../services/dbManager';
 import mongoose from 'mongoose';
@@ -236,22 +236,24 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             const driveService = getDriveService();
             if (driveService) {
                 if (googleDriveType === 'personal' && customFolderId) {
-                    // 1. Validate the personal folder is accessible first
+                    // 1. Validate using SERVICE ACCOUNT — users share with the service account email,
+                    //    not the OAuth2 user. Using getDriveService() (OAuth2) would always return 404.
+                    const saService = getServiceAccountDriveService();
                     try {
-                        await driveService.getFileMetadata(customFolderId);
+                        await saService.getFileMetadata(customFolderId);
                     } catch (e: any) {
                         return res.status(400).json({ 
                             message: `Google Drive Folder not found or inaccessible: ${customFolderId}. Please ensure you have shared it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor'.` 
                         });
                     }
 
-                    // 2. Use provided folder and ensure subfolders
+                    // 2. Use provided folder and ensure subfolders (also via service account)
                     googleDriveRootFolderId = customFolderId;
-                    await driveService.ensureFolder('Clients', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Employees', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Compliance', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Internal Docs', googleDriveRootFolderId);
-                    await driveService.ensureFolder('Reports', googleDriveRootFolderId);
+                    await saService.ensureFolder('Clients', googleDriveRootFolderId);
+                    await saService.ensureFolder('Employees', googleDriveRootFolderId);
+                    await saService.ensureFolder('Compliance', googleDriveRootFolderId);
+                    await saService.ensureFolder('Internal Docs', googleDriveRootFolderId);
+                    await saService.ensureFolder('Reports', googleDriveRootFolderId);
                 } else {
                     // Default behavior: create folder in app drive using standardized structure
                     googleDriveRootFolderId = await driveService.ensureFirmStructure(firmName);
@@ -463,12 +465,14 @@ router.patch('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Res
 
             if (targetDriveType === 'personal' && targetRootId) {
                 try {
-                    const driveService = getDriveService();
-                    await driveService.getFileMetadata(targetRootId);
+                    // Use SERVICE ACCOUNT for validation — personal folders are shared with
+                    // the service account email, not the OAuth2 user account.
+                    const saService = getServiceAccountDriveService();
+                    await saService.getFileMetadata(targetRootId);
                     
-                    // Also ensure basic folders exist if possible
-                    await driveService.ensureFolder('Clients', targetRootId);
-                    await driveService.ensureFolder('Employees', targetRootId);
+                    // Also ensure basic folders exist via service account
+                    await saService.ensureFolder('Clients', targetRootId);
+                    await saService.ensureFolder('Employees', targetRootId);
                 } catch (e: any) {
                     return res.status(400).json({ 
                         message: `Google Drive Folder not found or inaccessible: ${targetRootId}. Please share it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor' before saving.` 
