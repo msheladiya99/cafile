@@ -1,11 +1,12 @@
 import { Router, Response } from 'express';
 import { authenticate, requireRoles, AuthRequest } from '../middleware/auth';
+import { checkFeatureAccess } from '../middleware/subscriptionLimits';
 import { encrypt, decrypt } from '../utils/encryption';
 import { sendEmail } from '../utils/email';
 import mongoose from 'mongoose';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, checkFeatureAccess('dscBulk'));
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 function computeStatus(expiryDate: Date): 'active' | 'expiring_soon' | 'expired' {

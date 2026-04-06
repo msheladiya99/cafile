@@ -1,269 +1,306 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-    Box,
-    AppBar,
-    Toolbar,
-    Typography,
-    IconButton,
-    Avatar,
-    Tooltip,
-    Tabs,
-    Tab,
-    Container,
-    Badge,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    useMediaQuery,
-    useTheme
+    Box, Typography, Avatar, Tooltip, IconButton, Drawer,
+    useMediaQuery, useTheme
 } from '@mui/material';
 import {
-    Search as SearchIcon,
-    ChatBubbleOutline as ChatIcon,
-    Menu as MenuIcon,
     Dashboard as DashboardIcon,
     Business as BusinessIcon,
     Subscriptions as SubscriptionsIcon,
+    Extension as ExtensionIcon,
     Assessment as ReportsIcon,
-    Settings as SettingsIcon,
-    VpnKey as VpnKeyIcon
+    MonitorHeart as HealthIcon,
+    Security as SecurityIcon,
+    Logout as LogoutIcon,
+    Menu as MenuIcon,
+    Close as CloseIcon,
+    Add as AddIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import AccountMenu from '../components/common/AccountMenu';
 
+const NAV = [
+    { label: 'Dashboard',     icon: <DashboardIcon  />, path: '/super-admin/dashboard' },
+    { label: 'Firms',         icon: <BusinessIcon   />, path: '/super-admin/firms' },
+    { label: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
+    { label: 'Add-ons',       icon: <ExtensionIcon  />, path: '/super-admin/addons' },
+    { label: 'Analytics',     icon: <ReportsIcon    />, path: '/super-admin/analytics' },
+    { label: 'System Health', icon: <HealthIcon     />, path: '/super-admin/system-health' },
+    { label: 'Security',      icon: <SecurityIcon   />, path: '/super-admin/security' },
+];
 
+const SIDEBAR_W = 240;
+const SIDEBAR_W_COLLAPSED = 72;
+
+function SidebarItem({ item, active, collapsed, onClick }: {
+    item: typeof NAV[0]; active: boolean; collapsed: boolean; onClick: () => void;
+}) {
+    return (
+        <Tooltip title={collapsed ? item.label : ''} placement="right">
+            <Box
+                onClick={onClick}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    px: collapsed ? 1.5 : 2,
+                    py: 1.25,
+                    mx: 1,
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                    bgcolor: active ? 'rgba(99,102,241,0.1)' : 'transparent',
+                    color: active ? '#6366f1' : '#94a3b8',
+                    '&:hover': {
+                        bgcolor: active ? 'rgba(99,102,241,0.13)' : 'rgba(0,0,0,0.04)',
+                        color: active ? '#6366f1' : '#475569',
+                        transform: 'translateX(2px)',
+                    },
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Active bar */}
+                {active && (
+                    <Box sx={{
+                        position: 'absolute', left: 0, top: '25%', height: '50%',
+                        width: 3, borderRadius: '0 4px 4px 0', bgcolor: '#6366f1',
+                    }} />
+                )}
+                <Box sx={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minWidth: 28,
+                    '& svg': { fontSize: 20 }
+                }}>
+                    {item.icon}
+                </Box>
+                {!collapsed && (
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: active ? 700 : 500, whiteSpace: 'nowrap', letterSpacing: -0.2 }}>
+                        {item.label}
+                    </Typography>
+                )}
+            </Box>
+        </Tooltip>
+    );
+}
+
+function Sidebar({ collapsed, onToggle, onNavigate, currentPath }: {
+    collapsed: boolean; onToggle: () => void; onNavigate: (p: string) => void; currentPath: string;
+}) {
+    const { user, logout, remainingTime } = useAuth();
+    const navigate = useNavigate();
+
+    return (
+        <Box sx={{
+            width: collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W,
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: '#ffffff',
+            borderRight: '1px solid #f1f5f9',
+            transition: 'width 0.2s ease',
+            overflowX: 'hidden',
+            position: 'fixed',
+            top: 0, left: 0, bottom: 0,
+            zIndex: 100,
+        }}>
+            {/* Logo area */}
+            <Box sx={{ px: collapsed ? 1 : 2, pt: 2.5, pb: 2, display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between' }}>
+                {!collapsed && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }} onClick={() => navigate('/super-admin/dashboard')}>
+                        <Box sx={{
+                            width: 34, height: 34, bgcolor: '#6366f1', borderRadius: '10px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+                        }}>
+                            <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1rem', lineHeight: 1 }}>S</Typography>
+                        </Box>
+                        <Typography sx={{ fontWeight: 900, fontSize: '1.05rem', color: '#1e293b', letterSpacing: -0.5 }}>
+                            mycafile
+                        </Typography>
+                    </Box>
+                )}
+                {collapsed && (
+                    <Box sx={{
+                        width: 34, height: 34, bgcolor: '#6366f1', borderRadius: '10px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+                    }} onClick={() => navigate('/super-admin/dashboard')}>
+                        <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1rem' }}>S</Typography>
+                    </Box>
+                )}
+                <IconButton onClick={onToggle} size="small" sx={{ color: '#94a3b8', '&:hover': { bgcolor: '#f8fafc' } }}>
+                    {collapsed ? <MenuIcon fontSize="small" /> : <CloseIcon fontSize="small" />}
+                </IconButton>
+            </Box>
+
+            <Box sx={{ px: 1, mb: 1 }}>
+                <Box sx={{ height: '1px', bgcolor: '#f1f5f9' }} />
+            </Box>
+
+            {/* Nav items */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, py: 1 }}>
+                {NAV.map(item => {
+                    const active = currentPath === item.path || (item.path !== '/super-admin/dashboard' && currentPath.startsWith(item.path));
+                    return (
+                        <SidebarItem
+                            key={item.path}
+                            item={item}
+                            active={active}
+                            collapsed={collapsed}
+                            onClick={() => onNavigate(item.path)}
+                        />
+                    );
+                })}
+            </Box>
+
+            {/* Quick action */}
+            {!collapsed && (
+                <Box sx={{ mx: 1, mb: 2 }}>
+                    <Box
+                        onClick={() => navigate('/super-admin/create-firm')}
+                        sx={{
+                            display: 'flex', alignItems: 'center', gap: 1.5,
+                            px: 2, py: 1.25, borderRadius: '14px', cursor: 'pointer',
+                            bgcolor: '#f5f3ff', color: '#6366f1',
+                            transition: 'all 0.18s ease',
+                            '&:hover': { bgcolor: '#ede9fe' },
+                        }}
+                    >
+                        <AddIcon sx={{ fontSize: 18 }} />
+                        <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>Add New Firm</Typography>
+                    </Box>
+                </Box>
+            )}
+
+            {/* Bottom user section */}
+            <Box sx={{ p: collapsed ? 1 : 2, borderTop: '1px solid #f1f5f9' }}>
+                {collapsed ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800 }}>
+                            {user?.name?.charAt(0) || 'S'}
+                        </Avatar>
+                        <Tooltip title="Logout" placement="right">
+                            <IconButton onClick={logout} size="small" sx={{ color: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}>
+                                <LogoutIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                ) : (
+                    <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                            <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: '0.85rem', fontWeight: 800 }}>
+                                {user?.name?.charAt(0) || 'S'}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {user?.name || 'Super Admin'}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981', flexShrink: 0 }} />
+                                    <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>
+                                        {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <IconButton onClick={logout} size="small" sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}>
+                                <LogoutIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                        <Box sx={{ bgcolor: '#f8fafc', borderRadius: '10px', px: 1.5, py: 0.75 }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase' }}>
+                                Super Admin Portal
+                            </Typography>
+                        </Box>
+                    </Box>
+                )}
+            </Box>
+        </Box>
+    );
+}
 
 export const SuperAdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout, remainingTime } = useAuth();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [mobileOpen, setMobileOpen] = useState(false);
-
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+    const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-    const menuItems = [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/super-admin/dashboard' },
-        { text: 'Firms', icon: <BusinessIcon />, path: '/super-admin/firms' },
-        { text: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
-        { text: 'Analytics', icon: <ReportsIcon />, path: '/super-admin/analytics' },
-        { text: 'Health', icon: <SettingsIcon />, path: '/super-admin/system-health' },
-        { text: 'Security', icon: <VpnKeyIcon />, path: '/super-admin/security' },
-    ];
-
-    // Find active tab index based on current path - improved to catch subpages
-    const currentTabIndex = menuItems.findIndex(item => 
-        location.pathname === item.path || (item.path !== '/super-admin/dashboard' && location.pathname.startsWith(item.path))
-    );
-    const tabValue = currentTabIndex === -1 ? false : currentTabIndex;
-
-    const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-        navigate(menuItems[newValue].path);
-    };
-
-    const handleMobileMenuClick = (path: string) => {
+    const handleNavigate = (path: string) => {
         navigate(path);
         setMobileOpen(false);
     };
 
-
+    const sidebarWidth = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W;
 
     return (
-        <Box sx={{ bgcolor: '#eef2ff', minHeight: '100vh', pb: 10 }}>
-            <AppBar 
-                position="static" 
-                elevation={0} 
-                sx={{ 
-                    bgcolor: 'transparent', 
-                    color: '#1e293b', 
-                    pt: 2, 
-                    px: { xs: 2, md: 5 } 
-                }}
-            >
-                <Container maxWidth="xl" sx={{ p: '0 !important' }}>
-                    <Toolbar sx={{ justifyContent: 'space-between', bgcolor: '#fff', borderRadius: '24px', px: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {isMobile && (
-                                <IconButton 
-                                    onClick={() => setMobileOpen(true)} 
-                                    sx={{ mr: 1 }}
-                                    aria-label="Open mobile menu"
-                                    title="Open mobile menu"
-                                >
-                                    <MenuIcon />
-                                </IconButton>
-                            )}
-                            <Box sx={{ 
-                                width: 32, 
-                                height: 32, 
-                                bgcolor: '#6366f1', 
-                                borderRadius: '10px', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                transform: 'rotate(-10deg)',
-                                cursor: 'pointer'
-                            }} onClick={() => navigate('/super-admin/dashboard')}>
-                                <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '1rem' }}>S</Typography>
-                            </Box>
-                            <Typography variant="h6" sx={{ fontWeight: 1000, color: '#4f46e5', mt: 0.5, letterSpacing: -1 }}>mycafile</Typography>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8fafc' }}>
+            {/* Desktop Sidebar */}
+            {!isMobile && (
+                <Sidebar
+                    collapsed={collapsed}
+                    onToggle={() => setCollapsed(c => !c)}
+                    onNavigate={handleNavigate}
+                    currentPath={location.pathname}
+                />
+            )}
+
+            {/* Mobile Drawer */}
+            {isMobile && (
+                <Drawer
+                    anchor="left"
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    PaperProps={{ sx: { width: SIDEBAR_W, border: 'none' } }}
+                >
+                    <Sidebar
+                        collapsed={false}
+                        onToggle={() => setMobileOpen(false)}
+                        onNavigate={handleNavigate}
+                        currentPath={location.pathname}
+                    />
+                </Drawer>
+            )}
+
+            {/* Main Content */}
+            <Box sx={{
+                flex: 1,
+                ml: isMobile ? 0 : `${sidebarWidth}px`,
+                transition: 'margin-left 0.2s ease',
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+            }}>
+                {/* Top bar (mobile) */}
+                {isMobile && (
+                    <Box sx={{
+                        display: 'flex', alignItems: 'center', gap: 1.5,
+                        px: 2, py: 1.5, bgcolor: '#ffffff',
+                        borderBottom: '1px solid #f1f5f9',
+                        position: 'sticky', top: 0, zIndex: 99,
+                    }}>
+                        <IconButton onClick={() => setMobileOpen(true)} size="small">
+                            <MenuIcon />
+                        </IconButton>
+                        <Box sx={{
+                            width: 28, height: 28, bgcolor: '#6366f1', borderRadius: '8px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <Typography sx={{ color: '#fff', fontWeight: 900, fontSize: '0.9rem' }}>S</Typography>
                         </Box>
-
-                        {!isMobile && (
-                            <Tabs 
-                                value={tabValue} 
-                                onChange={handleTabChange}
-                                centered
-                                sx={{ 
-                                    '& .MuiTabs-indicator': { height: 0 },
-                                    '& .MuiTab-root': {
-                                        textTransform: 'none',
-                                        fontWeight: 800,
-                                        fontSize: '0.9rem',
-                                        color: '#94a3b8',
-                                        minWidth: 100,
-                                        borderRadius: '14px',
-                                        m: 0.5,
-                                        transition: 'all 0.2s ease',
-                                        '&.Mui-selected': {
-                                            bgcolor: '#f1f5f9',
-                                            color: '#1e293b'
-                                        },
-                                        '&:hover': {
-                                            color: '#6366f1'
-                                        }
-                                    }
-                                }}
-                            >
-                                {menuItems.map((item, index) => (
-                                    <Tab key={index} label={item.text} />
-                                ))}
-                            </Tabs>
-                        )}
-
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <IconButton 
-                                size="small" 
-                                sx={{ color: '#94a3b8' }}
-                                aria-label="Search platform"
-                                title="Search platform"
-                            >
-                                <SearchIcon />
-                            </IconButton>
-                            <IconButton 
-                                size="small" 
-                                sx={{ color: '#94a3b8' }}
-                                aria-label="View messages"
-                                title="View messages"
-                            >
-                                <Badge variant="dot" color="error"><ChatIcon /></Badge>
-                            </IconButton>
-                            <Tooltip title="Admin Account">
-                                <IconButton 
-                                    onClick={(e) => setAnchorEl(e.currentTarget)} 
-                                    size="small"
-                                    aria-label="Open account menu"
-                                >
-                                    <Avatar sx={{ width: 32, height: 32, border: '2px solid #f1f5f9', bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800 }}>S</Avatar>
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-
-                        <AccountMenu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={() => setAnchorEl(null)}
-                            user={user}
-                            logout={logout}
-                            remainingTime={remainingTime}
-                        />
-                    </Toolbar>
-                </Container>
-            </AppBar>
-
-            {/* Mobile Navigation Drawer */}
-            <Drawer
-                anchor="left"
-                open={mobileOpen}
-                onClose={() => setMobileOpen(false)}
-                PaperProps={{ sx: { width: 280, borderRadius: '0 32px 32px 0', p: 2 } }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, px: 1 }}>
-                    <Box sx={{ width: 32, height: 32, bgcolor: '#6366f1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Typography sx={{ color: '#fff', fontWeight: 900 }}>S</Typography>
+                        <Typography sx={{ fontWeight: 900, color: '#1e293b', letterSpacing: -0.5 }}>mycafile</Typography>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: -1 }}>mycafile</Typography>
-                </Box>
-                <List>
-                    {menuItems.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-                            <ListItemButton 
-                                onClick={() => handleMobileMenuClick(item.path)}
-                                selected={location.pathname.startsWith(item.path)}
-                                sx={{ borderRadius: '12px', '&.Mui-selected': { bgcolor: '#f1f5f9', color: '#1e293b' } }}
-                            >
-                                <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: 800, fontSize: '0.9rem' }} />
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
-                <Box sx={{ mt: 'auto', p: 2, bgcolor: '#f8fafc', borderRadius: '16px' }}>
-                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#94a3b8', display: 'block', mb: 1 }}>SESSION TIME</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 900, fontFamily: 'monospace', color: '#6366f1' }}>
-                        {Math.floor(remainingTime / 60)}:{((remainingTime % 60)).toString().padStart(2, '0')}
-                    </Typography>
-                </Box>
-            </Drawer>
+                )}
 
-            <Container maxWidth="xl" sx={{ mt: 2 }}>
-                <Box sx={{ 
-                    bgcolor: '#fff', 
-                    borderRadius: '48px', 
-                    minHeight: '85vh',
-                    p: { xs: 2.5, md: 6 },
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.02)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
-                    {/* Background decorative shapes like Sheeld */}
-                    <Box sx={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, borderRadius: '50%', bgcolor: '#f5f3ff', zIndex: 0 }} />
-                    <Box sx={{ position: 'absolute', bottom: -50, left: -50, width: 200, height: 200, borderRadius: '50%', bgcolor: '#eff6ff', zIndex: 0 }} />
-
-                    <Box sx={{ position: 'relative', zIndex: 1 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
-                            <Box sx={{ 
-                                bgcolor: '#f8fafc', 
-                                px: 2.5, 
-                                py: 1, 
-                                borderRadius: '14px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1.5,
-                                border: '1px solid #f1f5f9'
-                            }}>
-                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#10b981', animation: 'pulse 2s infinite' }} />
-                                <Typography variant="caption" sx={{ fontWeight: 900, color: '#475569', letterSpacing: 1.5 }}>
-                                    SECURE SESSION: {Math.floor(remainingTime / 60)}:{((remainingTime % 60)).toString().padStart(2, '0')}
-                                </Typography>
-                            </Box>
-                        </Box>
-                        <Outlet />
-                    </Box>
+                <Box sx={{ flex: 1, p: { xs: 2, md: 3 } }}>
+                    <Outlet />
                 </Box>
-            </Container>
+            </Box>
 
             <style>{`
-                @keyframes pulse {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                    100% { opacity: 1; }
-                }
+                @keyframes sa-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+                .sa-page { animation: sa-fade-in 0.25s ease; }
             `}</style>
         </Box>
     );
