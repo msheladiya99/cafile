@@ -803,6 +803,7 @@ router.delete('/files/:fileId', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asy
 // Get all years for a client
 router.get('/clients/:clientId/years', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { clientId } = req.params;
 
         const years = await File.distinct('year', { clientId });
@@ -816,6 +817,7 @@ router.get('/clients/:clientId/years', async (req: AuthRequest, res: Response) =
 // Download file (for preview and download)
 router.get('/download/:fileId', async (req: AuthRequest, res: Response) => {
     try {
+        const { File } = (req as any).models;
         const { fileId } = req.params;
 
         const file = await File.findOne({ _id: fileId, firmId: req.firmId });
@@ -1311,6 +1313,7 @@ router.post('/it-status', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (re
 // Update IT Status
 router.patch('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ITStatus } = (req as any).models;
         const { id } = req.params;
         const { name, description, status } = req.body;
         const firmId = req.firmId || req.user?.firmId;
@@ -1332,6 +1335,7 @@ router.patch('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asyn
 // Delete IT Status
 router.delete('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { ITStatus } = (req as any).models;
         const { id } = req.params;
         const firmId = req.firmId || req.user?.firmId;
 
@@ -1346,6 +1350,7 @@ router.delete('/it-status/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asy
 
 router.get('/it-status', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { ITStatus } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
@@ -1405,6 +1410,7 @@ router.post('/sub-master', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (r
 // Update Sub Master
 router.patch('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { SubMaster } = (req as any).models;
         const { id } = req.params;
         const { name, description, status } = req.body;
         const firmId = req.firmId || req.user?.firmId;
@@ -1426,6 +1432,7 @@ router.patch('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), asy
 // Delete Sub Master
 router.delete('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
+        const { SubMaster } = (req as any).models;
         const { id } = req.params;
         const firmId = req.firmId || req.user?.firmId;
 
@@ -1440,6 +1447,7 @@ router.delete('/sub-master/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), as
 
 router.get('/sub-master', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const { SubMaster } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
