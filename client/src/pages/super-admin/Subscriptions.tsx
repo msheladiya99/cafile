@@ -1,74 +1,139 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, Alert, Button, Stack } from '@mui/material';
+import {
+    Box, Typography, Grid, Dialog, DialogTitle, DialogContent,
+    DialogActions, TextField, CircularProgress, Alert, Button, Stack, Chip
+} from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Stars as StarsIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import { CheckCircle as CheckIcon, Edit as EditIcon, Tune as TuneIcon } from '@mui/icons-material';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface Plan {
     _id: string;
     name: 'Free' | 'Basic' | 'Standard' | 'Pro' | 'Enterprise' | 'Custom';
     yearlyPrice: number;
-    limits: {
-        clients: number;
-        staff: number;
-        storageGB: number;
-    };
+    limits: { clients: number; staff: number; storageGB: number };
     isActive: boolean;
 }
 
-const ProductCard = ({ plan, onEdit }: { plan: Plan, onEdit: (p: Plan) => void }) => {
-    const isPro = plan.name === 'Pro';
-    const bgConfig = isPro ? 'linear-gradient(135deg, #e0e8ff 0%, #d4ddf6 100%)' : '#f3f4f6';
-    const textColor = '#000';
+// ── Color accent per plan position ──────────────────────────────────────────
+const PLAN_ACCENTS = [
+    { bg: 'linear-gradient(135deg, #e0e8ff 0%, #c7d2fe 100%)', text: '#4338ca' },
+    { bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', text: '#065f46' },
+    { bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',  text: '#ffffff', dark: true },
+    { bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', text: '#92400e' },
+];
+
+const PlanCard = ({ plan, index, onEdit }: { plan: Plan; index: number; onEdit: (p: Plan) => void }) => {
+    const accent = PLAN_ACCENTS[index % PLAN_ACCENTS.length];
+    const isDark = !!accent.dark;
+
+    const staffLabel  = plan.limits.staff  >= 99999 ? 'Unlimited' : plan.limits.staff;
+    const clientLabel = plan.limits.clients >= 99999 ? 'Unlimited' : plan.limits.clients;
 
     return (
-        <Card sx={{ 
-            height: '100%', borderRadius: '32px', border: '1px solid #e5e7eb', bgcolor: '#ffffff',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', p: 1.5,
-            transition: 'transform 0.3s ease', '&:hover': { transform: 'translateY(-10px)' }
+        <Box sx={{
+            bgcolor: '#fff',
+            borderRadius: '24px',
+            border: '1px solid #f1f5f9',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'all 0.22s ease',
+            '&:hover': {
+                transform: 'translateY(-6px)',
+                boxShadow: '0 20px 48px rgba(0,0,0,0.09)',
+                border: '1px solid #e2e8f0',
+            },
         }}>
-            <Box sx={{ background: bgConfig, borderRadius: '24px', p: 3, pb: 4, mb: 1 }}>
-                <Box sx={{ display: 'inline-block', bgcolor: '#fff', px: 2, py: 0.5, borderRadius: '12px', mb: 3 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: '#000', textTransform: 'uppercase' }}>
+            {/* Gradient header */}
+            <Box sx={{ background: accent.bg, p: 3, pb: 3.5 }}>
+                {/* Plan name pill */}
+                <Box sx={{
+                    display: 'inline-block',
+                    bgcolor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    px: 2, py: 0.4,
+                    borderRadius: '20px',
+                    mb: 2.5,
+                    border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.06)',
+                }}>
+                    <Typography sx={{
+                        fontWeight: 800, fontSize: '0.7rem',
+                        letterSpacing: '0.1em', textTransform: 'uppercase',
+                        color: isDark ? '#fff' : accent.text,
+                    }}>
                         {plan.name}
                     </Typography>
                 </Box>
-                
-                <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 0.5 }}>
-                    <Typography sx={{ fontWeight: 900, color: textColor, fontSize: '1.8rem' }}>₹</Typography>
-                    <Typography sx={{ color: textColor, fontWeight: 900, fontSize: '3.5rem', lineHeight: 1, letterSpacing: '-2px' }}>
-                        {plan.yearlyPrice.toLocaleString()}
+
+                {/* Price */}
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mb: 2.5 }}>
+                    <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: isDark ? '#fff' : '#111', lineHeight: 1 }}>₹</Typography>
+                    <Typography sx={{ fontWeight: 900, fontSize: '3rem', color: isDark ? '#fff' : '#111', letterSpacing: '-2px', lineHeight: 1 }}>
+                        {plan.yearlyPrice.toLocaleString('en-IN')}
                     </Typography>
-                    <Typography sx={{ color: '#4b5563', fontWeight: 700, fontSize: '1.2rem' }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: isDark ? 'rgba(255,255,255,0.6)' : '#64748b' }}>
                         /yr
                     </Typography>
                 </Box>
 
-                <Button 
-                    fullWidth variant="contained" onClick={() => onEdit(plan)}
-                    sx={{ bgcolor: '#111', color: '#fff', py: 1.8, borderRadius: '20px', fontWeight: 800, '&:hover': { bgcolor: '#000' } }}
+                {/* Edit button */}
+                <Box
+                    onClick={() => onEdit(plan)}
+                    sx={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                        bgcolor: isDark ? '#fff' : '#111',
+                        color: isDark ? '#111' : '#fff',
+                        py: 1.25, borderRadius: '14px',
+                        cursor: 'pointer', fontWeight: 700, fontSize: '0.875rem',
+                        transition: 'all 0.15s ease',
+                        '&:hover': {
+                            bgcolor: isDark ? '#f1f5f9' : '#1e293b',
+                            transform: 'scale(1.02)',
+                        },
+                    }}
                 >
+                    <EditIcon sx={{ fontSize: 16 }} />
                     Edit Configuration
-                </Button>
+                </Box>
             </Box>
 
-            <Box sx={{ p: 3, pt: 1, flexGrow: 1 }}>
-                <Stack spacing={2.5}>
+            {/* Features list */}
+            <Box sx={{ p: 3, flex: 1 }}>
+                <Stack spacing={2}>
                     {[
-                        `${plan.limits.staff >= 99999 ? 'Unlimited' : plan.limits.staff} Staff Limit`,
-                        `${plan.limits.clients >= 99999 ? 'Unlimited' : plan.limits.clients} Client Limit`,
-                        `${plan.limits.storageGB} GB Cloud Storage`
-                    ].map((feat, index) => (
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start" key={index}>
-                            <CheckCircleIcon sx={{ fontSize: 18, color: '#9ca3af', mt: 0.3 }} />
-                            <Typography sx={{ color: '#1e293b', fontWeight: 700, fontSize: '0.95rem' }}>{feat}</Typography>
-                        </Stack>
+                        `${staffLabel} Staff Limit`,
+                        `${clientLabel} Client Limit`,
+                        `${plan.limits.storageGB} GB Cloud Storage`,
+                    ].map((feat) => (
+                        <Box key={feat} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                            <CheckIcon sx={{ fontSize: 17, color: '#94a3b8', flexShrink: 0 }} />
+                            <Typography sx={{ color: '#1e293b', fontWeight: 600, fontSize: '0.875rem' }}>
+                                {feat}
+                            </Typography>
+                        </Box>
                     ))}
                 </Stack>
+
+                {/* Status badge */}
+                <Box sx={{ mt: 2.5, pt: 2.5, borderTop: '1px solid #f8fafc' }}>
+                    <Chip
+                        label={plan.isActive ? 'Active' : 'Inactive'}
+                        size="small"
+                        sx={{
+                            bgcolor: plan.isActive ? '#ecfdf5' : '#fff1f2',
+                            color: plan.isActive ? '#10b981' : '#f43f5e',
+                            fontWeight: 700, fontSize: '0.7rem',
+                        }}
+                    />
+                </Box>
             </Box>
-        </Card>
+        </Box>
     );
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const Subscriptions: React.FC = () => {
     const queryClient = useQueryClient();
@@ -78,19 +143,23 @@ const Subscriptions: React.FC = () => {
     const { data: plans, isLoading, error } = useQuery<Plan[]>({
         queryKey: ['superadmin_plans'],
         queryFn: async () => {
-             const res = await api.get('/super-admin/plans');
-             return res.data;
-        }
+            const res = await api.get('/super-admin/plans');
+            return res.data;
+        },
+        staleTime: 30_000,
+        refetchOnWindowFocus: false,
     });
 
     const updatePlanMutation = useMutation({
         mutationFn: async (updatedPlan: Partial<Plan>) => {
-             return api.put(`/super-admin/plans/${updatedPlan._id}`, updatedPlan);
+            return api.put(`/super-admin/plans/${updatedPlan._id}`, updatedPlan);
         },
         onSuccess: () => {
-             queryClient.invalidateQueries({ queryKey: ['superadmin_plans'] });
-             setEditingPlan(null);
-        }
+            queryClient.invalidateQueries({ queryKey: ['superadmin_plans'] });
+            setEditingPlan(null);
+            toast.success('Plan configuration saved!');
+        },
+        onError: () => toast.error('Failed to save plan'),
     });
 
     const handleEditClick = (plan: Plan) => {
@@ -100,76 +169,148 @@ const Subscriptions: React.FC = () => {
 
     const handleSave = () => {
         if (editingPlan) {
-            updatePlanMutation.mutate({ 
+            updatePlanMutation.mutate({
                 _id: editingPlan._id,
                 yearlyPrice: formData.yearlyPrice,
-                limits: { 
-                    clients: Number(formData.clients), 
-                    staff: Number(formData.staff), 
-                    storageGB: Number(formData.storageGB) 
-                }
+                limits: {
+                    clients: Number(formData.clients),
+                    staff: Number(formData.staff),
+                    storageGB: Number(formData.storageGB),
+                },
             });
         }
     };
 
-    if (isLoading) return <Box sx={{ p: 5, textAlign: 'center' }}><CircularProgress /></Box>;
-    if (error) return <Box sx={{ p: 5 }}><Alert severity="error">Failed to load plans</Alert></Box>;
-
     return (
-        <Box>
-            <Box sx={{ textAlign: 'center', mb: 10 }}>
-                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', px: 3, py: 1, borderRadius: '12px', mb: 4 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <StarsIcon sx={{ fontSize: 18 }} />
-                        <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                            Super Admin Control
-                        </Typography>
-                    </Stack>
+        <Box className="sa-page">
+            {/* ── Header ── */}
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <Box sx={{ width: 32, height: 32, borderRadius: '10px', bgcolor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <TuneIcon sx={{ fontSize: 18, color: '#6366f1' }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: '#1e293b', letterSpacing: -0.5 }}>
+                        Platform Subscriptions
+                    </Typography>
                 </Box>
-                <Typography variant="h2" sx={{ fontWeight: 1000, color: '#0f172a', mb: 2, letterSpacing: -1.5, fontSize: { xs: '2.3rem', md: '3.5rem' }, lineHeight: 1.1 }}>
-                    Manage Platform Subscriptions
-                </Typography>
-                <Typography variant="h6" sx={{ color: '#64748b', maxWidth: '700px', mx: 'auto', fontWeight: 500 }}>
+                <Typography sx={{ color: '#94a3b8', fontSize: '0.875rem', fontWeight: 500, ml: '47px' }}>
                     Configure pricing tiers and account limits for all CA firms on the platform.
                 </Typography>
             </Box>
 
-            <Box sx={{ overflowX: 'auto', pb: 4, px: 2, mx: -2 }}>
-                <Grid container spacing={3} wrap="nowrap" justifyContent={{ xs: 'flex-start', md: 'center' }}>
-                    {plans?.map((plan) => (
-                        <Grid key={plan._id} sx={{ flex: '0 0 auto', width: { xs: '300px', sm: '320px', md: 'calc(25% - 24px)' } }}>
-                            <ProductCard plan={plan} onEdit={handleEditClick} />
+            {/* ── Plan Cards ── */}
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+                    <CircularProgress size={28} sx={{ color: '#6366f1' }} />
+                </Box>
+            ) : error ? (
+                <Alert severity="error" sx={{ borderRadius: '12px' }}>Failed to load subscription plans</Alert>
+            ) : (
+                <Grid container spacing={2.5}>
+                    {plans?.map((plan, i) => (
+                        <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={plan._id}>
+                            <PlanCard plan={plan} index={i} onEdit={handleEditClick} />
                         </Grid>
                     ))}
                 </Grid>
-            </Box>
+            )}
 
-            <Dialog open={!!editingPlan} onClose={() => setEditingPlan(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '32px', p: 2 } }}>
-                <DialogTitle sx={{ fontWeight: 900, fontSize: '1.5rem', textAlign: 'center' }}>Modify {editingPlan?.name} Tier</DialogTitle>
+            {/* ── Summary strip ── */}
+            {!isLoading && !error && plans && (
+                <Box sx={{
+                    mt: 3, bgcolor: '#fff', borderRadius: '16px',
+                    border: '1px solid #f1f5f9', p: 2.5,
+                    display: 'flex', gap: 4, flexWrap: 'wrap',
+                }}>
+                    <Box>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Plans</Typography>
+                        <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '1.25rem' }}>{plans.length}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Active Plans</Typography>
+                        <Typography sx={{ fontWeight: 800, color: '#10b981', fontSize: '1.25rem' }}>{plans.filter(p => p.isActive).length}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Highest Plan</Typography>
+                        <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '1.25rem' }}>
+                            ₹{Math.max(...plans.map(p => p.yearlyPrice)).toLocaleString('en-IN')}/yr
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
+
+            {/* ── Edit Dialog ── */}
+            <Dialog
+                open={!!editingPlan}
+                onClose={() => setEditingPlan(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '20px', p: 0.5 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem', pb: 1 }}>
+                    Edit — {editingPlan?.name} Plan
+                </DialogTitle>
                 <DialogContent>
-                     <Grid container spacing={3} sx={{ mt: 1 }}>
-                         <Grid size={{ xs: 12 }}>
-                              <TextField fullWidth type="number" label="Yearly Price (₹)" value={formData.yearlyPrice || 0} onChange={e => setFormData({ ...formData, yearlyPrice: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
-                         </Grid>
-                         <Grid size={{ xs: 12, sm: 6 }}>
-                              <TextField fullWidth type="number" label="Staff Limit" value={formData.staff || 0} onChange={e => setFormData({ ...formData, staff: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
-                         </Grid>
-                         <Grid size={{ xs: 12, sm: 6 }}>
-                              <TextField fullWidth type="number" label="Client Limit" value={formData.clients || 0} onChange={e => setFormData({ ...formData, clients: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
-                         </Grid>
-                         <Grid size={{ xs: 12 }}>
-                              <TextField fullWidth type="number" label="Storage Limit (GB)" value={formData.storageGB || 0} onChange={e => setFormData({ ...formData, storageGB: Number(e.target.value) })} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px' } }} />
-                         </Grid>
-                     </Grid>
+                    <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                fullWidth type="number" label="Yearly Price (₹)"
+                                value={formData.yearlyPrice || 0}
+                                onChange={e => setFormData({ ...formData, yearlyPrice: Number(e.target.value) })}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                fullWidth type="number" label="Staff Limit"
+                                value={formData.staff || 0}
+                                onChange={e => setFormData({ ...formData, staff: Number(e.target.value) })}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                                helperText="Use 99999 for unlimited"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                fullWidth type="number" label="Client Limit"
+                                value={formData.clients || 0}
+                                onChange={e => setFormData({ ...formData, clients: Number(e.target.value) })}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                                helperText="Use 99999 for unlimited"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                fullWidth type="number" label="Storage Limit (GB)"
+                                value={formData.storageGB || 0}
+                                onChange={e => setFormData({ ...formData, storageGB: Number(e.target.value) })}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                            />
+                        </Grid>
+                    </Grid>
                 </DialogContent>
-                <DialogActions sx={{ p: 4, justifyContent: 'center' }}>
-                    <Button onClick={() => setEditingPlan(null)} sx={{ color: '#94a3b8', fontWeight: 800 }}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSave} disabled={updatePlanMutation.isPending} sx={{ bgcolor: '#4f46e5', color: '#fff', fontWeight: 900, borderRadius: '16px', px: 6, py: 1.5 }}>
-                        {updatePlanMutation.isPending ? 'Saving...' : 'Save Configuration'}
+                <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+                    <Button
+                        onClick={() => setEditingPlan(null)}
+                        sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, color: '#64748b' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleSave}
+                        disabled={updatePlanMutation.isPending}
+                        sx={{
+                            bgcolor: '#1e293b', color: '#fff', fontWeight: 800,
+                            borderRadius: '12px', px: 4, textTransform: 'none',
+                            '&:hover': { bgcolor: '#0f172a' }, boxShadow: 'none',
+                        }}
+                    >
+                        {updatePlanMutation.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </DialogActions>
             </Dialog>
         </Box>
     );
 };
+
 export default Subscriptions;

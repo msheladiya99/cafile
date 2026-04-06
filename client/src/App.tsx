@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -80,6 +80,7 @@ const FirmManagement = lazy(() => import('./pages/super-admin/FirmManagement'));
 const CreateFirm = lazy(() => import('./pages/super-admin/CreateFirm'));
 const FirmDetails = lazy(() => import('./pages/super-admin/FirmDetails'));
 const Subscriptions = lazy(() => import('./pages/super-admin/Subscriptions'));
+const Addons = lazy(() => import('./pages/super-admin/Addons'));
 const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
 const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
@@ -120,6 +121,12 @@ const theme = createTheme({
   },
 });
 
+const SuperAdminRedirect: React.FC = () => {
+  const { pathname, search } = useLocation();
+  const newPath = pathname.replace(/^\/super_admin/, '/super-admin');
+  return <Navigate to={newPath + search} replace />;
+};
+
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isStaff, isSuperAdmin } = useAuth();
 
@@ -144,8 +151,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/superadmin" element={isSuperAdminDomain() ? <SuperAdminLogin /> : <Navigate to="/login" replace />} />
         
         {/* Redirect underscored super_admin to hyphenated super-admin */}
-        <Route path="/super_admin" element={<Navigate to="/super-admin" replace />} />
-        <Route path="/super_admin/*" element={<Navigate to="/super-admin" replace />} />
+        <Route path="/super_admin" element={<SuperAdminRedirect />} />
+        <Route path="/super_admin/*" element={<SuperAdminRedirect />} />
 
         {/* Super Admin Routes */}
         <Route
@@ -162,6 +169,7 @@ const AppRoutes: React.FC = () => {
           <Route path="create-firm" element={<CreateFirm />} />
           <Route path="firms/:id" element={<FirmDetails />} />
           <Route path="subscriptions" element={<Subscriptions />} />
+          <Route path="addons" element={<Addons />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="system-health" element={<SystemHealth />} />
           <Route path="security" element={<SecurityLogs />} />
