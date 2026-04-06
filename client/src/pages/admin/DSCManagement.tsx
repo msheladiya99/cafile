@@ -450,7 +450,7 @@ export const DSCManagement: React.FC = () => {
                                         height: { xs: 36, sm: 48 }, 
                                         boxShadow: `0 4px 12px ${c.color}40` 
                                     }}>
-                                        {React.cloneElement(c.icon as React.ReactElement, { sx: { fontSize: { xs: 18, sm: 24 } } })}
+                                        {React.cloneElement(c.icon as React.ReactElement<{ sx?: any }>, { sx: { fontSize: { xs: 18, sm: 24 } } })}
                                     </Avatar>
                                     <Box>
                                         <Typography variant="h4" fontWeight={800} lineHeight={1} sx={{ fontSize: { xs: '1.25rem', sm: '2.125rem' } }}>{c.value}</Typography>

@@ -10,6 +10,7 @@ import { File } from '../models/File';
 import { SuperAdmin } from '../models/SuperAdmin';
 import { ActivityLog } from '../models/ActivityLog';
 import { Plan } from '../models/Plan';
+import { Addon } from '../models/Addon';
 import { TaskCategory } from '../models/TaskCategory';
 import { TaskMaster } from '../models/TaskMaster';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
@@ -70,80 +71,73 @@ router.post('/login', async (req, res: Response) => {
 // Dashboard Summary & Charts
 router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const totalFirms = await Firm.countDocuments();
-        const activeFirms = await Firm.countDocuments({ status: 'active' });
-        const suspendedFirms = await Firm.countDocuments({ status: 'suspended' });
-        const totalUsers = await User.countDocuments();
-        const totalClients = await Client.countDocuments();
-        const totalTasks = await Task.countDocuments();
-        const completedTasks = await Task.countDocuments({ status: 'DONE' });
-        const totalInvoices = await Invoice.countDocuments();
-        const totalFiles = await File.countDocuments();
-        const totalStaff = await User.countDocuments({ role: { $ne: 'CLIENT' } });
+        // ── Run all counts in parallel for maximum speed ──
+        const [
+            totalFirms, activeFirms, suspendedFirms,
+            totalUsers, totalStaff, totalClients,
+            totalTasks, completedTasks, totalInvoices, totalFiles,
+            firms,
+            trialCount, basicCount, proCount, entCount,
+            recentFirms,
+        ] = await Promise.all([
+            Firm.countDocuments(),
+            Firm.countDocuments({ status: 'active' }),
+            Firm.countDocuments({ status: 'suspended' }),
+            User.countDocuments(),
+            User.countDocuments({ role: { $ne: 'CLIENT' } }),
+            Client.countDocuments(),
+            Task.countDocuments(),
+            Task.countDocuments({ status: 'DONE' }),
+            Invoice.countDocuments(),
+            File.countDocuments(),
+            Firm.find({}, 'plan createdAt').lean(),
+            Firm.countDocuments({ plan: 'trial' }),
+            Firm.countDocuments({ plan: 'basic' }),
+            Firm.countDocuments({ plan: 'professional' }),
+            Firm.countDocuments({ plan: 'enterprise' }),
+            Firm.find({}, 'firmName subdomain email plan status createdAt').sort({ createdAt: -1 }).limit(5).lean(),
+        ]);
+
         const storageUsage = `${(totalFiles * 0.5).toFixed(1)} MB`;
 
-        console.log('SUPER_ADMIN_DASHBOARD', { totalFirms, totalUsers, totalClients });
-
-        // Calculate actual revenue based on plans
-        const firms = await Firm.find();
         const planPricing: Record<string, number> = {
-            trial: 0,
-            basic: 2000,
-            professional: 5000,
-            enterprise: 10000
+            trial: 0, basic: 2000, professional: 5000, enterprise: 10000
         };
-        const totalRevenue = firms.reduce((acc, f) => acc + (planPricing[f.plan] || 0), 0);
+        const totalRevenue = firms.reduce((acc: number, f: { plan: string }) => acc + (planPricing[f.plan] || 0), 0);
 
-        // Firm Registrations Last 6 Months (Properly Grouped)
+        // Firm Registrations Last 6 Months
         const last6Months = Array.from({ length: 6 }).map((_, i) => {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             return {
                 month: d.toLocaleString('default', { month: 'short' }),
-                year: d.getFullYear(),
-                count: 0,
-                revenue: 0,
-                fullMonth: d.getMonth(),
-                fullYear: d.getFullYear()
+                count: 0, revenue: 0,
+                fullMonth: d.getMonth(), fullYear: d.getFullYear()
             };
         }).reverse();
 
-        firms.forEach(firm => {
+        firms.forEach((firm: { plan: string; createdAt: Date }) => {
             if (!firm.createdAt) return;
             const firmDate = new Date(firm.createdAt);
-            const item = last6Months.find(m =>
-                m.fullMonth === firmDate.getMonth() &&
-                m.fullYear === firmDate.getFullYear()
-            );
-            if (item) {
-                item.count++;
-                item.revenue += planPricing[firm.plan] || 0;
-            }
+            const item = last6Months.find(m => m.fullMonth === firmDate.getMonth() && m.fullYear === firmDate.getFullYear());
+            if (item) { item.count++; item.revenue += planPricing[firm.plan] || 0; }
         });
 
-        const recentFirms = await Firm.find().sort({ createdAt: -1 }).limit(5).lean();
-
         res.json({
-            widgets: {
-                totalFirms, activeFirms, suspendedFirms, totalUsers, totalStaff, totalClients, totalTasks, totalInvoices, totalRevenue, storageUsage
-            },
+            widgets: { totalFirms, activeFirms, suspendedFirms, totalUsers, totalStaff, totalClients, totalTasks, totalInvoices, totalRevenue, storageUsage },
             recentFirms,
             charts: {
                 firmRegistrations: last6Months,
-                platformUsage: {
-                    clients: totalClients,
-                    files: totalFiles,
-                    tasks: totalTasks
-                },
+                platformUsage: { clients: totalClients, files: totalFiles, tasks: totalTasks },
                 taskActivity: [
                     { name: 'Pending', value: totalTasks - completedTasks },
                     { name: 'Completed', value: completedTasks }
                 ],
                 plansDistribution: [
-                    { name: 'Trial', value: await Firm.countDocuments({ plan: 'trial' }) },
-                    { name: 'Basic', value: await Firm.countDocuments({ plan: 'basic' }) },
-                    { name: 'Professional', value: await Firm.countDocuments({ plan: 'professional' }) },
-                    { name: 'Enterprise', value: await Firm.countDocuments({ plan: 'enterprise' }) }
+                    { name: 'Trial', value: trialCount },
+                    { name: 'Basic', value: basicCount },
+                    { name: 'Professional', value: proCount },
+                    { name: 'Enterprise', value: entCount },
                 ]
             }
         });
@@ -152,6 +146,7 @@ router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Respo
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // Get all firms
 router.get('/firms', authenticate, requireSuperAdmin, async (req, res: Response) => {
@@ -242,8 +237,8 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
                     try {
                         await saService.getFileMetadata(customFolderId);
                     } catch (e: any) {
-                        return res.status(400).json({ 
-                            message: `Google Drive Folder not found or inaccessible: ${customFolderId}. Please ensure you have shared it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor'.` 
+                        return res.status(400).json({
+                            message: `Google Drive Folder not found or inaccessible: ${customFolderId}. Please ensure you have shared it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor'.`
                         });
                     }
 
@@ -266,7 +261,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
 
         let selectedPlan = await Plan.findOne({ name: planType });
         if (!selectedPlan) {
-             selectedPlan = await Plan.findOne({ name: 'Free' }); 
+            selectedPlan = await Plan.findOne({ name: 'Free' });
         }
 
         // 1. Save Firm in Master Database
@@ -294,7 +289,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
         // 2. Create Admin User
         const bcryptLib = await import('bcryptjs');
         const passwordHash = await bcryptLib.hash(adminPassword, 10);
-        
+
         let adminUserId: any;
 
         if (dbType === 'personal') {
@@ -410,7 +405,7 @@ router.post('/firms', authenticate, requireSuperAdmin, async (req, res: Response
             console.error('❌ [CreateFirm] Non-fatal error during task seeding (firm still created):', seedError);
         }
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: "Tenant created successfully",
             firm,
             dbType: firm.dbType,
@@ -469,13 +464,13 @@ router.patch('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Res
                     // the service account email, not the OAuth2 user account.
                     const saService = getServiceAccountDriveService();
                     await saService.getFileMetadata(targetRootId);
-                    
+
                     // Also ensure basic folders exist via service account
                     await saService.ensureFolder('Clients', targetRootId);
                     await saService.ensureFolder('Employees', targetRootId);
                 } catch (e: any) {
-                    return res.status(400).json({ 
-                        message: `Google Drive Folder not found or inaccessible: ${targetRootId}. Please share it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor' before saving.` 
+                    return res.status(400).json({
+                        message: `Google Drive Folder not found or inaccessible: ${targetRootId}. Please share it with drive-bot@ca-office-portal-486705.iam.gserviceaccount.com as an 'Editor' before saving.`
                     });
                 }
             } else if (targetDriveType === 'app' && currentFirm.googleDriveType === 'personal') {
@@ -483,7 +478,7 @@ router.patch('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Res
                     const driveService = getDriveService();
                     const caFilesRootId = await driveService.ensureFolder('MyCAFile');
                     targetRootId = await driveService.createFolder(currentFirm.firmName, caFilesRootId);
-                    
+
                     await driveService.ensureFolder('Clients', targetRootId);
                     await driveService.ensureFolder('Employees', targetRootId);
                     await driveService.ensureFolder('Compliance', targetRootId);
@@ -524,49 +519,46 @@ router.delete('/firms/:id', authenticate, requireSuperAdmin, async (req, res: Re
 // Global Analytics
 router.get('/analytics', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
-        const totalClients = await Client.countDocuments();
-        const totalTasks = await Task.countDocuments();
-        const completedTasks = await Task.countDocuments({ status: 'DONE' });
-        const totalFiles = await File.countDocuments();
+        const [
+            allClients, allTasks, completedTasks, allFiles, allFirms, allInvoices
+        ] = await Promise.all([
+            Client.find({}, 'createdAt firmId').lean(),
+            Task.countDocuments(),
+            Task.countDocuments({ status: 'DONE' }),
+            File.find({}, 'createdAt uploadedAt').lean(),
+            Firm.find({}, 'plan createdAt firmName status').lean(),
+            Invoice.countDocuments(),
+        ]);
 
-        const firms = await Firm.find();
         const planPricing: Record<string, number> = { trial: 0, basic: 2000, professional: 5000, enterprise: 10000 };
-        const totalRevenue = firms.reduce((acc, f) => acc + (planPricing[f.plan] || 0), 0);
+        const totalRevenue = allFirms.reduce((acc: number, f: any) => acc + (planPricing[f.plan] || 0), 0);
 
-        // Historical Data (Last 6 Months)
+        // Last 6 months history
         const history = Array.from({ length: 6 }).map((_, i) => {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             return {
                 month: d.toLocaleString('default', { month: 'short' }),
-                fullMonth: d.getMonth(),
-                fullYear: d.getFullYear(),
-                clients: 0,
-                revenue: 0,
-                files: 0
+                fullMonth: d.getMonth(), fullYear: d.getFullYear(),
+                clients: 0, revenue: 0, files: 0, firms: 0,
             };
         }).reverse();
 
-        // Clients per month
-        const clients = await Client.find();
-        clients.forEach(c => {
+        allClients.forEach((c: any) => {
             if (!c.createdAt) return;
             const cDate = new Date(c.createdAt);
             const h = history.find(m => m.fullMonth === cDate.getMonth() && m.fullYear === cDate.getFullYear());
             if (h) h.clients++;
         });
 
-        // Revenue per month
-        firms.forEach(f => {
+        allFirms.forEach((f: any) => {
             if (!f.createdAt) return;
-            const fDate = new Date(f.createdAt);
+            const fDate = new Date(f.createdAt as Date);
             const h = history.find(m => m.fullMonth === fDate.getMonth() && m.fullYear === fDate.getFullYear());
-            if (h) h.revenue += (planPricing[f.plan] || 0);
+            if (h) { h.revenue += (planPricing[f.plan] || 0); h.firms++; }
         });
 
-        // Files per month
-        const files = await File.find();
-        files.forEach((f: any) => {
+        allFiles.forEach((f: any) => {
             const date = f.createdAt || f.uploadedAt;
             if (!date) return;
             const fDate = new Date(date);
@@ -574,20 +566,32 @@ router.get('/analytics', authenticate, requireSuperAdmin, async (req, res: Respo
             if (h) h.files++;
         });
 
+        // Plan distribution
+        const planCounts: Record<string, number> = {};
+        allFirms.forEach((f: any) => { planCounts[f.plan] = (planCounts[f.plan] || 0) + 1; });
+
         res.json({
             metrics: {
-                totalClients: clients.length,
-                taskCompletionRate: totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) + '%' : '0%',
+                totalClients: allClients.length,
+                totalFirms: allFirms.length,
+                activeFirms: allFirms.filter((f: any) => f.status === 'active').length,
+                taskCompletionRate: allTasks > 0 ? ((completedTasks / allTasks) * 100).toFixed(1) + '%' : '0%',
+                taskCompletionPct: allTasks > 0 ? Math.round((completedTasks / allTasks) * 100) : 0,
+                totalTasks: allTasks,
+                completedTasks,
                 totalRevenue,
-                totalFiles: files.length
+                totalFiles: allFiles.length,
+                totalInvoices: allInvoices,
             },
-            history
+            history,
+            planDistribution: Object.entries(planCounts).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value })),
         });
     } catch (error) {
         console.error('Get global analytics error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
+
 
 // System Health
 router.get('/system-health', authenticate, requireSuperAdmin, async (req, res: Response) => {
@@ -618,18 +622,18 @@ router.get('/system-health', authenticate, requireSuperAdmin, async (req, res: R
 router.get('/security-logs', async (req, res: Response) => {
     try {
         const logs = await ActivityLog.find({ _id: { $exists: true } })
-        .sort({ timestamp: -1 })
-        .limit(100)
-        .populate({
-            path: 'userId',
-            select: 'name email username',
-            model: 'User'
-        })
-        .populate('firmId', 'firmName subdomain')
-        .lean();
+            .sort({ timestamp: -1 })
+            .limit(100)
+            .populate({
+                path: 'userId',
+                select: 'name email username',
+                model: 'User'
+            })
+            .populate('firmId', 'firmName subdomain')
+            .lean();
 
         console.log(`FETCHED_SECURITY_LOGS: count=${logs.length}`);
-        if(logs.length > 0) console.log('Sample Log Action:', logs[0].action);
+        if (logs.length > 0) console.log('Sample Log Action:', logs[0].action);
 
         const formattedLogs = logs.map((log: any) => ({
             id: log._id,
@@ -669,6 +673,109 @@ router.put('/plans/:id', authenticate, requireSuperAdmin, async (req: any, res: 
         res.json(plan);
     } catch (error) {
         console.error('Update plan error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ── Add-ons CRUD ─────────────────────────────────────────────────────────────
+router.get('/addons', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const addons = await Addon.find().sort({ createdAt: 1 }).lean();
+        res.json(addons);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/addons', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
+    try {
+        const { name, description, price, icon, color, isActive } = req.body;
+        if (!name || !description) return res.status(400).json({ message: 'Name and description are required' });
+        const addon = await Addon.create({ name, description, price: Number(price) || 0, icon: icon || 'Bolt', color: color || 'Indigo', isActive: isActive !== false });
+        res.status(201).json(addon);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.put('/addons/:id', authenticate, requireSuperAdmin, async (req: any, res: Response) => {
+    try {
+        const { name, description, price, icon, color, isActive } = req.body;
+        const addon = await Addon.findByIdAndUpdate(
+            req.params.id,
+            { name, description, price: Number(price), icon, color, isActive },
+            { new: true }
+        );
+        if (!addon) return res.status(404).json({ message: 'Add-on not found' });
+        res.json(addon);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.delete('/addons/:id', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const addon = await Addon.findByIdAndDelete(req.params.id);
+        if (!addon) return res.status(404).json({ message: 'Add-on not found' });
+        res.json({ message: 'Add-on deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ── Firm-specific Add-ons Management ──────────────────────────────────────────
+
+// GET: Get all purchased add-ons for a specific firm
+router.get('/firms/:id/addons', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const firm = await Firm.findById(req.params.id)
+            .populate('addons.addonId')
+            .lean();
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+        res.json(firm.addons || []);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST: Manually purchase/assign an add-on to a firm
+router.post('/firms/:id/addons', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { addonId, quantity, months } = req.body;
+        const firm = await Firm.findById(req.params.id);
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+
+        const addon = await Addon.findById(addonId);
+        if (!addon) return res.status(404).json({ message: 'Add-on not found in catalog' });
+
+        // Add to firm's addons array
+        const expiryDate = months ? new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Default 1 year
+        
+        firm.addons.push({
+            addonId,
+            quantity: Number(quantity) || 1,
+            purchaseDate: new Date(),
+            expiryDate
+        });
+
+        await firm.save();
+        res.status(201).json({ message: 'Add-on assigned successfully', addons: firm.addons });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// DELETE: Remove an add-on from a firm
+router.delete('/firms/:id/addons/:addonId', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const firm = await Firm.findById(req.params.id);
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+
+        firm.addons = firm.addons.filter(a => a.addonId.toString() !== req.params.addonId);
+        await firm.save();
+        
+        res.json({ message: 'Add-on removed successfully' });
+    } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
 });

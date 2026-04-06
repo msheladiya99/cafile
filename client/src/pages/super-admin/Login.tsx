@@ -61,7 +61,6 @@ const SuperAdminLogin: React.FC = () => {
     setError('');
     try {
       const res = await axios.post(`${API_URL}/super-admin/login`, { email, password });
-      await new Promise(r => setTimeout(r, 500));
       setAuth(res.data.token, res.data.user);
       navigate('/super-admin/dashboard');
     } catch (err: unknown) {

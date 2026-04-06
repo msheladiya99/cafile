@@ -3,24 +3,29 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IAddon extends Document {
     name: string;
     description: string;
-    type: 'STORAGE' | 'DATABASE' | 'WHATSAPP' | 'REPORTS' | 'DSC';
-    yearlyPrice: number;
-    value?: number; // e.g., 50 for 50GB storage
+    // Legacy fields
+    type?: 'STORAGE' | 'DATABASE' | 'WHATSAPP' | 'REPORTS' | 'DSC';
+    yearlyPrice?: number;
+    value?: number;
+    // New UI fields
+    price: number;
+    icon: string;
+    color: string;
     isActive: boolean;
 }
 
 const addonSchema = new Schema<IAddon>(
     {
-        name: { type: String, required: true },
+        name:        { type: String, required: true },
         description: { type: String, required: true },
-        type: { 
-            type: String, 
-            enum: ['STORAGE', 'DATABASE', 'WHATSAPP', 'REPORTS', 'DSC'],
-            required: true
-        },
-        yearlyPrice: { type: Number, required: true },
-        value: { type: Number },
-        isActive: { type: Boolean, default: true }
+        type:        { type: String, enum: ['STORAGE', 'DATABASE', 'WHATSAPP', 'REPORTS', 'DSC'] },
+        yearlyPrice: { type: Number },
+        value:       { type: Number },
+        // New fields
+        price:       { type: Number, default: 0 },
+        icon:        { type: String, default: 'Bolt' },
+        color:       { type: String, default: 'Indigo' },
+        isActive:    { type: Boolean, default: true }
     },
     { timestamps: true }
 );

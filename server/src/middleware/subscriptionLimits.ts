@@ -46,19 +46,21 @@ export const checkPlanLimits = (limitType: 'clients' | 'staff' | 'storageGB') =>
             // Add-ons value
             let addOnLimit = 0;
             if (firm.addons && firm.addons.length > 0) {
-                // Populate addons to get values
                 for (const fa of firm.addons) {
+                    // Check if addon is expired
+                    if (fa.expiryDate && new Date(fa.expiryDate) < new Date()) continue;
+
                     const addon = await Addon.findById(fa.addonId);
                     if (addon) {
-                        if (limitType === 'storageGB' && addon.type === 'STORAGE') {
+                        if (limitType === 'storageGB' && (addon.type === 'STORAGE' || addon.type === 'DATABASE')) {
                             addOnLimit += (addon.value || 0) * fa.quantity;
                         }
                     }
                 }
             }
 
-            const limit = plan.limits[limitType] + addOnLimit;
-            if (currentUsage >= limit) {
+            const limit = (plan.limits?.[limitType] || 0) + addOnLimit;
+            if (limit > 0 && currentUsage >= limit) {
                 return res.status(403).json({
                     message: `Limit reached for ${limitType}. Up to ${limit} allowed. Upgrade your plan.`
                 });
@@ -79,34 +81,43 @@ export const checkFeatureAccess = (featureFlag: string) => {
             if (!tenantId) return res.status(400).json({ message: 'Missing tenant context' });
 
             const firm = await Firm.findById(tenantId).populate('subscription.planId');
-            if (!firm || !firm.subscription?.planId) {
-                return res.status(403).json({ message: 'No active plan.' });
-            }
+            if (!firm) return res.status(404).json({ message: 'Firm not found' });
 
-            // Expiry Check
-            if (firm.subscription.endDate && new Date(firm.subscription.endDate) < new Date()) {
-                 return res.status(403).json({ 
-                    message: `Plan expired on ${firm.subscription.endDate.toDateString()}. Please upgrade.`,
-                    code: 'PLAN_EXPIRED'
-                 });
-            }
+            // Super Admin bypass
+            if (firm.plan === 'enterprise') return next();
 
-            const plan = firm.subscription.planId as any;
-            if (!plan.features[featureFlag]) {
-                // Maybe it's unlocked via Addon
-                let hasAddonFeature = false;
-                if (featureFlag === 'cloudStorage' && firm.addons.some(a => a.addonId)) {
-                   // need thorough check 
+            // Check Plan Features
+            const plan = firm.subscription?.planId as any;
+            if (plan && plan.features?.[featureFlag]) return next();
+
+            // ── Check Add-ons for Feature Unlocking ──
+            if (firm.addons && firm.addons.length > 0) {
+                // Populate or find relevant addons
+                for (const fa of firm.addons) {
+                    // Expiry Check
+                    if (fa.expiryDate && new Date(fa.expiryDate) < new Date()) continue;
+
+                    const addon = await Addon.findById(fa.addonId);
+                    if (!addon || !addon.isActive) continue;
+
+                    // Mapping Addon types to feature flags
+                    const typeToFeature: Record<string, string> = {
+                        'STORAGE':  'cloudStorage',
+                        'DATABASE': 'personalDrive',
+                        'WHATSAPP': 'whatsappAI',
+                        'REPORTS':  'advancedReports',
+                        'DSC':      'dscBulk',
+                    };
+
+                    if (typeToFeature[addon.type || ''] === featureFlag) {
+                        return next(); // Unlocked via Addon!
+                    }
                 }
-                
-                if (!hasAddonFeature) {
-                    return res.status(403).json({
-                        message: `Feature ${featureFlag} is not available in your current plan. Please upgrade.`
-                    });
-                }
             }
 
-            next();
+            return res.status(403).json({
+                message: `Feature ${featureFlag} is not available in your current plan. Please upgrade or purchase the relevant add-on.`
+            });
         } catch (error) {
             console.error('Check feature error', error);
             res.status(500).json({ message: 'Internal Server Error checking feature Access' });
