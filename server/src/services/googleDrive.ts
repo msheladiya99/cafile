@@ -33,7 +33,7 @@ export class GoogleDriveService {
             auth = new google.auth.JWT({
                 email: config.clientEmail,
                 key: config.privateKey.replace(/\\n/g, '\n'),
-                scopes: ['https://www.googleapis.com/auth/drive.file'],
+                scopes: ['https://www.googleapis.com/auth/drive'],
             });
             console.log('Google Drive Service initialized with Service Account (JWT)');
         } else {
@@ -451,4 +451,22 @@ export const getTenantDriveService = (rootFolderId?: string): GoogleDriveService
     };
 
     return new GoogleDriveService(config);
+};
+
+/**
+ * Always returns a Drive service authenticated as the SERVICE ACCOUNT (JWT).
+ * Use this when validating personal Drive folders shared with the service account email.
+ * OAuth2 (user account) cannot access files shared with the service account.
+ */
+export const getServiceAccountDriveService = (): GoogleDriveService => {
+    const clientEmail = process.env.GOOGLE_DRIVE_CLIENT_EMAIL;
+    const privateKey = process.env.GOOGLE_DRIVE_PRIVATE_KEY;
+
+    if (!clientEmail || !privateKey) {
+        throw new Error(
+            'Service Account credentials (GOOGLE_DRIVE_CLIENT_EMAIL / GOOGLE_DRIVE_PRIVATE_KEY) are not configured.'
+        );
+    }
+
+    return new GoogleDriveService({ clientEmail, privateKey });
 };
