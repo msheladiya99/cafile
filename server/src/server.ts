@@ -29,6 +29,7 @@ import taskApplicabilityRoutes from './routes/taskApplicability';
 import taskCategoryRoutes from './routes/taskCategory';
 import dscRoutes from './routes/dsc';
 import subscriptionRoutes from './routes/subscriptions';
+import emailRoutes from './routes/email';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -123,6 +124,7 @@ app.use('/api/task-applicability', taskApplicabilityRoutes);
 app.use('/api/task-category', taskCategoryRoutes);
 app.use('/api/dsc', dscRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/email', emailRoutes);
 
 
 // Health check

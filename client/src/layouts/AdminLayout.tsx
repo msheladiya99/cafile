@@ -20,7 +20,8 @@ import {
     ExpandMore,
     Business as BusinessIcon,
     Person as PersonIcon,
-    GppGood as GppGoodIcon
+    GppGood as GppGoodIcon,
+    Email as EmailIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -151,41 +152,13 @@ export const AdminLayout: React.FC = () => {
                 { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
             ]
         },
-        { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders', perm: 'reminders.view' },
-        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view' },
-        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view' },
-        { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload', perm: 'files.upload' },
-        { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files', perm: 'files.view' },
-        { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister', perm: 'files.register' },
-    ] as MenuItemDef[]), [isAdmin]);
-
-    // For ADMIN/MANAGER: show everything. For STAFF/INTERN: filter by permissions.
-    // Uses userPermissions array (not hasPermission fn) for stable memoization.
-    const canSee = (item: MenuItemDef, permsSet: Set<string>): boolean => {
-        if (!isEmployee) return true; // admins/managers see all
-        if (!item.perm) return true;  // no permission gate = always visible
-        const perms = Array.isArray(item.perm) ? item.perm : [item.perm];
-        return perms.some((p: string) => permsSet.has(p));
-    };
-
-    const filterMenuWithPerms = (items: MenuItemDef[], permsSet: Set<string>): MenuItemDef[] =>
-        items
-            .filter(item => canSee(item, permsSet))
-            .map(item => {
-                if (!item.children) return item;
-                const filteredChildren = filterMenuWithPerms(item.children, permsSet);
-                if (filteredChildren.length === 0) return null;
-                return { ...item, children: filteredChildren };
-            })
-            .filter(Boolean) as MenuItemDef[];
-
-    // Re-compute when: allMenuDef changes, isEmployee changes, or actual permissions change
-    const permKey = userPermissions.join(',');
-    const menuItems = React.useMemo(() => {
-        const permsSet = new Set(userPermissions);
-        return filterMenuWithPerms(allMenuDef, permsSet);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allMenuDef, isEmployee, permKey]);
+        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc' },
+        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
+        { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
+        { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
+        { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
+        ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
+    ], [isEmployee, employeeMenuItems, isAdmin]);
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);

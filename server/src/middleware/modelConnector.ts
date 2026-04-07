@@ -21,6 +21,7 @@ import { MultiFirm } from '../models/MultiFirm';
 import { TaxDetail } from '../models/TaxDetail';
 import { Currency } from '../models/Currency';
 import { DSC } from '../models/DSC';
+import EmailTemplate from '../models/EmailTemplate';
 
 
 /**
@@ -50,7 +51,8 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         MultiFirm: getTenantModel(req, 'MultiFirm', MultiFirm),
         TaxDetail: getTenantModel(req, 'TaxDetail', TaxDetail),
         Currency: getTenantModel(req, 'Currency', Currency),
-        DSC: getTenantModel(req, 'DSC', DSC)
+        DSC: getTenantModel(req, 'DSC', DSC),
+        EmailTemplate: getTenantModel(req, 'EmailTemplate', EmailTemplate),
     };
 
 
