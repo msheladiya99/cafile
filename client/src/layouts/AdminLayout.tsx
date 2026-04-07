@@ -29,11 +29,19 @@ import AccountMenu from '../components/common/AccountMenu';
 
 const drawerWidth = 240;
 
+interface MenuItemDef {
+    text: string;
+    icon?: React.ReactNode;
+    path?: string;
+    perm?: string | string[];
+    children?: MenuItemDef[];
+}
+
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout, isAdmin, isStaffMember, isIntern, remainingTime } = useAuth();
-    const isEmployee = isStaffMember || isIntern;
+    const { user, logout, isAdmin, isStaffMember, isIntern, remainingTime, userPermissions } = useAuth();
+    const isEmployee = isStaffMember || isIntern; // STAFF or INTERN — permission-gated
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
@@ -49,126 +57,101 @@ export const AdminLayout: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    // Employee-only sidebar (STAFF / INTERN): stripped-down view
-    const employeeMenuItems = React.useMemo(() => [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
-        {
-            text: 'Task',
-            icon: <AssignmentIcon />,
-            children: [
-                { text: 'Task Dashboard', path: '/admin/tasks' },
-                { text: 'Ongoing Task', path: '/admin/tasks/ongoing' },
-            ]
-        },
-        {
-            text: 'Employee',
-            icon: <PersonIcon />,
-            children: [
-                { text: 'Emp Task Schedule', path: '/admin/employee/tasks' },
-                {
-                    text: 'Time Sheet',
-                    children: [
-                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry' },
-                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask' },
-                        { text: 'Task Wise', path: '/admin/employee/timesheet/task' },
-                    ]
-                },
-                {
-                    text: 'Emp Attendance',
-                    children: [
-                        { text: 'Add Attendance', path: '/admin/employee/attendance/add' },
-                        { text: 'Attendance List', path: '/admin/employee/attendance/list' },
-                    ]
-                },
-            ]
-        },
-    ], []);
-
-    const menuItems = React.useMemo(() => isEmployee ? employeeMenuItems : [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
+    // ALL menu items with permission keys — used to build filtered sidebar
+    const allMenuDef = React.useMemo(() => ([
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view' },
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
-        { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports' },
+        { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view' },
         {
             text: 'Client',
             icon: <PeopleIcon />,
+            perm: ['client.view', 'client.add', 'client.edit', 'client.delete', 'client.group', 'client.ledger'],
             children: [
-                { text: 'Add Group + List', path: '/admin/client/add-group' },
-                { text: 'Client Master', path: '/admin/client/master' },
-                { text: 'Client List', path: '/admin/client/list' },
-                { text: 'Client Contact Detail', path: '/admin/client/contact-detail' },
-                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger' }] : []),
+                { text: 'Add Group + List', path: '/admin/client/add-group', perm: 'client.group' },
+                { text: 'Client Master', path: '/admin/client/master', perm: 'client.add' },
+                { text: 'Client List', path: '/admin/client/list', perm: 'client.view' },
+                { text: 'Client Contact Detail', path: '/admin/client/contact-detail', perm: 'client.view' },
+                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger', perm: 'client.ledger' }] : []),
             ]
         },
         {
             text: 'Employee',
             icon: <PersonIcon />,
+            perm: ['employee.view', 'employee.add', 'employee.edit', 'employee.attendance', 'employee.timesheet'],
             children: [
-                { text: 'Employee Master', path: '/admin/employee/master' },
-                { text: 'Employee List', path: '/admin/employee/list' },
-                { text: 'Emp Task Schedule', path: '/admin/employee/tasks' },
+                { text: 'Employee Master', path: '/admin/employee/master', perm: 'employee.add' },
+                { text: 'Employee List', path: '/admin/employee/list', perm: 'employee.view' },
+                { text: 'Emp Task Schedule', path: '/admin/employee/tasks', perm: 'employee.view' },
                 {
                     text: 'Time Sheet',
+                    perm: ['employee.timesheet'],
                     children: [
-                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry' },
-                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask' },
-                        { text: 'Task Wise', path: '/admin/employee/timesheet/task' },
+                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry', perm: 'employee.timesheet' },
+                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask', perm: 'employee.timesheet' },
+                        { text: 'Task Wise', path: '/admin/employee/timesheet/task', perm: 'employee.timesheet' },
                     ]
                 },
-                { text: 'Free Employee List', path: '/admin/employee/free-list' },
-                { text: 'Employee Login Detail', path: '/admin/employee/login-detail' },
+                { text: 'Free Employee List', path: '/admin/employee/free-list', perm: 'employee.view' },
+                { text: 'Employee Login Detail', path: '/admin/employee/login-detail', perm: 'employee.view' },
                 {
                     text: 'Emp Attendance',
+                    perm: ['employee.attendance'],
                     children: [
-                        { text: 'Add Attendance', path: '/admin/employee/attendance/add' },
-                        { text: 'Attendance List', path: '/admin/employee/attendance/list' },
+                        { text: 'Add Attendance', path: '/admin/employee/attendance/add', perm: 'employee.attendance' },
+                        { text: 'Attendance List', path: '/admin/employee/attendance/list', perm: 'employee.attendance' },
                     ]
                 },
-                { text: 'Form 108', path: '/admin/employee/form108' },
+                { text: 'Form 108', path: '/admin/employee/form108', perm: 'employee.view' },
+                ...(isAdmin ? [{ text: 'Staff Permissions', path: '/admin/employee/permissions' }] : []),
             ]
         },
         {
             text: 'Task',
             icon: <AssignmentIcon />,
+            perm: ['task.view', 'task.master.view', 'task.applicability', 'task.single', 'task.approve', 'task.transfer', 'task.information', 'task.udin'],
             children: [
-                { text: 'Task Dashboard', path: '/admin/tasks' },
+                { text: 'Task Dashboard', path: '/admin/tasks', perm: 'task.view' },
                 {
                     text: 'Task Master',
+                    perm: ['task.master.view', 'task.master.create', 'task.master.edit'],
                     children: [
-                        { text: 'Add Task', path: '/admin/task-master/add' },
-                        { text: 'Task List', path: '/admin/task-master/list' },
-                        { text: 'Task Category', path: '/admin/task-category' },
+                        { text: 'Add Task', path: '/admin/task-master/add', perm: 'task.master.create' },
+                        { text: 'Task List', path: '/admin/task-master/list', perm: 'task.master.view' },
+                        { text: 'Task Category', path: '/admin/task-category', perm: 'task.master.view' },
                     ]
                 },
                 {
                     text: 'Task Applicability',
+                    perm: ['task.applicability', 'task.single'],
                     children: [
-                        { text: 'Set Recurrence Task', path: '/admin/task-applicability' },
-                        { text: 'Start Single Task', path: '/admin/task-applicability?single=true' },
+                        { text: 'Set Recurrence Task', path: '/admin/task-applicability', perm: 'task.applicability' },
+                        { text: 'Start Single Task', path: '/admin/task-applicability?single=true', perm: 'task.single' },
                     ]
                 },
                 {
                     text: 'Task Approval',
+                    perm: ['task.approve'],
                     children: [
-                        { text: 'Task Approval', path: '/admin/tasks/approval' },
-                        { text: 'Approved Task List', path: '/admin/tasks/approved-list' },
-                        { text: 'Update Approved Task', path: '/admin/tasks/update-approved' },
+                        { text: 'Task Approval', path: '/admin/tasks/approval', perm: 'task.approve' },
+                        { text: 'Approved Task List', path: '/admin/tasks/approved-list', perm: 'task.approve' },
+                        { text: 'Update Approved Task', path: '/admin/tasks/update-approved', perm: 'task.approve' },
                     ]
                 },
                 {
                     text: 'Transfer Task',
+                    perm: ['task.transfer'],
                     children: [
-                        { text: 'Transfer Single Task', path: '/admin/tasks/transfer-single' },
-                        { text: 'Transfer All Task', path: '/admin/tasks/transfer-all' },
+                        { text: 'Transfer Single Task', path: '/admin/tasks/transfer-single', perm: 'task.transfer' },
+                        { text: 'Transfer All Task', path: '/admin/tasks/transfer-all', perm: 'task.transfer' },
                     ]
                 },
-                { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail' },
-                { text: 'Task Information', path: '/admin/tasks/information' },
-                { text: 'All Task Update', path: '/admin/tasks/all-update' },
-                { text: 'Ongoing Task', path: '/admin/tasks/ongoing' },
-                { text: 'UDIN List', path: '/admin/tasks/udin-list' },
+                { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail', perm: 'task.view' },
+                { text: 'Task Information', path: '/admin/tasks/information', perm: 'task.information' },
+                { text: 'All Task Update', path: '/admin/tasks/all-update', perm: 'task.view' },
+                { text: 'Ongoing Task', path: '/admin/tasks/ongoing', perm: 'task.view' },
+                { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
             ]
         },
-        { text: 'Reminders', icon: <ReminderIcon />, path: '/admin/reminders' },
         { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
@@ -264,7 +247,7 @@ export const AdminLayout: React.FC = () => {
                                     </ListItem>
                                     <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
                                         <List component="div" disablePadding>
-                                            {item.children.map((child: { text: string; path?: string; children?: { text: string; path: string }[] }) => (
+                                            {item.children.map((child: MenuItemDef) => (
                                                 <React.Fragment key={child.text}>
                                                     {child.children ? (
                                                         <>
@@ -288,11 +271,11 @@ export const AdminLayout: React.FC = () => {
                                                             </ListItem>
                                                             <Collapse in={openMenus[child.text]} timeout="auto" unmountOnExit>
                                                                 <List component="div" disablePadding>
-                                                                    {child.children.map((subChild: { text: string; path: string }) => (
+                                                                    {child.children!.map((subChild: MenuItemDef) => (
                                                                         <ListItem key={subChild.text} disablePadding sx={{ mb: 0.5, pl: 5, pr: 1 }}>
                                                                             <ListItemButton
                                                                                 selected={`${location.pathname}${location.search}` === subChild.path}
-                                                                                onClick={() => handleMenuItemClick(subChild.path)}
+                                                                                onClick={() => handleMenuItemClick(subChild.path!)}
                                                                                 sx={{
                                                                                     py: 0.6,
                                                                                     borderRadius: '24px',

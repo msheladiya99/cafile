@@ -62,6 +62,7 @@ const TaskWiseTimesheet = lazy(() => import('./pages/admin/employee/timesheet/Ta
 const AddAttendance = lazy(() => import('./pages/admin/employee/attendance/AddAttendance').then(module => ({ default: module.AddAttendance })));
 const AttendanceList = lazy(() => import('./pages/admin/employee/attendance/AttendanceList').then(module => ({ default: module.AttendanceList })));
 const Form108 = lazy(() => import('./pages/admin/employee/Form108').then(module => ({ default: module.Form108 })));
+const StaffPermissions = lazy(() => import('./pages/admin/employee/StaffPermissions').then(module => ({ default: module.StaffPermissions })));
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
@@ -236,6 +237,7 @@ const AppRoutes: React.FC = () => {
             <Route path="login-detail" element={<EmployeeLoginDetail />} />
             <Route path="free-list" element={<FreeEmployeeList />} />
             <Route path="form108" element={<Form108 />} />
+            <Route path="permissions" element={<ProtectedRoute requireAdmin><StaffPermissions /></ProtectedRoute>} />
           </Route>
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="dsc" element={<DSCManagement />} />
