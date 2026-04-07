@@ -57,8 +57,7 @@ export const AdminLayout: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    // ALL menu items with permission keys — used to build filtered sidebar
-    const allMenuDef = React.useMemo(() => ([
+    const menuItems = React.useMemo(() => [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view' },
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view' },
@@ -158,7 +157,7 @@ export const AdminLayout: React.FC = () => {
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
         ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
-    ], [isEmployee, employeeMenuItems, isAdmin]);
+    ], [isAdmin]);
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
