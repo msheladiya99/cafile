@@ -54,7 +54,7 @@ export const TaskInformation: React.FC = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     // Fetch Lists
-    const { data: clientGroups = [] } = useQuery<any[]>({
+    const { data: clientGroups = [] } = useQuery<{ _id?: string; groupName?: string; }[]>({
         queryKey: ['clientGroups'],
         queryFn: clientGroupService.getGroups
     });
@@ -169,7 +169,7 @@ export const TaskInformation: React.FC = () => {
 
             {isError && (
                 <Alert severity="error" icon={<AlertCircle size={20} />} sx={{ mb: 2, borderRadius: '12px' }}>
-                    Connectivity issue: {(tasksError as any)?.message || 'Database sync failed'}
+                    Connectivity issue: {(tasksError as { message?: string })?.message || 'Database sync failed'}
                     <CommonButton size="small" onClick={() => refetch()} sx={{ ml: 2, height: 24 }}>Retry Sync</CommonButton>
                 </Alert>
             )}
@@ -194,7 +194,7 @@ export const TaskInformation: React.FC = () => {
                         </Box>
                         <Select size="small" fullWidth displayEmpty value={groupName} onChange={(e) => { setGroupName(e.target.value); setPage(0); }} sx={{ borderRadius: '8px', bgcolor: '#f8fafc' }}>
                             <MenuItem value="">All Groups</MenuItem>
-                            {(clientGroups || []).map((g: any) => (<MenuItem key={g?._id || Math.random()} value={g?._id}>{g?.groupName}</MenuItem>))}
+                            {(clientGroups || []).map((g: { _id?: string; groupName?: string }, index: number) => (<MenuItem key={g?._id || `group-${index}`} value={g?._id}>{g?.groupName}</MenuItem>))}
                         </Select>
                     </Grid>
                     <Grid size={{ xs: 12, md: 3 }}>
@@ -204,7 +204,7 @@ export const TaskInformation: React.FC = () => {
                         </Box>
                         <Select size="small" fullWidth displayEmpty value={clientName} onChange={(e) => { setClientName(e.target.value); setPage(0); }} sx={{ borderRadius: '8px', bgcolor: '#f8fafc' }}>
                             <MenuItem value="">All Clients</MenuItem>
-                            {(clients || []).map((c: Client) => (<MenuItem key={c?._id || Math.random()} value={c?._id}>{c?.name}</MenuItem>))}
+                            {(clients || []).map((c: Client, index: number) => (<MenuItem key={c?._id || `client-${index}`} value={c?._id}>{c?.name}</MenuItem>))}
                         </Select>
                     </Grid>
                     <Grid size={{ xs: 12, md: 3 }}>
@@ -214,7 +214,7 @@ export const TaskInformation: React.FC = () => {
                         </Box>
                         <Select size="small" fullWidth displayEmpty value={selectedTask} onChange={(e) => { setSelectedTask(e.target.value); setPage(0); }} sx={{ borderRadius: '8px', bgcolor: '#f8fafc' }}>
                             <MenuItem value="">All Tasks</MenuItem>
-                            {(taskMasterData || []).map((t: TaskMasterData) => (<MenuItem key={t?._id || Math.random()} value={t?._id}>{t?.taskName}</MenuItem>))}
+                            {(taskMasterData || []).map((t: TaskMasterData, index: number) => (<MenuItem key={t?._id || `task-${index}`} value={t?._id}>{t?.taskName}</MenuItem>))}
                         </Select>
                     </Grid>
                     <Grid size={{ xs: 12, md: 3 }}>
@@ -267,7 +267,7 @@ export const TaskInformation: React.FC = () => {
                         </Box>
                         <Select size="small" fullWidth displayEmpty value={reportingManager} onChange={(e) => { setReportingManager(e.target.value); setPage(0); }} sx={{ borderRadius: '8px', bgcolor: '#f8fafc' }}>
                             <MenuItem value="">All Active Personnel</MenuItem>
-                            {(staffUsers || []).map((u: User) => (<MenuItem key={u?._id || Math.random()} value={u?._id}>{u?.name} ({u?.role})</MenuItem>))}
+                            {(staffUsers || []).map((u: User, index: number) => (<MenuItem key={u?._id || `staff-${index}`} value={u?._id}>{u?.name} ({u?.role})</MenuItem>))}
                         </Select>
                     </Grid>
                 </Grid>
@@ -329,11 +329,11 @@ export const TaskInformation: React.FC = () => {
                                     <TableCell sx={{ color: '#94a3b8', fontSize: '0.75rem' }}>{String(page * rowsPerPage + index + 1).padStart(2, '0')}</TableCell>
                                     <TableCell>
                                         <Typography sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.8rem' }}>
-                                            {typeof task?.clientId === 'object' && task?.clientId !== null ? (task.clientId as any).name || 'Unknown' : (task?.clientId || 'Internal')}
+                                            {typeof task?.clientId === 'object' && task?.clientId !== null ? (task.clientId as { name: string }).name || 'Unknown' : (task?.clientId || 'Internal')}
                                         </Typography>
                                         {typeof task?.clientGroupId === 'object' && task?.clientGroupId !== null && (
                                             <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
-                                                {(task.clientGroupId as any).groupName || ''}
+                                                {(task.clientGroupId as { groupName: string }).groupName || ''}
                                             </Typography>
                                         )}
                                     </TableCell>
@@ -358,7 +358,7 @@ export const TaskInformation: React.FC = () => {
                                         <Typography variant="caption" color="#64748b">{task?.frequency || '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="caption" color="#64748b">{(task as any)?.year || '-'}</Typography>
+                                        <Typography variant="caption" color="#64748b">{(task as { year?: string })?.year || '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Chip 

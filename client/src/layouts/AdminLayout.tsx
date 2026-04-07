@@ -20,7 +20,8 @@ import {
     ExpandMore,
     Business as BusinessIcon,
     Person as PersonIcon,
-    GppGood as GppGoodIcon
+    GppGood as GppGoodIcon,
+    Email as EmailIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -173,6 +174,7 @@ export const AdminLayout: React.FC = () => {
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
+        ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
     ], [isEmployee, employeeMenuItems, isAdmin]);
 
     const handleDrawerToggle = () => {
