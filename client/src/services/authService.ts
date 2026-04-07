@@ -27,4 +27,9 @@ export const authService = {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
     },
+
+    getCurrentUser: async (): Promise<User> => {
+        const response = await api.get('/auth/me');
+        return response.data;
+    },
 };
