@@ -18,6 +18,10 @@ interface AuthContextType {
     isStaff: boolean;
     isClient: boolean;
     remainingTime: number; // in seconds
+    userPermissions: string[]; // the logged-in user's permission keys
+    hasPermission: (key: string) => boolean; // check a single permission
+    hasAnyPermission: (keys: string[]) => boolean; // check if user has ANY of the listed permissions
+    refreshUser: () => Promise<void>; // re-fetch user from server
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,6 +87,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             clearInterval(timer);
         };
     }, [token, user]);
+
+    // On startup: silently refresh user data from server to pick up latest permissions
+    // This ensures permissions updated by admin are reflected without requiring re-login
+    useEffect(() => {
+        if (!token) return;
+        authService.getCurrentUser()
+            .then(freshUser => {
+                setUser(freshUser);
+                // Update localStorage so next hard refresh also has fresh data
+                authService.storeAuth(token, freshUser);
+            })
+            .catch((err) => {
+                // Log for debugging — but don't crash or force logout
+                // (auto-logout timer handles truly expired tokens)
+                console.warn('[AuthContext] Could not refresh user from server:', err?.response?.status, err?.message);
+            });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run once on mount only
+
+    // Manual refresh — call this if you need to immediately sync updated permissions
+    const refreshUser = async (): Promise<void> => {
+        if (!token) return;
+        try {
+            const freshUser = await authService.getCurrentUser();
+            setUser(freshUser);
+            authService.storeAuth(token, freshUser);
+        } catch {
+            // silently ignore
+        }
+    };
+    const isAdminOrManager = !!user && ['ADMIN', 'MANAGER', 'SUPER_ADMIN'].includes(user.role);
+    const userPermissions = isAdminOrManager ? ['*'] : (user?.permissions || []);
+
+    const hasPermission = (key: string): boolean => {
+        if (!user) return false;
+        if (isAdminOrManager) return true; // admins have all permissions
+        return userPermissions.includes(key);
+    };
+
+    const hasAnyPermission = (keys: string[]): boolean => {
+        if (!user) return false;
+        if (isAdminOrManager) return true;
+        return keys.some(k => userPermissions.includes(k));
+    };
+
     const value: AuthContextType = {
         user,
         token,
@@ -97,6 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isStaff: !!user && ['ADMIN', 'MANAGER', 'STAFF', 'INTERN', 'SUPER_ADMIN'].includes(user.role),
         isClient: user?.role === 'CLIENT',
         remainingTime,
+        userPermissions,
+        hasPermission,
+        hasAnyPermission,
+        refreshUser,
     };
 
     return (
