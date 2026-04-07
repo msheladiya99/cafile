@@ -18,12 +18,21 @@ import {
     Chip,
     CircularProgress,
     Alert,
+    Avatar,
 } from '@mui/material';
-import {
-    List as ListIcon,
-    SwapHoriz as TransferIcon,
-    Search as SearchIcon,
-} from '@mui/icons-material';
+import { 
+    Users, 
+    ArrowRightLeft, 
+    Send, 
+    Info, 
+    FileText, 
+    Calendar, 
+    Filter,
+    LayoutList,
+    AlertCircle,
+    RefreshCcw
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
@@ -32,13 +41,13 @@ import { toast } from 'react-hot-toast';
 import type { TaskMasterData, Client, User, Task } from '../../../types';
 import type { AxiosError } from 'axios';
 
-const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'success' | 'error'> = {
-    PENDING: 'warning',
-    IN_PROCESS: 'info',
-    PENDING_FOR_APPROVAL: 'info',
-    ON_HOLD: 'default',
-    PENDING_FROM_CLIENT: 'default',
-    PENDING_FROM_DEPARTMENT: 'default',
+const STATUS_COLORS: Record<string, { bg: string, color: string }> = {
+    PENDING: { bg: '#fff7ed', color: '#9a3412' },
+    IN_PROCESS: { bg: '#eff6ff', color: '#1e40af' },
+    PENDING_FOR_APPROVAL: { bg: '#f0fdf4', color: '#166534' },
+    ON_HOLD: { bg: '#f8fafc', color: '#475569' },
+    PENDING_FROM_CLIENT: { bg: '#fef2f2', color: '#991b1b' },
+    PENDING_FROM_DEPARTMENT: { bg: '#faf5ff', color: '#6b21a8' },
 };
 
 export const TransferTask: React.FC = () => {
@@ -67,7 +76,6 @@ export const TransferTask: React.FC = () => {
         queryFn: adminService.getStaffUsers
     });
 
-    // Preview: tasks that will be transferred
     const { data: previewTasks = [], isFetching: isLoadingPreview, refetch: refetchPreview } = useQuery<Task[]>({
         queryKey: ['transferPreview', transferFrom, clientName, selectedTask, frequency],
         queryFn: () => taskService.getTransferPreview({
@@ -76,19 +84,18 @@ export const TransferTask: React.FC = () => {
             taskMasterId: selectedTask || undefined,
             frequency: frequency || undefined,
         }),
-        enabled: false, // only run on manual trigger
+        enabled: false,
     });
 
     const handleLoadPreview = () => {
         if (!transferFrom) {
-            toast.error('Please select "Transfer From" employee');
+            toast.error('Please select source employee');
             return;
         }
         setPreviewLoaded(true);
         refetchPreview();
     };
 
-    // Transfer mutation
     const transferMutation = useMutation({
         mutationFn: taskService.transferTasks,
         onSuccess: (data) => {
@@ -103,12 +110,11 @@ export const TransferTask: React.FC = () => {
     });
 
     const handleTransfer = () => {
-        if (!transferFrom) return toast.error('Please select "Transfer From" employee');
-        if (!transferTo) return toast.error('Please select "Transfer To" employee');
-        if (transferFrom === transferTo) return toast.error('Transfer From and Transfer To cannot be the same');
-        if (previewTasks.length === 0) return toast.error('No tasks found to transfer. Load preview first.');
+        if (!transferFrom || !transferTo) return toast.error('Please select both employees');
+        if (transferFrom === transferTo) return toast.error('Source and destination cannot be the same');
+        if (previewTasks.length === 0) return toast.error('No tasks found to transfer');
 
-        if (!window.confirm(`Transfer ${previewTasks.length} task(s) from this employee? ${removeFromCurrent ? 'They will be removed from the original employee.' : 'Both employees will share these tasks.'}`)) return;
+        if (!window.confirm(`Transfer ${previewTasks.length} task(s)?`)) return;
 
         transferMutation.mutate({
             fromUserId: transferFrom,
@@ -121,249 +127,330 @@ export const TransferTask: React.FC = () => {
     };
 
     const frequencies = ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Half Yearly', 'Yearly', 'One Time'];
-
     const fromUser = staffUsers.find((u: User) => u._id === transferFrom);
     const toUser = staffUsers.find((u: User) => u._id === transferTo);
 
+    const containerVariants = {
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.05 } }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 5 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
-        <Box sx={{ p: 0 }}>
-            {/* Header */}
-            <Paper elevation={0} sx={{
-                p: 2,
-                bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-                color: '#1e293b',
-                borderRadius: '8px 8px 0 0',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <TransferIcon />
-                    <Typography variant="h6" fontWeight="500">Transfer Task</Typography>
-                </Box>
-                <Typography variant="body2" sx={{ opacity: 0.85 }}>
-                    Reassign active tasks from one employee to another
-                </Typography>
-            </Paper>
-
-            {/* Transfer Form */}
-            <Paper sx={{ p: 3, mb: 1, borderRadius: '0 0 8px 8px' }}>
-                <Grid container spacing={3}>
-                    {/* Transfer From */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 150, color: 'text.secondary', fontSize: '0.9rem' }}>
-                                Transfer From <span style={{ color: 'red' }}>*</span>
-                            </Typography>
-                            <Select size="small" fullWidth displayEmpty value={transferFrom}
-                                onChange={(e) => { setTransferFrom(e.target.value); setPreviewLoaded(false); }}>
-                                <MenuItem value=""><em>Choose Employee...</em></MenuItem>
-                                {staffUsers.map((u: User) => (
-                                    <MenuItem key={u._id} value={u._id}
-                                        disabled={u._id === transferTo}>
-                                        {u.name || u.username} ({u.role})
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-
-                    {/* Transfer To */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 150, color: 'text.secondary', fontSize: '0.9rem' }}>
-                                Transfer To <span style={{ color: 'red' }}>*</span>
-                            </Typography>
-                            <Select size="small" fullWidth displayEmpty value={transferTo}
-                                onChange={(e) => setTransferTo(e.target.value)}>
-                                <MenuItem value=""><em>Choose Employee...</em></MenuItem>
-                                {staffUsers.map((u: User) => (
-                                    <MenuItem key={u._id} value={u._id}
-                                        disabled={u._id === transferFrom}>
-                                        {u.name || u.username} ({u.role})
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-
-                    {/* Client Filter */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 150, color: 'text.secondary', fontSize: '0.9rem' }}>Client Name</Typography>
-                            <Select size="small" fullWidth displayEmpty value={clientName}
-                                onChange={(e) => { setClientName(e.target.value); setPreviewLoaded(false); }}>
-                                <MenuItem value=""><em>All Clients</em></MenuItem>
-                                {clients.map((c: Client) => (
-                                    <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-
-                    {/* Task Filter */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 150, color: 'text.secondary', fontSize: '0.9rem' }}>Task</Typography>
-                            <Select size="small" fullWidth displayEmpty value={selectedTask}
-                                onChange={(e) => { setSelectedTask(e.target.value); setPreviewLoaded(false); }}>
-                                <MenuItem value=""><em>All Tasks</em></MenuItem>
-                                {taskMasters.map((t: TaskMasterData) => (
-                                    <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-
-                    {/* Frequency Filter */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center">
-                            <Typography sx={{ width: 150, color: 'text.secondary', fontSize: '0.9rem' }}>Frequency</Typography>
-                            <Select size="small" fullWidth displayEmpty value={frequency}
-                                onChange={(e) => { setFrequency(e.target.value); setPreviewLoaded(false); }}>
-                                <MenuItem value=""><em>All Frequencies</em></MenuItem>
-                                {frequencies.map(f => (
-                                    <MenuItem key={f} value={f}>{f}</MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    </Grid>
-
-                    {/* Remove from current checkbox */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Box display="flex" alignItems="center" height="100%">
-                            <Box sx={{ width: 150 }} />
-                            <FormControlLabel
-                                control={
-                                    <Checkbox size="small" checked={removeFromCurrent}
-                                        onChange={(e) => setRemoveFromCurrent(e.target.checked)}
-                                        sx={{ color: '#764ba2', '&.Mui-checked': { color: '#764ba2' } }} />
-                                }
-                                label={
-                                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                        Remove From Current Employee
-                                    </Typography>
-                                }
-                            />
-                        </Box>
-                    </Grid>
-
-                    {/* Action Buttons */}
-                    <Grid size={{ xs: 12 }}>
-                        <Box display="flex" gap={2} justifyContent="center" mt={1}>
-                            <Button variant="outlined" startIcon={<SearchIcon />}
-                                onClick={handleLoadPreview}
-                                disabled={!transferFrom || isLoadingPreview}
-                                sx={{ borderColor: '#667eea', color: '#667eea' }}>
-                                {isLoadingPreview ? 'Loading...' : 'Load Preview'}
-                            </Button>
-                            <Button variant="contained" startIcon={<TransferIcon />}
-                                onClick={handleTransfer}
-                                disabled={!transferFrom || !transferTo || previewTasks.length === 0 || transferMutation.isPending}
-                                sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' } }}>
-                                {transferMutation.isPending ? 'Transferring...' : `Transfer ${previewTasks.length > 0 ? `(${previewTasks.length})` : ''} Tasks`}
-                            </Button>
-                        </Box>
-                    </Grid>
-                </Grid>
-
-                {/* Transfer info box */}
-                {transferFrom && transferTo && (
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                        Tasks will be transferred from <strong>{fromUser?.name || fromUser?.username}</strong> to <strong>{toUser?.name || toUser?.username}</strong>.
-                        {removeFromCurrent ? ' The original employee will NO LONGER be assigned.' : ' Both employees will share these tasks.'}
-                    </Alert>
-                )}
-            </Paper>
-
-            {/* Job List Preview */}
-            <Paper elevation={1} sx={{ borderRadius: '12px', overflow: 'hidden' }}>
-                <Box sx={{
-                    p: 1.5,
-                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-                    color: '#1e293b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                }}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <ListIcon fontSize="small" />
-                        <Typography fontWeight="500">
-                            Job List {previewLoaded && `(${previewTasks.length} tasks)`}
+        <Box sx={{ p: 0, maxWidth: 1200, mx: 'auto' }}>
+            <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+                {/* Header Container */}
+                <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, letterSpacing: '-0.02em' }}>
+                            Transfer Task
                         </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#64748b' }}>
+                            <Users size={16} />
+                            <Typography variant="body2">Granular control over task reassignment and workload balancing</Typography>
+                        </Box>
                     </Box>
-                    {isLoadingPreview && <CircularProgress size={18} sx={{ color: 'white' }} />}
                 </Box>
-                <TableContainer sx={{ minHeight: 150, bgcolor: '#f8f9fa' }}>
-                    <Table size="small">
-                        {previewLoaded && previewTasks.length > 0 && (
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 600 }}>#</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Task Title</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Client</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Frequency</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Target Date</TableCell>
-                                </TableRow>
-                            </TableHead>
+
+                {/* Main Control Card */}
+                <Paper 
+                    elevation={0}
+                    sx={{ 
+                        p: 4, 
+                        mb: 4,
+                        borderRadius: '24px', 
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                    }}
+                >
+                    <Grid container spacing={4}>
+                        {/* Source Employee */}
+                        <Grid size={{ xs: 12, md: 5 }}>
+                            <motion.div variants={itemVariants}>
+                                <Typography sx={{ fontWeight: 600, color: '#475569', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', bgcolor: '#fef2f2', color: '#991b1b' }}>F</Avatar>
+                                    Transfer From <span style={{ color: '#ef4444' }}>*</span>
+                                </Typography>
+                                <Select 
+                                    size="medium" fullWidth displayEmpty value={transferFrom}
+                                    onChange={(e) => { setTransferFrom(e.target.value); setPreviewLoaded(false); }}
+                                    sx={{ borderRadius: '12px', bgcolor: '#f8fafc' }}
+                                >
+                                    <MenuItem value="" disabled>Source Employee...</MenuItem>
+                                    {staffUsers.map((u: User) => (
+                                        <MenuItem key={u._id} value={u._id} disabled={u._id === transferTo}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>{u.username.charAt(0)}</Avatar>
+                                                {u.name || u.username}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </motion.div>
+                        </Grid>
+
+                        {/* Visual Arrow */}
+                        <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', pt: { md: 4 } }}>
+                            <Box sx={{ p: 1, borderRadius: '50%', bgcolor: '#eff6ff', color: '#3b82f6' }}>
+                                <ArrowRightLeft size={20} />
+                            </Box>
+                        </Grid>
+
+                        {/* Destination Employee */}
+                        <Grid size={{ xs: 12, md: 5 }}>
+                            <motion.div variants={itemVariants}>
+                                <Typography sx={{ fontWeight: 600, color: '#475569', mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem', bgcolor: '#f0fdf4', color: '#166534' }}>T</Avatar>
+                                    Transfer To <span style={{ color: '#ef4444' }}>*</span>
+                                </Typography>
+                                <Select 
+                                    size="medium" fullWidth displayEmpty value={transferTo}
+                                    onChange={(e) => setTransferTo(e.target.value)}
+                                    sx={{ borderRadius: '12px', bgcolor: '#f8fafc' }}
+                                >
+                                    <MenuItem value="" disabled>Destination Employee...</MenuItem>
+                                    {staffUsers.map((u: User) => (
+                                        <MenuItem key={u._id} value={u._id} disabled={u._id === transferFrom}>
+                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>{u.username.charAt(0)}</Avatar>
+                                                {u.name || u.username}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </motion.div>
+                        </Grid>
+
+                        {/* Filters Accordion/Section */}
+                        <Grid size={{ xs: 12 }}>
+                            <Box sx={{ pt: 2, borderTop: '1px dashed #e2e8f0' }}>
+                                <Typography variant="subtitle2" sx={{ color: '#64748b', mb: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Filter size={16} /> Refine Transfer Scope
+                                </Typography>
+                                <Grid container spacing={3}>
+                                    <Grid size={{ xs: 12, md: 4 }}>
+                                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', mb: 0.5 }}>Client Filter</Typography>
+                                        <Select size="small" fullWidth displayEmpty value={clientName} 
+                                            onChange={(e) => { setClientName(e.target.value); setPreviewLoaded(false); }}
+                                            sx={{ borderRadius: '8px' }}>
+                                            <MenuItem value="">All Clients</MenuItem>
+                                            {clients.map((c: Client) => (
+                                                <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 4 }}>
+                                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', mb: 0.5 }}>Task Type</Typography>
+                                        <Select size="small" fullWidth displayEmpty value={selectedTask}
+                                            onChange={(e) => { setSelectedTask(e.target.value); setPreviewLoaded(false); }}
+                                            sx={{ borderRadius: '8px' }}>
+                                            <MenuItem value="">All Tasks</MenuItem>
+                                            {taskMasters.map((t: TaskMasterData) => (
+                                                <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 4 }}>
+                                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', mb: 0.5 }}>Frequency</Typography>
+                                        <Select size="small" fullWidth displayEmpty value={frequency}
+                                            onChange={(e) => { setFrequency(e.target.value); setPreviewLoaded(false); }}
+                                            sx={{ borderRadius: '8px' }}>
+                                            <MenuItem value="">All Frequencies</MenuItem>
+                                            {frequencies.map(f => (
+                                                <MenuItem key={f} value={f}>{f}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Grid>
+
+                        {/* Options and Actions */}
+                        <Grid size={{ xs: 12 }}>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 2, mt: 1, p: 2, borderRadius: '16px', bgcolor: '#f8fafc' }}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox size="small" checked={removeFromCurrent}
+                                            onChange={(e) => setRemoveFromCurrent(e.target.checked)}
+                                            sx={{ color: '#3b82f6', '&.Mui-checked': { color: '#3b82f6' } }} />
+                                    }
+                                    label={
+                                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
+                                            Remove tasks from current employee after transfer
+                                        </Typography>
+                                    }
+                                />
+                                <Box sx={{ display: 'flex', gap: 1.5 }}>
+                                    <Button 
+                                        variant="outlined" 
+                                        onClick={handleLoadPreview}
+                                        disabled={!transferFrom || isLoadingPreview}
+                                        startIcon={isLoadingPreview ? <CircularProgress size={16} /> : <RefreshCcw size={18} />}
+                                        sx={{ borderRadius: '10px', textTransform: 'none' }}
+                                    >
+                                        Preview Changes
+                                    </Button>
+                                    <Button 
+                                        variant="contained" 
+                                        onClick={handleTransfer}
+                                        disabled={!transferFrom || !transferTo || previewTasks.length === 0 || transferMutation.isPending}
+                                        startIcon={<Send size={18} />}
+                                        sx={{ 
+                                            borderRadius: '10px', 
+                                            textTransform: 'none', 
+                                            bgcolor: '#3b82f6',
+                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                                            '&:hover': { bgcolor: '#2563eb' }
+                                        }}
+                                    >
+                                        {transferMutation.isPending ? 'Transferring...' : 'Execute Transfer'}
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    {/* Dynamic Status Alert */}
+                    <AnimatePresence>
+                        {transferFrom && transferTo && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                                <Alert 
+                                    severity="info" 
+                                    icon={<Info size={20} />}
+                                    sx={{ mt: 3, borderRadius: '12px', '& .MuiAlert-message': { width: '100%' } }}
+                                >
+                                    <Typography variant="body2">
+                                        Transferring tasks from <strong>{fromUser?.name || fromUser?.username}</strong> to <strong>{toUser?.name || toUser?.username}</strong>.
+                                        {removeFromCurrent ? ' Access will be revoked from the original employee.' : ' Both will have shared access.'}
+                                    </Typography>
+                                </Alert>
+                            </motion.div>
                         )}
-                        <TableBody>
-                            {isLoadingPreview ? (
-                                <TableRow>
-                                    <TableCell align="center" colSpan={6} sx={{ py: 6 }}>
-                                        <CircularProgress size={24} />
-                                        <Typography variant="body2" color="text.secondary" mt={1}>Loading tasks...</Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ) : previewLoaded && previewTasks.length > 0 ? (
-                                previewTasks.map((task: Task, idx: number) => (
-                                    <TableRow key={task._id} hover>
-                                        <TableCell>{idx + 1}</TableCell>
-                                        <TableCell sx={{ fontWeight: 500 }}>{task.title}</TableCell>
-                                        <TableCell>
-                                            {typeof task.clientId === 'object'
-                                                ? (task.clientId as Client)?.name
-                                                : '—'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip label={task.frequency || 'One Time'} size="small" variant="outlined" />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={task.status.replace(/_/g, ' ')}
-                                                size="small"
-                                                color={STATUS_COLORS[task.status] || 'default'}
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ color: task.isOverdue ? 'error.main' : 'inherit' }}>
-                                            {new Date(task.targetDate).toLocaleDateString('en-IN')}
-                                            {task.isOverdue && <Typography component="span" variant="caption" color="error"> (Overdue)</Typography>}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : previewLoaded && previewTasks.length === 0 ? (
-                                <TableRow>
-                                    <TableCell align="center" colSpan={6} sx={{ color: 'text.secondary', py: 6 }}>
-                                        No active tasks found for the selected employee with these filters.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow>
-                                    <TableCell align="center" colSpan={6} sx={{ color: 'text.secondary', py: 6 }}>
-                                        Select an employee above and click "Load Preview" to see tasks that will be transferred.
-                                    </TableCell>
-                                </TableRow>
+                    </AnimatePresence>
+                </Paper>
+
+                {/* Job List Preview Section */}
+                <motion.div variants={itemVariants}>
+                    <Paper 
+                        elevation={0}
+                        sx={{ 
+                            borderRadius: '24px', 
+                            overflow: 'hidden', 
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                        }}
+                    >
+                        <Box sx={{ p: 2.5, bgcolor: '#ffffff', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <LayoutList size={20} color="#3b82f6" />
+                                <Typography sx={{ fontWeight: 700, color: '#1e293b' }}>
+                                    Scoped Tasks Preview {previewLoaded && `(${previewTasks.length})`}
+                                </Typography>
+                            </Box>
+                            {previewLoaded && (
+                                <Chip 
+                                    label="Snapshot Ready" 
+                                    size="small" 
+                                    onDelete={() => setPreviewLoaded(false)}
+                                    sx={{ borderRadius: '6px', fontWeight: 600, bgcolor: '#f0fdf4', color: '#166534', '& .MuiChip-deleteIcon': { color: '#166534' } }} 
+                                />
                             )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
+                        </Box>
+
+                        <TableContainer sx={{ minHeight: 300, maxHeight: 500 }}>
+                            <Table stickyHeader size="medium">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>#</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Task Overview</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Client Context</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Cycle</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Current Status</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 600 }}>Deadline</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {isLoadingPreview ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                                <CircularProgress size={30} thickness={2} />
+                                                <Typography sx={{ mt: 2, color: '#64748b' }}>Analyzing workload scope...</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : previewLoaded && previewTasks.length > 0 ? (
+                                        previewTasks.map((task: Task, idx: number) => (
+                                            <TableRow key={task._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                                <TableCell sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>{String(idx + 1).padStart(2, '0')}</TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <FileText size={14} color="#3b82f6" />
+                                                        <Typography sx={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>{task.title}</Typography>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography sx={{ color: '#475569', fontSize: '0.85rem' }}>
+                                                        {typeof task.clientId === 'object' ? (task.clientId as Client)?.name : '—'}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip label={task.frequency || 'One Time'} size="small" variant="outlined" sx={{ borderRadius: '6px', height: 20, fontSize: '0.7rem' }} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box 
+                                                        sx={{ 
+                                                            px: 1, py: 0.5, borderRadius: '6px', display: 'inline-flex',
+                                                            bgcolor: STATUS_COLORS[task.status]?.bg || '#f1f5f9',
+                                                            color: STATUS_COLORS[task.status]?.color || '#475569',
+                                                            fontSize: '0.7rem', fontWeight: 700
+                                                        }}
+                                                    >
+                                                        {task.status.replace(/_/g, ' ')}
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: task.isOverdue ? '#ef4444' : '#64748b' }}>
+                                                        <Calendar size={14} />
+                                                        <Typography sx={{ fontSize: '0.85rem', fontWeight: task.isOverdue ? 700 : 400 }}>
+                                                            {new Date(task.targetDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                        </Typography>
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : previewLoaded && previewTasks.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                                <AlertCircle size={40} color="#cbd5e1" />
+                                                <Typography sx={{ mt: 2, color: '#94a3b8' }}>No tasks found matching these criteria.</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                                <Box sx={{ opacity: 0.4 }}>
+                                                    <LayoutList size={40} />
+                                                </Box>
+                                                <Typography sx={{ mt: 2, color: '#94a3b8' }}>Load a preview to audit tasks before transferring.</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Paper>
+                </motion.div>
+            </motion.div>
         </Box>
     );
 };
 
 export default TransferTask;
+
 
 
 
