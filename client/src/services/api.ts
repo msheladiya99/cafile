@@ -33,7 +33,8 @@ api.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
         const isLoginEndpoint = error.config?.url?.includes('/auth/login');
-        if (error.response?.status === 401 && !isLoginEndpoint) {
+        const isRefreshEndpoint = error.config?.url?.includes('/auth/me');
+        if (error.response?.status === 401 && !isLoginEndpoint && !isRefreshEndpoint) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';

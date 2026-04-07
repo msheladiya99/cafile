@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { User, userSchema } from '../models/User';
 import { Client } from '../models/Client';
 import { ActivityLog } from '../models/ActivityLog';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, authenticate } from '../middleware/auth';
 import { getModelFromConnection, rawUserSchema } from '../services/dbManager';
 
 const router = Router();
@@ -130,29 +130,32 @@ router.post('/login', async (req, res: Response) => {
     }
 });
 
-// Get current user info
-router.get('/me', async (req: AuthRequest, res: Response) => {
+// Get current user info (requires authentication)
+router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel, Client } = (req as any).models;
 
-
-        const user = await UserModel.findById(req.user?.userId).select('-passwordHash');
+        const user = await UserModel.findById(req.user?.userId).select('-passwordHash').lean();
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
         }
 
-        const userObj = user.toObject();
-        let name = user.username;
+        let name = user.name || user.username;
 
         if (user.clientId) {
-            const client = await Client.findById(user.clientId);
+            const client = await Client.findById(user.clientId).select('name').lean();
             if (client) {
                 name = client.name;
             }
         }
 
-        res.json({ ...userObj, name });
+        res.json({
+            ...user,
+            _id: user._id.toString(),
+            name,
+            permissions: user.permissions || [],
+        });
     } catch (error) {
         console.error('Get user error:', error);
         res.status(500).json({ message: 'Server error' });
