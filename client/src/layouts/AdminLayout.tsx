@@ -49,7 +49,7 @@ export const AdminLayout: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     // Employee-only sidebar (STAFF / INTERN): stripped-down view
-    const employeeMenuItems = [
+    const employeeMenuItems = React.useMemo(() => [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
         {
             text: 'Task',
@@ -81,9 +81,9 @@ export const AdminLayout: React.FC = () => {
                 },
             ]
         },
-    ];
+    ], []);
 
-    const menuItems = isEmployee ? employeeMenuItems : [
+    const menuItems = React.useMemo(() => isEmployee ? employeeMenuItems : [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports' },
@@ -173,11 +173,45 @@ export const AdminLayout: React.FC = () => {
         { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
-    ];
+    ], [isEmployee, employeeMenuItems, isAdmin]);
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
+
+    // Auto-open active menus
+    React.useEffect(() => {
+        const fullPath = `${location.pathname}${location.search}`;
+        
+        setOpenMenus(prev => {
+            const newOpenMenus: { [key: string]: boolean } = { ...prev };
+            let changed = false;
+
+            menuItems.forEach(item => {
+                if (item.children) {
+                    const isActive = item.children.some(c => 
+                        fullPath === c.path || (c.children && c.children.some(sc => fullPath === sc.path))
+                    );
+                    if (isActive && !newOpenMenus[item.text]) {
+                        newOpenMenus[item.text] = true;
+                        changed = true;
+                    }
+                    
+                    item.children.forEach(child => {
+                        if (child.children) {
+                            const isChildActive = child.children.some(sc => fullPath === sc.path);
+                            if (isChildActive && !newOpenMenus[child.text]) {
+                                newOpenMenus[child.text] = true;
+                                changed = true;
+                            }
+                        }
+                    });
+                }
+            });
+
+            return changed ? newOpenMenus : prev;
+        });
+    }, [location.pathname, location.search, menuItems]);
 
     const handleMenuItemClick = (path: string) => {
         navigate(path);
@@ -211,7 +245,7 @@ export const AdminLayout: React.FC = () => {
                                                 py: 1,
                                                 color: '#333',
                                                 '&:hover': { background: 'rgba(255,255,255,0.4)' },
-                                                ...(item.children.some(c => location.pathname === c.path) && {
+                                                ...(item.children.some(c => `${location.pathname}${location.search}` === c.path || (c.children && c.children.some(sc => `${location.pathname}${location.search}` === sc.path))) && {
                                                     background: '#ffffff',
                                                     color: '#000',
                                                     boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
@@ -235,7 +269,16 @@ export const AdminLayout: React.FC = () => {
                                                             <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
                                                                 <ListItemButton
                                                                     onClick={() => handleMenuToggle(child.text)}
-                                                                    sx={{ py: 0.6, borderRadius: 1.5 }}
+                                                                    selected={child.children.some(sc => `${location.pathname}${location.search}` === sc.path)}
+                                                                    sx={{ 
+                                                                        py: 0.6, 
+                                                                        borderRadius: 1.5,
+                                                                        '&.Mui-selected': {
+                                                                            bgcolor: 'rgba(255, 255, 255, 0.5)',
+                                                                            color: '#000',
+                                                                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.6)' }
+                                                                        }
+                                                                    }}
                                                                 >
                                                                     <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
                                                                     {openMenus[child.text] ? <ExpandLess sx={{ fontSize: 16 }} /> : <ExpandMore sx={{ fontSize: 16 }} />}
@@ -246,7 +289,7 @@ export const AdminLayout: React.FC = () => {
                                                                     {child.children.map((subChild: { text: string; path: string }) => (
                                                                         <ListItem key={subChild.text} disablePadding sx={{ mb: 0.5, pl: 5, pr: 1 }}>
                                                                             <ListItemButton
-                                                                                selected={location.pathname === subChild.path}
+                                                                                selected={`${location.pathname}${location.search}` === subChild.path}
                                                                                 onClick={() => handleMenuItemClick(subChild.path)}
                                                                                 sx={{
                                                                                     py: 0.6,
@@ -271,7 +314,7 @@ export const AdminLayout: React.FC = () => {
                                                     ) : (
                                                         <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
                                                             <ListItemButton
-                                                                selected={location.pathname === child.path}
+                                                                selected={`${location.pathname}${location.search}` === child.path}
                                                                 onClick={() => handleMenuItemClick(child.path!)}
                                                                 sx={{
                                                                     py: 0.6,
@@ -300,7 +343,7 @@ export const AdminLayout: React.FC = () => {
                             ) : (
                                 <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
                                     <ListItemButton
-                                        selected={location.pathname === item.path}
+                                        selected={`${location.pathname}${location.search}` === item.path}
                                         onClick={() => handleMenuItemClick(item.path!)}
                                         sx={{
                                             borderRadius: '24px',

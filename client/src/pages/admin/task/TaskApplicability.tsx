@@ -404,7 +404,7 @@ export const TaskApplicability: React.FC = () => {
                                 <Typography sx={{ width: isMobile ? '100%' : 140, color: 'text.secondary', fontSize: '0.9rem' }}>Group Name</Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleGroupName}
                                     onChange={(e) => { setSingleGroupName(e.target.value); setSingleClientName(''); }}>
-                                    <MenuItem value=""><em>Choose a Group...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose a Group...</span></MenuItem>
                                     {clientGroups.map((g: { _id: string; groupName: string }) => (
                                         <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                     ))}
@@ -420,7 +420,7 @@ export const TaskApplicability: React.FC = () => {
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleClientName}
                                     onChange={(e) => setSingleClientName(e.target.value)}>
-                                    <MenuItem value=""><em>Choose a Client...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose a Client...</span></MenuItem>
                                     {singleFilteredClients.map((c: Client) => (  // ✅ Fixed: filtered by group
                                         <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                     ))}
@@ -436,7 +436,7 @@ export const TaskApplicability: React.FC = () => {
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleTask}
                                     onChange={(e) => { setSingleTask(e.target.value); setSingleFrequency(''); setSingleDepartment(''); }}>
-                                    <MenuItem value=""><em>Choose a Task...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose a Task...</span></MenuItem>
                                     {taskMasters.map((t: TaskMasterData) => (
                                         <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
                                     ))}
@@ -451,7 +451,7 @@ export const TaskApplicability: React.FC = () => {
                                 <Select size="small" fullWidth displayEmpty
                                     value={effectiveFrequency}
                                     onChange={(e) => setSingleFrequency(e.target.value)}>
-                                    <MenuItem value=""><em>Choose a Frequency...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose a Frequency...</span></MenuItem>
                                     {frequencies.map(f => (
                                         <MenuItem key={f} value={f}>{f}</MenuItem>
                                     ))}
@@ -472,7 +472,7 @@ export const TaskApplicability: React.FC = () => {
                                 </Typography>
                                 <Select size="small" fullWidth displayEmpty value={singleYear}
                                     onChange={(e) => setSingleYear(e.target.value)}>
-                                    <MenuItem value=""><em>Choose Year...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose Year...</span></MenuItem>
                                     {years.map(y => (
                                         <MenuItem key={y} value={y}>{y}</MenuItem>
                                     ))}
@@ -487,7 +487,7 @@ export const TaskApplicability: React.FC = () => {
                                 <Select size="small" fullWidth displayEmpty
                                     value={effectiveDepartment}
                                     onChange={(e) => setSingleDepartment(e.target.value)}>
-                                    <MenuItem value=""><em>Choose a Department...</em></MenuItem>
+                                    <MenuItem value=""><span>Choose a Department...</span></MenuItem>
                                     {departments.map(d => (
                                         <MenuItem key={d} value={d}>{d}</MenuItem>
                                     ))}
@@ -519,14 +519,14 @@ export const TaskApplicability: React.FC = () => {
                                     value={assignedTo}
                                     onChange={(e) => setAssignedTo(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
                                     renderValue={(selected) => {
-                                        if ((selected as string[]).length === 0) return <em style={{ color: '#888' }}>Choose employee(s)...</em>;
+                                        if ((selected as string[]).length === 0) return <span style={{ color: '#888' }}>Choose employee(s)...</span>;
                                         return (selected as string[]).map(id => {
                                             const emp = staffList.find((s: User) => s._id === id);
                                             return emp ? `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username : id;
                                         }).join(', ');
                                     }}
                                 >
-                                    <MenuItem value="" disabled><em>Choose employee(s)...</em></MenuItem>
+                                    <MenuItem value="" disabled><span>Choose employee(s)...</span></MenuItem>
                                     {staffList.map((emp: User) => (
                                         <MenuItem key={emp._id} value={emp._id}>
                                             <Checkbox size="small" checked={assignedTo.includes(emp._id)} />
@@ -598,7 +598,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Task <span style={{ color: 'red' }}>*</span></Typography>
                                         <Select size="small" fullWidth displayEmpty value={selectedTask}
                                             onChange={(e) => { setSelectedTask(e.target.value); setSelectedClientIds([]); }}>
-                                            <MenuItem value=""><em>Choose a Task...</em></MenuItem>
+                                            <MenuItem value=""><span>Choose a Task...</span></MenuItem>
                                             {taskMasters.map((t: TaskMasterData) => (
                                                 <MenuItem key={t._id || 'none'} value={t._id}>{t.taskName}</MenuItem>
                                             ))}
@@ -610,7 +610,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Group Name</Typography>
                                         <Select size="small" fullWidth displayEmpty value={groupName}
                                             onChange={(e) => setGroupName(e.target.value)}>
-                                            <MenuItem value=""><em>All Groups</em></MenuItem>
+                                            <MenuItem value=""><span>All Groups</span></MenuItem>
                                             {clientGroups.map((g: { _id: string; groupName: string }) => (
                                                 <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                             ))}
@@ -622,7 +622,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>IT Status</Typography>
                                         <Select size="small" fullWidth displayEmpty value={itStatus}
                                             onChange={(e) => setITStatus(e.target.value)}>
-                                            <MenuItem value=""><em>All IT Statuses</em></MenuItem>
+                                            <MenuItem value=""><span>All IT Statuses</span></MenuItem>
                                             {itStatuses.map((s: { _id: string; name: string }) => (
                                                 <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
                                             ))}
@@ -634,7 +634,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Sub Master</Typography>
                                         <Select size="small" fullWidth displayEmpty value={subMaster}
                                             onChange={(e) => setSubMaster(e.target.value)}>
-                                            <MenuItem value=""><em>All Sub Masters</em></MenuItem>
+                                            <MenuItem value=""><span>All Sub Masters</span></MenuItem>
                                             {subMasters.map((s: { _id: string; name: string }) => (
                                                 <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
                                             ))}
@@ -647,7 +647,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Department</Typography>
                                         <Select size="small" fullWidth displayEmpty value={department}
                                             onChange={(e) => setDepartment(e.target.value)}>
-                                            <MenuItem value=""><em>Choose a Department...</em></MenuItem>
+                                            <MenuItem value=""><span>Choose a Department...</span></MenuItem>
                                             {departments.map(d => (
                                                 <MenuItem key={d} value={d}>{d}</MenuItem>
                                             ))}
@@ -665,7 +665,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Client <span style={{ color: 'red' }}>*</span></Typography>
                                         <Select size="small" fullWidth displayEmpty value={singleClientName}
                                             onChange={(e) => { setSingleClientName(e.target.value); setSelectedTaskIds([]); }}>
-                                            <MenuItem value=""><em>Choose a Client...</em></MenuItem>
+                                            <MenuItem value=""><span>Choose a Client...</span></MenuItem>
                                             {clients.map((c: Client) => (
                                                 <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                             ))}
@@ -677,7 +677,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Department</Typography>
                                         <Select size="small" fullWidth displayEmpty value={department}
                                             onChange={(e) => setDepartment(e.target.value)}>
-                                            <MenuItem value=""><em>Choose a Department...</em></MenuItem>
+                                            <MenuItem value=""><span>Choose a Department...</span></MenuItem>
                                             {departments.map(d => (
                                                 <MenuItem key={d} value={d}>{d}</MenuItem>
                                             ))}
@@ -699,14 +699,14 @@ export const TaskApplicability: React.FC = () => {
                                     value={assignedTo}
                                     onChange={(e) => setAssignedTo(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
                                     renderValue={(selected) => {
-                                        if ((selected as string[]).length === 0) return <em style={{ color: '#888' }}>Choose employee(s)...</em>;
+                                        if ((selected as string[]).length === 0) return <span style={{ color: '#888' }}>Choose employee(s)...</span>;
                                         return (selected as string[]).map(id => {
                                             const emp = staffList.find((s: User) => s._id === id);
                                             return emp ? `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username : id;
                                         }).join(', ');
                                     }}
                                 >
-                                    <MenuItem value="" disabled><em>Choose employee(s)...</em></MenuItem>
+                                    <MenuItem value="" disabled><span>Choose employee(s)...</span></MenuItem>
                                     {staffList.map((emp: User) => (
                                         <MenuItem key={emp._id} value={emp._id}>
                                             <Checkbox size="small" checked={assignedTo.includes(emp._id)} />
