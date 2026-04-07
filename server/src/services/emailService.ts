@@ -515,3 +515,73 @@ export const sendEmployeePasswordResetEmail = async (params: SendEmployeePasswor
         return false;
     }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIRM-LEVEL SMTP (uses firm's own SMTP settings, not global env)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface FirmSmtpConfig {
+    host: string;
+    port: number;
+    secure: boolean;
+    user: string;
+    password: string;
+    fromName: string;
+}
+
+/**
+ * Replace {{variable}} placeholders in a template string.
+ */
+export function renderTemplate(template: string, variables: Record<string, string>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? `{{${key}}}`);
+}
+
+/**
+ * Send email via the firm's own SMTP config.
+ */
+export async function sendFirmMail(
+    smtp: FirmSmtpConfig,
+    to: string | string[],
+    subject: string,
+    html: string,
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const transporter = nodemailer.createTransport({
+            host: smtp.host,
+            port: smtp.port,
+            secure: smtp.secure,
+            auth: { user: smtp.user, pass: smtp.password },
+            tls: { rejectUnauthorized: false },
+        });
+        await transporter.sendMail({
+            from: `"${smtp.fromName}" <${smtp.user}>`,
+            to: Array.isArray(to) ? to.join(', ') : to,
+            subject,
+            html,
+        });
+        return { success: true };
+    } catch (err: any) {
+        console.error('[FirmMail] Error:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Verify firm SMTP connection (for "Send Test Email" button).
+ */
+export async function verifyFirmSmtp(smtp: FirmSmtpConfig): Promise<{ success: boolean; error?: string }> {
+    try {
+        const transporter = nodemailer.createTransport({
+            host: smtp.host,
+            port: smtp.port,
+            secure: smtp.secure,
+            auth: { user: smtp.user, pass: smtp.password },
+            tls: { rejectUnauthorized: false },
+        });
+        await transporter.verify();
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
