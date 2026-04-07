@@ -213,6 +213,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         const { status, priority, assignedTo, clientId, clientGroupId, overdue, myTasks, taskMasterId, frequency, reportingManager, year, department } = req.query;
 
         const filter: any = { firmId: req.firmId };
+        
+        console.log(`🔍 [DEBUG] Fetching tasks for firmId: ${req.firmId || 'MISSING'}. Subdomain: ${req.headers.host}`);
 
         // Role-based filtering (STRICT ISOLATION with Approval Support)
         if (req.user!.role === 'STAFF' || req.user!.role === 'INTERN') {
@@ -279,6 +281,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             .populate('reportingManager', 'username name email')
             .sort({ priority: -1, targetDate: 1 })
             .lean();
+
+        console.log(`✅ [DEBUG] Found ${tasks.length} tasks for filter:`, JSON.stringify(filter, null, 2));
 
         // Dynamically calculate overdue status for each task
         const now = new Date();

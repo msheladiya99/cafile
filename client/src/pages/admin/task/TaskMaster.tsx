@@ -674,7 +674,7 @@ export const TaskMaster: React.FC = () => {
                             InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
-                            <MenuItem value=""><em>— No Category —</em></MenuItem>
+                            <MenuItem value=""><span>— No Category —</span></MenuItem>
                             {taskCategories.map((c: TaskCategoryData) => (
                                 <MenuItem key={c._id} value={c._id}>
                                     <Box display="flex" alignItems="center" gap={1.5}>
@@ -721,7 +721,7 @@ export const TaskMaster: React.FC = () => {
                             InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
-                            <MenuItem value=""><em>— Select Period —</em></MenuItem>
+                            <MenuItem value=""><span>— Select Period —</span></MenuItem>
                             <MenuItem value="Daily">Daily</MenuItem>
                             <MenuItem value="Weekly">Weekly</MenuItem>
                             <MenuItem value="Fortnightly">Fortnightly</MenuItem>
@@ -778,7 +778,7 @@ export const TaskMaster: React.FC = () => {
                             InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
-                            <MenuItem value=""><em>— Auto Select / Open —</em></MenuItem>
+                            <MenuItem value=""><span>— Auto Select / Open —</span></MenuItem>
                             {staff.map((s: User) => (
                                 <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
                             ))}
@@ -791,7 +791,7 @@ export const TaskMaster: React.FC = () => {
                             InputProps={{ sx: { borderRadius: '12px', bgcolor: '#fafbff' } }}
                             sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#667eea' }, '&.Mui-focused fieldset': { borderColor: '#667eea', borderWidth: 2 } } }}
                         >
-                            <MenuItem value=""><em>— Select Reporting Manager —</em></MenuItem>
+                            <MenuItem value=""><span>— Select Reporting Manager —</span></MenuItem>
                             {staff.filter((s: User) => ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(s.role)).map((s: User) => (
                                 <MenuItem key={s._id} value={s._id}>{s.name || s.username}</MenuItem>
                             ))}
