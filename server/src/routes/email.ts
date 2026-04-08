@@ -5,12 +5,18 @@ import { sendFirmMail, verifyFirmSmtp, renderTemplate } from '../services/emailS
 const router = Router();
 router.use(authenticate);
 
+import { Firm } from '../models/Firm';
+import { EmailLog } from '../models/EmailLog';
+import { sendEmail } from '../services/emailService';
+import { queueEmail } from '../config/queue';
+import { encrypt, decrypt } from '../utils/encryption';
+import nodemailer from 'nodemailer';
+
 // ─── Helper: get firm's smtp config ───────────────────────────────────────────
 async function getFirmSmtp(req: AuthRequest) {
-    const { Settings } = (req as any).models;
     const firmId = req.firmId || req.user?.firmId;
-    const settings = await Settings.findOne({ firmId }).lean();
-    return settings?.smtp;
+    const firm = await Firm.findById(firmId);
+    return firm;
 }
 
 // ─── SMTP CONFIG (Admin only) ─────────────────────────────────────────────────
@@ -18,9 +24,18 @@ async function getFirmSmtp(req: AuthRequest) {
 // GET SMTP config (password masked)
 router.get('/smtp', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const smtp = await getFirmSmtp(req);
-        if (!smtp) return res.json({ isConfigured: false });
-        res.json({ ...smtp, password: smtp.password ? '••••••••' : '' });
+        const firm = await getFirmSmtp(req);
+        if (!firm || !firm.smtpHost) return res.json({ isConfigured: false, smtpEnabled: false });
+        res.json({
+            host: firm.smtpHost,
+            port: firm.smtpPort,
+            secure: firm.smtpSecure,
+            user: firm.smtpUser,
+            password: firm.smtpPass ? '••••••••' : '',
+            fromName: firm.smtpFromName || firm.firmName || '',
+            smtpEnabled: firm.smtpEnabled,
+            isConfigured: true
+        });
     } catch (err) {
         res.status(500).json({ message: 'Error fetching SMTP config' });
     }
@@ -29,28 +44,24 @@ router.get('/smtp', requireAdmin, async (req: AuthRequest, res: Response) => {
 // SAVE SMTP config
 router.put('/smtp', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const { Settings } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
-        const { host, port, secure, user, password, fromName } = req.body;
+        const { host, port, secure, user, password, smtpEnabled, fromName } = req.body;
 
-        if (!host || !user || !fromName) {
-            return res.status(400).json({ message: 'Host, Email (user) and Display Name are required' });
+        const firm = await Firm.findById(firmId);
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+
+        firm.smtpHost = host?.trim();
+        firm.smtpPort = parseInt(port) || 587;
+        firm.smtpSecure = !!secure;
+        firm.smtpUser = user?.trim();
+        firm.smtpEnabled = !!smtpEnabled;
+        firm.smtpFromName = fromName?.trim() || '';
+
+        if (password && password !== '••••••••') {
+            firm.smtpPass = encrypt(password);
         }
 
-        let settings = await Settings.findOne({ firmId });
-        if (!settings) settings = await Settings.create({ firmId });
-
-        settings.smtp = {
-            host: host.trim(),
-            port: parseInt(port) || 587,
-            secure: !!secure,
-            user: user.trim(),
-            // Keep existing password if empty string sent (masked placeholder)
-            password: password && password !== '••••••••' ? password : (settings.smtp?.password || ''),
-            fromName: fromName.trim(),
-            isConfigured: true,
-        };
-        await settings.save();
+        await firm.save();
         res.json({ message: 'SMTP configuration saved', isConfigured: true });
     } catch (err) {
         res.status(500).json({ message: 'Error saving SMTP config' });
@@ -60,30 +71,89 @@ router.put('/smtp', requireAdmin, async (req: AuthRequest, res: Response) => {
 // TEST SMTP connection
 router.post('/smtp/test', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const { testEmail } = req.body;
-        const smtp = await getFirmSmtp(req);
-        if (!smtp?.isConfigured) return res.status(400).json({ message: 'SMTP not configured yet' });
+        const { testEmail, ...config } = req.body;
+        const firm = await getFirmSmtp(req);
+        
+        // In case they pass config in body to test without saving first
+        let testHost = config.host;
+        let testPort = config.port;
+        let testUser = config.user;
+        let testPass = config.password;
+        let testSecure = config.secure;
+        let testFromName = config.fromName;
 
-        // Send a test email
-        const result = await sendFirmMail(
-            smtp,
-            testEmail || smtp.user,
-            '✅ SMTP Test – CA Office Portal',
-            `<div style="font-family:sans-serif;padding:24px;max-width:500px">
+        if (!testHost) {
+            if (!firm || !firm.smtpHost) return res.status(400).json({ message: 'SMTP not configured yet' });
+            testHost = firm.smtpHost;
+            testPort = firm.smtpPort;
+            testUser = firm.smtpUser;
+            testPass = decrypt(firm.smtpPass || '') || firm.smtpPass;
+            testSecure = firm.smtpSecure;
+            testFromName = firm.smtpFromName;
+        }
+
+        if (testPass === '••••••••') {
+            testPass = decrypt(firm?.smtpPass || '') || firm?.smtpPass;
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: testHost,
+            port: parseInt(testPort) || 587,
+            secure: !!testSecure,
+            auth: { user: testUser, pass: testPass },
+            tls: { rejectUnauthorized: false }
+        });
+
+        // Test the connection
+        await transporter.verify();
+
+        // Actually send the test email
+        const targetEmail = testEmail || testUser;
+        const displayFromName = testFromName || firm?.firmName || 'CA Office Portal';
+        
+        await transporter.sendMail({
+            from: `"${displayFromName}" <${testUser}>`,
+            to: targetEmail,
+            subject: '✅ SMTP Test – CA Office Portal',
+            html: `<div style="font-family:sans-serif;padding:24px;max-width:500px">
               <h2 style="color:#4f46e5">🎉 SMTP Connection Successful!</h2>
               <p>Your SMTP configuration is working correctly.</p>
-              <p><b>Host:</b> ${smtp.host}:${smtp.port}<br>
-                 <b>From:</b> ${smtp.fromName} &lt;${smtp.user}&gt;</p>
+              <p><b>Host:</b> ${testHost}:${testPort}<br>
+                 <b>From:</b> ${displayFromName} &lt;${testUser}&gt;</p>
               <p style="color:#555;font-size:13px">Sent by CA Office Portal</p>
             </div>`
-        );
-        if (result.success) {
-            res.json({ message: `Test email sent to ${testEmail || smtp.user}` });
-        } else {
-            res.status(500).json({ message: result.error || 'Failed to send test email' });
-        }
+        });
+
+        res.json({ message: `SMTP Successful! Test email sent to ${targetEmail} ✅` });
     } catch (err: any) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// GET Email Analytics
+router.get('/analytics', requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const firmId = req.firmId || req.user?.firmId;
+
+        const [sent, failed, fallback] = await Promise.all([
+            EmailLog.countDocuments({ firmId, status: 'success' }),
+            EmailLog.countDocuments({ firmId, status: 'failed' }),
+            EmailLog.countDocuments({ firmId, status: 'fallback' })
+        ]);
+
+        // Get recent logs
+        const recentLogs = await EmailLog.find({ firmId })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('to subject status provider createdAt errorMessage')
+            .lean();
+
+        res.json({
+            stats: { sent, failed, fallback },
+            recentLogs
+        });
+    } catch (err: any) {
+        res.status(500).json({ message: 'Error fetching email analytics', error: err.message });
     }
 });
 
@@ -152,8 +222,6 @@ router.post('/send/bulk', requireAdmin, async (req: AuthRequest, res: Response) 
     try {
         const { Client, EmailTemplate } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
-        const smtp = await getFirmSmtp(req);
-        if (!smtp?.isConfigured) return res.status(400).json({ message: 'SMTP not configured. Go to Settings → Email Configuration first.' });
 
         const { templateId, subject: customSubject, body: customBody, clientIds } = req.body;
 
@@ -175,7 +243,7 @@ router.post('/send/bulk', requireAdmin, async (req: AuthRequest, res: Response) 
         if (clientIds?.length) query._id = { $in: clientIds };
         const clients = await Client.find(query).select('name email').lean();
 
-        const results = { sent: 0, failed: 0, errors: [] as string[] };
+        let queued = 0;
 
         for (const client of clients) {
             if (!client.email) continue;
@@ -186,12 +254,18 @@ router.post('/send/bulk', requireAdmin, async (req: AuthRequest, res: Response) 
             };
             const renderedSubject = renderTemplate(subject, variables);
             const renderedBody = renderTemplate(body, variables);
-            const result = await sendFirmMail(smtp, client.email, renderedSubject, renderedBody);
-            if (result.success) results.sent++;
-            else { results.failed++; results.errors.push(`${client.name}: ${result.error}`); }
+            
+            // Push to background queue
+            await queueEmail({
+                to: client.email,
+                subject: renderedSubject,
+                html: renderedBody,
+                firmId: firmId
+            });
+            queued++;
         }
 
-        res.json({ message: `Done. Sent: ${results.sent}, Failed: ${results.failed}`, ...results });
+        res.json({ message: `Queued ${queued} emails to be sent in the background` });
     } catch (err: any) {
         res.status(500).json({ message: err.message });
     }
@@ -202,8 +276,6 @@ router.post('/send/client/:clientId', requireAdmin, async (req: AuthRequest, res
     try {
         const { Client, EmailTemplate } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
-        const smtp = await getFirmSmtp(req);
-        if (!smtp?.isConfigured) return res.status(400).json({ message: 'SMTP not configured' });
 
         const client = await Client.findOne({ _id: req.params.clientId, firmId }).lean();
         if (!client) return res.status(404).json({ message: 'Client not found' });
@@ -222,9 +294,15 @@ router.post('/send/client/:clientId', requireAdmin, async (req: AuthRequest, res
         }
 
         const variables = { clientName: client.name, name: client.name, email: client.email, ...(extraVars || {}) };
-        const result = await sendFirmMail(smtp, client.email, renderTemplate(subject, variables), renderTemplate(body, variables));
-        if (result.success) res.json({ message: 'Email sent successfully' });
-        else res.status(500).json({ message: result.error });
+        
+        await queueEmail({
+            to: client.email,
+            subject: renderTemplate(subject, variables),
+            html: renderTemplate(body, variables),
+            firmId: firmId
+        });
+        
+        res.json({ message: 'Email queued successfully' });
     } catch (err: any) {
         res.status(500).json({ message: err.message });
     }

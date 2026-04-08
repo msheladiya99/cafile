@@ -36,6 +36,15 @@ export interface IFirm extends Document {
     subscription?: IFirmSubscription;
     addons: IFirmAddon[];
     
+    // Email Configuration
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPass?: string; // Encrypted
+    smtpSecure?: boolean;
+    smtpEnabled?: boolean;
+    smtpFromName?: string;
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -109,7 +118,16 @@ const firmSchema = new Schema<IFirm>(
             purchaseDate: { type: Date, default: Date.now },
             expiryDate: Date,
             razorpaySubscriptionId: String
-        }]
+        }],
+        
+        // Custom Email Configuration
+        smtpHost: String,
+        smtpPort: Number,
+        smtpUser: String,
+        smtpPass: String,
+        smtpSecure: { type: Boolean, default: false },
+        smtpEnabled: { type: Boolean, default: false },
+        smtpFromName: String
     },
     { timestamps: true }
 );
