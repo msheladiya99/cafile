@@ -4,6 +4,13 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
+import dns from 'dns';
+
+// Fix for Nodemailer "Connection timeout" on servers with broken IPv6
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {}
+
 import { createServer } from 'http';
 import { connectDB } from './config/database'; // database.ts applies the plugin immediately
 import { tenantMiddleware } from './middleware/tenant';
