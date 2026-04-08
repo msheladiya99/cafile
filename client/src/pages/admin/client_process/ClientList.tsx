@@ -33,10 +33,12 @@ import {
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
     FilterList as FilterListIcon,
-    LockReset as LockResetIcon
+    LockReset as LockResetIcon,
+    Send as SendIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '../../../services/api';
 import { adminService } from '../../../services/adminService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import { masterService } from '../../../services/masterService';
@@ -91,6 +93,18 @@ export const ClientList: React.FC = () => {
         content: '',
         onConfirm: () => {}
     });
+
+    // Email Dialog State
+    const [emailDialog, setEmailDialog] = React.useState(false);
+    const [templates, setTemplates] = React.useState<any[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = React.useState('');
+    const [sendingEmail, setSendingEmail] = React.useState(false);
+
+    React.useEffect(() => {
+        if (emailDialog && templates.length === 0) {
+            api.get('/email/templates').then(res => setTemplates(res.data)).catch(() => {});
+        }
+    }, [emailDialog, templates.length]);
 
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
@@ -241,7 +255,17 @@ export const ClientList: React.FC = () => {
                 actions={
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {selectedClients.length > 0 && (
-                            <Button
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => setEmailDialog(true)}
+                                    startIcon={<SendIcon />}
+                                    sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem' }}
+                                >
+                                    Send Email ({selectedClients.length})
+                                </Button>
+                                <Button
                                 variant="contained"
                                 size="small"
                                 color="error"
@@ -250,8 +274,9 @@ export const ClientList: React.FC = () => {
                                 startIcon={<DeleteIcon />}
                                 sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, boxShadow: 'none', fontSize: '0.85rem' }}
                             >
-                                Delete Selected ({selectedClients.length})
-                            </Button>
+                                    Delete Selected ({selectedClients.length})
+                                </Button>
+                            </>
                         )}
                         <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ boxShadow: 'none' }}>
                             + Add New
@@ -669,6 +694,59 @@ export const ClientList: React.FC = () => {
                     <Button onClick={closeConfirm} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
                     <Button onClick={confirmDialog.onConfirm} variant="contained" color="error" sx={{ fontWeight: 600, boxShadow: 'none' }}>
                         Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Email Blast Dialog */}
+            <Dialog 
+                open={emailDialog} 
+                onClose={() => !sendingEmail && setEmailDialog(false)}
+                PaperProps={{ sx: { borderRadius: '12px', minWidth: { xs: 300, sm: 400 } } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Send Email to Selected</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        Select a template to send to the {selectedClients.length} chosen clients.
+                    </DialogContentText>
+                    <Select
+                        fullWidth
+                        size="small"
+                        displayEmpty
+                        value={selectedTemplate}
+                        onChange={(e) => setSelectedTemplate(e.target.value as string)}
+                        sx={{ borderRadius: 2 }}
+                    >
+                        <MenuItem value="" disabled>Select Email Template...</MenuItem>
+                        {templates.map(t => (
+                            <MenuItem key={t._id} value={t._id}>{t.name} ({t.subject})</MenuItem>
+                        ))}
+                    </Select>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+                    <Button onClick={() => setEmailDialog(false)} disabled={sendingEmail} sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={async () => {
+                            if (!selectedTemplate) return toast.error('Please select an email template');
+                            setSendingEmail(true);
+                            try {
+                                const res = await api.post('/email/send/bulk', { templateId: selectedTemplate, clientIds: selectedClients });
+                                toast.success(res.data.message);
+                                setEmailDialog(false);
+                            } catch (e: any) {
+                                toast.error(e.response?.data?.message || 'Failed to send bulk email');
+                            } finally {
+                                setSendingEmail(false);
+                            }
+                        }} 
+                        variant="contained" 
+                        disabled={sendingEmail || !selectedTemplate}
+                        startIcon={<SendIcon />}
+                        sx={{ fontWeight: 600, boxShadow: 'none', borderRadius: 2 }}
+                    >
+                        {sendingEmail ? 'Sending...' : 'Send Emails'}
                     </Button>
                 </DialogActions>
             </Dialog>
