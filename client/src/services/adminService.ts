@@ -5,7 +5,12 @@ export type { Client, CreateClientData, CreateClientResponse, FileData };
 
 export interface DashboardStats {
     clientCount: number;
+    staffCount?: number;
+    storageUsedGB?: number;
     reminders: unknown[];
+    firmSubscription?: any;
+    firmPlan?: string;
+    planLimits?: { clients: number; storageGB: number; staff: number };
     [key: string]: unknown;
 }
 
