@@ -241,7 +241,16 @@ router.post('/send/bulk', requireAdmin, async (req: AuthRequest, res: Response) 
         // Get clients
         const query: any = { firmId };
         if (clientIds?.length) query._id = { $in: clientIds };
-        const clients = await Client.find(query).select('name email').lean();
+        const clients = await Client.find(query).select('name email clientCode').lean();
+        
+        // Fetch Firm for companyName and subdomain
+        const firm = await Firm.findById(firmId);
+        const companyName = firm?.firmName || 'Our Firm';
+        
+        const baseDomain = process.env.APP_BASE_DOMAIN || 'mycafile.in';
+        const portalUrl = firm?.subdomain 
+            ? `https://${firm.subdomain}.${baseDomain}` 
+            : (process.env.CLIENT_URL || process.env.PORTAL_URL || 'http://localhost:5173');
 
         let queued = 0;
 
@@ -251,6 +260,10 @@ router.post('/send/bulk', requireAdmin, async (req: AuthRequest, res: Response) 
                 clientName: client.name || '',
                 name: client.name || '',
                 email: client.email || '',
+                username: client.email || client.clientCode || '',
+                password: '(Encrypted - please reset password if lost)',
+                companyName: companyName,
+                portalUrl: portalUrl
             };
             const renderedSubject = renderTemplate(subject, variables);
             const renderedBody = renderTemplate(body, variables);
@@ -293,7 +306,22 @@ router.post('/send/client/:clientId', requireAdmin, async (req: AuthRequest, res
             body = customBody;
         }
 
-        const variables = { clientName: client.name, name: client.name, email: client.email, ...(extraVars || {}) };
+        const firm = await Firm.findById(firmId);
+        const baseDomain = process.env.APP_BASE_DOMAIN || 'mycafile.in';
+        const portalUrl = firm?.subdomain 
+            ? `https://${firm.subdomain}.${baseDomain}` 
+            : (process.env.CLIENT_URL || process.env.PORTAL_URL || 'http://localhost:5173');
+
+        const variables = { 
+            clientName: client.name, 
+            name: client.name, 
+            email: client.email, 
+            username: client.email || client.clientCode || '',
+            password: '(Encrypted - please reset password if lost)',
+            companyName: firm?.firmName || 'Our Firm',
+            portalUrl: portalUrl,
+            ...(extraVars || {}) 
+        };
         
         await queueEmail({
             to: client.email,
