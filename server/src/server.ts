@@ -172,10 +172,12 @@ const startServer = async () => {
 };
 
 import { startSubscriptionCronJob } from './utils/subscriptionCron';
+import { startEmailWorker } from './workers/emailWorker';
 
 startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
+startEmailWorker();
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {

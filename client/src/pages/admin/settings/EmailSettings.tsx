@@ -25,6 +25,7 @@ interface SmtpConfig {
     password: string;
     fromName: string;
     isConfigured?: boolean;
+    smtpEnabled?: boolean;
 }
 
 interface EmailTemplate {
@@ -135,7 +136,7 @@ const AVAILABLE_VARS: Record<string, string[]> = {
 // ─── Component ────────────────────────────────────────────────────────────────
 export const EmailSettings: React.FC = () => {
     const [tab, setTab] = useState(0);
-    const [smtp, setSmtp] = useState<SmtpConfig>({ host: '', port: 587, secure: false, user: '', password: '', fromName: '' });
+    const [smtp, setSmtp] = useState<SmtpConfig>({ host: '', port: 587, secure: false, user: '', password: '', fromName: '', smtpEnabled: false });
     const [smtpLoading, setSmtpLoading] = useState(false);
     const [testLoading, setTestLoading] = useState(false);
     const [testEmail, setTestEmail] = useState('');
@@ -262,35 +263,49 @@ export const EmailSettings: React.FC = () => {
                                     </Alert>
                                 )}
 
+                                <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                                    <FormControlLabel
+                                        control={<Switch checked={smtp.smtpEnabled || false} onChange={e => setSmtp(p => ({ ...p, smtpEnabled: e.target.checked }))} />}
+                                        label={
+                                            <Box>
+                                                <Typography variant="body1" fontWeight={600}>Use Custom SMTP</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    If turned OFF, emails will be sent using the system default (Resend).
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                </Box>
+
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 12, sm: 8 }}>
                                         <TextField label="SMTP Host" fullWidth size="small"
                                             placeholder="smtp.gmail.com"
-                                            value={smtp.host} onChange={e => setSmtp(p => ({ ...p, host: e.target.value }))} />
+                                            value={smtp.host} onChange={e => setSmtp(p => ({ ...p, host: e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 4 }}>
                                         <TextField label="Port" fullWidth size="small" type="number"
                                             placeholder="587"
-                                            value={smtp.port} onChange={e => setSmtp(p => ({ ...p, port: +e.target.value }))} />
+                                            value={smtp.port} onChange={e => setSmtp(p => ({ ...p, port: +e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>
                                         <TextField label="Display Name (From Name)" fullWidth size="small"
                                             placeholder="Lalit Hirpara & Co."
-                                            value={smtp.fromName} onChange={e => setSmtp(p => ({ ...p, fromName: e.target.value }))} />
+                                            value={smtp.fromName} onChange={e => setSmtp(p => ({ ...p, fromName: e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>
                                         <TextField label="Email Address (Login)" fullWidth size="small" type="email"
                                             placeholder="yourcompany@gmail.com"
-                                            value={smtp.user} onChange={e => setSmtp(p => ({ ...p, user: e.target.value }))} />
+                                            value={smtp.user} onChange={e => setSmtp(p => ({ ...p, user: e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>
                                         <TextField label="App Password" fullWidth size="small" type="password"
                                             placeholder="Gmail App Password (not your Google password)"
-                                            value={smtp.password} onChange={e => setSmtp(p => ({ ...p, password: e.target.value }))} />
+                                            value={smtp.password} onChange={e => setSmtp(p => ({ ...p, password: e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
-                                    <Grid size={{ xs: 12 }}>
+                                     <Grid size={{ xs: 12 }}>
                                         <FormControlLabel
-                                            control={<Switch checked={smtp.secure} onChange={e => setSmtp(p => ({ ...p, secure: e.target.checked, port: e.target.checked ? 465 : 587 }))} />}
+                                            control={<Switch checked={smtp.secure} onChange={e => setSmtp(p => ({ ...p, secure: e.target.checked, port: e.target.checked ? 465 : 587 }))} disabled={!smtp.smtpEnabled} />}
                                             label={`Use SSL/TLS (Port ${smtp.secure ? 465 : 587}) — ${smtp.secure ? 'Port 465 for SSL' : 'Port 587 for STARTTLS'}`}
                                         />
                                     </Grid>
