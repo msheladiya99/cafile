@@ -1,4 +1,10 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import { Firm } from '../models/Firm';
+import { EmailLog } from '../models/EmailLog';
+import { decrypt } from '../utils/encryption';
+
+const resend = new Resend(process.env.RESEND_API_KEY || 're_default');
 
 // Email configuration
 const createTransporter = () => {
@@ -584,4 +590,92 @@ export async function verifyFirmSmtp(smtp: FirmSmtpConfig): Promise<{ success: b
         return { success: false, error: err.message };
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW HYBRID SEND EMAIL LOGIC + QUEUE HOOK
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SendEmailParams {
+    to: string;
+    subject: string;
+    html: string;
+    firmId?: string;
+}
+
+export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) => {
+    let usedProvider: 'smtp' | 'resend' = 'resend';
+    let status: 'success' | 'failed' | 'fallback' = 'failed';
+    let errorMessage = '';
+
+    try {
+        if (firmId) {
+            const firm = await Firm.findById(firmId);
+            if (firm && firm.smtpEnabled && firm.smtpHost && firm.smtpUser) {
+                try {
+                    const decryptedPass = decrypt(firm.smtpPass || '') || firm.smtpPass;
+                    const transporter = nodemailer.createTransport({
+                        host: firm.smtpHost,
+                        port: firm.smtpPort,
+                        secure: firm.smtpSecure,
+                        auth: { user: firm.smtpUser, pass: decryptedPass },
+                        tls: { rejectUnauthorized: false }
+                    });
+
+                    const displayFromName = firm.smtpFromName || firm.firmName || 'CA Office Portal';
+
+                    await transporter.sendMail({
+                        from: `"${displayFromName}" <${firm.smtpUser}>`,
+                        to,
+                        subject,
+                        html
+                    });
+
+                    status = 'success';
+                    usedProvider = 'smtp';
+
+                    await logEmail(firmId, to, subject, status, usedProvider);
+                    return { success: true, provider: usedProvider };
+                } catch (smtpError: any) {
+                    console.error('[SMTP Error] Falling back to Resend:', smtpError);
+                    status = 'fallback';
+                    errorMessage = smtpError.message;
+                    usedProvider = 'resend';
+                }
+            }
+        }
+
+        // Fallback or Default: Resend API
+        await resend.emails.send({
+            from: process.env.EMAIL_FROM || 'CA Office Portal <onboarding@resend.dev>',
+            to,
+            subject,
+            html
+        });
+
+        status = status === 'fallback' ? 'fallback' : 'success';
+        
+        await logEmail(firmId, to, subject, status, 'resend', errorMessage);
+        return { success: true, provider: 'resend', status };
+
+    } catch (error: any) {
+        status = 'failed';
+        await logEmail(firmId, to, subject, status, usedProvider, error.message);
+        return { success: false, error: error.message };
+    }
+};
+
+const logEmail = async (firmId: string | undefined, to: string, subject: string, status: string, provider: string, errorMessage?: string) => {
+    try {
+        await EmailLog.create({
+            firmId,
+            to,
+            subject,
+            status,
+            provider,
+            errorMessage
+        });
+    } catch (e) {
+        console.error('Failed to log email:', e);
+    }
+};
 
