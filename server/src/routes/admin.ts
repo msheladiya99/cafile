@@ -402,13 +402,13 @@ router.get('/clients/count', async (req: AuthRequest, res: Response) => {
 // Single optimized Dashboard endpoint: returns multiple stats in parallel
 router.get('/dashboard', async (req: AuthRequest, res: Response) => {
     try {
-        const { Client, Reminder } = (req as any).models;
+        const { Client, Reminder, File } = (req as any).models;
 
         const today = new Date();
         const next30Days = new Date();
         next30Days.setDate(today.getDate() + 30);
 
-        const [clientCount, upcomingReminders] = await Promise.all([
+        const [clientCount, upcomingReminders, firmDoc, staffCount, storageResult] = await Promise.all([
             Client.countDocuments({ firmId: req.firmId }),
             Reminder.find({
                 firmId: req.firmId,
@@ -417,12 +417,32 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
             })
             .sort({ dueDate: 1 })
             .limit(10)
-            .lean()
+            .lean(),
+            Firm.findById(req.firmId).lean(),
+            User.countDocuments({ firmId: req.firmId, role: { $ne: 'CLIENT' } }),
+            File.aggregate([
+                { $match: { firmId: new mongoose.Types.ObjectId(req.firmId) } },
+                { $group: { _id: null, totalBytes: { $sum: "$fileSize" } } }
+            ])
         ]);
+        
+        const storageUsedGB = storageResult.length > 0 ? (storageResult[0].totalBytes / (1024 * 1024 * 1024)) : 0;
+        
+        let planLimits = { clients: 500, storageGB: 0.5, staff: 5 };
+        if (firmDoc?.plan) {
+             const { Plan } = await import('../models/Plan');
+             const planDoc = await Plan.findOne({ name: { $regex: new RegExp(`^${firmDoc.plan}$`, 'i') } }).lean();
+             if (planDoc) planLimits = planDoc.limits;
+        }
 
         res.json({
             clientCount,
-            reminders: upcomingReminders
+            staffCount,
+            storageUsedGB,
+            reminders: upcomingReminders,
+            firmSubscription: firmDoc?.subscription || null,
+            firmPlan: firmDoc?.plan || 'Free Trial',
+            planLimits
         });
     } catch (error) {
         console.error('Dashboard error:', error);
