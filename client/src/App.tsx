@@ -48,6 +48,7 @@ const UploadFile = lazy(() => import('./pages/admin/UploadFile').then(module => 
 const ManageFiles = lazy(() => import('./pages/admin/ManageFiles').then(module => ({ default: module.ManageFiles })));
 const Reminders = lazy(() => import('./pages/admin/Reminders').then(module => ({ default: module.Reminders })));
 const Billing = lazy(() => import('./pages/admin/Billing').then(module => ({ default: module.Billing })));
+const SubscriptionDetails = lazy(() => import('./pages/admin/SubscriptionDetails').then(module => ({ default: module.SubscriptionDetails })));
 const ClientLedger = lazy(() => import('./pages/admin/ClientLedger').then(module => ({ default: module.ClientLedger })));
 const FileRegister = lazy(() => import('./pages/admin/FileRegister').then(module => ({ default: module.FileRegister })));
 const FirmMasterPage = lazy(() => import('./pages/admin/FirmMaster').then(module => ({ default: module.FirmMasterPage })));
@@ -217,6 +218,7 @@ const AppRoutes: React.FC = () => {
           <Route path="files" element={<ManageFiles />} />
           <Route path="reminders" element={<Reminders />} />
           <Route path="billing" element={<Billing />} />
+          <Route path="subscription" element={<SubscriptionDetails />} />
           <Route path="client-ledger" element={<ProtectedRoute requireAdmin><ClientLedger /></ProtectedRoute>} />
           <Route path="fileregister" element={<FileRegister />} />
           <Route path="firm-master" element={<ProtectedRoute requireAdmin><FirmMasterPage /></ProtectedRoute>} />

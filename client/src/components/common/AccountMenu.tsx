@@ -120,7 +120,7 @@ const AccountMenu: React.FC<AccountMenuProps> = ({
 
                 {/* Navigation Items (STRICTLY ONLY PLANS, BILLING, SETTINGS) */}
                 <Box sx={{ py: 1 }}>
-                    <MenuItem onClick={() => { onClose(); navigate('/admin/billing'); }}>
+                    <MenuItem onClick={() => { onClose(); navigate('/admin/subscription'); }}>
                         <ListItemIcon><PlansIcon sx={{ fontSize: 20 }} /></ListItemIcon>
                         <Typography>Plans</Typography>
                     </MenuItem>
