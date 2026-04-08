@@ -37,76 +37,150 @@ interface EmailTemplate {
     isActive: boolean;
 }
 
-// ─── Default 5 templates ──────────────────────────────────────────────────────
+// ─── Default 5 Premium Templates ──────────────────────────────────────────────
+const baseStyles = {
+    wrapper: 'background-color:#f4f7f6;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;',
+    container: 'max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);',
+    header: 'background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);padding:35px 30px;text-align:center;',
+    headerText: 'color:#ffffff;margin:0;font-size:26px;font-weight:800;letter-spacing:0.5px;',
+    body: 'padding:40px 30px;',
+    h2: 'color:#111827;font-size:22px;margin-top:0;margin-bottom:15px;font-weight:700;',
+    p: 'color:#4b5563;font-size:16px;line-height:1.6;margin-bottom:20px;',
+    infoBox: (color: string) => `background:#f8fafc;border-left:4px solid ${color};padding:20px;border-radius:6px;margin:25px 0;`,
+    infoRow: 'margin:0 0 12px 0;color:#1f2937;font-size:15px;',
+    btnContainer: 'margin-top:35px;text-align:center;',
+    btn: (color: string) => `display:inline-block;background-color:${color};color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:0.5px;`,
+    footer: 'background-color:#f9fafb;padding:24px;text-align:center;border-top:1px solid #e5e7eb;',
+    footerText: 'color:#6b7280;font-size:13px;margin:0;',
+    footerSubText: 'color:#9ca3af;font-size:12px;margin-top:8px;'
+};
+
 const DEFAULT_TEMPLATES: Omit<EmailTemplate, '_id'>[] = [
     {
         name: 'Client Welcome',
         slug: 'client_welcome',
         subject: 'Welcome to {{companyName}} – Your Account Details',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#4f46e5">Welcome, {{clientName}}! 🎉</h2>
-  <p>Your account has been created successfully at <b>{{companyName}}</b>.</p>
-  <div style="background:#f0f4ff;padding:16px;border-radius:8px;margin:16px 0">
-    <b>Username:</b> {{username}}<br>
-    <b>Password:</b> {{password}}<br>
-    <b>Portal:</b> <a href="{{portalUrl}}">{{portalUrl}}</a>
+        body: `<div style="${baseStyles.wrapper}">
+  <div style="${baseStyles.container}">
+    <div style="${baseStyles.header}">
+       <h1 style="${baseStyles.headerText}">{{companyName}}</h1>
+    </div>
+    <div style="${baseStyles.body}">
+       <h2 style="${baseStyles.h2}">Welcome aboard, {{clientName}}! 🎉</h2>
+       <p style="${baseStyles.p}">Your secure client account has been successfully created. You can now access your tax records, invoices, and documents in one central portal.</p>
+       
+       <div style="${baseStyles.infoBox('#4f46e5')}">
+         <p style="${baseStyles.infoRow}"><strong>Username:</strong> {{username}}</p>
+         <p style="${baseStyles.infoRow}"><strong>Password:</strong> {{password}}</p>
+       </div>
+       
+       <p style="${baseStyles.p}">For your security, please log in and change your password as soon as possible.</p>
+       
+       <div style="${baseStyles.btnContainer}">
+         <a href="{{portalUrl}}" style="${baseStyles.btn('#4f46e5')}">Access Client Portal</a>
+       </div>
+    </div>
+    <div style="${baseStyles.footer}">
+       <p style="${baseStyles.footerText}">&copy; {{companyName}}. All rights reserved.</p>
+       <p style="${baseStyles.footerSubText}">This is an automated notification. Please do not reply directly to this email.</p>
+    </div>
   </div>
-  <p>Please login and change your password. Contact us if you need help.</p>
-  <p>Regards,<br><b>{{companyName}}</b></p>
 </div>`,
         isActive: true,
     },
     {
         name: 'Task Assigned',
         slug: 'task_assigned',
-        subject: 'Task Assigned: {{taskName}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#059669">New Task Assigned 📋</h2>
-  <p>Dear {{clientName}},</p>
-  <p>A new task has been assigned for your account:</p>
-  <div style="background:#f0fdf4;padding:16px;border-radius:8px;border-left:4px solid #059669;margin:16px 0">
-    <b>Task:</b> {{taskName}}<br>
-    <b>Due Date:</b> {{dueDate}}<br>
-    <b>Assigned To:</b> {{assignedTo}}
+        subject: 'New Task Required: {{taskName}}',
+        body: `<div style="${baseStyles.wrapper}">
+  <div style="${baseStyles.container}">
+    <div style="background:linear-gradient(135deg, #059669 0%, #10b981 100%);padding:35px 30px;text-align:center;">
+       <h1 style="${baseStyles.headerText}">Action Required</h1>
+    </div>
+    <div style="${baseStyles.body}">
+       <h2 style="${baseStyles.h2}">Hello {{clientName}},</h2>
+       <p style="${baseStyles.p}">Our team has assigned a new task to your dashboard that requires your attention to proceed with your filings.</p>
+       
+       <div style="${baseStyles.infoBox('#059669')}">
+         <p style="${baseStyles.infoRow}"><strong>Task Required:</strong> {{taskName}}</p>
+         <p style="${baseStyles.infoRow}"><strong>Due Date:</strong> {{dueDate}}</p>
+         <p style="${baseStyles.infoRow}" style="margin:0;"><strong>Assigned Specialist:</strong> {{assignedTo}}</p>
+       </div>
+       
+       <p style="${baseStyles.p}">Prompt completion ensures we meet all compliance deadlines smoothly.</p>
+       
+       <div style="${baseStyles.btnContainer}">
+         <a href="{{portalUrl}}" style="${baseStyles.btn('#059669')}">View Task Details</a>
+       </div>
+    </div>
+    <div style="${baseStyles.footer}">
+       <p style="${baseStyles.footerText}">Regards, <strong>{{companyName}}</strong></p>
+    </div>
   </div>
-  <p>We will keep you updated on the progress.</p>
-  <p>Regards,<br><b>{{companyName}}</b></p>
 </div>`,
         isActive: true,
     },
     {
         name: 'Payment Reminder',
         slug: 'payment_reminder',
-        subject: 'Payment Reminder – {{companyName}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#d97706">Payment Reminder 💰</h2>
-  <p>Dear {{clientName}},</p>
-  <p>This is a friendly reminder that the following payment is due:</p>
-  <div style="background:#fffbeb;padding:16px;border-radius:8px;border-left:4px solid #d97706;margin:16px 0">
-    <b>Amount:</b> ₹{{amount}}<br>
-    <b>Due Date:</b> {{dueDate}}<br>
-    <b>Invoice No:</b> {{invoiceNo}}
+        subject: 'Invoice Due: {{companyName}}',
+        body: `<div style="${baseStyles.wrapper}">
+  <div style="${baseStyles.container}">
+    <div style="background:linear-gradient(135deg, #d97706 0%, #f59e0b 100%);padding:35px 30px;text-align:center;">
+       <h1 style="${baseStyles.headerText}">Payment Reminder</h1>
+    </div>
+    <div style="${baseStyles.body}">
+       <h2 style="${baseStyles.h2}">Dear {{clientName}},</h2>
+       <p style="${baseStyles.p}">This is a gentle reminder that an invoice for professional services rendered is currently due for payment.</p>
+       
+       <div style="${baseStyles.infoBox('#d97706')}">
+         <p style="${baseStyles.infoRow}"><strong>Invoice Number:</strong> {{invoiceNo}}</p>
+         <p style="${baseStyles.infoRow}"><strong>Amount Due:</strong> ₹{{amount}}</p>
+         <p style="${baseStyles.infoRow}" style="margin:0;"><strong>Due Date:</strong> {{dueDate}}</p>
+       </div>
+       
+       <p style="${baseStyles.p}">You can download the invoice and process your payment directly through your secure portal.</p>
+       
+       <div style="${baseStyles.btnContainer}">
+         <a href="{{portalUrl}}" style="${baseStyles.btn('#d97706')}">View Invoice & Pay</a>
+       </div>
+    </div>
+    <div style="${baseStyles.footer}">
+       <p style="${baseStyles.footerText}">Regards, <strong>{{companyName}}</strong></p>
+    </div>
   </div>
-  <p>Please make the payment at the earliest to avoid any interruption in services.</p>
-  <p>Regards,<br><b>{{companyName}}</b></p>
 </div>`,
         isActive: true,
     },
     {
         name: 'Document Ready',
         slug: 'document_ready',
-        subject: '{{documentType}} is Ready – {{companyName}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#7c3aed">Document Ready 📄</h2>
-  <p>Dear {{clientName}},</p>
-  <p>Your <b>{{documentType}}</b> for {{year}} is ready and has been uploaded to your portal.</p>
-  <div style="background:#f5f3ff;padding:16px;border-radius:8px;border-left:4px solid #7c3aed;margin:16px 0">
-    <b>Document:</b> {{documentType}}<br>
-    <b>Financial Year:</b> {{year}}<br>
-    <b>Category:</b> {{category}}
+        subject: 'Document Available: {{documentType}}',
+        body: `<div style="${baseStyles.wrapper}">
+  <div style="${baseStyles.container}">
+    <div style="${baseStyles.header}">
+       <h1 style="${baseStyles.headerText}">Document Ready</h1>
+    </div>
+    <div style="${baseStyles.body}">
+       <h2 style="${baseStyles.h2}">Hello {{clientName}},</h2>
+       <p style="${baseStyles.p}">Your latest document has been successfully generated and securely uploaded to your private vault.</p>
+       
+       <div style="${baseStyles.infoBox('#4f46e5')}">
+         <p style="${baseStyles.infoRow}"><strong>Document:</strong> {{documentType}}</p>
+         <p style="${baseStyles.infoRow}"><strong>Financial Period:</strong> {{year}}</p>
+         <p style="${baseStyles.infoRow}" style="margin:0;"><strong>Category:</strong> {{category}}</p>
+       </div>
+       
+       <p style="${baseStyles.p}">Please login to download your completed documents for your records.</p>
+       
+       <div style="${baseStyles.btnContainer}">
+         <a href="{{portalUrl}}" style="${baseStyles.btn('#4f46e5')}">Download Document</a>
+       </div>
+    </div>
+    <div style="${baseStyles.footer}">
+       <p style="${baseStyles.footerText}">Regards, <strong>{{companyName}}</strong></p>
+    </div>
   </div>
-  <p>Login to your portal to view and download the document.</p>
-  <p>Regards,<br><b>{{companyName}}</b></p>
 </div>`,
         isActive: true,
     },
@@ -114,12 +188,21 @@ const DEFAULT_TEMPLATES: Omit<EmailTemplate, '_id'>[] = [
         name: 'General Announcement',
         slug: 'general_announcement',
         subject: 'Important Update from {{companyName}}',
-        body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
-  <h2 style="color:#0891b2">Important Update 📢</h2>
-  <p>Dear {{clientName}},</p>
-  <p>{{message}}</p>
-  <p>If you have any questions, please feel free to contact us.</p>
-  <p>Regards,<br><b>{{companyName}}</b></p>
+        body: `<div style="${baseStyles.wrapper}">
+  <div style="${baseStyles.container}">
+    <div style="background:linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);padding:35px 30px;text-align:center;">
+       <h1 style="${baseStyles.headerText}">{{companyName}} Update</h1>
+    </div>
+    <div style="${baseStyles.body}">
+       <h2 style="${baseStyles.h2}">Dear {{clientName}},</h2>
+       <p style="${baseStyles.p}">{{message}}</p>
+       <br/>
+       <p style="${baseStyles.p}">If you require any clarification regarding this update, please don't hesitate to reach out to your account manager.</p>
+    </div>
+    <div style="${baseStyles.footer}">
+       <p style="${baseStyles.footerText}">Regards, <strong>{{companyName}}</strong></p>
+    </div>
+  </div>
 </div>`,
         isActive: true,
     },
