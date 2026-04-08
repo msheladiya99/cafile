@@ -1,8 +1,13 @@
 import { Worker, Job } from 'bullmq';
-import { connection, EmailJobData } from '../config/queue';
+import { connection, EmailJobData, USE_REDIS } from '../config/queue';
 import { sendEmail } from '../services/emailService';
 
 export const startEmailWorker = () => {
+    if (!USE_REDIS || !connection) {
+        console.log('[EmailWorker] Redis offline. Background queue worker physically disabled.');
+        return;
+    }
+
     const worker = new Worker<EmailJobData>(
         'emailQueue',
         async (job: Job) => {
