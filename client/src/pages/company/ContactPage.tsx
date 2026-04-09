@@ -13,11 +13,32 @@ import {
 
 const ContactPage: React.FC = () => {
     const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', firm: '', message: '' });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
+        setSubmitting(true);
+        try {
+            const VITE_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            const res = await fetch(`${VITE_API_URL}/public/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form)
+            });
+            
+            if (res.ok) {
+                setSubmitted(true);
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Failed to connect to the server. Please try again later.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -160,8 +181,9 @@ const ContactPage: React.FC = () => {
                                         </Grid>
                                         <Grid size={{ xs: 12 }}>
                                             <Button type="submit" variant="contained" size="large" fullWidth endIcon={<SendIcon />}
+                                                disabled={submitting}
                                                 sx={{ py: 1.8, borderRadius: '12px', fontWeight: 800, textTransform: 'none', fontSize: '1rem', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}>
-                                                Send Message
+                                                {submitting ? 'Sending...' : 'Send Message'}
                                             </Button>
                                         </Grid>
                                     </Grid>

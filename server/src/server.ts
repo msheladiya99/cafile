@@ -37,6 +37,7 @@ import taskCategoryRoutes from './routes/taskCategory';
 import dscRoutes from './routes/dsc';
 import subscriptionRoutes from './routes/subscriptions';
 import emailRoutes from './routes/email';
+import publicRoutes from './routes/public';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -98,7 +99,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Apply Tenant Middleware to all /api routes except health and super-admin
 app.use('/api', (req, res, next) => {
-    if (req.path === '/health' || req.path.startsWith('/super-admin')) {
+    if (req.path === '/health' || req.path.startsWith('/super-admin') || req.path.startsWith('/public')) {
         return next();
     }
     tenantMiddleware(req, res, () => {
@@ -132,7 +133,7 @@ app.use('/api/task-category', taskCategoryRoutes);
 app.use('/api/dsc', dscRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/email', emailRoutes);
-
+app.use('/api/public', publicRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
