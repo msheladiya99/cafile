@@ -38,6 +38,7 @@ import dscRoutes from './routes/dsc';
 import subscriptionRoutes from './routes/subscriptions';
 import emailRoutes from './routes/email';
 import publicRoutes from './routes/public';
+import bankStatementRoutes from './routes/bankStatement';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -134,6 +135,7 @@ app.use('/api/dsc', dscRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/bank-statement', bankStatementRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

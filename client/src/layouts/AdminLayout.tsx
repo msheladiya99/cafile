@@ -10,7 +10,6 @@ import {
     People as PeopleIcon,
     CloudUpload as UploadIcon,
     Folder as FolderIcon,
-    NotificationsActive as ReminderIcon,
     Receipt as ReceiptIcon,
     Menu as MenuIcon,
     Assessment as ReportsIcon,
@@ -21,7 +20,8 @@ import {
     Business as BusinessIcon,
     Person as PersonIcon,
     GppGood as GppGoodIcon,
-    Email as EmailIcon
+    Email as EmailIcon,
+    AccountBalance as BankIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,8 +40,7 @@ interface MenuItemDef {
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout, isAdmin, isStaffMember, isIntern, remainingTime, userPermissions } = useAuth();
-    const isEmployee = isStaffMember || isIntern; // STAFF or INTERN — permission-gated
+    const { user, logout, isAdmin, remainingTime } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
@@ -157,6 +156,7 @@ export const AdminLayout: React.FC = () => {
         { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
         { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
         ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
+        { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
     ], [isAdmin]);
 
     const handleDrawerToggle = () => {
