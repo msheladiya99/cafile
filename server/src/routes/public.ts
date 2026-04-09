@@ -13,9 +13,10 @@ router.post('/contact', async (req: Request, res: Response) => {
         }
 
         const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: Number(process.env.EMAIL_PORT) || 587,
-            secure: process.env.EMAIL_SECURE === 'true',
+            service: process.env.EMAIL_HOST?.includes('gmail') ? 'gmail' : undefined,
+            host: process.env.EMAIL_HOST?.includes('gmail') ? undefined : (process.env.EMAIL_HOST || 'smtp.gmail.com'),
+            port: process.env.EMAIL_HOST?.includes('gmail') ? undefined : (Number(process.env.EMAIL_PORT) || 587),
+            secure: process.env.EMAIL_HOST?.includes('gmail') ? undefined : (process.env.EMAIL_SECURE === 'true'),
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASSWORD
