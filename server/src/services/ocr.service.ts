@@ -27,13 +27,23 @@ class OCRService {
         if (!this.client) {
 
             if (process.env.GOOGLE_VISION_KEY_FILE) {
-                // ✅ Explicit service account JSON key file (highest priority)
+                // ✅ Option 1: Explicit service account JSON key file (local dev)
                 this.client = new ImageAnnotatorClient({
                     keyFilename: process.env.GOOGLE_VISION_KEY_FILE,
                 });
 
+            } else if (process.env.GOOGLE_VISION_CLIENT_EMAIL && process.env.GOOGLE_VISION_PRIVATE_KEY) {
+                // ✅ Option 2: Env vars (production — no JSON file needed)
+                const privateKey = process.env.GOOGLE_VISION_PRIVATE_KEY.replace(/\\n/g, '\n');
+                this.client = new ImageAnnotatorClient({
+                    credentials: {
+                        client_email: process.env.GOOGLE_VISION_CLIENT_EMAIL,
+                        private_key:  privateKey,
+                    },
+                });
+
             } else {
-                // Fallback: reuse existing Drive service account credentials from .env
+                // ✅ Option 3: Fallback to Google Drive service account credentials
                 const clientEmail = process.env.GOOGLE_DRIVE_CLIENT_EMAIL;
                 const privateKey  = (process.env.GOOGLE_DRIVE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
 
@@ -46,7 +56,8 @@ class OCRService {
                 } else {
                     throw new Error(
                         'Google Vision: No credentials found. ' +
-                        'Set GOOGLE_VISION_KEY_FILE=./src/config/vision-key.json in .env'
+                        'Set GOOGLE_VISION_CLIENT_EMAIL + GOOGLE_VISION_PRIVATE_KEY in production, ' +
+                        'or GOOGLE_VISION_KEY_FILE in development.'
                     );
                 }
             }
