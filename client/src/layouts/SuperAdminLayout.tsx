@@ -23,6 +23,7 @@ import { useAuth } from '../contexts/AuthContext';
 const NAV = [
     { label: 'Dashboard',     icon: <DashboardIcon  />, path: '/super-admin/dashboard' },
     { label: 'Firms',         icon: <BusinessIcon   />, path: '/super-admin/firms' },
+    { label: 'Credits',       icon: <CreditCardIcon />, path: '/super-admin/credits' },
     { label: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
     { label: 'Add-ons',       icon: <ExtensionIcon  />, path: '/super-admin/addons' },
     { label: 'Credits',       icon: <CreditCardIcon />, path: '/super-admin/credits' },

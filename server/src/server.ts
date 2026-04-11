@@ -182,6 +182,7 @@ startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
 startEmailWorker();
+import './queues/parse.worker';
 
 
 // Graceful shutdown
