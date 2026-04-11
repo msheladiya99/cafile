@@ -70,6 +70,7 @@ const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ de
 const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(module => ({ default: module.DSCManagement })));
 const EmailSettings = lazy(() => import('./pages/admin/settings/EmailSettings').then(module => ({ default: module.EmailSettings })));
 const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').then(module => ({ default: module.BankStatementTool })));
+const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHistory'));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -248,6 +249,7 @@ const AppRoutes: React.FC = () => {
           <Route path="dsc" element={<DSCManagement />} />
           <Route path="email-settings" element={<EmailSettings />} />
           <Route path="bank-statement" element={<BankStatementTool />} />
+          <Route path="bank-statement/history" element={<BankStatementHistory />} />
         </Route>
 
         {/* Client Routes */}

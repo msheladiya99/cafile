@@ -80,6 +80,15 @@ export interface CreditBalance {
     resetsOn: string;
 }
 
+// ─── Progress Event ───────────────────────────────────────────────────────────
+
+export interface ProgressEvent {
+    step:      string;
+    label:     string;
+    progress:  number;   // 0–100
+    timestamp: number;
+}
+
 // ─── API Client ───────────────────────────────────────────────────────────────
 
 export const bankStatementApi = {
@@ -96,6 +105,21 @@ export const bankStatementApi = {
 
     getStatement: async (id: string): Promise<BankStatementRecord> => {
         const { data } = await api.get<BankStatementRecord>(`${BASE}/${id}`);
+        return data;
+    },
+
+    listAll: async (params?: {
+        clientId?: string;
+        status?: string;
+        page?: number;
+        limit?: number;
+    }): Promise<{ data: BankStatementRecord[]; total: number; page: number }> => {
+        const q = new URLSearchParams();
+        if (params?.clientId) q.set('clientId', params.clientId);
+        if (params?.status)   q.set('status',   params.status);
+        if (params?.page)     q.set('page',      String(params.page));
+        if (params?.limit)    q.set('limit',     String(params.limit));
+        const { data } = await api.get(`${BASE}?${q}`);
         return data;
     },
 
@@ -150,5 +174,18 @@ export const bankStatementApi = {
 
     deleteStatement: async (id: string): Promise<void> => {
         await api.delete(`${BASE}/${id}`);
+    },
+
+    /**
+     * Subscribe to SSE progress events for a statement being processed.
+     * Returns an EventSource. Caller must close it when done.
+     */
+    subscribeProgress: (id: string, token: string, onEvent: (evt: ProgressEvent) => void): EventSource => {
+        const base = (api.defaults.baseURL || '').replace(/\/$/, '');
+        const es   = new EventSource(`${base}${BASE}/progress/${id}?token=${encodeURIComponent(token)}`);
+        es.onmessage = (e) => {
+            try { onEvent(JSON.parse(e.data)); } catch { /* ignore */ }
+        };
+        return es;
     },
 };

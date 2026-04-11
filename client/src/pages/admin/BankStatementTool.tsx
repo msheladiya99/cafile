@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { bankStatementApi } from '../../services/bankStatementApi';
-import type { AutoFixSuggestion, CreditBalance, TransactionRow, ProcessResponse } from '../../services/bankStatementApi';
+import type { AutoFixSuggestion, CreditBalance, TransactionRow, ProcessResponse, ProgressEvent } from '../../services/bankStatementApi';
 import { adminService } from '../../services/adminService';
 import type { Client } from '../../types';
 
@@ -90,42 +90,58 @@ const ConfidenceBar: React.FC<{ confidence: number; ocrUsed?: boolean; method?: 
     );
 };
 
-const ProcessingAnimation: React.FC = () => {
-    const steps = [
-        { label: 'Reading document...', icon: '📄' },
-        { label: 'Running OCR if needed...', icon: '👁️' },
-        { label: 'Detecting bank format...', icon: '🏦' },
-        { label: 'Extracting transactions...', icon: '📊' },
-        { label: 'Running AI analysis...', icon: '🧠' },
-        { label: 'Validating balances...', icon: '🔍' },
-        { label: 'Checking for duplicates...', icon: '🔎' },
-        { label: 'Building preview...', icon: '📋' },
-    ];
-    const [activeStep, setActiveStep] = useState(0);
+// ─── Live SSE Progress Bar ────────────────────────────────────────────────────
 
-    useEffect(() => {
-        const interval = setInterval(() => setActiveStep(s => (s + 1) % steps.length), 900);
-        return () => clearInterval(interval);
-    }, [steps.length]);
+const STEP_ICONS: Record<string, string> = {
+    fetch:    '📥',
+    parse:    '📄',
+    ocr:      '👁️',
+    rule:     '📊',
+    ai:       '🧠',
+    validate: '🔍',
+    saving:   '💾',
+    done:     '✅',
+    error:    '❌',
+};
+
+const LiveProgressBar: React.FC<{ event: ProgressEvent | null }> = ({ event }) => {
+    const pct     = event?.progress ?? 0;
+    const label   = event?.label   ?? 'Starting AI engine...';
+    const step    = event?.step    ?? 'fetch';
+    const color   = step === 'error' ? '#ef4444' : step === 'done' ? '#22c55e' : '#667eea';
+    const icon    = STEP_ICONS[step] || '⚙️';
 
     return (
         <Box sx={{ textAlign: 'center', py: 6 }}>
             <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
-                <CircularProgress size={80} thickness={3} sx={{ color: '#667eea' }} />
-                <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>
-                    {steps[activeStep].icon}
+                <CircularProgress
+                    variant="determinate"
+                    value={pct}
+                    size={90}
+                    thickness={4}
+                    sx={{ color }}
+                />
+                <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
+                    {icon}
                 </Box>
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#1a1a1a', mb: 1 }}>
-                {steps[activeStep].label}
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.5 }}>
+                {label}
             </Typography>
-            <Typography variant="body2" sx={{ color: '#888' }}>
-                Multi-layer AI engine processing your statement...
+            <Typography variant="body2" sx={{ color: '#888', mb: 2 }}>
+                {pct < 100 ? `${pct}% complete` : step === 'done' ? 'Processing complete!' : 'Finishing...'}
             </Typography>
-            <LinearProgress sx={{ mt: 3, maxWidth: 300, mx: 'auto', borderRadius: 2, height: 6 }} />
+            <Box sx={{ maxWidth: 320, mx: 'auto' }}>
+                <LinearProgress
+                    variant="determinate"
+                    value={pct}
+                    sx={{ height: 8, borderRadius: 4, bgcolor: '#eee', '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 4, transition: 'transform 0.4s ease' } }}
+                />
+            </Box>
         </Box>
     );
 };
+
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -153,6 +169,7 @@ export const BankStatementTool: React.FC = () => {
     const [fixSuggestions, setFixSuggestions] = useState<AutoFixSuggestion[]>([]);
     const [showFixDialog,  setShowFixDialog ] = useState(false);
     const [applyingFixes,  setApplyingFixes ] = useState(false);
+    const [sseProgress,    setSseProgress   ] = useState<ProgressEvent | null>(null);
     const [snackbar,       setSnackbar      ] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' | 'warning' }>({ open: false, msg: '', severity: 'info' });
 
     const showSnackRef = useRef<(msg: string, severity?: typeof snackbar.severity) => void>();
@@ -230,18 +247,55 @@ export const BankStatementTool: React.FC = () => {
         }
 
         setStep('processing');
+        setSseProgress(null);
+        let eventSource: EventSource | null = null;
         try {
             const data = await bankStatementApi.uploadAndProcess(selectedFile, selectedClient);
-            if (data.status === 'completed' || data.status === 'failed') {
+            setStatementId(data.id);
+
+            // Subscribe to SSE progress immediately
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+            eventSource = bankStatementApi.subscribeProgress(data.id, token, (evt: ProgressEvent) => {
+                setSseProgress(evt);
+                if (evt.step === 'done' || evt.step === 'error') {
+                    eventSource?.close();
+                    // Load final data from server
+                    bankStatementApi.getStatement(data.id).then(stmt => {
+                        if (stmt.status === 'completed') {
+                            const asProcessResponse = { ...stmt, id: stmt._id, rows: stmt.extractedRows, extractedRows: stmt.extractedRows } as unknown as ProcessResponse;
+                            setResult(asProcessResponse);
+                            setRows(stmt.extractedRows || []);
+                            setStep('preview');
+                            const suggestable = (stmt.extractedRows || [])
+                                .filter(r => r.hasError && !r.autoFixed)
+                                .map((r, i) => ({ rowIndex: i, field: 'balance' as const, currentValue: r.balance, suggestedValue: r.balance, reason: r.errorMessage || '', confidence: 70 }));
+                            if (suggestable.length > 0) setFixSuggestions(suggestable);
+                        } else {
+                            showSnack(stmt.processingErrors?.join(', ') || 'Processing failed', 'error');
+                            setStep('upload');
+                        }
+                    }).catch(() => { showSnack('Failed to load results', 'error'); setStep('upload'); });
+                }
+            });
+            eventSource.onerror = () => {
+                // SSE failed — fall back to polling
+                eventSource?.close();
+                pollStatus(data.id);
+            };
+
+            // Immediate complete handling (sync parse)
+            if (data.status === 'completed') {
+                eventSource.close();
                 setResult(data);
                 setRows(data.rows || data.extractedRows || []);
-                setStatementId(data.id);
-                setStep(data.status === 'completed' ? 'preview' : 'upload');
-            } else {
-                setStatementId(data.id);
-                pollStatus(data.id);
+                setStep('preview');
+            } else if (data.status === 'failed') {
+                eventSource.close();
+                showSnack('Upload processing failed', 'error');
+                setStep('upload');
             }
         } catch (err: unknown) {
+            eventSource?.close();
             const errorMsg =
                 err !== null && typeof err === 'object' && 'response' in err
                     ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Upload failed')
@@ -487,7 +541,7 @@ export const BankStatementTool: React.FC = () => {
                 {step === 'processing' && (
                     <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid #eee' }}>
-                            <ProcessingAnimation />
+                            <LiveProgressBar event={sseProgress} />
                         </Paper>
                     </motion.div>
                 )}

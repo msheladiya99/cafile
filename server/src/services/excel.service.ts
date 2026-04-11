@@ -50,6 +50,7 @@ class ExcelService {
 
         this.buildTransactionsSheet(wb, rows, options);
         this.buildSummarySheet(wb, rows, options);
+        this.buildMonthlySummarySheet(wb, rows);
         this.buildSuspiciousSheet(wb, rows);
         this.buildInfoSheet(wb, options);
 
@@ -228,7 +229,114 @@ class ExcelService {
         ws.autoFilter = { from: 'A1', to: 'E1' };
     }
 
-    // ── Sheet 3: Suspicious Rows ──────────────────────────────────────────────
+    // ── Sheet 3: Monthly Summary ────────────────────────────────────────────────────
+
+    private buildMonthlySummarySheet(wb: ExcelJS.Workbook, rows: ITransactionRow[]): void {
+        const ws = wb.addWorksheet('📅 Monthly Summary', {
+            views: [{ state: 'frozen', ySplit: 1 }],
+        });
+
+        ws.columns = [
+            { key: 'month',  width: 18 },
+            { key: 'txns',   width: 14 },
+            { key: 'debit',  width: 18 },
+            { key: 'credit', width: 18 },
+            { key: 'net',    width: 18 },
+        ];
+
+        // Header row
+        const hdr = ws.getRow(1);
+        ['Month', 'Transactions', 'Total Debit (₹)', 'Total Credit (₹)', 'Net Flow (₹)'].forEach((h, i) => {
+            const cell = hdr.getCell(i + 1);
+            cell.value = h;
+            cell.font  = { bold: true, color: { argb: COLOR.HEADER_FG } };
+            cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0F766E' } }; // teal
+            cell.border = this.border();
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+        hdr.height = 22;
+
+        // Aggregate by YYYY-MM
+        const monthMap = new Map<string, { count: number; debit: number; credit: number }>();
+
+        for (const row of rows) {
+            // Parse DD/MM/YYYY
+            const parts = (row.date || '').split('/');
+            if (parts.length !== 3) continue;
+            const [dd, mm, yyyy] = parts;
+            const key   = `${yyyy}-${mm}`;
+            const label = new Date(`${yyyy}-${mm}-01`).toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            const existing = monthMap.get(key) || { count: 0, debit: 0, credit: 0 };
+            monthMap.set(key, {
+                count:  existing.count  + 1,
+                debit:  existing.debit  + (row.debit  || 0),
+                credit: existing.credit + (row.credit || 0),
+            });
+            // Store label separately — indexed by key for lookup
+            (monthMap as any).__labels = (monthMap as any).__labels || {};
+            (monthMap as any).__labels[key] = label;
+        }
+
+        // Sort chronologically
+        const sorted = [...monthMap.entries()]
+            .filter(([k]) => k !== '__labels')
+            .sort((a, b) => a[0].localeCompare(b[0]));
+
+        let totalDebit = 0, totalCredit = 0, totalTxns = 0;
+
+        sorted.forEach(([key, data], idx) => {
+            const label = ((monthMap as any).__labels?.[key]) || key;
+            const r = ws.addRow({
+                month:  label,
+                txns:   data.count,
+                debit:  data.debit  > 0 ? data.debit  : null,
+                credit: data.credit > 0 ? data.credit : null,
+                net:    data.credit - data.debit,
+            });
+
+            totalDebit  += data.debit;
+            totalCredit += data.credit;
+            totalTxns   += data.count;
+
+            const bg = idx % 2 === 0 ? 'FFFFFF' : 'F0FDFA';
+            r.eachCell(c => {
+                c.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                c.border = this.border();
+                c.font   = { size: 9 };
+            });
+            ['debit', 'credit', 'net'].forEach(k => {
+                r.getCell(k).numFmt    = '₹#,##,##0.00';
+                r.getCell(k).alignment = { horizontal: 'right' };
+            });
+
+            // Colour net cell
+            const netCell = r.getCell('net');
+            const net = data.credit - data.debit;
+            netCell.font = { size: 9, color: { argb: net >= 0 ? COLOR.CREDIT_FG : COLOR.DEBIT_FG }, bold: true };
+        });
+
+        // Totals row
+        const totRow = ws.addRow({
+            month:  'TOTAL',
+            txns:   totalTxns,
+            debit:  totalDebit,
+            credit: totalCredit,
+            net:    totalCredit - totalDebit,
+        });
+        totRow.eachCell(c => {
+            c.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.TOTAL_BG } };
+            c.border = this.border();
+            c.font   = { bold: true, size: 10 };
+        });
+        ['debit', 'credit', 'net'].forEach(k => {
+            totRow.getCell(k).numFmt    = '₹#,##,##0.00';
+            totRow.getCell(k).alignment = { horizontal: 'right' };
+        });
+
+        ws.autoFilter = { from: 'A1', to: 'E1' };
+    }
+
+    // ── Sheet 4: Suspicious Rows ─────────────────────────────────────────────────
 
     private buildSuspiciousSheet(wb: ExcelJS.Workbook, rows: ITransactionRow[]): void {
         const ws = wb.addWorksheet('🚨 Suspicious', {});

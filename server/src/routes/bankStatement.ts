@@ -10,7 +10,7 @@ import { excelService } from '../services/excel.service';
 import { computeTotals, parseLines } from '../services/bankStatementParser';
 import { validationService } from '../services/validation.service';
 import { storageService } from '../services/storage.service';
-import { enqueueParsingTask } from '../queues/parse.queue';
+import { enqueueParsingTask, drainProgress } from '../queues/parse.queue';
 import crypto from 'crypto';
 
 const router = Router();
@@ -129,7 +129,105 @@ router.post(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// POST /:id/reprocess  — Force AI re-analysis
+// GET /progress/:id  — Server-Sent Events for real-time parse progress
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.get(
+    '/progress/:id',
+    authenticate,
+    async (req: AuthRequest, res: Response) => {
+        const id = String(req.params.id);
+
+        // SSE headers
+        res.setHeader('Content-Type',  'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection',    'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');  // for nginx
+        res.flushHeaders();
+
+        const send = (data: object) => {
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+
+        // Poll progress store every 600ms for up to 5 minutes
+        const MAX_WAIT_MS = 5 * 60 * 1000;
+        const POLL_MS     = 600;
+        let elapsed = 0;
+        let done    = false;
+
+        const tick = setInterval(async () => {
+            elapsed += POLL_MS;
+
+            // Drain any pending events from the worker
+            const events = drainProgress(id);
+            for (const evt of events) {
+                send(evt);
+                if (evt.step === 'done' || evt.step === 'error') {
+                    done = true;
+                }
+            }
+
+            // If not received from worker yet, check DB status as fallback
+            if (!done) {
+                try {
+                    const stmt = await BankStatement.findById(id).select('status confidence transactionCount').lean();
+                    if (stmt?.status === 'completed') {
+                        send({ step: 'done', label: `Done! ${stmt.transactionCount} transactions extracted.`, progress: 100 });
+                        done = true;
+                    } else if (stmt?.status === 'failed') {
+                        send({ step: 'error', label: 'Processing failed. Please try again.', progress: 100 });
+                        done = true;
+                    }
+                } catch { /* ignore */ }
+            }
+
+            if (done || elapsed >= MAX_WAIT_MS) {
+                clearInterval(tick);
+                res.end();
+            }
+        }, POLL_MS);
+
+        // Cleanup on client disconnect
+        req.on('close', () => {
+            clearInterval(tick);
+            res.end();
+        });
+    }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /  — List all statements for the firm (for history page)
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.get(
+    '/',
+    authenticate,
+    requireRoles(['ADMIN', 'MANAGER', 'STAFF']),
+    async (req: AuthRequest, res: Response) => {
+        try {
+            const { clientId, status, page = '1', limit = '20' } = req.query as Record<string, string>;
+            const filter: Record<string, unknown> = { firmId: req.firmId };
+            if (clientId) filter.clientId = clientId;
+            if (status)   filter.status   = status;
+
+            const skip  = (parseInt(page) - 1) * parseInt(limit);
+            const total = await BankStatement.countDocuments(filter);
+            const statements = await BankStatement
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit))
+                .select('-extractedRows -rowConfidences')
+                .lean();
+
+            return res.json({ data: statements, total, page: parseInt(page), limit: parseInt(limit) });
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            return res.status(500).json({ message: msg });
+        }
+    }
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.post(

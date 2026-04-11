@@ -26,8 +26,8 @@ export interface ICreditLedger extends Document {
 // ─── Defaults per plan ────────────────────────────────────────────────────────
 
 export const PLAN_LIMITS: Record<string, number> = {
-    free:       5,
-    pro:        100,
+    free:       100,   // was 5 — increased for better UX
+    pro:        500,
     enterprise: -1,   // unlimited
 };
 
@@ -43,10 +43,10 @@ const CreditTransactionSchema = new Schema<ICreditTransaction>({
 
 const CreditLedgerSchema = new Schema<ICreditLedger>({
     firmId:        { type: Schema.Types.ObjectId, ref: 'Firm', required: true, unique: true },
-    planType:      { type: String, enum: ['free', 'pro', 'enterprise'], default: 'free' },
-    monthlyLimit:  { type: Number, default: 5 },
+    planType:      { type: String, enum: ['free', 'pro', 'enterprise'], default: 'enterprise' },
+    monthlyLimit:  { type: Number, default: -1 },
     usedThisMonth: { type: Number, default: 0 },
-    totalAllotted: { type: Number, default: 5 },
+    totalAllotted: { type: Number, default: -1 },
     totalUsed:     { type: Number, default: 0 },
     resetDate: {
         type:    Date,
