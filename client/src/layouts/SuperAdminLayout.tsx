@@ -16,6 +16,7 @@ import {
     Menu as MenuIcon,
     Close as CloseIcon,
     Add as AddIcon,
+    CreditCard as CreditCardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,6 +25,7 @@ const NAV = [
     { label: 'Firms',         icon: <BusinessIcon   />, path: '/super-admin/firms' },
     { label: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
     { label: 'Add-ons',       icon: <ExtensionIcon  />, path: '/super-admin/addons' },
+    { label: 'Credits',       icon: <CreditCardIcon />, path: '/super-admin/credits' },
     { label: 'Analytics',     icon: <ReportsIcon    />, path: '/super-admin/analytics' },
     { label: 'System Health', icon: <HealthIcon     />, path: '/super-admin/system-health' },
     { label: 'Security',      icon: <SecurityIcon   />, path: '/super-admin/security' },

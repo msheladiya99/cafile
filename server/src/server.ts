@@ -176,11 +176,13 @@ const startServer = async () => {
 
 import { startSubscriptionCronJob } from './utils/subscriptionCron';
 import { startEmailWorker } from './workers/emailWorker';
+import './queues/parse.worker'; // This starts the worker listener
 
 startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
 startEmailWorker();
+
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {

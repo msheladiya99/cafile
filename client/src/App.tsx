@@ -89,6 +89,7 @@ const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
 const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const AdminCreditsDashboard = lazy(() => import('./pages/super-admin/Credits'));
 const AboutPage = lazy(() => import('./pages/company/AboutPage'));
 const CareersPage = lazy(() => import('./pages/company/CareersPage'));
 const ContactPage = lazy(() => import('./pages/company/ContactPage'));
@@ -177,6 +178,7 @@ const AppRoutes: React.FC = () => {
           <Route path="analytics" element={<Analytics />} />
           <Route path="system-health" element={<SystemHealth />} />
           <Route path="security" element={<SecurityLogs />} />
+          <Route path="credits" element={<AdminCreditsDashboard />} />
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
