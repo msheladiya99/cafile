@@ -26,6 +26,7 @@ const NAV = [
     { label: 'Credits',       icon: <CreditCardIcon />, path: '/super-admin/credits' },
     { label: 'Subscriptions', icon: <SubscriptionsIcon />, path: '/super-admin/subscriptions' },
     { label: 'Add-ons',       icon: <ExtensionIcon  />, path: '/super-admin/addons' },
+    { label: 'Credits',       icon: <CreditCardIcon />, path: '/super-admin/credits' },
     { label: 'Analytics',     icon: <ReportsIcon    />, path: '/super-admin/analytics' },
     { label: 'System Health', icon: <HealthIcon     />, path: '/super-admin/system-health' },
     { label: 'Security',      icon: <SecurityIcon   />, path: '/super-admin/security' },

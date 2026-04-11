@@ -42,7 +42,6 @@ export interface IBankStatement extends Document {
     processingMethod: 'pdf-parse' | 'ocr' | 'manual' | 'ai';
     fileHash?: string;
     driveFileId?: string;
-    mimeType?: string;
     // ── NEW fields ─────────────────────────────────────────────────────────────
     confidence: number;           // 0–100: overall extraction confidence
     rowConfidences: number[];     // per-row confidence array (parallel to extractedRows)
@@ -97,7 +96,6 @@ const BankStatementSchema = new Schema<IBankStatement>({
     fileUrl:          { type: String },
     fileHash:         { type: String, index: true },
     driveFileId:      { type: String },
-    mimeType:         { type: String },
     bankName:         { type: String, default: '' },
     accountNumber:    { type: String, default: '' },
     statementPeriod:  { type: String, default: '' },

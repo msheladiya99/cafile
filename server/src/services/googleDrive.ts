@@ -287,6 +287,7 @@ export class GoogleDriveService {
         itrFolderId: string;
         gstFolderId: string;
         accountingFolderId: string;
+        bankStatementsFolderId: string;
         documentsFolderId: string;
         noticesFolderId: string;
     }> {
@@ -306,12 +307,16 @@ export class GoogleDriveService {
             const accountingFolderId = await this.ensureFolder('Audit', clientFolderId);
             const documentsFolderId = await this.ensureFolder('Documents', clientFolderId);
             const noticesFolderId = await this.ensureFolder('Notices', clientFolderId);
+            
+            // Subfolder for bank statements specifically under Audit
+            const bankStatementsFolderId = await this.ensureFolder('Bank Statements', accountingFolderId);
 
             return {
                 clientFolderId,
                 itrFolderId,
                 gstFolderId,
                 accountingFolderId,
+                bankStatementsFolderId,
                 documentsFolderId,
                 noticesFolderId,
             };

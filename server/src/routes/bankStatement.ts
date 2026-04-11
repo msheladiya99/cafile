@@ -97,7 +97,6 @@ router.post(
                 fileHash:         hash,
                 fileUrl:          driveResult.url,
                 driveFileId:      driveResult.fileId,
-                mimeType:         req.file.mimetype,
                 status:           'uploaded',
             });
 
@@ -252,7 +251,7 @@ router.post(
                 clientId:         stmt.clientId.toString(),
                 fileBufferBase64: '',
                 fileName:         stmt.originalFileName,
-                mimeType:         stmt.mimeType || 'application/pdf',
+                mimeType:         'application/pdf',
             });
 
             return res.json({ message: 'Reprocessing started.', id: stmt._id });

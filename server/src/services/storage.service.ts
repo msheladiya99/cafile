@@ -14,7 +14,7 @@ export class StorageService {
         let folderId;
         if (clientName) {
             const structure = await drive.createClientFolderStructure(clientName, panNumber);
-            folderId = structure.documentsFolderId; // bank statements go into Documents folder
+            folderId = structure.bankStatementsFolderId;
         }
 
         const result = await drive.uploadFile(buffer, fileName, mimeType, folderId);

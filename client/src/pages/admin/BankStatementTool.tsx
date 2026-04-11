@@ -172,10 +172,10 @@ export const BankStatementTool: React.FC = () => {
     const [sseProgress,    setSseProgress   ] = useState<ProgressEvent | null>(null);
     const [snackbar,       setSnackbar      ] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' | 'warning' }>({ open: false, msg: '', severity: 'info' });
 
-    const showSnackRef = useRef<((msg: string, severity?: 'success' | 'error' | 'info' | 'warning') => void) | null>(null);
-    const showSnack = useCallback((msg: string, severity: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    const showSnackRef = useRef<(msg: string, severity?: typeof snackbar.severity) => void>();
+    const showSnack = useCallback((msg: string, severity: typeof snackbar.severity = 'info') => {
         setSnackbar({ open: true, msg, severity });
-    }, [setSnackbar]);
+    }, []);
     showSnackRef.current = showSnack;
 
     // ── Load clients + credit balance ─────────────────────────────────────────
@@ -338,37 +338,11 @@ export const BankStatementTool: React.FC = () => {
     const handleReprocessAI = async () => {
         if (!statementId) return;
         setReprocessing(true);
-        setSseProgress(null);
-        let eventSource: EventSource | null = null;
         try {
             await bankStatementApi.reprocess(statementId);
             showSnack('AI analysis started in background...', 'info');
             setStep('processing');
-
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
-            eventSource = bankStatementApi.subscribeProgress(statementId, token, (evt: ProgressEvent) => {
-                setSseProgress(evt);
-                if (evt.step === 'done' || evt.step === 'error') {
-                    eventSource?.close();
-                    bankStatementApi.getStatement(statementId).then(stmt => {
-                        if (stmt.status === 'completed') {
-                            const asRes = { ...stmt, id: stmt._id, rows: stmt.extractedRows, extractedRows: stmt.extractedRows } as unknown as ProcessResponse;
-                            setResult(asRes);
-                            setRows(stmt.extractedRows || []);
-                            setStep('preview');
-                        } else {
-                            showSnack(stmt.processingErrors?.join(', ') || 'Processing failed', 'error');
-                            setStep('preview'); // return to preview even if failed
-                        }
-                    });
-                }
-            });
-
-            eventSource.onerror = () => {
-                eventSource?.close();
-                pollStatus(statementId);
-            };
-
+            pollStatus(statementId);
         } catch {
             showSnack('Failed to start AI analysis', 'error');
         } finally {
