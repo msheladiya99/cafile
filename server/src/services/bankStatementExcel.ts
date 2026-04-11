@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import type { Cell } from 'exceljs';
 import { ITransactionRow } from '../models/BankStatement';
 
 export interface ExcelOptions {
@@ -95,7 +96,7 @@ export async function generateExcel(rows: ITransactionRow[], options: ExcelOptio
         const isAlt = idx % 2 === 0;
         const bgColor = row.hasError ? 'FFFFEBEE' : isAlt ? 'FFFAFBFF' : 'FFFFFFFF';
 
-        r.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        r.eachCell({ includeEmpty: true }, (cell: Cell, colNumber: number) => {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
             cell.font = { name: 'Arial', size: 10 };
             cell.border = {
@@ -134,7 +135,7 @@ export async function generateExcel(rows: ITransactionRow[], options: ExcelOptio
         balance: '',
     });
 
-    totalsRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    totalsRow.eachCell({ includeEmpty: true }, (cell: Cell, colNumber: number) => {
         cell.font = { name: 'Arial', size: 11, bold: true };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4FF' } };
         cell.border = {
@@ -193,7 +194,7 @@ export async function generateExcel(rows: ITransactionRow[], options: ExcelOptio
     summaryData.forEach(([label, value], idx) => {
         const r = summarySheet.addRow({ label, value });
         const isAlt = idx % 2 === 0;
-        r.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        r.eachCell({ includeEmpty: true }, (cell: Cell, colNumber: number) => {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAlt ? 'FFF8F0FF' : 'FFFFFFFF' } };
             cell.font = { name: 'Arial', size: 10, bold: colNumber === 1 };
             cell.border = { bottom: { style: 'hair', color: { argb: 'FFDDDDDD' } } };
