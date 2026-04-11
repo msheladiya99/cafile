@@ -172,10 +172,10 @@ export const BankStatementTool: React.FC = () => {
     const [sseProgress,    setSseProgress   ] = useState<ProgressEvent | null>(null);
     const [snackbar,       setSnackbar      ] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' | 'warning' }>({ open: false, msg: '', severity: 'info' });
 
-    const showSnackRef = useRef<(msg: string, severity?: typeof snackbar.severity) => void>();
-    const showSnack = useCallback((msg: string, severity: typeof snackbar.severity = 'info') => {
+    const showSnackRef = useRef<((msg: string, severity?: 'success' | 'error' | 'info' | 'warning') => void) | null>(null);
+    const showSnack = useCallback((msg: string, severity: 'success' | 'error' | 'info' | 'warning' = 'info') => {
         setSnackbar({ open: true, msg, severity });
-    }, []);
+    }, [setSnackbar]);
     showSnackRef.current = showSnack;
 
     // ── Load clients + credit balance ─────────────────────────────────────────
