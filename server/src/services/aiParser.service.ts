@@ -117,20 +117,22 @@ ${columnHint}
 TASK: Extract ALL transactions from the provided bank statement content.
 
 STRICT RULES:
-1. DATE: Normalize ALL dates to "DD/MM/YYYY" format ONLY. Never use any other format.
-2. AMOUNTS: Return decimal numbers (no commas). Use null if genuinely absent.
-3. BALANCE: Always extract the running/closing balance for EACH row. Never null if visible.
-4. DESCRIPTION: Remove long alphanumeric IDs (>8 chars), timestamps (HH:MM:SS), and "/DR/" "/CR/" prefixes. Keep: merchant name, counterparty, payment mode.
-5. CATEGORY: Use one of these exact values: Salary | Income | Transfer | UPI Transfer | NEFT Transfer | RTGS Transfer | IMPS Transfer | EMI/Loan | Tax/GST | Insurance | Investments | Rent | Food & Dining | Travel | Shopping | Medical | Education | Utility Bills | Fuel | ATM | Cash | Cheque | Savings/FD | Miscellaneous
-6. SUBCATEGORY: A more specific label (e.g., "HDFC Life", "Swiggy", "Electricity")
-7. CONFIDENCE (per row): 0-100. Assign lower confidence when:
+1. BANK_NAME: Detect the full bank name. SCAN FOR IFSC CODES (e.g., SBIN, HDFC, ICIC, UTIB) at the start or end of the document to guarantee accuracy. If the rule-based input says "Unknown", prioritize your own find via IFSC.
+2. DATE: Normalize ALL dates to "DD/MM/YYYY" format ONLY. Never use any other format.
+3. AMOUNTS: Return decimal numbers (no commas). Use null if genuinely absent.
+4. BALANCE: Always extract the running/closing balance for EACH row. Never null if visible.
+5. DESCRIPTION: Remove long alphanumeric IDs (>8 chars), timestamps (HH:MM:SS), and "/DR/" "/CR/" prefixes. Keep: merchant name, counterparty, payment mode.
+6. CATEGORY: Use one of these exact values: Salary | Income | Transfer | UPI Transfer | NEFT Transfer | RTGS Transfer | IMPS Transfer | EMI/Loan | Tax/GST | Insurance | Investments | Rent | Food & Dining | Travel | Shopping | Medical | Education | Utility Bills | Fuel | ATM | Cash | Cheque | Savings/FD | Miscellaneous
+7. SUBCATEGORY: A more specific label (e.g., "HDFC Life", "Swiggy", "Electricity")
+8. CONFIDENCE (per row): 0-100. Assign lower confidence when:
    - Date is ambiguous or approximated
    - Amount has to be inferred (only one amount column, no separate debit/credit)
    - Balance does not math-check with previous row
-8. ERROR_REASON: If confidence < 70, briefly explain why (e.g., "balance mismatch", "date ambiguous")
-9. OVERALL_CONFIDENCE: Average of all row confidences, from 0-100.
-10. NEVER invent transactions. Only extract what is explicitly visible.
-11. NEVER skip a transaction row even if partially readable.
+9. ERROR_REASON: If confidence < 70, briefly explain why (e.g., "balance mismatch", "date ambiguous")
+10. OVERALL_CONFIDENCE: Average of all row confidences, from 0-100.
+11. NEVER invent transactions. Only extract what is explicitly visible.
+12. NEVER skip a transaction row even if partially readable.
+13. IFSC_CODE: If you find an IFSC code, list it in the parsing_notes.
 
 OUTPUT JSON SCHEMA (STRICT — no extra keys, no missing keys):
 {
@@ -138,7 +140,7 @@ OUTPUT JSON SCHEMA (STRICT — no extra keys, no missing keys):
   "account_number": "XXXXXXXXX (last 4 digits unmasked if visible) or null",
   "statement_period": "DD/MM/YYYY - DD/MM/YYYY or null",
   "overall_confidence": <integer 0-100>,
-  "parsing_notes": ["any issues you noticed, e.g., 'page 3 text was unclear'"],
+  "parsing_notes": ["any issues you noticed, plus detected IFSC if found"],
   "transactions": [
     {
       "date": "DD/MM/YYYY",

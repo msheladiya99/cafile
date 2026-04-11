@@ -92,56 +92,133 @@ const ConfidenceBar: React.FC<{ confidence: number; ocrUsed?: boolean; method?: 
 
 // ─── Live SSE Progress Bar ────────────────────────────────────────────────────
 
-const STEP_ICONS: Record<string, string> = {
-    fetch:    '📥',
-    parse:    '📄',
-    ocr:      '👁️',
-    rule:     '📊',
-    ai:       '🧠',
-    validate: '🔍',
-    saving:   '💾',
-    done:     '✅',
-    error:    '❌',
-};
 
-const LiveProgressBar: React.FC<{ event: ProgressEvent | null }> = ({ event }) => {
-    const pct     = event?.progress ?? 0;
-    const label   = event?.label   ?? 'Starting AI engine...';
-    const step    = event?.step    ?? 'fetch';
-    const color   = step === 'error' ? '#ef4444' : step === 'done' ? '#22c55e' : '#667eea';
-    const icon    = STEP_ICONS[step] || '⚙️';
+const PIPELINE_STEPS = [
+    { key: 'fetch',    label: 'Fetching Document', icon: <CloudUpload sx={{ fontSize: 24 }} />,  color: '#667eea' },
+    { key: 'parse',    label: 'Extracting Text',   icon: <Description sx={{ fontSize: 24 }} />,  color: '#764ba2' },
+    { key: 'ocr',      label: 'Vision OCR Scan',   icon: <Visibility sx={{ fontSize: 24 }} />,   color: '#3b82f6' },
+    { key: 'ai',       label: 'Deep AI Analysis',  icon: <Psychology sx={{ fontSize: 24 }} />,   color: '#8b5cf6' },
+    { key: 'validate', label: 'Verifying Math',    icon: <AutoFixHigh sx={{ fontSize: 24 }} />,  color: '#10b981' },
+    { key: 'saving',   label: 'Saving Results',    icon: <Save sx={{ fontSize: 24 }} />,         color: '#6366f1' },
+];
+
+const LiveProgressBar: React.FC<{ event: ProgressEvent | null; isUploading?: boolean }> = ({ event, isUploading }) => {
+    const targetPct = event?.progress ?? (isUploading ? 5 : 0);
+    const [displayPct, setDisplayPct] = useState(0);
+    
+    // Smooth Interpolation Logic
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+        
+        if (displayPct < targetPct) {
+            // Accelerate if we are behind real server progress
+            const speed = Math.max(1, Math.ceil((targetPct - displayPct) / 10));
+            interval = setInterval(() => {
+                setDisplayPct(prev => {
+                    if (prev >= targetPct) { clearInterval(interval); return targetPct; }
+                    return prev + speed;
+                });
+            }, 60);
+        } else if (displayPct < 99 && !event?.step?.includes('done') && !event?.step?.includes('error')) {
+            // Slowly "glide" forward even if no update from server
+            interval = setInterval(() => {
+                setDisplayPct(prev => {
+                    if (prev >= 99) { clearInterval(interval); return 99; }
+                    if (prev >= targetPct + 12) { clearInterval(interval); return prev; }
+                    return prev + 0.12;
+                });
+            }, 100);
+        }
+        
+        return () => clearInterval(interval);
+    }, [targetPct, displayPct, event?.step]);
+
+    const stepKey = isUploading ? 'fetch' : (event?.step ?? 'fetch');
+    const label   = isUploading ? 'Uploading to secure server...' : (event?.label ?? 'Initializing AI engine...');
+    const error   = stepKey === 'error';
+    const done    = stepKey === 'done';
+
+    const activeStep = PIPELINE_STEPS.find(s => s.key === stepKey) || PIPELINE_STEPS[0];
+    const accentColor = error ? '#ef4444' : done ? '#10b981' : activeStep.color;
+    
+    // Use the done state to force 100% in the UI without a cascading setState
+    const roundedPct = done ? 100 : Math.floor(displayPct);
+    const circlePct  = done ? 100 : displayPct;
 
     return (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-            <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
-                <CircularProgress
-                    variant="determinate"
-                    value={pct}
-                    size={90}
-                    thickness={4}
-                    sx={{ color }}
-                />
-                <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>
-                    {icon}
+        <Box sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            {/* Main Central Pulse Circle */}
+            <Box sx={{ position: 'relative', width: 220, height: 220, mb: 4 }}>
+                {/* Background pulse rings */}
+                {[...Array(3)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ scale: 0.8, opacity: 0.5 }}
+                        animate={done || error ? { scale: 1, opacity: 0 } : { scale: [1, 1.4, 1.6], opacity: [0.3, 0.1, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
+                        style={{
+                            position: 'absolute', inset: 0, borderRadius: '50%',
+                            border: `2px solid ${accentColor}`,
+                        }}
+                    />
+                ))}
+                
+                {/* Main Circle */}
+                <Box sx={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    background: done ? '#10b981' : error ? '#ef4444' : '#fff',
+                    boxShadow: `0 0 30px ${accentColor}40`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '8px solid #f8f9ff', zIndex: 2,
+                    transition: 'all 0.6s ease'
+                }}>
+                    <CircularProgress
+                        variant="determinate"
+                        value={circlePct}
+                        size={204}
+                        thickness={2}
+                        sx={{ position: 'absolute', color: accentColor, transition: 'all 0.12s linear' }}
+                    />
+                    <motion.div
+                        key={stepKey}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', damping: 12 }}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: done || error ? '#fff' : accentColor }}
+                    >
+                        {done ? <CheckCircle sx={{ fontSize: 60 }} /> : error ? <Warning sx={{ fontSize: 60 }} /> : activeStep.icon}
+                        <Typography variant="h4" sx={{ fontWeight: 900, mt: 1 }}>{roundedPct}%</Typography>
+                    </motion.div>
                 </Box>
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 0.5 }}>
-                {label}
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#888', mb: 2 }}>
-                {pct < 100 ? `${pct}% complete` : step === 'done' ? 'Processing complete!' : 'Finishing...'}
-            </Typography>
-            <Box sx={{ maxWidth: 320, mx: 'auto' }}>
-                <LinearProgress
-                    variant="determinate"
-                    value={pct}
-                    sx={{ height: 8, borderRadius: 4, bgcolor: '#eee', '& .MuiLinearProgress-bar': { bgcolor: color, borderRadius: 4, transition: 'transform 0.4s ease' } }}
-                />
+
+            <Box sx={{ maxWidth: 500 }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#1a1a1a', mb: 1, letterSpacing: -0.5 }}>
+                    {done ? 'Analysis Complete!' : error ? 'Extraction Failed' : activeStep.label}
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#666', mb: 4, minHeight: 48 }}>
+                    {label}
+                </Typography>
+
+                {/* Progress Stepper Bar */}
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                    {PIPELINE_STEPS.map((s, idx) => {
+                        const currentIdx = PIPELINE_STEPS.findIndex(p => p.key === stepKey);
+                        const isPast    = currentIdx > idx || done;
+                        const isCurrent = currentIdx === idx && !done;
+                        return (
+                            <Box key={s.key} sx={{
+                                width: isCurrent ? 40 : 12, height: 12, borderRadius: 6,
+                                bgcolor: isPast ? accentColor : isCurrent ? accentColor : '#eee',
+                                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                            }} />
+                        );
+                    })}
+                </Box>
             </Box>
         </Box>
     );
 };
-
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -170,12 +247,13 @@ export const BankStatementTool: React.FC = () => {
     const [showFixDialog,  setShowFixDialog ] = useState(false);
     const [applyingFixes,  setApplyingFixes ] = useState(false);
     const [sseProgress,    setSseProgress   ] = useState<ProgressEvent | null>(null);
+    const [isUploading,    setIsUploading   ] = useState(false);
     const [snackbar,       setSnackbar      ] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' | 'warning' }>({ open: false, msg: '', severity: 'info' });
 
-    const showSnackRef = useRef<(msg: string, severity?: typeof snackbar.severity) => void>();
-    const showSnack = useCallback((msg: string, severity: typeof snackbar.severity = 'info') => {
+    const showSnackRef = useRef<((msg: string, severity?: 'success' | 'error' | 'info' | 'warning') => void) | null>(null);
+    const showSnack = useCallback((msg: string, severity: 'success' | 'error' | 'info' | 'warning' = 'info') => {
         setSnackbar({ open: true, msg, severity });
-    }, []);
+    }, [setSnackbar]);
     showSnackRef.current = showSnack;
 
     // ── Load clients + credit balance ─────────────────────────────────────────
@@ -247,10 +325,12 @@ export const BankStatementTool: React.FC = () => {
         }
 
         setStep('processing');
+        setIsUploading(true);
         setSseProgress(null);
         let eventSource: EventSource | null = null;
         try {
             const data = await bankStatementApi.uploadAndProcess(selectedFile, selectedClient);
+            setIsUploading(false);
             setStatementId(data.id);
 
             // Subscribe to SSE progress immediately
@@ -540,8 +620,8 @@ export const BankStatementTool: React.FC = () => {
                 {/* ─── STEP 2: Processing ─── */}
                 {step === 'processing' && (
                     <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid #eee' }}>
-                            <LiveProgressBar event={sseProgress} />
+                        <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: '1px solid #eee', overflow: 'hidden' }}>
+                            <LiveProgressBar event={sseProgress} isUploading={isUploading} />
                         </Paper>
                     </motion.div>
                 )}

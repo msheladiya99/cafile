@@ -2,6 +2,7 @@ import { ImageAnnotatorClient } from '@google-cloud/vision';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import os from 'os';
 
 // ─── OCR Service ──────────────────────────────────────────────────────────────
@@ -26,12 +27,13 @@ class OCRService {
     private getClient(): ImageAnnotatorClient {
         if (!this.client) {
 
-            if (process.env.GOOGLE_VISION_KEY_FILE) {
-                // ✅ Option 1: Explicit service account JSON key file (local dev)
-                this.client = new ImageAnnotatorClient({
-                    keyFilename: process.env.GOOGLE_VISION_KEY_FILE,
-                });
+            const keyFile = process.env.GOOGLE_VISION_KEY_FILE;
+            const keyFileExists = keyFile ? existsSync(path.resolve(process.cwd(), keyFile)) : false;
 
+            if (keyFile && keyFileExists) {
+                this.client = new ImageAnnotatorClient({
+                    keyFilename: keyFile,
+                });
             } else if (process.env.GOOGLE_VISION_CLIENT_EMAIL && process.env.GOOGLE_VISION_PRIVATE_KEY) {
                 // ✅ Option 2: Env vars (production — no JSON file needed)
                 const privateKey = process.env.GOOGLE_VISION_PRIVATE_KEY.replace(/\\n/g, '\n');

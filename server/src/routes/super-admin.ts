@@ -786,57 +786,70 @@ router.delete('/firms/:id/addons/:addonId', authenticate, requireSuperAdmin, asy
 // ─────────────────────────────────────────────────────────────────────────────
 
 // GET /super-admin/credits — All firms credit data (paginated, filterable)
+// Joins from ALL Firms so firms without a ledger still appear with defaults.
 router.get('/credits', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
         const { filter, search, page = '1', limit = '50' } = req.query;
-        const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+        const skip    = (parseInt(page as string) - 1) * parseInt(limit as string);
+        const limitN  = parseInt(limit as string);
 
-        // Pull all ledgers with aggregation
-        const ledgers = await CreditLedger.find()
-            .sort({ usedThisMonth: -1 })
+        // 1. Fetch ALL firms (paginated)
+        let firmQuery: any = {};
+        const totalFirms = await Firm.countDocuments(firmQuery);
+        const allFirms   = await Firm.find(firmQuery, 'firmName email subdomain')
+            .sort({ firmName: 1 })
             .skip(skip)
-            .limit(parseInt(limit as string))
+            .limit(limitN)
             .lean();
 
-        // Get all firm names in one query
-        const firmIds = ledgers.map(l => l.firmId);
-        const firms = await Firm.find({ _id: { $in: firmIds } }, 'firmName email subdomain').lean();
-        const firmMap = new Map(firms.map(f => [f._id.toString(), f]));
+        // 2. Fetch existing ledgers for these firms in one shot
+        const firmIds    = allFirms.map(f => f._id);
+        const ledgers    = await CreditLedger.find({ firmId: { $in: firmIds } }).lean();
+        const ledgerMap  = new Map(ledgers.map(l => [l.firmId.toString(), l]));
 
-        let results = ledgers.map(l => {
-            const firm = firmMap.get(l.firmId.toString());
-            const remaining = l.monthlyLimit === -1 ? -1 : l.monthlyLimit - l.usedThisMonth;
-            const lastTxn = l.transactions.length > 0 ? l.transactions[l.transactions.length - 1].timestamp : null;
+        // 3. Build result — use ledger if exists, otherwise synthesize defaults
+        let results = allFirms.map(firm => {
+            const l           = ledgerMap.get(firm._id.toString());
+            const monthlyLimit  = l ? l.monthlyLimit  : PLAN_LIMITS.enterprise;
+            const usedThisMonth = l ? l.usedThisMonth : 0;
+            const totalUsed     = l ? l.totalUsed     : 0;
+            const planType      = l ? l.planType      : 'enterprise';
+            const remaining     = monthlyLimit === -1 ? -1 : monthlyLimit - usedThisMonth;
+            const lastTxn       = l && l.transactions.length > 0
+                ? l.transactions[l.transactions.length - 1].timestamp
+                : null;
             return {
-                firmId:           l.firmId,
-                firmName:         firm?.firmName || 'Unknown Firm',
-                firmEmail:        (firm as any)?.email || '',
-                subdomain:        (firm as any)?.subdomain || '',
-                planType:         l.planType,
-                monthlyLimit:     l.monthlyLimit,
-                usedThisMonth:    l.usedThisMonth,
+                firmId:           firm._id,
+                firmName:         (firm as any).firmName || 'Unknown Firm',
+                firmEmail:        (firm as any).email    || '',
+                subdomain:        (firm as any).subdomain || '',
+                planType,
+                monthlyLimit,
+                usedThisMonth,
                 remainingCredits: remaining,
-                totalUsed:        l.totalUsed,
+                totalUsed,
                 isLow:            remaining !== -1 && remaining < 5,
                 lastUsedAt:       lastTxn,
-                resetDate:        l.resetDate,
+                resetDate:        l?.resetDate || null,
+                hasLedger:        !!l,
             };
         });
 
-        // Apply filters
-        if (filter === 'low')      results = results.filter(r => r.isLow);
-        if (filter === 'high')     results = results.filter(r => r.usedThisMonth > (r.monthlyLimit * 0.8));
-        if (filter === 'pro')      results = results.filter(r => r.planType === 'pro');
-        if (filter === 'free')     results = results.filter(r => r.planType === 'free');
+        // 4. Apply filters
+        if (filter === 'low')  results = results.filter(r => r.isLow);
+        if (filter === 'high') results = results.filter(r => r.monthlyLimit > 0 && r.usedThisMonth > r.monthlyLimit * 0.8);
+        if (filter === 'pro')  results = results.filter(r => r.planType === 'pro');
+        if (filter === 'free') results = results.filter(r => r.planType === 'free');
 
-        // Search by firm name
+        // 5. Search by firm name / email
         if (search) {
             const s = (search as string).toLowerCase();
-            results = results.filter(r => r.firmName.toLowerCase().includes(s) || r.firmEmail.toLowerCase().includes(s));
+            results = results.filter(r =>
+                r.firmName.toLowerCase().includes(s) || r.firmEmail.toLowerCase().includes(s)
+            );
         }
 
-        const total = await CreditLedger.countDocuments();
-        res.json({ data: results, total, page: parseInt(page as string), limit: parseInt(limit as string) });
+        res.json({ data: results, total: totalFirms, page: parseInt(page as string), limit: limitN });
 
     } catch (err: any) {
         console.error('[Credits] GET all error:', err);
@@ -847,17 +860,19 @@ router.get('/credits', authenticate, requireSuperAdmin, async (req, res: Respons
 // GET /super-admin/credits/summary — Platform-wide credit stats
 router.get('/credits/summary', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {
+        const totalFirms = await Firm.countDocuments();
+        
         const [summary] = await CreditLedger.aggregate([
             {
                 $group: {
                     _id: null,
-                    totalFirms:            { $sum: 1 },
+                    totalLedgers:          { $sum: 1 },
                     totalCreditsUsed:      { $sum: '$usedThisMonth' },
                     totalCreditsAllotted:  { $sum: '$monthlyLimit' },
                     totalLifetimeUsed:     { $sum: '$totalUsed' },
                 }
             }
-        ]);
+        ]) || [{ totalLedgers: 0, totalCreditsUsed: 0, totalCreditsAllotted: 0, totalLifetimeUsed: 0 }];
 
         // Top 5 usage firms
         const topFirmsRaw = await CreditLedger.find()
@@ -912,7 +927,7 @@ router.get('/credits/summary', authenticate, requireSuperAdmin, async (req, res:
         }));
 
         res.json({
-            totalFirms:            summary?.totalFirms            || 0,
+            totalFirms:            totalFirms,
             totalCreditsUsed:      summary?.totalCreditsUsed      || 0,
             totalCreditsAllotted:  summary?.totalCreditsAllotted  || 0,
             totalLifetimeUsed:     summary?.totalLifetimeUsed     || 0,
@@ -923,6 +938,34 @@ router.get('/credits/summary', authenticate, requireSuperAdmin, async (req, res:
 
     } catch (err: any) {
         console.error('[Credits] Summary error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// POST /super-admin/credits/seed-all — Force create ledgers for all firms that don't have one
+router.get('/credits/seed-all', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const firms = await Firm.find({}, '_id').lean();
+        let created = 0;
+        let skipped = 0;
+
+        for (const firm of firms) {
+            const exists = await CreditLedger.exists({ firmId: firm._id });
+            if (!exists) {
+                await CreditLedger.create({
+                    firmId: firm._id,
+                    planType: 'enterprise',
+                    monthlyLimit: -1,
+                    totalAllotted: -1
+                });
+                created++;
+            } else {
+                skipped++;
+            }
+        }
+
+        res.json({ message: `Seeding complete. Created: ${created}, Skipped: ${skipped}`, created, skipped });
+    } catch (err: any) {
         res.status(500).json({ message: err.message });
     }
 });
