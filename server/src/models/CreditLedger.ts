@@ -5,7 +5,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ICreditTransaction {
     statementId?: mongoose.Types.ObjectId;
     creditsUsed: number;
-    type: 'statement' | 'bulk' | 'reprocess' | 'topup' | 'reset';
+    type: 'statement' | 'bulk' | 'reprocess' | 'topup' | 'reset' | 'adjustment';
     description: string;
     timestamp: Date;
 }
@@ -36,7 +36,7 @@ export const PLAN_LIMITS: Record<string, number> = {
 const CreditTransactionSchema = new Schema<ICreditTransaction>({
     statementId:  { type: Schema.Types.ObjectId, ref: 'BankStatement' },
     creditsUsed:  { type: Number, required: true },
-    type:         { type: String, enum: ['statement', 'bulk', 'reprocess', 'topup', 'reset'], required: true },
+    type:         { type: String, enum: ['statement', 'bulk', 'reprocess', 'topup', 'reset', 'adjustment'], required: true },
     description:  { type: String, default: '' },
     timestamp:    { type: Date, default: Date.now },
 }, { _id: false });

@@ -13,6 +13,8 @@ import { Plan } from '../models/Plan';
 import { Addon } from '../models/Addon';
 import { TaskCategory } from '../models/TaskCategory';
 import { TaskMaster } from '../models/TaskMaster';
+import { CreditLedger, PLAN_LIMITS } from '../models/CreditLedger';
+import { BankStatement } from '../models/BankStatement';
 import { authenticate, requireSuperAdmin } from '../middleware/auth';
 import { getDriveService, getServiceAccountDriveService } from '../services/googleDrive';
 import { encrypt } from '../utils/encryption';
@@ -775,6 +777,191 @@ router.delete('/firms/:id/addons/:addonId', authenticate, requireSuperAdmin, asy
         await firm.save();
         
         res.json({ message: 'Add-on removed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ── Global Credit Management ──────────────────────────────────────────────────
+// Used by Super Admin Credit Dashboard
+
+router.get('/credits', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { page = '1', limit = '30', search = '', filter = '' } = req.query as Record<string, string>;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // 1. Get all firms (optionally filtered by search)
+        const firmQuery: any = {};
+        if (search) {
+            firmQuery.$or = [
+                { firmName: { $regex: search, $options: 'i' } },
+                { email:    { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const firms = await Firm.find(firmQuery).sort({ createdAt: -1 }).lean();
+        const firmIds = firms.map(f => f._id);
+
+        // 2. Get ledgers for these firms
+        let ledgerQuery: any = { firmId: { $sum: firmIds } }; 
+        // Wait, firmId in CreditLedger is an ObjectId or string depending on model.
+        // Actually, let's just use firmIds array.
+        ledgerQuery = { firmId: { $in: firmIds } };
+
+        if (filter === 'free')       ledgerQuery.planType = 'free';
+        if (filter === 'pro')        ledgerQuery.planType = 'pro';
+        if (filter === 'enterprise') ledgerQuery.planType = 'enterprise';
+
+        const ledgers = await CreditLedger.find(ledgerQuery).lean();
+
+        // 3. Enrich ledgers with firm data
+        const data = ledgers.map(l => {
+            const f = firms.find(firm => firm._id.toString() === l.firmId.toString());
+            const remaining = l.monthlyLimit === -1 ? -1 : (l.monthlyLimit - l.usedThisMonth);
+            return {
+                firmId:           l.firmId,
+                firmName:         f?.firmName || 'Unknown',
+                firmEmail:        f?.email    || '',
+                subdomain:        f?.subdomain || '',
+                planType:         l.planType,
+                monthlyLimit:     l.monthlyLimit,
+                usedThisMonth:    l.usedThisMonth,
+                remainingCredits: remaining,
+                totalUsed:        l.totalUsed,
+                isLow:            remaining !== -1 && remaining < 5,
+                lastUsedAt:       l.transactions.length > 0 ? l.transactions[l.transactions.length - 1].timestamp : null,
+                resetDate:        l.resetDate,
+            };
+        });
+
+        // Manual filter for high/low (since they depend on calculated fields)
+        let filtered = data;
+        if (filter === 'low')  filtered = data.filter(d => d.remainingCredits !== -1 && d.remainingCredits < 5);
+        if (filter === 'high') filtered = data.filter(d => d.monthlyLimit > 0 && (d.usedThisMonth / d.monthlyLimit) > 0.8);
+
+        const total = filtered.length;
+        const paged = filtered.slice(skip, skip + parseInt(limit));
+
+        res.json({ data: paged, total, page: parseInt(page) });
+    } catch (error) {
+        console.error('Get credits error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/credits/summary', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const [ledgers, totalFirms] = await Promise.all([
+            CreditLedger.find().lean(),
+            Firm.countDocuments(),
+        ]);
+
+        const firms = await Firm.find({ _id: { $in: ledgers.map(l => l.firmId) } }).select('firmName plan email').lean();
+
+        const data = ledgers.map(l => {
+            const f = firms.find(firm => firm._id.toString() === l.firmId.toString());
+            const remaining = l.monthlyLimit === -1 ? -1 : (l.monthlyLimit - l.usedThisMonth);
+            return {
+                firmId:           l.firmId,
+                firmName:         f?.firmName || 'Unknown',
+                planType:         l.planType,
+                monthlyLimit:     l.monthlyLimit,
+                usedThisMonth:    l.usedThisMonth,
+                remainingCredits: remaining,
+            };
+        });
+
+        // Summary metrics
+        const totalCreditsUsed     = data.reduce((s, l) => s + l.usedThisMonth, 0);
+        const totalCreditsAllotted = data.reduce((s, l) => s + (l.monthlyLimit === -1 ? 0 : l.monthlyLimit), 0);
+        const totalLifetimeUsed    = ledgers.reduce((s, l) => s + (l.totalUsed || 0), 0);
+
+        // Sorting for lists
+        const topUsageFirms = [...data].sort((a, b) => b.usedThisMonth - a.usedThisMonth).slice(0, 5);
+        const lowCreditFirms = data.filter(d => d.remainingCredits !== -1 && d.remainingCredits < 5).slice(0, 5);
+
+        // Usage Chart: Aggregated monthly usage from transactions across all firms
+        const now = new Date();
+        const monthlyUsageChart = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthLabel = d.toLocaleString('default', { month: 'short' });
+            
+            // Count transactions in this month range
+            const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const end   = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+
+            let usedCount = 0;
+            ledgers.forEach(l => {
+                const inMonth = l.transactions.filter(t => t.timestamp >= start && t.timestamp <= end);
+                usedCount += inMonth.reduce((s, t) => s + t.creditsUsed, 0);
+            });
+
+            monthlyUsageChart.push({
+                month: monthLabel,
+                used:  usedCount,
+                txnCount: 0, // not tracked here
+            });
+        }
+
+        res.json({
+            totalFirms,
+            totalCreditsUsed,
+            totalCreditsAllotted,
+            totalLifetimeUsed,
+            topUsageFirms,
+            lowCreditFirms,
+            monthlyUsageChart,
+        });
+    } catch (error) {
+        console.error('Get credit summary error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/credits/update', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { firmId, creditsToAdd, reason } = req.body;
+        if (!firmId || creditsToAdd === undefined) return res.status(400).json({ message: 'firmId and creditsToAdd required' });
+
+        const ledger = await CreditLedger.findOne({ firmId });
+        if (!ledger) return res.status(404).json({ message: 'Credit ledger not found' });
+
+        // Adding credits to monthly budget = increasing monthly limit
+        // Removing = decreasing
+        ledger.monthlyLimit += parseInt(creditsToAdd);
+        if (ledger.monthlyLimit < 0) ledger.monthlyLimit = 0;
+
+        ledger.transactions.push({
+            creditsUsed: -parseInt(creditsToAdd), // negative used = add
+            type:        'adjustment',
+            description: reason || 'Manual adjustment by Super Admin',
+            timestamp:   new Date(),
+        });
+
+        await ledger.save();
+        res.json({ message: 'Credits updated', newLimit: ledger.monthlyLimit });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/credits/set-plan', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { firmId, planType } = req.body;
+        if (!firmId || !planType) return res.status(400).json({ message: 'firmId and planType required' });
+
+        const ledger = await CreditLedger.findOne({ firmId });
+        if (!ledger) return res.status(404).json({ message: 'Credit ledger not found' });
+
+        const limit = PLAN_LIMITS[planType as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;
+        
+        ledger.planType      = planType;
+        ledger.monthlyLimit  = limit;
+        ledger.usedThisMonth = 0; // reset on plan change
+        ledger.save();
+
+        res.json({ message: `Plan updated to ${planType}`, newLimit: limit });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
