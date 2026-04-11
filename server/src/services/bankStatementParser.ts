@@ -111,11 +111,10 @@ const HEADER_BANK_PATTERNS: Array<[RegExp, string]> = [
     [/\bcitibank\b/i, 'Citibank'],
     [/\bhsbc\s+bank\b/i, 'HSBC Bank'],
     [/\bstandard\s+chartered\b/i, 'Standard Chartered'],
-    [/\bdeutsche\s+bank\b/i, 'Deutsche Bank'],
     [/\bbank\s+of\s+baroda\b/i, 'Bank of Baroda'],
-    [/\bcentral\s+bank\s+of\s+india\b/i, 'Central Bank of India'],
-    [/\bidbi\s+bank\b/i, 'IDBI Bank'],
-    [/\bkotak\b/i, 'Kotak Mahindra Bank'],
+    [/\bbaroda\s+connect\b/i, 'Bank of Baroda'],
+    [/\bBOB\b/i, 'Bank of Baroda'],
+    [/\bbaroda\s+central\b/i, 'Bank of Baroda'],
     [/\bbandhan\s+bank\b/i, 'Bandhan Bank'],
     [/\bcity\s+union\s+bank\b/i, 'City Union Bank'],
     [/\bkarur\s+vysya\b/i, 'Karur Vysya Bank'],
@@ -126,52 +125,75 @@ const HEADER_BANK_PATTERNS: Array<[RegExp, string]> = [
  * Priority: IFSC code → Header/title patterns → Fuzzy full-text scan → UNKNOWN BANK
  */
 export function detectBankName(text: string): string {
-    // 1. Find ALL IFSC codes in the document (not just first)
-    const ifscMatches = [...text.matchAll(/\b([A-Z]{4})\d{7}\b/g)];
+    // 1. Find ALL IFSC codes in the document.
+    // Enhanced for OCR: try fuzzy matching for common character swaps (O/0, I/1, etc.)
+    const ifscMatches = [...text.matchAll(/\b([A-Z0-9]{4})[0-9A-Z]{7}\b/g)];
     for (const m of ifscMatches) {
-        const prefix = m[1].toUpperCase();
+        // Normalize the first 4 characters (alphabetic prefix)
+        let prefix = m[1].toUpperCase()
+            .replace(/0/g, 'O')
+            .replace(/1/g, 'I');
+            
         if (IFSC_MAP[prefix]) return IFSC_MAP[prefix];
+        
+        // Also try pure prefix extract if length is good but digits are mixed into prefix
+        const pureAlphaPrefix = m[0].substring(0, 4).toUpperCase()
+            .replace(/0/g, 'O')
+            .replace(/1/g, 'I');
+        if (IFSC_MAP[pureAlphaPrefix]) return IFSC_MAP[pureAlphaPrefix];
     }
 
-    // 2. Scan first 50 lines (expanded from 30 — some banks have long headers)
+    // 2. Scan lines 0-100 for bank name — rejecting transaction lines
     const lines = text.split('\n');
-    const headerText = lines.slice(0, 50).join('\n');
-    for (const [pattern, name] of HEADER_BANK_PATTERNS) {
-        if (pattern.test(headerText)) return name;
+    const scanLimit = Math.min(lines.length, 100);
+    
+    for (let i = 0; i < scanLimit; i++) {
+        const line = lines[i];
+        
+        // REJECT if this looks like a transaction (Date + Amount)
+        // This is key: "Transfer to ICICI Bank" will have a date/amount on the same line,
+        // whereas a header or footer mention of the bank usually won't.
+        const hasDate = universalDate(line) !== null;
+        const hasAmount = /(?:\d{1,3}(?:,\d{2,3})*|\d+)\.\d{2}/.test(line);
+        if (hasDate && hasAmount) continue;
+
+        // REJECT if contains transaction keywords
+        const isNarration = /upi|neft|imps|rtgs|ref\s*no|txn\s*id|transfer\s+to|payment\s+to|deposited|paytm|phonepe|gpay|amazon|jio|bill\s*pay/i.test(line);
+        if (isNarration) continue;
+
+        // CHECK against bank patterns
+        for (const [pattern, name] of HEADER_BANK_PATTERNS) {
+            if (pattern.test(line)) return name;
+        }
     }
 
-    // 3. Full-text scan — skip lines that look like transaction descriptions
+    // 3. Last fallback: Check if any patterns match anywhere (less restrictive)
+    // Only if above failed
     for (const [pattern, name] of HEADER_BANK_PATTERNS) {
-        const lineIdx = lines.findIndex(l => pattern.test(l));
-        if (lineIdx === -1) continue;
-        const line = lines[lineIdx];
-        // Reject if this looks like a transaction narration, not a bank header
-        const isNarration = /upi|neft|imps|rtgs|ref\s*no|txn\s*id|transfer\s+to|payment\s+to|deposited/i.test(line)
-                         && lineIdx > 15;
-        if (!isNarration) return name;
+        if (pattern.test(text.slice(0, 2000))) return name;
     }
 
     // 4. Short-form standalone bank name (only in first 50 lines)
     const shortPatterns: Array<[RegExp, string]> = [
-        [/\bHDFC\b/i,    'HDFC Bank'],
-        [/\bICICI\b/i,   'ICICI Bank'],
-        [/\bSBI\b/i,     'State Bank of India (SBI)'],
-        [/\bAxis\b/i,    'Axis Bank'],
-        [/\bKotak\b/i,   'Kotak Mahindra Bank'],
-        [/\bPNB\b/i,     'Punjab National Bank'],
-        [/\bUBI\b/i,     'Union Bank of India'],
-        [/\bBOI\b/i,     'Bank of India'],
-        [/\bBOB\b/i,     'Bank of Baroda'],
-        [/\bIOB\b/i,     'Indian Overseas Bank'],
-        [/\bIDFC\b/i,    'IDFC First Bank'],
-        [/\bIDBI\b/i,    'IDBI Bank'],
+        [/\bHDFC\b/i, 'HDFC Bank'],
+        [/\bICICI\b/i, 'ICICI Bank'],
+        [/\bSBI\b/i, 'State Bank of India (SBI)'],
+        [/\bAxis\b/i, 'Axis Bank'],
+        [/\bKotak\b/i, 'Kotak Mahindra Bank'],
+        [/\bPNB\b/i, 'Punjab National Bank'],
+        [/\bUBI\b/i, 'Union Bank of India'],
+        [/\bBOI\b/i, 'Bank of India'],
+        [/\bBOB\b/i, 'Bank of Baroda'],
+        [/\bIOB\b/i, 'Indian Overseas Bank'],
+        [/\bIDFC\b/i, 'IDFC First Bank'],
+        [/\bIDBI\b/i, 'IDBI Bank'],
         [/\bYes\s+Bank\b/i, 'Yes Bank'],
         [/\bBandhan\b/i, 'Bandhan Bank'],
         [/\bAU\s+Bank\b/i, 'AU Small Finance Bank'],
         [/\bFederal\b/i, 'Federal Bank'],
     ];
     for (const [pattern, name] of shortPatterns) {
-        if (pattern.test(headerText)) return name;
+        if (pattern.test(text.slice(0, 2000))) return name;
     }
 
     return 'UNKNOWN BANK';
@@ -576,7 +598,7 @@ const BANK_BRAND_DESCRIPTIONS = new Set([
 function isGarbageRow(row: ITransactionRow, index: number, all: ITransactionRow[]): boolean {
     const desc = row.description.toLowerCase().trim();
     const isFirst = index === 0;
-    const isLast  = index === all.length - 1;
+    const isLast = index === all.length - 1;
     const isBoundary = isFirst || isLast;
 
     // 1. Always: description is empty
