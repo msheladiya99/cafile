@@ -181,6 +181,7 @@ startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
 startEmailWorker();
+import './queues/parse.worker';
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {
