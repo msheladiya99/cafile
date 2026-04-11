@@ -69,6 +69,8 @@ const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
 const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(module => ({ default: module.DSCManagement })));
 const EmailSettings = lazy(() => import('./pages/admin/settings/EmailSettings').then(module => ({ default: module.EmailSettings })));
+const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').then(module => ({ default: module.BankStatementTool })));
+const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHistory'));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -88,6 +90,7 @@ const Analytics = lazy(() => import('./pages/super-admin/Analytics'));
 const SystemHealth = lazy(() => import('./pages/super-admin/SystemHealth'));
 const SecurityLogs = lazy(() => import('./pages/super-admin/Security'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const AdminCreditsDashboard = lazy(() => import('./pages/super-admin/Credits'));
 const AboutPage = lazy(() => import('./pages/company/AboutPage'));
 const CareersPage = lazy(() => import('./pages/company/CareersPage'));
 const ContactPage = lazy(() => import('./pages/company/ContactPage'));
@@ -176,6 +179,7 @@ const AppRoutes: React.FC = () => {
           <Route path="analytics" element={<Analytics />} />
           <Route path="system-health" element={<SystemHealth />} />
           <Route path="security" element={<SecurityLogs />} />
+          <Route path="credits" element={<AdminCreditsDashboard />} />
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
@@ -244,6 +248,8 @@ const AppRoutes: React.FC = () => {
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="dsc" element={<DSCManagement />} />
           <Route path="email-settings" element={<EmailSettings />} />
+          <Route path="bank-statement" element={<BankStatementTool />} />
+          <Route path="bank-statement/history" element={<BankStatementHistory />} />
         </Route>
 
         {/* Client Routes */}
