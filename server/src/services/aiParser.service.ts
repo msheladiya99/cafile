@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerationConfig } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,39 +45,109 @@ const BANK_COLUMN_HINTS: Record<string, string> = {
 // ─── AI Parser Service ────────────────────────────────────────────────────────
 
 class AIParserService {
-    private genAI: GoogleGenerativeAI;
+    private genAI: GoogleGenerativeAI | null = null;
+    private openRouter: OpenAI | null = null;
 
-    private readonly GENERATION_CONFIG: GenerationConfig = {
-        responseMimeType: 'application/json',
-        temperature:       0.1,        // low = deterministic, good for extraction
+    private readonly GEMINI_CONFIG: GenerationConfig = {
+        temperature:       0.1,
         maxOutputTokens:   8192,
+        responseMimeType: 'application/json',
     };
 
     constructor() {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) throw new Error('GEMINI_API_KEY not set in environment variables');
-        this.genAI = new GoogleGenerativeAI(apiKey);
+        const orKey = process.env.OPENROUTER_API_KEY;
+        if (orKey && orKey.includes('sk-')) {
+            this.openRouter = new OpenAI({
+                baseURL: 'https://openrouter.ai/api/v1',
+                apiKey: orKey,
+                defaultHeaders: {
+                    "HTTP-Referer": "https://ca-office-portal.com",
+                    "X-Title": "CA Office Portal",
+                }
+            });
+            console.log('[AI Parser] Initialized with OpenRouter');
+        }
+
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (geminiKey) {
+            this.genAI = new GoogleGenerativeAI(geminiKey);
+            console.log('[AI Parser] Initialized with Direct Gemini');
+        }
+        
+        if (!this.openRouter && !this.genAI) {
+            console.warn('[AI Parser] No API keys found for OpenRouter or Gemini');
+        }
     }
 
     // ── Main parse method ─────────────────────────────────────────────────────
 
-    /**
-     * Parses a bank statement from raw text or base64 image data.
-     * Returns a structured result with per-row confidence scores.
-     */
     async parseStatement(
         input: string,
         isImage: boolean = false,
         bankName: string = 'Unknown',
         mimeType: string = 'image/jpeg'
     ): Promise<AIParseResult> {
-
-        const model = this.genAI.getGenerativeModel(
-            { model: 'gemini-1.5-flash', generationConfig: this.GENERATION_CONFIG },
-            { apiVersion: 'v1' }
-        );
-
         const prompt = this.buildPrompt(bankName);
+
+        if (this.openRouter) {
+            try {
+                return await this.parseWithOpenRouter(prompt, input, isImage, mimeType, bankName);
+            } catch (err: any) {
+                console.warn('[AI Parser] OpenRouter failed, falling back to Gemini:', err.message);
+                if (!this.genAI) throw err;
+            }
+        }
+
+        if (this.genAI) {
+            return await this.parseWithGemini(prompt, input, isImage, mimeType, bankName);
+        }
+
+        throw new Error('AI extraction unavailable: No API keys configured.');
+    }
+
+    private async parseWithOpenRouter(
+        prompt: string,
+        input: string,
+        isImage: boolean,
+        mimeType: string,
+        bankName: string
+    ): Promise<AIParseResult> {
+        console.log('[AI Parser] Routing via OpenRouter (Gemini Flash)');
+        
+        const messages: any[] = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
+        
+        if (isImage) {
+            messages[0].content.push({
+                type: 'image_url',
+                image_url: { url: `data:${mimeType};base64,${input}` }
+            });
+        } else {
+            messages[0].content.push({ type: 'text', text: input });
+        }
+
+        const response = await this.openRouter!.chat.completions.create({
+            model: 'google/gemini-flash-1.5',
+            messages,
+            response_format: { type: 'json_object' },
+            temperature: 0.1,
+        });
+
+        const text = response.choices[0].message.content || '{}';
+        return this.sanitizeResult(JSON.parse(text), bankName);
+    }
+
+    private async parseWithGemini(
+        prompt: string,
+        input: string,
+        isImage: boolean,
+        mimeType: string,
+        bankName: string
+    ): Promise<AIParseResult> {
+        console.log('[AI Parser] Routing via Direct Gemini');
+        const model = this.genAI!.getGenerativeModel(
+            { model: 'gemini-1.5-flash', generationConfig: this.GEMINI_CONFIG },
+            { apiVersion: 'v1beta' }
+        );
 
         let result;
         if (isImage) {
@@ -88,18 +159,7 @@ class AIParserService {
             result = await model.generateContent([prompt, input]);
         }
 
-        const text = result.response.text();
-
-        let parsed: AIParseResult;
-        try {
-            parsed = JSON.parse(text);
-        } catch {
-            console.error('[AI Parser] Failed to parse JSON response:', text.substring(0, 500));
-            throw new Error('AI returned malformed JSON. Input may be too complex or truncated.');
-        }
-
-        // Validate & sanitize the AI output before returning
-        return this.sanitizeResult(parsed, bankName);
+        return this.sanitizeResult(JSON.parse(result.response.text()), bankName);
     }
 
     // ── Prompt builder ────────────────────────────────────────────────────────
