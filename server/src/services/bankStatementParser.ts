@@ -483,11 +483,11 @@ export function parseLines(lines: string[]): ITransactionRow[] {
     const amountPattern = /(?:\d{1,3}(?:,\d{2,3})*|\d+)\.\d{2}/g;
 
     // Skip obvious header/footer-only lines
-    const skipPattern = /^\s*(?:page\s+\d+|sl\.?\s*no\.?|sr\.?\s*no\.?|s\.?\s*no\.?|transaction\s+id|value\s+date|stmt\s+of\s+acct|account\s+statement|generated\s+on|print\s+date|branch\s+name|ifsc\s+code|micr\s+code|customer\s+id|customer\s+name|for\s+details\s+please\s+visit|opening\s+balance|closing\s+balance|brought\s+forward|carried\s+forward|ob\s*[:—]|cb\s*[:—])\s*$/i;
+    const skipPattern = /^\s*(?:page\s+\d+|sl\.?\s*no\.?|sr\.?\s*no\.?|s\.?\s*no\.?|transaction\s+id|value\s+date|stmt\s+of\s+acct|account\s+statement|generated\s+on|print\s+date|branch\s+name|ifsc\s+code|micr\s+code|customer\s+id|customer\s+name|for\s+details\s+please\s+visit|opening\s+balance|closing\s+balance|brought\s+forward|carried\s+forward|ob\s*[:—]|cb\s*[:—]|your\s+account\s+statement|statement\s+period)\s*$/i;
 
     // Patterns that indicate a line is an opening/closing balance row (not a real tx)
     // NOTE: Keep these strict — avoid matching real transaction reference text
-    const openingClosingPattern = /\b(?:opening\s+balance|closing\s+balance|carry\s*forward|brought\s*forward)\b/i;
+    const openingClosingPattern = /\b(?:opening\s+balance|closing\s+balance|carry\s*forward|brought\s*forward|statement\s+period)\b/i;
 
     for (const rawLine of lines) {
         const line = rawLine.trim();
@@ -615,6 +615,9 @@ function isGarbageRow(row: ITransactionRow, index: number, all: ITransactionRow[
     //    A ₹1 Jio recharge is a VALID transaction even at boundary,
     //    but a row with description = 'Jio' AND debit+credit = 0 is just a balance sentinel.
     if (isBoundary && BANK_BRAND_DESCRIPTIONS.has(desc) && row.debit === 0 && row.credit === 0) return true;
+
+    // 5. Always: contains "statement period" or "account statement" and is a boundary row
+    if (isBoundary && /\b(?:statement\s+period|account\s+statement|your\s+account)\b/i.test(desc)) return true;
 
     return false;
 }
