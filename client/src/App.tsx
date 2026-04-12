@@ -100,9 +100,26 @@ const TermsOfServicePage = lazy(() => import('./pages/company/TermsOfServicePage
 
 
 const LoadingScreen = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
-    <div className="spinner"></div>
-    <style>{` .spinner { width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 1s ease-in-out infinite; } @keyframes spin { to { transform: rotate(360deg); } } `}</style>
+  <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 9999, fontFamily: '"Inter", sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', animation: 'loader-fade-in 0.8s ease-out' }}>
+      <div style={{ position: 'relative' }}>
+        <div style={{ width: '80px', height: '80px', background: '#ffffff', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(102, 126, 234, 0.15)', border: '1px solid rgba(102, 126, 234, 0.1)', position: 'relative', zIndex: 2 }}>
+          <img src="/faviconca.webp" alt="My CA File Logo" style={{ width: '54px', height: '54px', objectFit: 'contain' }} />
+        </div>
+        <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))', borderRadius: '24px', zIndex: 1, animation: 'loader-glow 3s infinite alternate' }}></div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ fontSize: '36px', fontWeight: 900, color: '#1e293b', letterSpacing: '-1.5px' }}>mycafile<span style={{ color: '#667eea' }}>.</span></div>
+      </div>
+    </div>
+    <div style={{ width: '200px', height: '4px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden', position: 'relative', marginTop: '40px' }}>
+      <div style={{ position: 'absolute', width: '45%', height: '100%', background: 'linear-gradient(90deg, #667eea, #764ba2)', borderRadius: '10px', animation: 'loader-slide 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite' }}></div>
+    </div>
+    <style>{`
+      @keyframes loader-fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes loader-glow { from { transform: scale(0.95); opacity: 0.5; } to { transform: scale(1.05); opacity: 0.8; } }
+      @keyframes loader-slide { 0% { left: -45%; } 100% { left: 100%; } }
+    `}</style>
   </div>
 );
 
