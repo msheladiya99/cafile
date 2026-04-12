@@ -368,8 +368,8 @@ export const AdminLayout: React.FC = () => {
                     <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
                         {user?.name || user?.username}
                     </Typography>
-                    <Typography variant="caption" noWrap sx={{ color: '#666', textTransform: 'capitalize' }}>
-                        {user?.role?.toLowerCase() || 'User'}
+                    <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
+                        {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
                     </Typography>
                 </Box>
             </Box>

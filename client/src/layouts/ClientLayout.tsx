@@ -150,8 +150,8 @@ export const ClientLayout: React.FC = () => {
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
                         {loadingName ? <Skeleton width={200} sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} /> : companyName}
                     </Typography>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
-                        {user?.name || user?.username}
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' }, mr: 1 }}>
+                        {user?.name || user?.username} | {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
                     </Typography>
                     <Tooltip title="Account settings">
                         <IconButton
