@@ -11,7 +11,7 @@ import {
     Psychology, Visibility, TrendingDown, TrendingUp, BarChart,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { bankStatementApi, BankStatementRecord } from '../../services/bankStatementApi';
+import { bankStatementApi, type BankStatementRecord } from '../../services/bankStatementApi';
 import { adminService } from '../../services/adminService';
 import type { Client } from '../../types';
 

@@ -16,7 +16,6 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    TextField,
     CircularProgress,
     Chip,
     Alert,
@@ -30,8 +29,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { taskMasterService } from '../../../services/taskMasterService';
 import { adminService } from '../../../services/adminService';
-import { clientGroupService } from '../../../services/clientGroupService';
 import { taskService } from '../../../services/taskService';
+import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
 import type { TaskMasterData, Client, User, Task, TaskStatus } from '../../../types';
 
 export const UpdateApprovedTask: React.FC = () => {
@@ -109,18 +108,18 @@ export const UpdateApprovedTask: React.FC = () => {
             {/* Selection Form */}
             <Paper sx={{ p: 3, mb: 1, borderRadius: '0 0 8px 8px', borderBottom: '1px solid #e2e8f0' }}>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Group Name</Typography>
                             <Select size="small" fullWidth displayEmpty value={groupName} onChange={(e) => setGroupName(e.target.value)}>
                                 <MenuItem value="">All Groups</MenuItem>
-                                {(clientGroups || []).map((g: any) => (
+                                {(clientGroups as ClientGroup[] || []).map((g) => (
                                     <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                 ))}
                             </Select>
                         </Box>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Client Name</Typography>
                             <Select size="small" fullWidth displayEmpty value={clientName} onChange={(e) => setClientName(e.target.value)}>
@@ -132,7 +131,7 @@ export const UpdateApprovedTask: React.FC = () => {
                         </Box>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Department</Typography>
                             <Select size="small" fullWidth displayEmpty value={department} onChange={(e) => setDepartment(e.target.value)}>
@@ -143,7 +142,7 @@ export const UpdateApprovedTask: React.FC = () => {
                             </Select>
                         </Box>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Task</Typography>
                             <Select size="small" fullWidth displayEmpty value={selectedTask} onChange={(e) => setSelectedTask(e.target.value)}>
@@ -155,7 +154,7 @@ export const UpdateApprovedTask: React.FC = () => {
                         </Box>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center" gap={1}>
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Frequency</Typography>
                             <Select size="small" fullWidth displayEmpty value={frequency} onChange={(e) => setFrequency(e.target.value)}>
@@ -166,7 +165,7 @@ export const UpdateApprovedTask: React.FC = () => {
                             </Select>
                         </Box>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Year</Typography>
                             <Select size="small" fullWidth displayEmpty value={year} onChange={(e) => setYear(e.target.value)}>
@@ -178,7 +177,7 @@ export const UpdateApprovedTask: React.FC = () => {
                         </Box>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Reporting Manager</Typography>
                             <Select size="small" fullWidth displayEmpty value={reportingManager} onChange={(e) => setReportingManager(e.target.value)}>
@@ -189,7 +188,7 @@ export const UpdateApprovedTask: React.FC = () => {
                             </Select>
                         </Box>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <Box display="flex" alignItems="center">
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600 }}>Task Status</Typography>
                             <Select size="small" fullWidth displayEmpty value={uiStatus} onChange={(e) => setUiStatus(e.target.value)}>
@@ -271,14 +270,14 @@ export const UpdateApprovedTask: React.FC = () => {
                                 <TableRow key={task._id} hover>
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>
-                                        <Typography variant="body2" fontWeight={700}>{(task.clientId as any)?.name || 'Internal'}</Typography>
-                                        <Typography variant="caption" color="textSecondary">{(task.clientGroupId as any)?.groupName}</Typography>
+                                        <Typography variant="body2" fontWeight={700}>{(task.clientId as unknown as Client)?.name || 'Internal'}</Typography>
+                                        <Typography variant="caption" color="textSecondary">{(task.clientGroupId as ClientGroup)?.groupName}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2" fontWeight={500}>{task.title}</Typography>
                                         <Typography variant="caption" color="textSecondary">{task.priority}</Typography>
                                     </TableCell>
-                                    <TableCell>{(task as any).frequency || '-'}</TableCell>
+                                    <TableCell>{(task as Task).frequency || '-'}</TableCell>
                                     <TableCell>
                                         <Chip 
                                             label={task.status.replace(/_/g, ' ')} 
