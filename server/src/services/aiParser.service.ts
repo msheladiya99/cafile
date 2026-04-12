@@ -193,6 +193,7 @@ STRICT RULES:
 11. NEVER invent transactions. Only extract what is explicitly visible.
 12. NEVER skip a transaction row even if partially readable.
 13. IFSC_CODE: If you find an IFSC code, list it in the parsing_notes.
+14. EXCLUDE summary rows: Do NOT include rows that represent "Closing Balance", "Opening Balance", "Total", or "Statement Period" in the transactions array. These are summaries, not individual transactions.
 
 OUTPUT JSON SCHEMA (STRICT — no extra keys, no missing keys):
 {

@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-    Box, Drawer, AppBar, Toolbar, List, Typography, IconButton, 
+    Box, Drawer, AppBar, Toolbar, List, Typography, IconButton,
     ListItem, ListItemButton, ListItemIcon, ListItemText, 
-    useMediaQuery, Avatar, Collapse, useTheme
+    Avatar, Collapse, Skeleton
 } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import {
     Dashboard as DashboardIcon,
     People as PeopleIcon,
-    CloudUpload as UploadIcon,
-    Folder as FolderIcon,
-    Receipt as ReceiptIcon,
     Menu as MenuIcon,
     Assessment as ReportsIcon,
     Inventory as InventoryIcon,
-    Assignment as AssignmentIcon,
     ExpandLess,
     ExpandMore,
     Business as BusinessIcon,
@@ -24,7 +21,7 @@ import {
     AccountBalance as BankIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-
+import settingsService from '../services/settingsService';
 import AccountMenu from '../components/common/AccountMenu';
 
 const drawerWidth = 240;
@@ -45,16 +42,22 @@ export const AdminLayout: React.FC = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
-    const companyName = 'CA Admin Panel';
+    const { data: settings, isLoading: isLoadingSettings } = useQuery({
+        queryKey: ['company-settings'],
+        queryFn: settingsService.getSettings,
+        staleTime: 10 * 60 * 1000,
+    });
+
+    const companyName = settings?.companyName || 'CA Office Portal';
 
     const handleMenuToggle = (text: string) => {
         setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
     };
 
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
 
-
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const menuItems = React.useMemo(() => [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view' },
@@ -99,281 +102,111 @@ export const AdminLayout: React.FC = () => {
                         { text: 'Attendance List', path: '/admin/employee/attendance/list', perm: 'employee.attendance' },
                     ]
                 },
-                { text: 'Form 108', path: '/admin/employee/form108', perm: 'employee.view' },
-                ...(isAdmin ? [{ text: 'Staff Permissions', path: '/admin/employee/permissions' }] : []),
             ]
         },
         {
-            text: 'Task',
-            icon: <AssignmentIcon />,
-            perm: ['task.view', 'task.master.view', 'task.applicability', 'task.single', 'task.approve', 'task.transfer', 'task.information', 'task.udin'],
+            text: 'Bank Statement',
+            icon: <BankIcon />,
+            perm: 'bank_statement.view',
             children: [
-                { text: 'Task Dashboard', path: '/admin/tasks', perm: 'task.view' },
-                {
-                    text: 'Task Master',
-                    perm: ['task.master.view', 'task.master.create', 'task.master.edit'],
-                    children: [
-                        { text: 'Add Task', path: '/admin/task-master/add', perm: 'task.master.create' },
-                        { text: 'Task List', path: '/admin/task-master/list', perm: 'task.master.view' },
-                        { text: 'Task Category', path: '/admin/task-category', perm: 'task.master.view' },
-                    ]
-                },
-                {
-                    text: 'Task Applicability',
-                    perm: ['task.applicability', 'task.single'],
-                    children: [
-                        { text: 'Set Recurrence Task', path: '/admin/task-applicability', perm: 'task.applicability' },
-                        { text: 'Start Single Task', path: '/admin/task-applicability?single=true', perm: 'task.single' },
-                    ]
-                },
-                {
-                    text: 'Task Approval',
-                    perm: ['task.approve'],
-                    children: [
-                        { text: 'Task Approval', path: '/admin/tasks/approval', perm: 'task.approve' },
-                        { text: 'Approved Task List', path: '/admin/tasks/approved-list', perm: 'task.approve' },
-                        { text: 'Update Approved Task', path: '/admin/tasks/update-approved', perm: 'task.approve' },
-                    ]
-                },
-                {
-                    text: 'Transfer Task',
-                    perm: ['task.transfer'],
-                    children: [
-                        { text: 'Transfer Single Task', path: '/admin/tasks/transfer-single', perm: 'task.transfer' },
-                        { text: 'Transfer All Task', path: '/admin/tasks/transfer-all', perm: 'task.transfer' },
-                    ]
-                },
-                { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail', perm: 'task.view' },
-                { text: 'Task Information', path: '/admin/tasks/information', perm: 'task.information' },
-                { text: 'All Task Update', path: '/admin/tasks/all-update', perm: 'task.view' },
-                { text: 'Ongoing Task', path: '/admin/tasks/ongoing', perm: 'task.view' },
-                { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
+                { text: 'Parser Tool', path: '/admin/bank-statement', perm: 'bank_statement.view' },
             ]
         },
-        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc' },
-        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
-        { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
-        { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
-        { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
-        ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
-        { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
+        { text: 'Digital Signature', icon: <GppGoodIcon />, path: '/admin/digital-signature', perm: 'digital_signature.view' },
+        { text: 'Mailbox', icon: <EmailIcon />, path: '/admin/mailbox', perm: 'mailbox.view' },
+        { text: 'Inventory', icon: <InventoryIcon />, path: '/admin/inventory', perm: 'inventory.view' }
     ], [isAdmin]);
 
-    const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
-    };
+    const renderMenuItem = (item: MenuItemDef) => {
+        const hasChildren = item.children && item.children.length > 0;
+        const isOpen = openMenus[item.text] || false;
+        const isSelected = item.path ? location.pathname === item.path : false;
 
-    // Auto-open active menus
-    React.useEffect(() => {
-        const fullPath = `${location.pathname}${location.search}`;
-        
-        setOpenMenus(prev => {
-            const newOpenMenus: { [key: string]: boolean } = { ...prev };
-            let changed = false;
-
-            menuItems.forEach(item => {
-                if (item.children) {
-                    const isActive = item.children.some(c => 
-                        fullPath === c.path || (c.children && c.children.some(sc => fullPath === sc.path))
-                    );
-                    if (isActive && !newOpenMenus[item.text]) {
-                        newOpenMenus[item.text] = true;
-                        changed = true;
-                    }
-                    
-                    item.children.forEach(child => {
-                        if (child.children) {
-                            const isChildActive = child.children.some(sc => fullPath === sc.path);
-                            if (isChildActive && !newOpenMenus[child.text]) {
-                                newOpenMenus[child.text] = true;
-                                changed = true;
-                            }
-                        }
-                    });
-                }
-            });
-
-            return changed ? newOpenMenus : prev;
-        });
-    }, [location.pathname, location.search, menuItems]);
-
-    const handleMenuItemClick = (path: string) => {
-        navigate(path);
-        if (isMobile) {
-            setMobileOpen(false);
-        }
+        return (
+            <React.Fragment key={item.text}>
+                <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
+                    <ListItemButton
+                        onClick={() => hasChildren ? handleMenuToggle(item.text) : item.path && navigate(item.path)}
+                        selected={isSelected}
+                        sx={{
+                            minHeight: 44,
+                            px: 2,
+                            borderRadius: '10px',
+                            mx: 1,
+                            color: isSelected ? 'primary.main' : '#444',
+                            '&.Mui-selected': {
+                                bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.12)' },
+                                '& .MuiListItemIcon-root': { color: 'primary.main' },
+                                '& .MuiTypography-root': { fontWeight: 600 },
+                            },
+                        }}
+                    >
+                        {item.icon && (
+                            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+                                {item.icon}
+                            </ListItemIcon>
+                        )}
+                        <ListItemText 
+                            primary={item.text} 
+                            primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} 
+                        />
+                        {hasChildren && (isOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />)}
+                    </ListItemButton>
+                </ListItem>
+                {hasChildren && (
+                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ pl: 3 }}>
+                            {item.children?.map(child => (
+                                <ListItemButton
+                                    key={child.text}
+                                    onClick={() => child.path && navigate(child.path)}
+                                    selected={location.pathname === child.path}
+                                    sx={{
+                                        minHeight: 36,
+                                        borderRadius: '8px',
+                                        mb: 0.5,
+                                        mx: 1,
+                                        '&.Mui-selected': {
+                                            bgcolor: 'transparent',
+                                            color: 'primary.main',
+                                            '& .MuiTypography-root': { fontWeight: 600 },
+                                        },
+                                    }}
+                                >
+                                    <ListItemText 
+                                        primary={child.text} 
+                                        primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} 
+                                    />
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    </Collapse>
+                )}
+            </React.Fragment>
+        );
     };
 
     const drawerContent = (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {/* Sidebar Header (Logo / Brand) */}
-            <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-                <img src="/faviconca.webp" alt="Logo" style={{ width: 32, height: 32, marginRight: '12px', objectFit: 'contain' }} />
-                <Typography variant="h6" noWrap sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#1a1a1a' }}>
-                    {companyName}
-                </Typography>
-            </Box>
-
-            {/* Navigation Menu */}
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none', px: 1 }}>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ p: 2, mt: 8 }}>
                 <List>
-                    {menuItems.map((item) => (
-                        <React.Fragment key={item.text}>
-                            {item.children ? (
-                                <>
-                                    <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
-                                        <ListItemButton
-                                            onClick={() => handleMenuToggle(item.text)}
-                                            sx={{
-                                                borderRadius: '24px',
-                                                py: 1,
-                                                color: '#333',
-                                                '&:hover': { background: 'rgba(255,255,255,0.4)' },
-                                                ...(item.children.some(c => `${location.pathname}${location.search}` === c.path || (c.children && c.children.some(sc => `${location.pathname}${location.search}` === sc.path))) && {
-                                                    background: '#ffffff',
-                                                    color: '#000',
-                                                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                                                    '& .MuiListItemIcon-root': {
-                                                        color: '#000',
-                                                    },
-                                                }),
-                                            }}
-                                        >
-                                            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                                            <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
-                                            {openMenus[item.text] ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
-                                        </ListItemButton>
-                                    </ListItem>
-                                    <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
-                                        <List component="div" disablePadding>
-                                            {item.children.map((child: MenuItemDef) => (
-                                                <React.Fragment key={child.text}>
-                                                    {child.children ? (
-                                                        <>
-                                                            <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
-                                                                <ListItemButton
-                                                                    onClick={() => handleMenuToggle(child.text)}
-                                                                    selected={child.children.some(sc => `${location.pathname}${location.search}` === sc.path)}
-                                                                    sx={{ 
-                                                                        py: 0.6, 
-                                                                        borderRadius: 1.5,
-                                                                        '&.Mui-selected': {
-                                                                            bgcolor: 'rgba(255, 255, 255, 0.5)',
-                                                                            color: '#000',
-                                                                            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.6)' }
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
-                                                                    {openMenus[child.text] ? <ExpandLess sx={{ fontSize: 16 }} /> : <ExpandMore sx={{ fontSize: 16 }} />}
-                                                                </ListItemButton>
-                                                            </ListItem>
-                                                            <Collapse in={openMenus[child.text]} timeout="auto" unmountOnExit>
-                                                                <List component="div" disablePadding>
-                                                                    {child.children!.map((subChild: MenuItemDef) => (
-                                                                        <ListItem key={subChild.text} disablePadding sx={{ mb: 0.5, pl: 5, pr: 1 }}>
-                                                                            <ListItemButton
-                                                                                selected={`${location.pathname}${location.search}` === subChild.path}
-                                                                                onClick={() => handleMenuItemClick(subChild.path!)}
-                                                                                sx={{
-                                                                                    py: 0.6,
-                                                                                    borderRadius: '24px',
-                                                                                    color: '#444',
-                                                                                    '&:hover': { background: 'rgba(255,255,255,0.4)' },
-                                                                                    '&.Mui-selected': {
-                                                                                        background: '#ffffff',
-                                                                                        color: '#000',
-                                                                                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                                                                                        '&:hover': { background: '#ffffff' },
-                                                                                    },
-                                                                                }}
-                                                                            >
-                                                                                <ListItemText primary={subChild.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
-                                                                            </ListItemButton>
-                                                                        </ListItem>
-                                                                    ))}
-                                                                </List>
-                                                            </Collapse>
-                                                        </>
-                                                    ) : (
-                                                        <ListItem disablePadding sx={{ mb: 0.5, pl: 3, pr: 1 }}>
-                                                            <ListItemButton
-                                                                selected={`${location.pathname}${location.search}` === child.path}
-                                                                onClick={() => handleMenuItemClick(child.path!)}
-                                                                sx={{
-                                                                    py: 0.6,
-                                                                    borderRadius: '24px',
-                                                                    color: '#444',
-                                                                    '&:hover': { background: 'rgba(255,255,255,0.4)' },
-                                                                    '&.Mui-selected': {
-                                                                        background: '#ffffff',
-                                                                        color: '#000',
-                                                                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                                                                        '&:hover': {
-                                                                            background: '#ffffff',
-                                                                        },
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
-                                                            </ListItemButton>
-                                                        </ListItem>
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                        </List>
-                                    </Collapse>
-                                </>
-                            ) : (
-                                <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
-                                    <ListItemButton
-                                        selected={`${location.pathname}${location.search}` === item.path}
-                                        onClick={() => handleMenuItemClick(item.path!)}
-                                        sx={{
-                                            borderRadius: '24px',
-                                            py: 1,
-                                            color: '#333',
-                                            '&:hover': { background: 'rgba(255,255,255,0.4)' },
-                                            '&.Mui-selected': {
-                                                background: '#ffffff',
-                                                color: '#000',
-                                                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                                                '& .MuiListItemIcon-root': {
-                                                    color: '#000',
-                                                },
-                                                '&:hover': {
-                                                    background: '#ffffff',
-                                                },
-                                            },
-                                        }}
-                                    >
-                                        <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
-                                    </ListItemButton>
-                                </ListItem>
-                            )}
-                        </React.Fragment>
-                    ))}
+                    {menuItems.map(item => renderMenuItem(item))}
                 </List>
             </Box>
-
-            {/* Account Settings at Bottom */}
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', cursor: 'pointer', '&:hover': { background: 'rgba(0,0,0,0.02)' } }} onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <Avatar
-                    sx={{ width: 36, height: 36, bgcolor: '#222', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' }}
-                >
-                    {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
-                </Avatar>
-                <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden' }}>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-                        {user?.name || user?.username}
-                    </Typography>
-                    <Typography variant="caption" noWrap sx={{ color: '#666', textTransform: 'capitalize' }}>
-                        {user?.role?.toLowerCase() || 'User'}
-                    </Typography>
-                </Box>
+            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)' }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                 <ListItemButton sx={{ borderRadius: '12px', p: 1 }}>
+                    <Avatar sx={{ width: 36, height: 36, bgcolor: '#2c3e50', fontWeight: 'bold' }}>
+                        {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
+                    </Avatar>
+                    <Box sx={{ ml: 1.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{user?.name || user?.username}</Typography>
+                        <Typography variant="caption" color="text.secondary">{user?.role}</Typography>
+                    </Box>
+                </ListItemButton>
             </Box>
-             <AccountMenu
+            <AccountMenu
                 anchorEl={anchorEl}
                 open={anchorEl !== null}
                 onClose={() => setAnchorEl(null)}
@@ -386,16 +219,13 @@ export const AdminLayout: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
-            {/* Mobile Only AppBar */}
             <AppBar
                 position="fixed"
                 sx={{
-                    display: { xs: 'flex', md: 'none' },
                     zIndex: (theme) => theme.zIndex.drawer + 1,
-                    background: '#ffffff',
-                    color: '#1a1a1a',
-                    boxShadow: 'none',
-                    borderBottom: '1px solid rgba(0,0,0,0.05)',
+                    background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                 }}
             >
                 <Toolbar>
@@ -404,28 +234,56 @@ export const AdminLayout: React.FC = () => {
                         aria-label="Open sidebar menu"
                         edge="start"
                         onClick={handleDrawerToggle}
-                        sx={{ mr: 2 }}
+                        sx={{ mr: 2, display: { md: 'none' } }}
                     >
                         <MenuIcon />
                     </IconButton>
-                    <img src="/faviconca.webp" alt="Logo" style={{ width: 28, height: 28, marginLeft: '8px', objectFit: 'contain' }} />
+                     <img src="/faviconca.webp" alt="Logo" style={{ width: 32, height: 32, marginRight: '16px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: -0.5 }}>
+                         {isLoadingSettings ? (
+                            <Skeleton 
+                                variant="text" 
+                                width={200} 
+                                animation="wave" 
+                                sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1 }} 
+                            />
+                        ) : companyName}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' }, opacity: 0.9 }}>
+                            Admin Panel
+                        </Typography>
+                        <Avatar
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
+                            sx={{ 
+                                width: 36, 
+                                height: 36, 
+                                bgcolor: 'rgba(255,255,255,0.2)', 
+                                color: '#fff', 
+                                cursor: 'pointer',
+                                border: '2px solid rgba(255,255,255,0.1)',
+                                fontSize: '0.875rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
+                        </Avatar>
+                    </Box>
                 </Toolbar>
             </AppBar>
 
-            {/* Mobile Drawer */}
             <Drawer
                 variant="temporary"
                 open={mobileOpen}
                 onClose={handleDrawerToggle}
-                ModalProps={{
-                    keepMounted: true, // Better open performance on mobile.
-                }}
+                ModalProps={{ keepMounted: true }}
                 sx={{
                     display: { xs: 'block', md: 'none' },
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
+                        background: '#fff',
                         borderRight: 'none',
                     },
                 }}
@@ -433,7 +291,6 @@ export const AdminLayout: React.FC = () => {
                 {drawerContent}
             </Drawer>
 
-            {/* Desktop Drawer */}
             <Drawer
                 variant="permanent"
                 sx={{
@@ -443,8 +300,8 @@ export const AdminLayout: React.FC = () => {
                     '& .MuiDrawer-paper': {
                         width: drawerWidth,
                         boxSizing: 'border-box',
-                        background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
-                        borderRight: 'none',
+                        background: '#fff',
+                        borderRight: '1px solid rgba(0,0,0,0.08)',
                     },
                 }}
             >
@@ -458,11 +315,15 @@ export const AdminLayout: React.FC = () => {
                     p: { xs: 2, sm: 2.5, md: 3 },
                     background: '#f5f7fa',
                     minHeight: '100vh',
-                    width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` }
+                    width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
+                    display: 'flex',
+                    flexDirection: 'column'
                 }}
             >
-                <Toolbar sx={{ display: { md: 'none' } }} />
-                <Outlet />
+                <Toolbar />
+                <Box sx={{ mt: 2, flexGrow: 1 }}>
+                    <Outlet />
+                </Box>
             </Box>
         </Box>
     );
