@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC = () => {
     };
 
     return (
-        <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
+        <Box className={!isLoadingClients ? 'page-content-fade' : ''} sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
             <Helmet>
                 <title>Admin Dashboard | MyCAFile - CA Office Portal</title>
                 <link rel="canonical" href="https://mycafile.in/admin/dashboard" />

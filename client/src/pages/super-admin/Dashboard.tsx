@@ -71,7 +71,7 @@ function StatCard({ label, value, sub, icon, color, accent, loading, onClick }: 
                     {label}
                 </Typography>
                 {loading ? (
-                    <Skeleton width={60} height={28} />
+                    <Skeleton width={60} height={28} sx={{ borderRadius: '6px' }} />
                 ) : (
                     <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', lineHeight: 1.2 }}>
                         {value ?? '—'}
@@ -156,7 +156,7 @@ const SuperAdminDashboard: React.FC = () => {
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <Box className="sa-page" sx={{ maxWidth: 1200 }}>
+        <Box className={`sa-page ${!isLoading ? 'page-content-fade' : ''}`} sx={{ maxWidth: 1200 }}>
 
             {/* ── Header ── */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 4, flexWrap: 'wrap', gap: 2 }}>
@@ -226,7 +226,7 @@ const SuperAdminDashboard: React.FC = () => {
 
                     {isLoading ? (
                         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {[1, 2, 3, 4].map(i => <Skeleton key={i} height={40} sx={{ borderRadius: '8px' }} />)}
+                            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} height={32} sx={{ borderRadius: '8px', opacity: 0.6 }} />)}
                         </Box>
                     ) : recentFirms.length === 0 ? (
                         <Box sx={{ p: 5, textAlign: 'center', color: '#94a3b8' }}>
