@@ -28,23 +28,6 @@ function getAIThreshold(bankName: string): number {
     return BANK_AI_THRESHOLD[bankName] ?? BANK_AI_THRESHOLD.DEFAULT;
 }
 
-/**
- * Sorts transactions chronologically (ascending).
- * Standardizes date parsing to handle common Indian DMY formats.
- */
-function sortTransactions(rows: ITransactionRow[]): ITransactionRow[] {
-    const parseDMY = (d: string) => {
-        if (!d) return 0;
-        const parts = d.split('/');
-        if (parts.length !== 3) return 0;
-        const [dd, mm, yyyy] = parts;
-        return new Date(`${yyyy}-${mm}-${dd}`).getTime() || 0;
-    };
-    
-    const sorted = [...rows].sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-    return sorted.map((r, i) => ({ ...r, rowIndex: i }));
-}
-
 // ─── AI Text Chunker ──────────────────────────────────────────────────────────
 // Splits large text into ≤2000-line chunks, parses each with AI, merges results.
 
@@ -90,7 +73,18 @@ async function aiParseChunked(
             // continue — partial results are better than none
         }
     }
-    return allRows;
+
+    // Sort merged result by date (robust for multi-page statements)
+    allRows.sort((a, b) => {
+        const parseDMY = (d: string) => {
+            const [dd, mm, yyyy] = d.split('/');
+            return new Date(`${yyyy}-${mm}-${dd}`).getTime() || 0;
+        };
+        return parseDMY(a.date) - parseDMY(b.date);
+    });
+
+    // Re-index after sort
+    return allRows.map((r, i) => ({ ...r, rowIndex: i }));
 }
 
 // ─── Duplicate row deduplication ─────────────────────────────────────────────
@@ -266,12 +260,9 @@ export const parseWorker = new Worker(
                 }
             }
 
-            // ── Step 6: Sorting + Deduplication + Validation ──────────────────────────
+            // ── Step 6: Deduplication + Validation ────────────────────────────
             progress('validate', 'Validating & cleaning data...', 78);
-            
-            extractedRows = sortTransactions(extractedRows);
             extractedRows = deduplicateRows(extractedRows);
-            
             const validationResult = validationService.validate(extractedRows);
             const processedRows    = validationResult.rows;
 

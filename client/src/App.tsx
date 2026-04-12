@@ -1,8 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { ThemeProvider, createTheme, CssBaseline, Box, Typography, Avatar } from '@mui/material';
-import { motion } from 'framer-motion';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -101,77 +100,10 @@ const TermsOfServicePage = lazy(() => import('./pages/company/TermsOfServicePage
 
 
 const LoadingScreen = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}
-  >
-    {/* Abstract background blobs */}
-    <Box sx={{ position: 'absolute', top: '-10%', right: '-10%', width: '40%', height: '40%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(102,126,234,0.08) 0%, transparent 70%)' }} />
-    <Box sx={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '40%', height: '40%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(118,75,162,0.08) 0%, transparent 70%)' }} />
-
-    <Box
-      component={motion.div}
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1 }}
-    >
-      <Box sx={{ position: 'relative', mb: 4 }}>
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          style={{
-            position: 'absolute',
-            inset: -20,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(102,126,234,0.2) 0%, transparent 70%)',
-          }}
-        />
-        <Avatar
-          src="/faviconca.webp"
-          sx={{
-            width: 100,
-            height: 100,
-            boxShadow: '0 10px 40px rgba(102,126,234,0.3)',
-            border: '4px solid #fff',
-            p: 1,
-            bgcolor: '#fff'
-          }}
-        />
-      </Box>
-
-      <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: -1, color: '#1e293b', mb: 1 }}>
-        CA OFFICE <span style={{ color: '#667eea' }}>PORTAL</span>
-      </Typography>
-      <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, mb: 4 }}>
-        Securing your financial data...
-      </Typography>
-
-      <Box sx={{ width: 160, height: 4, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 2, overflow: 'hidden' }}>
-        <motion.div
-          animate={{ x: [-160, 160] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{
-            width: '60%',
-            height: '100%',
-            background: 'linear-gradient(90deg, transparent, #667eea, transparent)',
-            borderRadius: 2,
-          }}
-        />
-      </Box>
-    </Box>
-  </Box>
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f8fafc' }}>
+    <div className="spinner"></div>
+    <style>{` .spinner { width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 1s ease-in-out infinite; } @keyframes spin { to { transform: rotate(360deg); } } `}</style>
+  </div>
 );
 
 const queryClient = new QueryClient({
@@ -179,8 +111,8 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000,    // 5 min
-      gcTime: 30 * 60 * 1000,      // 30 min
+      staleTime: 2 * 60 * 1000,    // 2 min: serve cached data without re-fetching
+      gcTime: 10 * 60 * 1000,      // 10 min: keep unused data in memory
     }
   },
 });

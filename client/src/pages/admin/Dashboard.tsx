@@ -59,6 +59,8 @@ export const AdminDashboard: React.FC = () => {
 
     const clientCount = dashboardData?.clientCount || 0;
     const reminders = dashboardData?.reminders || [];
+    const isLoadingClients = isDashboardLoading;
+    const isLoadingReminders = isDashboardLoading;
 
 
 
@@ -109,35 +111,6 @@ export const AdminDashboard: React.FC = () => {
     const handleToday = () => {
         setViewDate(new Date());
     };
-
-    if (isDashboardLoading) {
-        return (
-            <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
-                <Box sx={{ mb: 4 }}>
-                    <Skeleton variant="text" width="30%" height={60} sx={{ borderRadius: 2 }} animation="wave" />
-                    <Skeleton variant="text" width="15%" height={24} sx={{ borderRadius: 1 }} animation="wave" />
-                </Box>
-                <Grid container spacing={2} mb={4}>
-                    {[1, 2, 3].map(i => (
-                        <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={i}>
-                            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 4 }} animation="wave" />
-                        </Grid>
-                    ))}
-                </Grid>
-                <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 4 }} animation="wave" />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 4 }} animation="wave" />
-                    </Grid>
-                    <Grid size={{ xs: 12, lg: 4 }}>
-                        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 4 }} animation="wave" />
-                    </Grid>
-                </Grid>
-            </Box>
-        );
-    }
 
     return (
         <Box sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
@@ -226,7 +199,11 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
-                            <Typography variant="h3" component="p" fontWeight="800" sx={{ color: '#1a2e44', fontSize: { xs: '2rem', sm: '3rem' } }}>{clientCount}</Typography>
+                            {isLoadingClients ? (
+                                <Skeleton width={60} height={40} />
+                            ) : (
+                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44', fontSize: { xs: '2rem', sm: '3rem' } }}>{clientCount}</Typography>
+                            )}
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <PeopleIcon />
@@ -237,7 +214,11 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
-                            <Typography variant="h3" component="p" fontWeight="800" sx={{ color: '#b45309', fontSize: { xs: '2rem', sm: '3rem' } }}>{reminders.length}</Typography>
+                            {isLoadingReminders ? (
+                                <Skeleton width={60} height={40} />
+                            ) : (
+                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#b45309', fontSize: { xs: '2rem', sm: '3rem' } }}>{reminders.length}</Typography>
+                            )}
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <AssignmentIcon />
@@ -248,7 +229,7 @@ export const AdminDashboard: React.FC = () => {
                     <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                         <Box>
                             <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
-                            <Typography variant="h3" component="p" fontWeight="800" sx={{ color: '#166534', fontSize: { xs: '2rem', sm: '3rem' } }}>85%</Typography>
+                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#166534', fontSize: { xs: '2rem', sm: '3rem' } }}>85%</Typography>
                         </Box>
                         <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
                             <PieChartIcon />
