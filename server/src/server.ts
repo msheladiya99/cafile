@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import dotenv from 'dotenv';
 import path from 'path';
 import dns from 'dns';
 
@@ -43,8 +43,6 @@ import taxNoticeRoutes from './routes/taxNotice';
 import { startDSCCronJob } from './utils/dscCron';
 
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
