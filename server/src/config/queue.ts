@@ -36,7 +36,7 @@ export const queueEmail = async (data: EmailJobData, delay = 0) => {
         // Graceful fallback to node's event loop
         console.log('[Queue Fallback] Redis not configured, firing email via setTimeout');
         setTimeout(() => {
-            sendEmail(data).catch(err => console.error('[Fallback Send] Error:', err));
+            sendEmail(data).catch((err: any) => console.error('[Fallback Send] Error:', err));
         }, delay || 0);
         return { id: 'fallback-' + Date.now() };
     }
