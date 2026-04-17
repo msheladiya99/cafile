@@ -23,6 +23,7 @@ import {
     Email as EmailIcon,
     AccountBalance as BankIcon,
     Gavel as GavelIcon,
+    AccountBalanceWallet as WalletIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -159,7 +160,9 @@ export const AdminLayout: React.FC = () => {
         ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
         { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
         { text: 'AI Tax Notice Reply', icon: <GavelIcon />, path: '/admin/tax-notice-engine' },
+        { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses' },
     ], [isAdmin]);
+
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);

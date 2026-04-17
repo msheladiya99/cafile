@@ -22,6 +22,8 @@ import { TaxDetail } from '../models/TaxDetail';
 import { Currency } from '../models/Currency';
 import { DSC } from '../models/DSC';
 import EmailTemplate from '../models/EmailTemplate';
+import { Expense } from '../models/Expense';
+import { ExpenseSettlement } from '../models/ExpenseSettlement';
 
 
 /**
@@ -53,6 +55,8 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         Currency: getTenantModel(req, 'Currency', Currency),
         DSC: getTenantModel(req, 'DSC', DSC),
         EmailTemplate: getTenantModel(req, 'EmailTemplate', EmailTemplate),
+        Expense: getTenantModel(req, 'Expense', Expense),
+        ExpenseSettlement: getTenantModel(req, 'ExpenseSettlement', ExpenseSettlement),
     };
 
 
