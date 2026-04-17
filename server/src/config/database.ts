@@ -5,20 +5,31 @@ import { tenantPlugin } from '../utils/tenantPlugin';
 // This must happen before any mongoose.model() calls occur in the application.
 mongoose.plugin(tenantPlugin);
 
-export const connectDB = async (): Promise<void> => {
+export const connectDB = async (retryOffset = 0): Promise<void> => {
+    const maxRetries = 5;
     try {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ca-office';
 
+        console.log(`🔌 Attempting MongoDB connection (Attempt ${retryOffset + 1}/${maxRetries})...`);
         await mongoose.connect(mongoUri, {
-            maxPoolSize: 10,           // Allow up to 10 concurrent DB connections
-            serverSelectionTimeoutMS: 30000, // Wait longer for primary selection (common for Atlas/slow networks)
-            socketTimeoutMS: 45000,    // Close sockets after 45s of inactivity
+            maxPoolSize: 10,           
+            serverSelectionTimeoutMS: 30000, 
+            socketTimeoutMS: 45000,
+            heartbeatFrequencyMS: 10000, // Check health every 10s
         });
 
         console.log('✅ MongoDB connected successfully');
     } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        console.error('TIP: Check if your current IP Address is whitelisted in MongoDB Atlas.');
+        console.error(`❌ MongoDB connection error (Attempt ${retryOffset + 1}):`, error);
+        
+        if (retryOffset < maxRetries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, retryOffset), 10000); // Exponential backoff
+            console.log(`🕒 Retrying in ${delay / 1000}s...`);
+            await new Promise(res => setTimeout(res, delay));
+            return connectDB(retryOffset + 1);
+        }
+
+        console.error('CRITICAL: Max retry attempts reached. Check if your current IP Address is whitelisted in MongoDB Atlas.');
         process.exit(1);
     }
 };

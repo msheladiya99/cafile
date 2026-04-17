@@ -199,3 +199,19 @@ const shutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
+
+// Auto-Restart / Resilience: Catch all unhandled process failures
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 [CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    // In production, we log this and might restart. In dev, we log it.
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('💥 [CRITICAL] Uncaught Exception:', error.message);
+    console.error(error.stack);
+    
+    // Attempt graceful shutdown before exiting so a process manager (PM2/Nodemon) can restart
+    shutdown('UNCAUGHT_EXCEPTION').then(() => {
+        process.exit(1);
+    }).catch(() => process.exit(1));
+});
