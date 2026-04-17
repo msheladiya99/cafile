@@ -252,8 +252,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
                 password: finalPassword
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create staff error:', error);
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.username) {
+            return res.status(400).json({ message: `Username '${error.keyValue.username}' is already taken. Please enter a different username or leave it blank to auto-generate.` });
+        }
         res.status(500).json({ message: 'Server error' });
     }
 });

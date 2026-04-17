@@ -1087,7 +1087,7 @@ router.get('/users', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
         const firmId = req.firmId || req.user?.firmId;
 
         const users = await User.find({ role: { $ne: 'CLIENT' }, firmId })
-            .select('_id username name email role')
+            .select('_id username name firstName lastName email role')
             .sort({ name: 1 })
             .lean();
         res.json(users);
