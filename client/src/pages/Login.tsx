@@ -37,6 +37,12 @@ export const Login: React.FC = () => {
     const [loadingMessage, setLoadingMessage] = useState('Signing in...');
     const [firm, setFirm] = useState<{ firmName: string; logo?: string; status: string } | null>(null);
 
+    const prefetchInBackground = (queries: Array<{ queryKey: readonly string[]; queryFn: () => Promise<unknown> }>) => {
+        Promise.all(
+            queries.map(({ queryKey, queryFn }) => queryClient.prefetchQuery({ queryKey: [...queryKey], queryFn }))
+        ).catch(err => console.error('Prefetch error:', err));
+    };
+
     React.useEffect(() => {
         if (subdomain) {
             api.get('/firm/public')
@@ -78,33 +84,39 @@ export const Login: React.FC = () => {
             queryClient.clear();
             login(data.token, data.user);
 
-            // 3. Background prefetching (don't block navigation)
-            const prefetchPromises: Promise<unknown>[] = [];
-             if (data.user.role === 'SUPER_ADMIN') {
-                setLoadingMessage('Fetching global analytics...');
-                prefetchPromises.push(queryClient.prefetchQuery({
+            // 3. Load critical first-screen data before navigation so the dashboard opens populated
+            if (data.user.role === 'SUPER_ADMIN') {
+                setLoadingMessage('Loading dashboard...');
+                await queryClient.ensureQueryData({
                     queryKey: ['super-admin-dashboard'],
                     queryFn: async () => {
                         const res = await api.get('/super-admin/dashboard');
                         return res.data;
                     }
-                }));
+                });
             } else if (['ADMIN', 'MANAGER', 'STAFF', 'INTERN'].includes(data.user.role)) {
-                setLoadingMessage('Loading firm workspace...');
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['firm'], queryFn: firmService.getFirm }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['settings'], queryFn: settingsService.getSettings }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['clients'], queryFn: adminService.getClients }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['upcoming-reminders'], queryFn: reminderService.getUpcomingReminders }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['admin-dashboard-stats'], queryFn: adminService.getDashboardStats }));
+                setLoadingMessage('Loading dashboard...');
+                await Promise.all([
+                    queryClient.ensureQueryData({ queryKey: ['firm'], queryFn: firmService.getFirm }),
+                    queryClient.ensureQueryData({ queryKey: ['settings'], queryFn: settingsService.getSettings }),
+                    queryClient.ensureQueryData({ queryKey: ['admin-dashboard-stats'], queryFn: adminService.getDashboardStats }),
+                ]);
+
+                prefetchInBackground([
+                    { queryKey: ['clients'], queryFn: adminService.getClients },
+                    { queryKey: ['upcoming-reminders'], queryFn: reminderService.getUpcomingReminders },
+                ]);
             } else if (data.user.role === 'CLIENT') {
-                setLoadingMessage('Accessing client portal...');
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['firm'], queryFn: firmService.getFirm }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-stats'], queryFn: clientService.getStats }));
-                prefetchPromises.push(queryClient.prefetchQuery({ queryKey: ['client-reminders'], queryFn: clientService.getReminders }));
+                setLoadingMessage('Loading dashboard...');
+                await Promise.all([
+                    queryClient.ensureQueryData({ queryKey: ['firm'], queryFn: firmService.getFirm }),
+                    queryClient.ensureQueryData({ queryKey: ['client-stats'], queryFn: clientService.getStats }),
+                ]);
+
+                prefetchInBackground([
+                    { queryKey: ['client-reminders'], queryFn: clientService.getReminders },
+                ]);
             }
-            
-            // Start prefetching in background
-            Promise.all(prefetchPromises).catch(err => console.error('Prefetch error:', err));
 
             // 4. Instant navigation - AppRoutes will handle most of this via context, but explicit navigate ensures it
             if (data.user.role === 'SUPER_ADMIN') {

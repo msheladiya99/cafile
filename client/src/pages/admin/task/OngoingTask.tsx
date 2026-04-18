@@ -469,7 +469,7 @@ export const OngoingTask: React.FC = () => {
                                         </ListItem>
                                     ))}
                                     {totalCheck === 0 && (
-                                        <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', py: 1 }}>
+                                        <Typography variant="body2" color="text.disabled" sx={{ py: 1 }}>
                                             No checklist items for this task.
                                         </Typography>
                                     )}
@@ -653,7 +653,7 @@ export const OngoingTask: React.FC = () => {
                             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 1.5 }} key={label}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>{label}</Typography>
                                 <Select size="small" fullWidth displayEmpty value={value} onChange={e => set(e.target.value)} sx={{ mt: 0.5, borderRadius: '12px' }}>
-                                    <MenuItem value=""><em>All {label}s</em></MenuItem>
+                                    <MenuItem value="">All {label}s</MenuItem>
                                     {items.map((item: { v: string; l: string }) => <MenuItem key={item.v} value={item.v}>{item.l}</MenuItem>)}
                                 </Select>
                             </Grid>

@@ -504,19 +504,48 @@ export const EmpTaskSchedule: React.FC = () => {
                     </Grid>
 
                     {/* Action Buttons */}
-                    <Grid size={{ xs: 12 }}>
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                            <Button variant="outlined" color="error" startIcon={<ClearIcon />} onClick={handleClear} sx={{ textTransform: 'none', borderRadius: '8px' }}>
+                    <Grid size={12}>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            gap: 1.5, 
+                            justifyContent: 'flex-end', 
+                            mt: 1,
+                            pt: 2,
+                            borderTop: '1px solid #f1f5f9'
+                        }}>
+                            <Button 
+                                variant="outlined" 
+                                color="error" 
+                                startIcon={<ClearIcon fontSize="small" />} 
+                                onClick={handleClear} 
+                                sx={{ 
+                                    textTransform: 'none', 
+                                    borderRadius: '8px', 
+                                    px: 3,
+                                    height: 36,
+                                    fontWeight: 600
+                                }}
+                            >
                                 Clear
                             </Button>
                             <Button
                                 variant="contained"
-                                startIcon={loadingTasks ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
+                                startIcon={loadingTasks ? <CircularProgress size={16} color="inherit" /> : <SearchIcon fontSize="small" />}
                                 onClick={handleSearch}
                                 disabled={loadingTasks}
-                                sx={{ textTransform: 'none', borderRadius: '8px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', boxShadow: 'none' }}
+                                sx={{ 
+                                    textTransform: 'none', 
+                                    borderRadius: '8px', 
+                                    px: 3,
+                                    height: 36,
+                                    fontWeight: 600,
+                                    bgcolor: '#667eea', 
+                                    color: '#fff',
+                                    '&:hover': { bgcolor: '#5a67d8' },
+                                    boxShadow: '0 4px 12px rgba(102,126,234,0.2)' 
+                                }}
                             >
-                                Search
+                                {loadingTasks ? 'Searching...' : 'Search'}
                             </Button>
                         </Box>
                     </Grid>

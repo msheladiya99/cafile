@@ -128,12 +128,85 @@ const LoadingScreen = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMount: 'always',
       retry: 1,
-      staleTime: 2 * 60 * 1000,    // 2 min: serve cached data without re-fetching
-      gcTime: 10 * 60 * 1000,      // 10 min: keep unused data in memory
+      staleTime: 15 * 1000,
+      gcTime: 10 * 60 * 1000,
     }
   },
+});
+
+const liveQueryDefaults = {
+  refetchInterval: 15 * 1000,
+  refetchIntervalInBackground: true,
+  staleTime: 5 * 1000,
+};
+
+[
+  ['tasks'],
+  ['tasksApproval'],
+  ['tasksApproved'],
+  ['tasksUpdate'],
+  ['tasksCycle'],
+  ['tasksCompliance'],
+  ['transferPreview'],
+  ['timesheet'],
+  ['attendance'],
+  ['reminders'],
+  ['upcoming-reminders'],
+  ['invoices'],
+  ['invoice-services'],
+  ['monthly-report'],
+  ['admin-dashboard-stats'],
+  ['admin-dashboard'],
+  ['dashboardStats'],
+  ['dashboard-stats'],
+  ['client-dashboard'],
+  ['client-stats'],
+  ['client-reminders'],
+  ['clientLedger'],
+  ['subscription-dashboard'],
+  ['dsc'],
+  ['dsc-dashboard'],
+  ['loginLogs'],
+  ['form108'],
+  ['freeEmployees'],
+  ['freeClients'],
+  ['system-health'],
+  ['security-events'],
+  ['super-admin-dashboard'],
+  ['sa-firms'],
+  ['sa-firm'],
+  ['sa-addons'],
+  ['superadmin_plans'],
+].forEach((queryKey) => {
+  queryClient.setQueryDefaults(queryKey, liveQueryDefaults);
+});
+
+const referenceQueryDefaults = {
+  staleTime: 60 * 1000,
+};
+
+[
+  ['clients'],
+  ['clientGroups'],
+  ['staff'],
+  ['staffUsers'],
+  ['taskMasters'],
+  ['taskCategories'],
+  ['billingServices'],
+  ['multiFirms'],
+  ['firm'],
+  ['settings'],
+  ['itStatus'],
+  ['subMaster'],
+  ['currencies'],
+  ['taxDetails'],
+  ['firmDocuments'],
+].forEach((queryKey) => {
+  queryClient.setQueryDefaults(queryKey, referenceQueryDefaults);
 });
 
 const theme = createTheme({
