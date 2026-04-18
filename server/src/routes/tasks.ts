@@ -242,7 +242,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
         // Apply shared filters
         if (status) {
-            filter.status = status;
+            if (Array.isArray(status)) {
+                filter.status = { $in: status };
+            } else {
+                filter.status = status;
+            }
         }
         if (priority) {
             filter.priority = priority;
@@ -251,7 +255,28 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             filter.clientId = clientId;
         }
         if (clientGroupId) {
-            filter.clientGroupId = clientGroupId;
+            const { Client } = (req as any).models;
+            const clientsInGroup = await Client.find({ groupName: clientGroupId, firmId: req.firmId }).select('_id');
+            const clientIds = clientsInGroup.map((c: any) => c._id);
+            
+            const groupFilter = {
+                $or: [
+                    { clientGroupId: clientGroupId },
+                    { clientId: { $in: clientIds } }
+                ]
+            };
+
+            if (filter.$or) {
+                // If role-based isolation is active, we must wrap both in an $and
+                const existingOr = filter.$or;
+                delete filter.$or;
+                filter.$and = [
+                    { $or: existingOr },
+                    groupFilter
+                ];
+            } else {
+                filter.$or = groupFilter.$or;
+            }
         }
         if (taskMasterId) {
             filter.taskMasterId = taskMasterId;
@@ -260,7 +285,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             filter.frequency = frequency;
         }
         if (reportingManager) {
-            filter.reportingManager = reportingManager;
+            if (filter.$or || filter.$and) {
+                // If isolation is already active, we don't overwrite it
+                // unless we want to further restrict it
+            } else {
+                filter.reportingManager = reportingManager;
+            }
         }
         if (overdue === 'true') {
             filter.targetDate = { $lt: new Date() };
@@ -1005,30 +1035,46 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
 // ============================================
 // ALL TASK UPDATE — Bulk status + time entry
 // ============================================
+// ============================================
+// ALL TASK UPDATE — Bulk status + time entry
+// ============================================
 router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
     try {
-        const { Task } = (req as any).models;
+        const { Task, Invoice, Client: ClientApp, MultiFirm, FirmMaster } = (req as any).models;
         const { employeeId, clientId, taskMasterId, year, status, timeSpentMinutes, description, place, subtaskName, date } = req.body;
 
-
-        if (!employeeId || !clientId || !taskMasterId) {
-            res.status(400).json({ message: 'Employee, Client, and Task are required' });
+        if (!employeeId || !taskMasterId) {
+            res.status(400).json({ message: 'Employee and Task are required' });
             return;
         }
 
-        // Find matching task
+        // Find matching task — handle both single client and group tasks
         const filter: any = {
             firmId: req.firmId,
-            clientId,
             taskMasterId,
             assignedTo: employeeId,
             status: { $nin: ['DONE', 'CANCELLED'] }
         };
-        if (year) filter.year = year;
 
-        const task = await Task.findOne(filter);
+        if (clientId) {
+            filter.clientId = clientId;
+        }
+        if (year) {
+            filter.year = year;
+        }
+
+        let task = await Task.findOne(filter);
+
+        // If not found by clientId, try finding by clientGroupId if the user didn't specify a client
+        // or if the task is a group-level task
+        if (!task && !clientId) {
+            // This case handles broader group updates if we add group selection later
+        }
+
         if (!task) {
-            res.status(404).json({ message: 'No active task found for the selected Employee, Client, and Task combination. Make sure the task is assigned to this employee.' });
+            res.status(404).json({ 
+                message: 'No active task found. Please ensure:\n1. The task is assigned to the selected employee.\n2. The task is not already marked as DONE or CANCELLED.' 
+            });
             return;
         }
 
@@ -1038,9 +1084,48 @@ router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: Auth
             if (validStatuses.includes(status as TaskStatus)) {
                 task.status = status as TaskStatus;
                 if (status === 'IN_PROCESS' && !task.startDate) task.startDate = new Date();
-                if (status === 'DONE' && !task.completedAt) {
-                    task.completedAt = new Date();
+                
+                if (status === 'DONE') {
+                    if (!task.completedAt) task.completedAt = new Date();
                     task.progressPercentage = 100;
+
+                    // Trigger Auto-Bill logic for bulk update matches
+                    try {
+                        const existingInvoice = await Invoice.findOne({ notes: `auto:task:${task._id}` });
+                        if (!existingInvoice && (task.clientId || task.clientGroupId)) {
+                            // Simplified bill generation for bulk (reuse existing logic patterns)
+                            let invoicePrefix = 'INV-';
+                            const fm = await FirmMaster.findOne({ firmId: task.firmId }).lean();
+                            if (fm?.invoicePrefix) invoicePrefix = fm.invoicePrefix;
+
+                            const invCount = await Invoice.countDocuments({ firmId: task.firmId });
+                            const invoiceNumber = `${invoicePrefix}${new Date().getFullYear()}-${String(invCount + 1).padStart(4, '0')}`;
+                            
+                            const newInvoice = new Invoice({
+                                invoiceNumber,
+                                billingType: task.clientGroupId ? 'CLIENT_GROUP' : 'SINGLE_CLIENT',
+                                clientId: task.clientId,
+                                clientGroupId: task.clientGroupId,
+                                firmId: task.firmId,
+                                items: [{
+                                    name: `Task Completion: ${task.title}`,
+                                    description: task.description || 'Auto-generated from All Task Update',
+                                    quantity: 1,
+                                    unitPrice: task.billingAmount || 0,
+                                    amount: task.billingAmount || 0
+                                }],
+                                subtotal: task.billingAmount || 0,
+                                totalAmount: task.billingAmount || 0,
+                                balanceAmount: task.billingAmount || 0,
+                                status: (task.billingAmount || 0) > 0 ? 'PENDING' : 'PAID',
+                                notes: `auto:task:${task._id}`,
+                                createdBy: req.user!.userId
+                            });
+                            await newInvoice.save();
+                        }
+                    } catch (billErr) {
+                        console.error('[BulkUpdate-AutoBill] Failed:', billErr);
+                    }
                 }
             }
         }
@@ -1054,23 +1139,22 @@ router.post('/bulk-update', requireRoles(['ADMIN', 'MANAGER']), async (req: Auth
                 endTime: new Date(entryDate.getTime() + minutes * 60000),
                 duration: minutes
             });
-            (task as any).actualTimeSpent = (task.actualTimeSpent || 0) + minutes;
+            task.actualTimeSpent = (task.actualTimeSpent || 0) + minutes;
         }
 
-        // Add description as a comment if provided
+        // Add description as a comment
         if (description) {
             task.comments.push({
                 id: uuidv4(),
-                userId: req.user!.userId as any,
-                userName: (req.user as any).username || (req.user as any).name || 'Admin',
+                userId: req.user!.userId,
+                userName: (req.user as any).name || (req.user as any).username || 'Admin',
                 text: `[${place || 'Office'}${subtaskName ? ' | ' + subtaskName : ''}] ${description}`,
                 createdAt: new Date()
-            } as any);
+            });
         }
 
         await task.save();
-
-        res.json({ message: `Task updated successfully`, taskId: task._id });
+        res.json({ message: `Task "${task.title}" updated successfully`, taskId: task._id });
     } catch (error) {
         console.error('Bulk update task error:', error);
         res.status(500).json({ message: 'Server error' });

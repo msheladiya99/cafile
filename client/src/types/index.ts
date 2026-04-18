@@ -61,6 +61,12 @@ export interface Client {
     updatedAt?: string;
 }
 
+export interface ClientGroup {
+    _id: string;
+    groupName: string;
+    description?: string;
+}
+
 export interface CreateClientData {
     name: string;
     email: string;
@@ -318,6 +324,7 @@ export interface CreateTaskData {
     taskMasterId?: string;
     year?: string;
     department?: string;
+    status?: TaskStatus;
 }
 
 export interface TaskAnalytics {

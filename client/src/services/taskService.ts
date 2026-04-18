@@ -4,7 +4,7 @@ import type { Task, CreateTaskData, TaskStatus, TaskAnalytics } from '../types';
 export const taskService = {
     // Get all tasks with optional filters
     getTasks: async (filters?: {
-        status?: TaskStatus;
+        status?: TaskStatus | TaskStatus[];
         priority?: string;
         assignedTo?: string;
         clientId?: string;
@@ -21,7 +21,11 @@ export const taskService = {
         if (filters) {
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null) {
-                    params.append(key, value.toString());
+                    if (Array.isArray(value)) {
+                        value.forEach(v => params.append(key, v.toString()));
+                    } else {
+                        params.append(key, value.toString());
+                    }
                 }
             });
         }
