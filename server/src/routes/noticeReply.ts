@@ -87,7 +87,7 @@ async function generateWithOpenRouter(noticeText: string, clientDetails: string)
 
     const model = process.env.OPENROUTER_NOTICE_MODEL
         || process.env.OPENROUTER_TAX_MODEL
-        || 'google/gemini-flash-1.5';
+        || 'openai/gpt-4o-mini';
 
     const userPrompt = `Analyze the following tax notice and generate a complete professional reply:
 
@@ -193,7 +193,7 @@ async function extractTextWithAI(buffer: Buffer, mimetype: string): Promise<stri
     if (!client) throw new Error('OpenRouter not configured');
 
     // Use a vision-capable model for OCR
-    const visionModel = process.env.OPENROUTER_OCR_MODEL || 'google/gemini-flash-1.5';
+    const visionModel = process.env.OPENROUTER_OCR_MODEL || 'openai/gpt-4o-mini';
 
     const base64 = buffer.toString('base64');
     const dataUrl = `data:${mimetype};base64,${base64}`;
@@ -243,7 +243,7 @@ router.post(
             let reply = '';
             const modelUsed = process.env.OPENROUTER_NOTICE_MODEL
                 || process.env.OPENROUTER_TAX_MODEL
-                || 'google/gemini-flash-1.5';
+                || 'openai/gpt-4o-mini';
 
             console.log(`[Notice Reply] Using OpenRouter model: ${modelUsed}`);
 
