@@ -72,9 +72,8 @@ const EmailSettings = lazy(() => import('./pages/admin/settings/EmailSettings').
 const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').then(module => ({ default: module.BankStatementTool })));
 const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHistory'));
 const TaxNoticeReplyEngine = lazy(() => import('./pages/admin/TaxNoticeReplyEngine').then(module => ({ default: module.TaxNoticeReplyEngine })));
-const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement.tsx').then(module => ({ default: module.ExpenseManagement })));
+const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement').then(module => ({ default: module.ExpenseManagement })));
 const NoticeReplyGenerator = lazy(() => import('./pages/admin/notices/NoticeReplyGenerator'));
-const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement.tsx').then(module => ({ default: module.ExpenseManagement })));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
