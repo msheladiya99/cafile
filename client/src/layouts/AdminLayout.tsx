@@ -23,7 +23,6 @@ import {
     Email as EmailIcon,
     AccountBalance as BankIcon,
     Gavel as GavelIcon,
-    AccountBalanceWallet as WalletIcon,
     AccountBalanceWallet as WalletIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
