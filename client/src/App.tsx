@@ -71,7 +71,6 @@ const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(modu
 const EmailSettings = lazy(() => import('./pages/admin/settings/EmailSettings').then(module => ({ default: module.EmailSettings })));
 const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').then(module => ({ default: module.BankStatementTool })));
 const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHistory'));
-const TaxNoticeReplyEngine = lazy(() => import('./pages/admin/TaxNoticeReplyEngine').then(module => ({ default: module.TaxNoticeReplyEngine })));
 const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement').then(module => ({ default: module.ExpenseManagement })));
 const NoticeReplyGenerator = lazy(() => import('./pages/admin/notices/NoticeReplyGenerator'));
 
@@ -343,10 +342,8 @@ const AppRoutes: React.FC = () => {
           <Route path="email-settings" element={<EmailSettings />} />
           <Route path="bank-statement" element={<BankStatementTool />} />
           <Route path="bank-statement/history" element={<BankStatementHistory />} />
-          <Route path="tax-notice-engine" element={<TaxNoticeReplyEngine />} />
           <Route path="expenses" element={<ExpenseManagement />} />
           <Route path="notice-reply" element={<NoticeReplyGenerator />} />
-          <Route path="expenses" element={<ExpenseManagement />} />
         </Route>
 
         {/* Client Routes */}

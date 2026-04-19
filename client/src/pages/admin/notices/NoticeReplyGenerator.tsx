@@ -154,7 +154,7 @@ const NOTICE_TYPES = [
 type InputMode = 'text' | 'pdf';
 
 const NoticeReplyGenerator: React.FC = () => {
-    const { token } = useAuth() as any;
+    const { token } = useAuth();
 
     // Input mode
     const [inputMode, setInputMode] = useState<InputMode>('text');
@@ -203,11 +203,11 @@ const NoticeReplyGenerator: React.FC = () => {
         setExtracting(true);
 
         try {
-            const result = await extractTextFromFile(file, token);
+            const result = await extractTextFromFile(file, token || '');
             setExtractedText(result.text);
             setExtractMethod(result.method);
-        } catch (err: any) {
-            setError(err.message || 'Failed to extract text from file.');
+        } catch (err) {
+            setError((err as Error).message || 'Failed to extract text from file.');
             setUploadedFile(null);
         } finally {
             setExtracting(false);
@@ -235,12 +235,12 @@ const NoticeReplyGenerator: React.FC = () => {
         setError('');
         setReply('');
         try {
-            const result = await generateNoticeReply(activeNoticeText, clientDetails, token);
+            const result = await generateNoticeReply(activeNoticeText, clientDetails, token || '');
             setReply(result.reply);
             setProvider(result.provider);
             setTimeout(() => replyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-        } catch (err: any) {
-            setError(err.message || 'Failed to generate reply. Please try again.');
+        } catch (err) {
+            setError((err as Error).message || 'Failed to generate reply. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -709,7 +709,7 @@ const NoticeReplyGenerator: React.FC = () => {
             <AnimatePresence>
                 {reply && (
                     <motion.div
-                        ref={replyRef as any}
+                        ref={replyRef}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
@@ -780,5 +780,7 @@ const NoticeReplyGenerator: React.FC = () => {
         </Box>
     );
 };
+
+
 
 export default NoticeReplyGenerator;
