@@ -39,6 +39,7 @@ import subscriptionRoutes from './routes/subscriptions';
 import emailRoutes from './routes/email';
 import publicRoutes from './routes/public';
 import bankStatementRoutes from './routes/bankStatement';
+import noticeReplyRoutes from './routes/noticeReply';
 import expenseRoutes from './routes/expense';
 import expenseSettlementRoutes from './routes/expenseSettlement';
 import { startDSCCronJob } from './utils/dscCron';
