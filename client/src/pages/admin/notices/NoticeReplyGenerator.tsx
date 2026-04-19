@@ -16,6 +16,19 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Helper to get subdomain for multi-tenancy
+const getSubdomain = () => {
+    const host = window.location.hostname;
+    if (host.includes('localhost') || host.match(/^[\d.]+$/)) {
+        // Handle local dev (e.g., test.localhost:5173)
+        const parts = host.split('.');
+        return parts.length > 1 ? parts[0] : '';
+    }
+    const parts = host.split('.');
+    if (parts.length >= 3) return parts[0];
+    return '';
+};
+
 // ─── API: extract text from PDF/image ────────────────────────────────────────
 
 async function extractTextFromFile(
@@ -27,7 +40,10 @@ async function extractTextFromFile(
 
     const res = await fetch(`${API_BASE}/notice-reply/extract-text`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'X-Tenant-Id': getSubdomain(),
+        },
         body: formData,
     });
 
@@ -50,6 +66,7 @@ async function generateNoticeReply(
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            'X-Tenant-Id': getSubdomain(),
         },
         body: JSON.stringify({ noticeText, clientDetails }),
     });
