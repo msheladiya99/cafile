@@ -138,7 +138,7 @@ router.post(
             if (mimetype === 'application/pdf') {
                 // ── Step 1: Try pdf-parse (works on digital/text-based PDFs) ──
                 try {
-                    const data = await pdfParse(buffer);
+                    const data = await (pdfParse as any)(buffer);
                     extractedText = (data.text || '').trim();
                     console.log(`[NoticeReply] pdf-parse extracted ${extractedText.length} chars from ${originalname}`);
                 } catch (pdfErr: any) {
