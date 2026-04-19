@@ -42,7 +42,6 @@ import bankStatementRoutes from './routes/bankStatement';
 import noticeReplyRoutes from './routes/noticeReply';
 import expenseRoutes from './routes/expense';
 import expenseSettlementRoutes from './routes/expenseSettlement';
-import noticeReplyRoutes from './routes/noticeReply';
 import { startDSCCronJob } from './utils/dscCron';
 
 
