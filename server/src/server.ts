@@ -137,6 +137,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/bank-statement', bankStatementRoutes);
+app.use('/api/notice-reply', noticeReplyRoutes);
 app.use('/api/expense', expenseRoutes);
 app.use('/api/expense-settlement', expenseSettlementRoutes);
 
