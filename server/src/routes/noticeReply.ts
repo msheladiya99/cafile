@@ -3,6 +3,7 @@ import { authenticate, requireRoles, AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 import multer from 'multer';
 import fs from 'fs/promises';
+const pdfParse = require('pdf-parse');
 
 const router = Router();
 
@@ -137,7 +138,6 @@ router.post(
             if (mimetype === 'application/pdf') {
                 // ── Step 1: Try pdf-parse (works on digital/text-based PDFs) ──
                 try {
-                    const pdfParse = (await import('pdf-parse')).default;
                     const data = await pdfParse(buffer);
                     extractedText = (data.text || '').trim();
                     console.log(`[NoticeReply] pdf-parse extracted ${extractedText.length} chars from ${originalname}`);
