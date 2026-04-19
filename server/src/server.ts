@@ -42,6 +42,7 @@ import bankStatementRoutes from './routes/bankStatement';
 import noticeReplyRoutes from './routes/noticeReply';
 import expenseRoutes from './routes/expense';
 import expenseSettlementRoutes from './routes/expenseSettlement';
+import noticeReplyRoutes from './routes/noticeReply';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -140,6 +141,7 @@ app.use('/api/bank-statement', bankStatementRoutes);
 app.use('/api/notice-reply', noticeReplyRoutes);
 app.use('/api/expense', expenseRoutes);
 app.use('/api/expense-settlement', expenseSettlementRoutes);
+app.use('/api/notice-reply', noticeReplyRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

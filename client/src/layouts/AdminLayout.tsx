@@ -22,8 +22,13 @@ import {
     GppGood as GppGoodIcon,
     Email as EmailIcon,
     AccountBalance as BankIcon,
+<<<<<<< HEAD
     Gavel as GavelIcon,
     AccountBalanceWallet as WalletIcon,
+=======
+    AccountBalanceWallet as WalletIcon,
+    Gavel as GavelIcon
+>>>>>>> a0839db (ai-notice-auto replay complete)
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -161,6 +166,7 @@ export const AdminLayout: React.FC = () => {
         { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
         { text: 'AI Tax Notice Reply', icon: <GavelIcon />, path: '/admin/tax-notice-engine' },
         { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses' },
+        { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply' },
     ], [isAdmin]);
 
 
