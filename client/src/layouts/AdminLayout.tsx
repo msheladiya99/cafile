@@ -23,7 +23,8 @@ import {
     Email as EmailIcon,
     AccountBalance as BankIcon,
     Gavel as GavelIcon,
-    AccountBalanceWallet as WalletIcon
+    AccountBalanceWallet as WalletIcon,
+    AutoAwesome as AssistantIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -161,7 +162,9 @@ export const AdminLayout: React.FC = () => {
         { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
         { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses' },
         { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply' },
+        { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant' },
     ], [isAdmin]);
+
 
 
     const handleDrawerToggle = () => {

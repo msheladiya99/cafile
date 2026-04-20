@@ -43,6 +43,7 @@ import noticeReplyRoutes from './routes/noticeReply';
 import expenseRoutes from './routes/expense';
 import expenseSettlementRoutes from './routes/expenseSettlement';
 import taxNoticeRoutes from './routes/taxNotice';
+import caAssistantRoutes from './routes/caAssistant';
 import { startDSCCronJob } from './utils/dscCron';
 
 
@@ -143,6 +144,8 @@ app.use('/api/notice-reply', noticeReplyRoutes);
 app.use('/api/expense', expenseRoutes);
 app.use('/api/expense-settlement', expenseSettlementRoutes);
 app.use('/api/tax-notice', taxNoticeRoutes);
+app.use('/api/assistant', caAssistantRoutes);
+
 
 
 // Health check
