@@ -73,6 +73,7 @@ const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').t
 const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHistory'));
 const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement').then(module => ({ default: module.ExpenseManagement })));
 const NoticeReplyGenerator = lazy(() => import('./pages/admin/notices/NoticeReplyGenerator'));
+const CAAssistant = lazy(() => import('./pages/admin/assistant/CAAssistant'));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -344,6 +345,7 @@ const AppRoutes: React.FC = () => {
           <Route path="bank-statement/history" element={<BankStatementHistory />} />
           <Route path="expenses" element={<ExpenseManagement />} />
           <Route path="notice-reply" element={<NoticeReplyGenerator />} />
+          <Route path="assistant" element={<CAAssistant />} />
         </Route>
 
         {/* Client Routes */}
