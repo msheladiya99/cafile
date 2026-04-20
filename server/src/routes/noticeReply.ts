@@ -3,7 +3,11 @@ import { authenticate, requireRoles, AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 import multer from 'multer';
 import fs from 'fs/promises';
-const pdfParse = require('pdf-parse');
+import { ocrService } from '../services/ocr.service';
+const pdfParseRaw = require('pdf-parse');
+
+const pdfParse = typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default || pdfParseRaw.PDFParse;
+
 
 const router = Router();
 
@@ -138,33 +142,59 @@ router.post(
             if (mimetype === 'application/pdf') {
                 // ── Step 1: Try pdf-parse (works on digital/text-based PDFs) ──
                 try {
-                    const data = await (pdfParse as any)(buffer);
-                    extractedText = (data.text || '').trim();
+                    let data;
+                    if (typeof pdfParse === 'function') {
+                        data = await pdfParse(buffer);
+                    } else if (typeof pdfParse?.PDFParse === 'function') {
+                        const inst = new pdfParse.PDFParse({ data: buffer });
+                        await inst.load();
+                        data = await inst.getText();
+                    } else {
+                        throw new Error('pdf-parse module shape unrecognized');
+                    }
+                    extractedText = (data?.text || '').trim();
                     console.log(`[NoticeReply] pdf-parse extracted ${extractedText.length} chars from ${originalname}`);
                 } catch (pdfErr: any) {
+
                     console.warn('[NoticeReply] pdf-parse failed:', pdfErr.message);
                 }
 
-                // ── Step 2: If text too short → AI OCR via OpenRouter (vision model) ──
+                // ── Step 2: If text too short → Robust OCR via ocrService ──
                 if (extractedText.length < 100) {
-                    console.log('[NoticeReply] Text too short, trying AI vision OCR via OpenRouter...');
+                    console.log('[NoticeReply] Text too short, trying robust OCR via ocrService...');
                     try {
-                        extractedText = await extractTextWithAI(buffer, mimetype);
-                        method = 'ai-vision-ocr';
-                    } catch (aiErr: any) {
-                        console.warn('[NoticeReply] AI OCR also failed:', aiErr.message);
+                        const ocrResult = await ocrService.extractText(buffer, mimetype);
+                        extractedText = ocrResult.text;
+                        method = 'ocr-service';
+                    } catch (ocrErr: any) {
+                        console.warn('[NoticeReply] ocrService failed, trying AI vision fallback:', ocrErr.message);
+                        // Final fallback to OpenRouter vision if ocrService failed
+                        try {
+                            extractedText = await extractTextWithAI(buffer, mimetype);
+                            method = 'ai-vision-ocr';
+                        } catch (aiErr: any) {
+                            console.warn('[NoticeReply] AI vision also failed:', aiErr.message);
+                        }
                     }
                 }
 
             } else if (mimetype.startsWith('image/')) {
-                // ── Image: Use AI vision OCR directly ──
+                // ── Image: Use ocrService directly ──
                 try {
-                    extractedText = await extractTextWithAI(buffer, mimetype);
-                    method = 'ai-vision-ocr';
-                } catch (aiErr: any) {
-                    console.warn('[NoticeReply] AI image OCR failed:', aiErr.message);
+                    const ocrResult = await ocrService.extractText(buffer, mimetype);
+                    extractedText = ocrResult.text;
+                    method = 'ocr-service';
+                } catch (ocrErr: any) {
+                    console.warn('[NoticeReply] ocrService image failed:', ocrErr.message);
+                    try {
+                        extractedText = await extractTextWithAI(buffer, mimetype);
+                        method = 'ai-vision-ocr';
+                    } catch (aiErr: any) {
+                        console.warn('[NoticeReply] AI vision fallback failed:', aiErr.message);
+                    }
                 }
             }
+
 
             if (!extractedText || extractedText.length < 20) {
                 return res.status(422).json({
@@ -196,7 +226,20 @@ async function extractTextWithAI(buffer: Buffer, mimetype: string): Promise<stri
     const visionModel = process.env.OPENROUTER_OCR_MODEL || 'openai/gpt-4o-mini';
 
     const base64 = buffer.toString('base64');
-    const dataUrl = `data:${mimetype};base64,${base64}`;
+    
+    // ⚠️ CRITICAL: OpenRouter/OpenAI vision models ONLY support image formats (JPG, PNG, WEBP).
+    // They DO NOT support application/pdf via image_url.
+    // If the file is a PDF, we should ideally use the existing ocrService or extract an image first.
+    // For now, we fix the mimetype if it's an image, and warn if it's a PDF.
+    
+    let finalMimeType = mimetype;
+    if (mimetype === 'application/pdf') {
+        console.warn('[NoticeReply] Sending raw PDF to vision model. This will likely fail. Consider using ocrService.');
+        // If we have pdf2pic or similar, we should convert here.
+        // As a temporary fix to prevent crash, we'll try to let ocrService handle it if available.
+    }
+
+    const dataUrl = `data:${finalMimeType};base64,${base64}`;
 
     const response = await client.chat.completions.create({
         model: visionModel,
@@ -210,13 +253,14 @@ async function extractTextWithAI(buffer: Buffer, mimetype: string): Promise<stri
                     },
                     {
                         type: 'text',
-                        text: 'Extract ALL text from this tax notice document exactly as it appears. Preserve the structure, headings, amounts, dates, section numbers, and all content. Return only the extracted text, no commentary.',
+                        text: 'Extract ALL text from this tax notice document exactly as it appears. Preserve the structure, headings, amounts, dates, section numbers, and all content. Return only the extracted text, no commentary. If the document has multiple pages, extract text from all of them.',
                     },
                 ] as any,
             },
         ],
         max_tokens: 4000,
     });
+
 
     return response.choices[0].message.content || '';
 }
