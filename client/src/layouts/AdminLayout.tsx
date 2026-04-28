@@ -160,7 +160,6 @@ export const AdminLayout: React.FC = () => {
                 },
                 { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail', perm: 'task.view' },
                 { text: 'Task Information', path: '/admin/tasks/information', perm: 'task.information' },
-                { text: 'All Task Update', path: '/admin/tasks/all-update', perm: 'task.view' },
                 { text: 'Ongoing Task', path: '/admin/tasks/ongoing', perm: 'task.view' },
                 { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
             ]

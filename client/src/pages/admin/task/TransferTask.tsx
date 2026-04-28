@@ -112,9 +112,16 @@ export const TransferTask: React.FC = () => {
     const handleTransfer = () => {
         if (!transferFrom || !transferTo) return toast.error('Please select both employees');
         if (transferFrom === transferTo) return toast.error('Source and destination cannot be the same');
-        if (previewTasks.length === 0) return toast.error('No tasks found to transfer');
+        
+        if (previewLoaded && previewTasks.length === 0) {
+            return toast.error('No tasks found to transfer');
+        }
 
-        if (!window.confirm(`Transfer ${previewTasks.length} task(s)?`)) return;
+        const confirmMsg = previewLoaded 
+            ? `Transfer ${previewTasks.length} task(s)?` 
+            : `Transfer all matching tasks based on your selected filters?`;
+
+        if (!window.confirm(confirmMsg)) return;
 
         transferMutation.mutate({
             fromUserId: transferFrom,
@@ -298,7 +305,7 @@ export const TransferTask: React.FC = () => {
                                     <Button 
                                         variant="contained" 
                                         onClick={handleTransfer}
-                                        disabled={!transferFrom || !transferTo || previewTasks.length === 0 || transferMutation.isPending}
+                                        disabled={!transferFrom || !transferTo || transferMutation.isPending || (previewLoaded && previewTasks.length === 0)}
                                         startIcon={<Send size={18} />}
                                         sx={{ 
                                             borderRadius: '10px', 
