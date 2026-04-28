@@ -1412,7 +1412,8 @@ router.patch('/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest
         const allowedUpdates = [
             'title', 'description', 'category', 'assignedTo', 'clientId',
             'clientGroupId', 'billingType',
-            'priority', 'targetDate', 'estimatedHours', 'tags', 'firmId', 'billingAmount'
+            'priority', 'targetDate', 'estimatedHours', 'tags', 'firmId', 'billingAmount',
+            'reportingManager', 'department', 'year'
         ];
 
         allowedUpdates.forEach(field => {

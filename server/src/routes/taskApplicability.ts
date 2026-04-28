@@ -85,7 +85,10 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                             createdBy,
                             frequency: taskMaster.frequency || 'One Time',
                             department: department || taskMaster.department
-                        } 
+                        },
+                        $setOnInsert: {
+                            lastGeneratedDate: targetDate
+                        }
                     },
                     { upsert: true, new: true }
                 );
@@ -133,7 +136,10 @@ router.post('/apply', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthReques
                             createdBy,
                             frequency: taskMaster.frequency || 'One Time',
                             department: department || taskMaster.department
-                        } 
+                        },
+                        $setOnInsert: {
+                            lastGeneratedDate: targetDate
+                        }
                     },
                     { upsert: true, new: true }
                 );

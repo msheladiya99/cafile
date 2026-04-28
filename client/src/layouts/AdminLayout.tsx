@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     Box, Drawer, AppBar, Toolbar, List, Typography, IconButton, 
     ListItem, ListItemButton, ListItemIcon, ListItemText, 
-    useMediaQuery, Avatar, Collapse, useTheme
+    useMediaQuery, Avatar, Collapse, useTheme, Fab, Fade
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -24,7 +24,8 @@ import {
     AccountBalance as BankIcon,
     Gavel as GavelIcon,
     AccountBalanceWallet as WalletIcon,
-    AutoAwesome as AssistantIcon
+    AutoAwesome as AssistantIcon,
+    KeyboardArrowUp as UpIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -47,14 +48,25 @@ export const AdminLayout: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
+    const [showScroll, setShowScroll] = useState(false);
 
-    const companyName = 'CA Admin Panel';
+    useEffect(() => {
+        const checkScrollTop = () => {
+            if (!showScroll && window.scrollY > 300) {
+                setShowScroll(true);
+            } else if (showScroll && window.scrollY <= 300) {
+                setShowScroll(false);
+            }
+        };
+        window.addEventListener('scroll', checkScrollTop);
+        return () => window.removeEventListener('scroll', checkScrollTop);
+    }, [showScroll]);
 
-    const handleMenuToggle = (text: string) => {
-        setOpenMenus(prev => ({ ...prev, [text]: !prev[text] }));
+    const scrollTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-
+    const companyName = 'CA Admin Panel';
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -165,6 +177,38 @@ export const AdminLayout: React.FC = () => {
         { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant' },
     ], [isAdmin]);
 
+    const handleMenuToggle = React.useCallback((text: string) => {
+        setOpenMenus(prev => {
+            const isCurrentlyOpen = prev[text];
+            if (isCurrentlyOpen) {
+                return { ...prev, [text]: false };
+            }
+
+            const newOpenMenus = { ...prev };
+            
+            const toggleAndCloseSiblings = (items: MenuItemDef[]): boolean => {
+                const found = items.some(item => item.text === text);
+                if (found) {
+                    items.forEach(item => {
+                        if (item.text !== text && newOpenMenus[item.text]) {
+                            newOpenMenus[item.text] = false;
+                        }
+                    });
+                    return true;
+                }
+                for (const item of items) {
+                    if (item.children && toggleAndCloseSiblings(item.children)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            toggleAndCloseSiblings(menuItems);
+            newOpenMenus[text] = true;
+            return newOpenMenus;
+        });
+    }, [menuItems]);
 
 
     const handleDrawerToggle = () => {
@@ -472,6 +516,26 @@ export const AdminLayout: React.FC = () => {
                 <Toolbar sx={{ display: { md: 'none' } }} />
                 <Outlet />
             </Box>
+
+            <Fade in={showScroll}>
+                <Fab 
+                    color="primary" 
+                    size="small" 
+                    onClick={scrollTop}
+                    aria-label="scroll back to top"
+                    sx={{ 
+                        position: 'fixed', 
+                        bottom: 30, 
+                        right: 30, 
+                        zIndex: 1000,
+                        boxShadow: '0 4px 12px rgba(99,102,241,0.4)',
+                        bgcolor: '#6366f1',
+                        '&:hover': { bgcolor: '#4f46e5' }
+                    }}
+                >
+                    <UpIcon />
+                </Fab>
+            </Fade>
         </Box>
     );
 };

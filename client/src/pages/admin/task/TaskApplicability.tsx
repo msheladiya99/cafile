@@ -351,32 +351,28 @@ export const TaskApplicability: React.FC = () => {
                 </Typography>
                 {!isSingleTask && (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, width: { xs: '100%', md: 'auto' } }}>
-                        <Button
-                            variant="contained"
+                        <CommonButton
                             size="small"
                             onClick={() => navigate('/admin/tasks/free-client-list')}
-                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
+                            sx={{ bgcolor: '#f59e0b', '&:hover': { bgcolor: '#d97706' }, boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)' }}
                         >
                             Vacant Client
-                        </Button>
-                        <Button
-                            variant="contained"
+                        </CommonButton>
+                        <CommonButton
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => navigate('/admin/task-master/add')}
-                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
+                            sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
                         >
                             Add New
-                        </Button>
-                        <Button
-                            variant="contained"
+                        </CommonButton>
+                        <CommonButton
                             size="small"
                             startIcon={<ListIcon />}
                             onClick={() => navigate('/admin/task-master/list')}
-                            sx={{ bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}
                         >
                             List
-                        </Button>
+                        </CommonButton>
                     </Box>
                 )}
                 {isSingleTask && (

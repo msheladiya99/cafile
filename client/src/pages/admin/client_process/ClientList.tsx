@@ -31,7 +31,6 @@ import {
     FormatListBulleted as FormatListBulletedIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
-    Visibility as VisibilityIcon,
     FilterList as FilterListIcon,
     LockReset as LockResetIcon,
     Send as SendIcon
@@ -504,13 +503,7 @@ export const ClientList: React.FC = () => {
                                             </Stack>
 
                                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: '#f8fafc', m: -2, mt: 0, p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: '#6366f1', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
-                                                    onClick={() => navigate(`/admin/client/${client._id}`)}
-                                                >
-                                                    <VisibilityIcon sx={{ fontSize: 18 }} />
-                                                </IconButton>
+
                                                 <IconButton
                                                     size="small"
                                                     sx={{ color: '#f59e0b', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
@@ -617,14 +610,7 @@ export const ClientList: React.FC = () => {
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{ color: 'primary.main', bgcolor: 'primary.50', mr: 1, '&:hover': { bgcolor: 'primary.100' } }}
-                                                        onClick={() => navigate(`/admin/client/${client._id}`)}
-                                                        aria-label="View client details"
-                                                    >
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
+
                                                     <IconButton
                                                         size="small"
                                                         sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
