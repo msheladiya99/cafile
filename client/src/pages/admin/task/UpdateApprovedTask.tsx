@@ -232,14 +232,17 @@ export const UpdateApprovedTask: React.FC = () => {
     const bulkUpdateMutation = useMutation({
         mutationFn: async () => {
             if (tasks.length === 0) return;
-            const promises = tasks.map(task => {
+            const promises = tasks.map(async task => {
+                if (bulkStatus) {
+                    await taskService.updateStatus(task._id, bulkStatus);
+                }
                 const updateData: Partial<CreateTaskData> = {};
-                if (bulkStatus) updateData.status = bulkStatus;
                 if (bulkManager) updateData.reportingManager = bulkManager;
                 if (bulkAssignedTo.length > 0) updateData.assignedTo = bulkAssignedTo;
                 
-                if (Object.keys(updateData).length === 0) return Promise.resolve();
-                return taskService.updateTask(task._id, updateData);
+                if (Object.keys(updateData).length > 0) {
+                    await taskService.updateTask(task._id, updateData);
+                }
             });
             await Promise.all(promises);
         },

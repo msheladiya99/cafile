@@ -940,7 +940,7 @@ export const TaskMaster: React.FC = () => {
                 <Box display="flex" gap={2}>
                     <CommonButton type="submit" variant="contained" fullWidth
                         loading={createMutation.isPending || updateMutation.isPending}
-                        sx={{ py: 1.5, borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 4px 20px rgba(102,126,234,0.4)', '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #653d96 100%)', transform: 'translateY(-1px)' }, transition: 'all 0.2s ease' }}>
+                        sx={{ py: 1.5, borderRadius: '12px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', boxShadow: '0 4px 20px rgba(102,126,234,0.4)', '&:hover': { background: 'linear-gradient(135deg, #5568d3 0%, #653d96 100%)', transform: 'translateY(-1px)' }, transition: 'all 0.2s ease' }}>
                         {formData._id ? '✔ Update Task' : '✔ Save Task'}
                     </CommonButton>
                     <CommonButton variant="outlined" onClick={resetForm}

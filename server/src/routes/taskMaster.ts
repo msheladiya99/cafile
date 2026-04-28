@@ -23,8 +23,19 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
         const { TaskMaster } = (req as any).models;
+        const payload = { ...req.body };
+        ['category', 'reportingManager', 'multiFirmId', 'workingUser'].forEach(field => {
+            if (payload[field] === '') payload[field] = null;
+        });
+        if (payload.subtasks && Array.isArray(payload.subtasks)) {
+            payload.subtasks = payload.subtasks.map((st: any) => ({
+                ...st,
+                predefinedEmployee: st.predefinedEmployee === '' ? null : st.predefinedEmployee
+            }));
+        }
+
         const taskMaster = new TaskMaster({
-            ...req.body,
+            ...payload,
             firmId: req.firmId,
             createdBy: req.user?._id
         });
@@ -40,9 +51,20 @@ router.post('/', requireStaff, async (req: AuthRequest, res: Response) => {
 router.put('/:id', requireStaff, async (req: AuthRequest, res: Response) => {
     try {
         const { TaskMaster } = (req as any).models;
+        const payload = { ...req.body };
+        ['category', 'reportingManager', 'multiFirmId', 'workingUser'].forEach(field => {
+            if (payload[field] === '') payload[field] = null;
+        });
+        if (payload.subtasks && Array.isArray(payload.subtasks)) {
+            payload.subtasks = payload.subtasks.map((st: any) => ({
+                ...st,
+                predefinedEmployee: st.predefinedEmployee === '' ? null : st.predefinedEmployee
+            }));
+        }
+
         const taskMaster = await TaskMaster.findOneAndUpdate(
             { _id: req.params.id, firmId: req.firmId },
-            { $set: req.body },
+            { $set: payload },
             { new: true }
         );
         if (!taskMaster) return res.status(404).json({ message: 'Task master not found' });

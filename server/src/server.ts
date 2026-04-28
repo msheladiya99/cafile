@@ -186,12 +186,14 @@ const startServer = async () => {
 };
 
 import { startSubscriptionCronJob } from './utils/subscriptionCron';
+import { startTaskCronJob } from './utils/taskCron';
 import { startEmailWorker } from './workers/emailWorker';
 import './queues/parse.worker'; // This starts the worker listener
 
 startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
+startTaskCronJob();
 startEmailWorker();
 import './queues/parse.worker';
 
