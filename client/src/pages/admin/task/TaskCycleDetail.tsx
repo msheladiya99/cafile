@@ -19,6 +19,7 @@ import {
     CircularProgress,
     LinearProgress,
     Tooltip,
+    TablePagination,
 } from '@mui/material';
 import {
     List as ListIcon,
@@ -57,6 +58,8 @@ export const TaskCycleDetail: React.FC = () => {
     const [startFrom, setStartFrom] = useState('');
     const [startTo, setStartTo] = useState('');
     const [searchedOnce, setSearchedOnce] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -101,8 +104,22 @@ export const TaskCycleDetail: React.FC = () => {
 
     const handleSearch = () => {
         setSearchedOnce(true);
+        setPage(0);
         refetch();
     };
+
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const paginatedTasks = useMemo(() => {
+        return cycleTasks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    }, [cycleTasks, page, rowsPerPage]);
 
     // Filter by group client-side
     const filteredClients = useMemo(() => {
@@ -338,7 +355,7 @@ export const TaskCycleDetail: React.FC = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                cycleTasks.map((task: Task, idx: number) => {
+                                paginatedTasks.map((task: Task, idx: number) => {
                                     const statusInfo = STATUS_MAP[task.status] || { label: task.status, color: 'default' as const };
                                     const assignedUsers = Array.isArray(task.assignedTo)
                                         ? task.assignedTo.map((u: string | User) =>
@@ -346,9 +363,9 @@ export const TaskCycleDetail: React.FC = () => {
                                         ).join(', ')
                                         : '—';
                                     return (
-                                        <TableRow key={task._id} hover
-                                            sx={{ bgcolor: task.isOverdue ? 'rgba(255,82,82,0.04)' : 'inherit' }}>
-                                            <TableCell>{idx + 1}</TableCell>
+                                            <TableRow key={task._id} hover
+                                                sx={{ bgcolor: task.isOverdue ? 'rgba(255,82,82,0.04)' : 'inherit' }}>
+                                                <TableCell>{page * rowsPerPage + idx + 1}</TableCell>
                                             <TableCell sx={{ fontWeight: 500 }}>{task.title}</TableCell>
                                             <TableCell>
                                                 {typeof task.clientId === 'object'
@@ -397,6 +414,18 @@ export const TaskCycleDetail: React.FC = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                {searchedOnce && cycleTasks.length > 0 && (
+                    <TablePagination
+                        rowsPerPageOptions={[10, 25, 50, 100]}
+                        component="div"
+                        count={cycleTasks.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                )}
             </Paper>
         </Box>
     );

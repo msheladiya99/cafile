@@ -376,11 +376,18 @@ export const TaskInformation: React.FC = () => {
                                             {((task?.assignedTo as unknown as User[]) || []).map((u, idx) => (
                                                 <Tooltip key={u?._id || idx} title={u?.role || 'Staff'}>
                                                     <Chip 
-                                                        avatar={<Avatar sx={{ width: 14, height: 14, fontSize: '0.6rem' }}>{u?.username?.charAt(0) || '?'}</Avatar>}
-                                                        label={u?.username || u?.name || 'User'} 
+                                                        avatar={<Avatar sx={{ bgcolor: '#e0e7ff', color: '#4f46e5', fontWeight: 700 }}>{(`${u?.firstName || ''} ${u?.lastName || ''}`.trim() || u?.name || u?.username || '?').charAt(0).toUpperCase()}</Avatar>}
+                                                        label={`${u?.firstName || ''} ${u?.lastName || ''}`.trim() || u?.name || u?.username?.split('@')[0] || 'User'} 
                                                         size="small" 
-                                                        variant="outlined" 
-                                                        sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#ffffff', borderRadius: '4px' }} 
+                                                        sx={{ 
+                                                            height: 24, 
+                                                            fontSize: '0.75rem', 
+                                                            fontWeight: 600,
+                                                            bgcolor: '#f8fafc', 
+                                                            color: '#475569',
+                                                            border: '1px solid #e2e8f0',
+                                                            '& .MuiChip-avatar': { width: 18, height: 18, fontSize: '0.65rem' }
+                                                        }} 
                                                     />
                                                 </Tooltip>
                                             ))}

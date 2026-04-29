@@ -19,9 +19,11 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../../services/adminService';
+import { taskService } from '../../../services/taskService';
 import type { User } from '../../../types';
+import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
 export const TransferAllTask: React.FC = () => {
@@ -35,7 +37,21 @@ export const TransferAllTask: React.FC = () => {
         queryFn: adminService.getStaffUsers
     });
 
-    const handleTransfer = async () => {
+    const queryClient = useQueryClient();
+
+    const transferMutation = useMutation({
+        mutationFn: taskService.transferTasks,
+        onSuccess: (data) => {
+            toast.success(data.message || 'All tasks have been successfully transferred');
+            setDescription('');
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        },
+        onError: (err: AxiosError<{ message: string }>) => {
+            toast.error(err.response?.data?.message || 'Failed to transfer tasks. Please try again.');
+        }
+    });
+
+    const handleTransfer = () => {
         if (!transferFrom || !transferTo) {
             toast.error('Please select both employees');
             return;
@@ -45,18 +61,15 @@ export const TransferAllTask: React.FC = () => {
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            // Implementation for transferring all tasks
-            console.log('Transferring all tasks from', transferFrom, 'to', transferTo);
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-            toast.success('All tasks have been successfully transferred');
-            setDescription('');
-        } catch {
-            toast.error('Failed to transfer tasks. Please try again.');
-        } finally {
-            setIsSubmitting(false);
+        if (!window.confirm('Are you sure you want to transfer all tasks from the source employee to the destination employee?')) {
+            return;
         }
+
+        transferMutation.mutate({
+            fromUserId: transferFrom,
+            toUserId: transferTo,
+            removeFromCurrent: true,
+        });
     };
 
     const containerVariants = {
@@ -257,8 +270,8 @@ export const TransferAllTask: React.FC = () => {
                                 <Button
                                     variant="contained"
                                     onClick={handleTransfer}
-                                    disabled={isSubmitting || !transferFrom || !transferTo}
-                                    startIcon={isSubmitting ? null : <Send size={18} />}
+                                    disabled={transferMutation.isPending || !transferFrom || !transferTo}
+                                    startIcon={transferMutation.isPending ? null : <Send size={18} />}
                                     sx={{
                                         background: 'linear-gradient(to right, #3b82f6, #2563eb)',
                                         px: 6,
@@ -283,7 +296,7 @@ export const TransferAllTask: React.FC = () => {
                                         }
                                     }}
                                 >
-                                    {isSubmitting ? 'Processing...' : 'Transfer All Tasks'}
+                                    {transferMutation.isPending ? 'Processing...' : 'Transfer All Tasks'}
                                 </Button>
                                 {!transferFrom || !transferTo ? (
                                     <Typography variant="caption" sx={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 0.5 }}>
