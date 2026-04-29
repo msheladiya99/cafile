@@ -117,18 +117,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // silently ignore
         }
     };
-    const isAdminOrManager = !!user && ['ADMIN', 'MANAGER', 'SUPER_ADMIN'].includes(user.role);
-    const userPermissions = isAdminOrManager ? ['*'] : (user?.permissions || []);
+    // Only ADMIN and SUPER_ADMIN bypass all permission checks
+    // MANAGER, STAFF, and INTERN are subject to their assigned permissions
+    const isPermissionBypassed = !!user && ['ADMIN', 'SUPER_ADMIN'].includes(user.role);
+    const userPermissions = isPermissionBypassed ? ['*'] : (user?.permissions || []);
 
     const hasPermission = (key: string): boolean => {
         if (!user) return false;
-        if (isAdminOrManager) return true; // admins have all permissions
+        if (isPermissionBypassed) return true;
         return userPermissions.includes(key);
     };
 
     const hasAnyPermission = (keys: string[]): boolean => {
         if (!user) return false;
-        if (isAdminOrManager) return true;
+        if (isPermissionBypassed) return true;
         return keys.some(k => userPermissions.includes(k));
     };
 

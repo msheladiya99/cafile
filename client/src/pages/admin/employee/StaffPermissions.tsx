@@ -130,6 +130,40 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
             { key: 'reminders.delete', label: 'Delete Reminders', description: 'Remove reminders' },
         ]
     },
+    {
+        group: 'Expenses',
+        icon: '💰',
+        items: [
+            { key: 'expenses.view', label: 'View Expenses', description: 'View expense records and reports' },
+            { key: 'expenses.create', label: 'Add Expense', description: 'Record new expenses' },
+            { key: 'expenses.edit', label: 'Edit Expense', description: 'Modify expense entries' },
+            { key: 'expenses.delete', label: 'Delete Expense', description: 'Remove expense records' },
+            { key: 'expenses.settlement', label: 'Expense Settlement', description: 'Manage expense settlements and reimbursements' },
+        ]
+    },
+    {
+        group: 'Tax Notices',
+        icon: '📜',
+        items: [
+            { key: 'notices.view', label: 'View Notices', description: 'View tax notices and replies' },
+            { key: 'notices.create', label: 'Create Notice Reply', description: 'Generate tax notice replies using AI' },
+        ]
+    },
+    {
+        group: 'Bank Statement',
+        icon: '🏦',
+        items: [
+            { key: 'bankstatement.view', label: 'Bank Statement Tool', description: 'Convert bank statements to Excel' },
+            { key: 'bankstatement.history', label: 'Statement History', description: 'View past bank statement conversions' },
+        ]
+    },
+    {
+        group: 'CA Assistant AI',
+        icon: '🤖',
+        items: [
+            { key: 'assistant.view', label: 'CA Assistant AI', description: 'Access the CA Assistant AI chat tool' },
+        ]
+    },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSION_GROUPS.flatMap(g => g.items.map(i => i.key));

@@ -8,12 +8,10 @@ import {
 import {
     Dashboard as DashboardIcon,
     People as PeopleIcon,
-    CloudUpload as UploadIcon,
     Folder as FolderIcon,
     Receipt as ReceiptIcon,
     Menu as MenuIcon,
     Assessment as ReportsIcon,
-    Inventory as InventoryIcon,
     Assignment as AssignmentIcon,
     ExpandLess,
     ExpandMore,
@@ -25,7 +23,8 @@ import {
     Gavel as GavelIcon,
     AccountBalanceWallet as WalletIcon,
     AutoAwesome as AssistantIcon,
-    KeyboardArrowUp as UpIcon
+    KeyboardArrowUp as UpIcon,
+    NotificationsActive as RemindersIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -44,7 +43,7 @@ interface MenuItemDef {
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, logout, isAdmin, remainingTime } = useAuth();
+    const { user, logout, isAdmin, remainingTime, hasPermission, hasAnyPermission } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
@@ -71,7 +70,19 @@ export const AdminLayout: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-    const menuItems = React.useMemo(() => [
+    // Helper: check if a menu item is visible for the current user
+    const isItemVisible = React.useCallback((item: MenuItemDef): boolean => {
+        // Admins & Super Admins see everything
+        if (isAdmin) return true;
+        // No perm restriction → visible to all staff
+        if (!item.perm) return true;
+        // Single perm
+        if (typeof item.perm === 'string') return hasPermission(item.perm);
+        // Array of perms — visible if user has ANY
+        return hasAnyPermission(item.perm);
+    }, [isAdmin, hasPermission, hasAnyPermission]);
+
+    const rawMenuItems = React.useMemo(() => [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view' },
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view' },
@@ -90,7 +101,7 @@ export const AdminLayout: React.FC = () => {
         {
             text: 'Employee',
             icon: <PersonIcon />,
-            perm: ['employee.view', 'employee.add', 'employee.edit', 'employee.attendance', 'employee.timesheet'],
+            perm: ['employee.view', 'employee.add', 'employee.edit', 'employee.delete', 'employee.attendance', 'employee.timesheet'],
             children: [
                 { text: 'Employee Master', path: '/admin/employee/master', perm: 'employee.add' },
                 { text: 'Employee List', path: '/admin/employee/list', perm: 'employee.view' },
@@ -126,7 +137,7 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Task Dashboard', path: '/admin/tasks', perm: 'task.view' },
                 {
                     text: 'Task Master',
-                    perm: ['task.master.view', 'task.master.create', 'task.master.edit'],
+                    perm: ['task.master.view', 'task.master.create', 'task.master.edit', 'task.master.delete'],
                     children: [
                         { text: 'Add Task', path: '/admin/task-master/add', perm: 'task.master.create' },
                         { text: 'Task List', path: '/admin/task-master/list', perm: 'task.master.view' },
@@ -164,74 +175,162 @@ export const AdminLayout: React.FC = () => {
                 { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
             ]
         },
-        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc' },
-        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing' },
-        { text: 'Upload Files', icon: <UploadIcon />, path: '/admin/upload' },
-        { text: 'Manage Files', icon: <FolderIcon />, path: '/admin/files' },
-        { text: 'File Register', icon: <InventoryIcon />, path: '/admin/fileregister' },
+        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view' },
+        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view' },
+        {
+            text: 'Files & Documents',
+            icon: <FolderIcon />,
+            perm: ['files.view', 'files.upload', 'files.register'],
+            children: [
+                { text: 'Upload Files', path: '/admin/upload', perm: 'files.upload' },
+                { text: 'Manage Files', path: '/admin/files', perm: 'files.view' },
+                { text: 'File Register', path: '/admin/fileregister', perm: 'files.register' },
+            ]
+        },
+        { text: 'Reminders', icon: <RemindersIcon />, path: '/admin/reminders', perm: 'reminders.view' },
         ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
-        { text: 'Bank Statement → Excel', icon: <BankIcon />, path: '/admin/bank-statement' },
-        { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses' },
-        { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply' },
-        { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant' },
+        {
+            text: 'Bank Statement',
+            icon: <BankIcon />,
+            perm: ['bankstatement.view', 'bankstatement.history'],
+            children: [
+                { text: 'Bank Statement → Excel', path: '/admin/bank-statement', perm: 'bankstatement.view' },
+                { text: 'Statement History', path: '/admin/bank-statement/history', perm: 'bankstatement.history' },
+            ]
+        },
+        { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses', perm: 'expenses.view' },
+        { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply', perm: 'notices.view' },
+        { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant', perm: 'assistant.view' },
     ], [isAdmin]);
+
+    // Filter menu items (and their children) based on user permissions
+    const filterMenuItems = React.useCallback((items: MenuItemDef[]): MenuItemDef[] => {
+        return items
+            .filter(isItemVisible)
+            .map(item => {
+                if (!item.children) return item;
+                const visibleChildren = item.children
+                    .filter(isItemVisible)
+                    .map(child => {
+                        if (!child.children) return child;
+                        const visibleSubChildren = child.children.filter(isItemVisible);
+                        return { ...child, children: visibleSubChildren };
+                    })
+                    .filter(child => !child.children || child.children.length > 0);
+                return { ...item, children: visibleChildren };
+            })
+            .filter(item => !item.children || item.children.length > 0);
+    }, [isItemVisible]);
+
+    const menuItems = React.useMemo(
+        () => filterMenuItems(rawMenuItems),
+        [rawMenuItems, filterMenuItems]
+    );
+
+    // Collect all descendant menu-key names (for nested dropdowns)
+    const getAllDescendantKeys = React.useCallback((items: MenuItemDef[]): string[] => {
+        const keys: string[] = [];
+        for (const item of items) {
+            if (item.children) {
+                keys.push(item.text);
+                keys.push(...getAllDescendantKeys(item.children));
+            }
+        }
+        return keys;
+    }, []);
 
     const handleMenuToggle = React.useCallback((text: string) => {
         setOpenMenus(prev => {
-            const isCurrentlyOpen = prev[text];
-            if (isCurrentlyOpen) {
-                return { ...prev, [text]: false };
+            // If already open → just close it (and collapse all its nested children)
+            if (prev[text]) {
+                // Find this item's children in the tree and close them too
+                const findItem = (items: MenuItemDef[]): MenuItemDef | null => {
+                    for (const item of items) {
+                        if (item.text === text) return item;
+                        if (item.children) {
+                            const found = findItem(item.children);
+                            if (found) return found;
+                        }
+                    }
+                    return null;
+                };
+                const target = findItem(menuItems);
+                const keysToClose = [text, ...(target?.children ? getAllDescendantKeys(target.children) : [])];
+                const next = { ...prev };
+                keysToClose.forEach(k => { next[k] = false; });
+                return next;
             }
 
-            const newOpenMenus = { ...prev };
-            
-            const toggleAndCloseSiblings = (items: MenuItemDef[]): boolean => {
-                const found = items.some(item => item.text === text);
-                if (found) {
-                    items.forEach(item => {
-                        if (item.text !== text && newOpenMenus[item.text]) {
-                            newOpenMenus[item.text] = false;
-                        }
-                    });
-                    return true;
-                }
+            // Opening: find which top-level parent this item belongs to,
+            // close ALL siblings of that parent (and their descendants).
+            const findTopLevelParent = (items: MenuItemDef[], target: string): string | null => {
                 for (const item of items) {
-                    if (item.children && toggleAndCloseSiblings(item.children)) {
-                        return true;
+                    if (item.text === target) return item.text; // it IS top-level
+                    if (item.children) {
+                        const found = item.children.some(c => {
+                            if (c.text === target) return true;
+                            return c.children?.some(sc => sc.text === target);
+                        });
+                        if (found) return item.text;
                     }
                 }
-                return false;
+                return null;
             };
 
-            toggleAndCloseSiblings(menuItems);
-            newOpenMenus[text] = true;
-            return newOpenMenus;
+            const topLevelParentText = findTopLevelParent(menuItems, text);
+            const next = { ...prev };
+
+            // Close all other top-level dropdowns and their descendants
+            menuItems.forEach(item => {
+                if (item.children && item.text !== topLevelParentText) {
+                    // Close this sibling and all its nested dropdowns
+                    const keysToClose = [item.text, ...getAllDescendantKeys(item.children)];
+                    keysToClose.forEach(k => { next[k] = false; });
+                }
+            });
+
+            next[text] = true;
+            return next;
         });
-    }, [menuItems]);
+    }, [menuItems, getAllDescendantKeys]);
 
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
 
-    // Auto-open active menus
+    // Keep a stable ref to menuItems so the auto-open effect can read it
+    // without having it as a reactive dependency (which caused re-open loops)
+    const menuItemsRef = React.useRef(menuItems);
+    menuItemsRef.current = menuItems;
+
+    // Track the last path that triggered auto-open so we don't re-run on
+    // user-initiated toggles (which don't change the path)
+    const lastAutoOpenedPath = React.useRef('');
+
+    // Auto-open active menus — ONLY when the URL path changes (navigation)
     React.useEffect(() => {
         const fullPath = `${location.pathname}${location.search}`;
-        
+
+        // Skip if this path was already processed — prevents re-opening when
+        // the user manually closes a dropdown while staying on the same page
+        if (fullPath === lastAutoOpenedPath.current) return;
+        lastAutoOpenedPath.current = fullPath;
+
         setOpenMenus(prev => {
             const newOpenMenus: { [key: string]: boolean } = { ...prev };
             let changed = false;
 
-            menuItems.forEach(item => {
+            menuItemsRef.current.forEach(item => {
                 if (item.children) {
-                    const isActive = item.children.some(c => 
+                    const isActive = item.children.some(c =>
                         fullPath === c.path || (c.children && c.children.some(sc => fullPath === sc.path))
                     );
                     if (isActive && !newOpenMenus[item.text]) {
                         newOpenMenus[item.text] = true;
                         changed = true;
                     }
-                    
+
                     item.children.forEach(child => {
                         if (child.children) {
                             const isChildActive = child.children.some(sc => fullPath === sc.path);
@@ -246,7 +345,7 @@ export const AdminLayout: React.FC = () => {
 
             return changed ? newOpenMenus : prev;
         });
-    }, [location.pathname, location.search, menuItems]);
+    }, [location.pathname, location.search]); // ← intentionally excludes menuItems
 
     const handleMenuItemClick = (path: string) => {
         navigate(path);
