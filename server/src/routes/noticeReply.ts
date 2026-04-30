@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authenticate, requireRoles, AuthRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 import multer from 'multer';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs/promises';
 import { ocrService } from '../services/ocr.service';
 const pdfParseRaw = require('pdf-parse');
@@ -168,12 +169,13 @@ router.post(
                         method = 'ocr-service';
                     } catch (ocrErr: any) {
                         console.warn('[NoticeReply] ocrService failed, trying AI vision fallback:', ocrErr.message);
-                        // Final fallback to OpenRouter vision if ocrService failed
+                        // Final fallback to OpenRouter / Gemini if ocrService failed
                         try {
                             extractedText = await extractTextWithAI(buffer, mimetype);
                             method = 'ai-vision-ocr';
                         } catch (aiErr: any) {
                             console.warn('[NoticeReply] AI vision also failed:', aiErr.message);
+                            extractedText = `__ERROR_AI_OCR__: ${aiErr.message}`;
                         }
                     }
                 }
@@ -191,8 +193,16 @@ router.post(
                         method = 'ai-vision-ocr';
                     } catch (aiErr: any) {
                         console.warn('[NoticeReply] AI vision fallback failed:', aiErr.message);
+                        extractedText = `__ERROR_AI_OCR__: ${aiErr.message}`;
                     }
                 }
+            }
+
+            if (extractedText.startsWith('__ERROR_AI_OCR__:')) {
+                const apiError = extractedText.replace('__ERROR_AI_OCR__:', '').trim();
+                return res.status(503).json({
+                    message: `OCR API Failed: ${apiError}. Please check your API quotas (Gemini/OpenRouter) or try pasting the text manually.`,
+                });
             }
 
 
@@ -219,50 +229,61 @@ router.post(
 // Sends base64 image to OpenRouter vision model to extract text
 
 async function extractTextWithAI(buffer: Buffer, mimetype: string): Promise<string> {
+    const prompt = 'Extract ALL text from this tax notice document exactly as it appears. Preserve the structure, headings, amounts, dates, section numbers, and all content. Return only the extracted text, no commentary. If the document has multiple pages, extract text from all of them.';
+
+    // ── Use OpenRouter for OCR ──
     const client = getOpenRouterClient();
     if (!client) throw new Error('OpenRouter not configured');
 
-    // Use a vision-capable model for OCR
-    const visionModel = process.env.OPENROUTER_OCR_MODEL || 'openai/gpt-4o-mini';
-
-    const base64 = buffer.toString('base64');
+    // ⚠️ CRITICAL: OpenRouter supports PDF OCR *only* via specific models like Gemini.
+    // OpenAI models (like gpt-4o-mini) will throw an error if sent a PDF via image_url.
+    let visionModel = process.env.OPENROUTER_OCR_MODEL || 'openai/gpt-4o-mini';
     
-    // ⚠️ CRITICAL: OpenRouter/OpenAI vision models ONLY support image formats (JPG, PNG, WEBP).
-    // They DO NOT support application/pdf via image_url.
-    // If the file is a PDF, we should ideally use the existing ocrService or extract an image first.
-    // For now, we fix the mimetype if it's an image, and warn if it's a PDF.
-    
-    let finalMimeType = mimetype;
     if (mimetype === 'application/pdf') {
-        console.warn('[NoticeReply] Sending raw PDF to vision model. This will likely fail. Consider using ocrService.');
-        // If we have pdf2pic or similar, we should convert here.
-        // As a temporary fix to prevent crash, we'll try to let ocrService handle it if available.
+        // Force a model that we know supports PDF via OpenRouter's image_url wrapper
+        visionModel = 'google/gemini-2.0-flash-001';
+        console.log('[NoticeReply] PDF detected. Forcing OpenRouter model to:', visionModel);
     }
 
-    const dataUrl = `data:${finalMimeType};base64,${base64}`;
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${mimetype};base64,${base64}`;
 
-    const response = await client.chat.completions.create({
-        model: visionModel,
-        messages: [
-            {
-                role: 'user',
-                content: [
+    try {
+        const response = await client.chat.completions.create({
+            model: visionModel,
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'image_url', image_url: { url: dataUrl } },
+                        { type: 'text', text: prompt },
+                    ] as any,
+                },
+            ],
+            max_tokens: 4000,
+        }, { timeout: 60000 }); // Increase timeout to 60s
+        
+        return response.choices[0].message.content || '';
+    } catch (error: any) {
+        if (mimetype === 'application/pdf' && error.message?.includes('504')) {
+            console.warn('[NoticeReply] OpenRouter 504 on primary model, falling back to claude-3.5-sonnet...');
+            const fallbackResponse = await client.chat.completions.create({
+                model: 'anthropic/claude-3.5-sonnet',
+                messages: [
                     {
-                        type: 'image_url',
-                        image_url: { url: dataUrl },
+                        role: 'user',
+                        content: [
+                            { type: 'image_url', image_url: { url: dataUrl } },
+                            { type: 'text', text: prompt },
+                        ] as any,
                     },
-                    {
-                        type: 'text',
-                        text: 'Extract ALL text from this tax notice document exactly as it appears. Preserve the structure, headings, amounts, dates, section numbers, and all content. Return only the extracted text, no commentary. If the document has multiple pages, extract text from all of them.',
-                    },
-                ] as any,
-            },
-        ],
-        max_tokens: 4000,
-    });
-
-
-    return response.choices[0].message.content || '';
+                ],
+                max_tokens: 4000,
+            }, { timeout: 60000 });
+            return fallbackResponse.choices[0].message.content || '';
+        }
+        throw error;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

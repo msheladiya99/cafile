@@ -228,12 +228,12 @@ export const AdminLayout: React.FC = () => {
     );
 
     // Collect all descendant menu-key names (for nested dropdowns)
-    const getAllDescendantKeys = React.useCallback((items: MenuItemDef[]): string[] => {
+    const getAllDescendantKeys = React.useCallback(function getDescendants(items: MenuItemDef[]): string[] {
         const keys: string[] = [];
         for (const item of items) {
             if (item.children) {
                 keys.push(item.text);
-                keys.push(...getAllDescendantKeys(item.children));
+                keys.push(...getDescendants(item.children));
             }
         }
         return keys;
