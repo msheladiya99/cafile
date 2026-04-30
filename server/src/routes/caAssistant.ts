@@ -201,4 +201,44 @@ router.post('/embed', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// 7. Delete Chat
+router.delete('/chat/:id', async (req: AuthRequest, res: Response) => {
+    try {
+        const mongoose = require('mongoose');
+        const { ObjectId } = require('mongoose').Types;
+
+        // Validate ObjectId
+        if (!ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid chat ID' });
+        }
+
+        const chatId = new ObjectId(req.params.id);
+        const userId = new ObjectId(req.user!._id);
+
+        // Use native MongoDB driver directly — bypasses all Mongoose plugins
+        const collection = mongoose.connection.db.collection('assistantchats');
+
+        // Find the chat first to verify ownership
+        const chat = await collection.findOne({ _id: chatId });
+
+        if (!chat) {
+            return res.status(404).json({ message: 'Chat not found' });
+        }
+
+        // Verify ownership
+        if (chat.userId.toString() !== userId.toString()) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        // Delete it
+        await collection.deleteOne({ _id: chatId });
+
+        res.json({ message: 'Chat deleted successfully' });
+    } catch (e: any) {
+        console.error('Delete chat error:', e);
+        res.status(500).json({ message: e.message });
+    }
+});
+
 export default router;
+
