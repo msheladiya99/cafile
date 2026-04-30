@@ -161,6 +161,14 @@ const FirmDetails: React.FC = () => {
             toast.error(err.response?.data?.message || 'Reset failed'),
     });
 
+    const { data: plans } = useQuery({
+        queryKey: ['superadmin_plans'],
+        queryFn: async () => {
+            const res = await api.get('/super-admin/plans');
+            return res.data;
+        },
+    });
+
     const { data: catalogAddons = [], isLoading: loadingCatalog } = useQuery({
         queryKey: ['sa-addons'],
         queryFn: async () => {
@@ -190,7 +198,7 @@ const FirmDetails: React.FC = () => {
     const handleEditToggle = () => {
         if (!editMode) {
             setFormData({
-                plan: firm.plan.toLowerCase(),
+                plan: firm.plan,
                 status: firm.status.toLowerCase(),
                 maxAdmins: firm.maxAdmins || 5,
                 googleDriveType: firm.googleDriveType || 'app',
@@ -340,8 +348,10 @@ const FirmDetails: React.FC = () => {
                                     <TextField select fullWidth label="Subscription Plan" size="small" value={formData.plan}
                                         onChange={e => setFormData({ ...formData, plan: e.target.value })}
                                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}>
-                                        {['Trial', 'Basic', 'Professional', 'Enterprise'].map(opt =>
-                                            <MenuItem key={opt} value={opt.toLowerCase()}>{opt}</MenuItem>
+                                        {plans ? plans.map((p: { _id: string; name: string }) => (
+                                            <MenuItem key={p._id} value={p.name}>{p.name}</MenuItem>
+                                        )) : ['Starter', 'Professional', 'Enterprise', 'Pro Cloud', 'Enterprise Cloud', 'Custom'].map(opt =>
+                                            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
                                         )}
                                     </TextField>
                                     <TextField select fullWidth label="Firm Status" size="small" value={formData.status}
