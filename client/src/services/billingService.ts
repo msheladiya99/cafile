@@ -27,14 +27,16 @@ export interface Payment {
     note?: string;
 }
 
+export type PopulatedRef<T extends Record<string, unknown>> = string | T;
+
 export interface Invoice {
     _id: string;
     invoiceNumber: string;
     billingType: 'SINGLE_CLIENT' | 'CLIENT_GROUP';
-    clientId?: any; // Populated client object
-    clientGroupId?: any; // Populated client group object
-    firmId?: any; // Tenant ID
-    multiFirmId?: any; // Populated branch/branding object
+    clientId?: PopulatedRef<{ _id: string; name: string; email: string }>;
+    clientGroupId?: PopulatedRef<{ _id: string; groupName: string; email: string }>;
+    firmId?: PopulatedRef<{ _id: string; firmName: string }>;
+    multiFirmId?: PopulatedRef<{ _id: string; firmName: string; logoUrl?: string; invoiceTemplate?: string; invoiceTerms?: string; gstin?: string; panNumber?: string }>;
     items: InvoiceItem[];
     subtotal: number;
     tax: number;
@@ -63,7 +65,43 @@ export interface PaymentStatus {
     }>;
 }
 
+export interface ClientLedger {
+    client: { _id: string; name: string; email: string; phone?: string; address?: string };
+    summary: {
+        totalInvoices: number;
+        totalBilled: number;
+        totalPaid: number;
+        totalDue: number;
+        totalOverdue: number;
+        paidInvoices: number;
+        partialInvoices: number;
+        pendingInvoices: number;
+        cancelledInvoices: number;
+        overdueInvoices: number;
+        avgPaymentDays: number;
+        lastPaymentDate: string | null;
+        lastPaymentAmount: number;
+        paymentRate: number;
+    };
+    ledgerEntries: Array<{
+        date: string;
+        type: 'INVOICE' | 'PAYMENT';
+        description: string;
+        invoiceNumber: string;
+        invoiceId: string;
+        debit: number;
+        credit: number;
+        balance: number;
+        status?: string;
+        dueDate?: string;
+        method?: string;
+    }>;
+    invoices: Invoice[];
+    paymentHistory: Payment[];
+}
+
 export const billingService = {
+
     // --- Services ---
     getServices: async (): Promise<ServiceItem[]> => {
         const response = await api.get('/billing/services');
@@ -96,7 +134,7 @@ export const billingService = {
         return response.data;
     },
 
-    createInvoice: async (data: any): Promise<Invoice> => {
+    createInvoice: async (data: Partial<Invoice>): Promise<Invoice> => {
         const response = await api.post('/billing/invoices', data);
         return response.data;
     },
@@ -116,8 +154,13 @@ export const billingService = {
         return response.data;
     },
 
-    updateInvoice: async (id: string, data: any): Promise<Invoice> => {
+    updateInvoice: async (id: string, data: Partial<Invoice>): Promise<Invoice> => {
         const response = await api.put(`/billing/invoices/${id}`, data);
+        return response.data;
+    },
+
+    createGroupBilling: async (invoices: Partial<Invoice>[]): Promise<{ created: number; invoices: Invoice[] }> => {
+        const response = await api.post('/billing/invoices/bulk-group', { invoices });
         return response.data;
     },
 
@@ -141,7 +184,7 @@ export const billingService = {
         firmId?: string;
         year?: string;
         month?: string;
-    }): Promise<any> => {
+    }): Promise<{ clientLedgers: ClientLedger[]; overallSummary: Record<string, number>; generatedAt: string }> => {
         const params = new URLSearchParams();
         if (filters) {
             Object.entries(filters).forEach(([key, value]) => {

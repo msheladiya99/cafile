@@ -24,12 +24,15 @@ router.get('/services', authMiddleware, async (req: Request, res: Response) => {
 router.post('/services', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: Request, res: Response) => {
     try {
         const { Service } = (req as any).models;
+        // Attach tenant firmId so the service is visible to this firm's GET query
+        req.body.firmId = (req as any).firmId;
         const service = new Service(req.body);
         await service.save();
 
         res.status(201).json(service);
-    } catch (error) {
-        res.status(400).json({ message: 'Error creating service' });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : 'Error creating service';
+        res.status(400).json({ message: msg });
     }
 });
 
@@ -44,8 +47,9 @@ router.put('/services/:id', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), 
 
         if (!service) return res.status(404).json({ message: 'Service not found' });
         res.json(service);
-    } catch (error) {
-        res.status(400).json({ message: 'Error updating service' });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : 'Error updating service';
+        res.status(400).json({ message: msg });
     }
 });
 
@@ -282,6 +286,65 @@ router.patch('/invoices/:id/status', authMiddleware, requireRoles(['ADMIN', 'MAN
         res.json(invoice);
     } catch (error) {
         res.status(400).json({ message: 'Error updating status' });
+    }
+});
+
+// Bulk group billing — create one invoice per client from a group in a single request
+router.post('/invoices/bulk-group', authMiddleware, requireRoles(['ADMIN', 'MANAGER']), async (req: any, res: Response) => {
+    try {
+        const { Invoice, MultiFirm } = (req as any).models;
+        const { invoices: clientInvoices } = req.body; // array of per-client invoice payloads
+
+        if (!Array.isArray(clientInvoices) || clientInvoices.length === 0) {
+            return res.status(400).json({ message: 'No client invoices provided' });
+        }
+
+        // Find prefix
+        let prefix = 'INV-';
+        const { firmId: selectedFirmId } = clientInvoices[0];
+        if (selectedFirmId) {
+            const mf = await MultiFirm.findById(selectedFirmId);
+            if (mf && mf.invoicePrefix) prefix = mf.invoicePrefix;
+        } else {
+            const firmId = req.firmId || req.user?.firmId;
+            const FirmMaster = mongoose.model('FirmMaster');
+            const fm = await FirmMaster.findOne({ firmId });
+            if (fm && fm.invoicePrefix) prefix = fm.invoicePrefix;
+        }
+
+        const tenantId = req.firmId || req.user?.firmId;
+        const createdInvoices = [];
+
+        for (const payload of clientInvoices) {
+            if (!payload.clientId || !payload.items || payload.items.length === 0) continue;
+
+            const invoiceData: any = {
+                ...payload,
+                invoiceNumber: payload.invoiceNumber || `${prefix}${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                createdBy: req.user.userId,
+                firmId: tenantId,
+                billingType: 'SINGLE_CLIENT',
+            };
+
+            // Handle branding selection
+            if (payload.multiFirmId && payload.multiFirmId !== tenantId.toString()) {
+                invoiceData.multiFirmId = payload.multiFirmId;
+            } else {
+                delete invoiceData.multiFirmId;
+            }
+
+            // Clean empty IDs
+            if (invoiceData.clientGroupId === '') delete invoiceData.clientGroupId;
+
+            const invoice = new Invoice(invoiceData);
+            await invoice.save();
+            createdInvoices.push(invoice);
+        }
+
+        res.status(201).json({ created: createdInvoices.length, invoices: createdInvoices });
+    } catch (error) {
+        console.error('Bulk group billing error:', error);
+        res.status(400).json({ message: 'Error creating group invoices' });
     }
 });
 

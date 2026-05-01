@@ -3,7 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     Box, Drawer, AppBar, Toolbar, List, Typography, IconButton, 
     ListItem, ListItemButton, ListItemIcon, ListItemText, 
-    useMediaQuery, Avatar, Collapse, useTheme, Fab, Fade
+    useMediaQuery, Avatar, Collapse, useTheme, Fab, Fade,
+    Dialog, DialogTitle, DialogContent, Button, Divider, Tooltip, Grid
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -25,6 +26,7 @@ import {
     AutoAwesome as AssistantIcon,
     KeyboardArrowUp as UpIcon,
     NotificationsActive as RemindersIcon,
+    Keyboard as KeyboardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -38,6 +40,7 @@ interface MenuItemDef {
     path?: string;
     perm?: string | string[];
     children?: MenuItemDef[];
+    shortcut?: string;
 }
 
 export const AdminLayout: React.FC = () => {
@@ -48,6 +51,7 @@ export const AdminLayout: React.FC = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
     const [showScroll, setShowScroll] = useState(false);
+    const [showShortcutGuide, setShowShortcutGuide] = useState(false);
 
     useEffect(() => {
         const checkScrollTop = () => {
@@ -60,6 +64,7 @@ export const AdminLayout: React.FC = () => {
         window.addEventListener('scroll', checkScrollTop);
         return () => window.removeEventListener('scroll', checkScrollTop);
     }, [showScroll]);
+
 
     const scrollTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -83,19 +88,19 @@ export const AdminLayout: React.FC = () => {
     }, [isAdmin, hasPermission, hasAnyPermission]);
 
     const rawMenuItems = React.useMemo(() => [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view' },
-        ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master' }] : []),
-        { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view' },
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view', shortcut: 'Alt+D' },
+        ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master', shortcut: 'Alt+F' }] : []),
+        { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view', shortcut: 'Alt+R' },
         {
             text: 'Client',
             icon: <PeopleIcon />,
             perm: ['client.view', 'client.add', 'client.edit', 'client.delete', 'client.group', 'client.ledger'],
             children: [
-                { text: 'Add Group + List', path: '/admin/client/add-group', perm: 'client.group' },
-                { text: 'Client Master', path: '/admin/client/master', perm: 'client.add' },
-                { text: 'Client List', path: '/admin/client/list', perm: 'client.view' },
-                { text: 'Client Contact Detail', path: '/admin/client/contact-detail', perm: 'client.view' },
-                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger', perm: 'client.ledger' }] : []),
+                { text: 'Add Group + List', path: '/admin/client/add-group', perm: 'client.group', shortcut: 'Alt+G' },
+                { text: 'Client Master', path: '/admin/client/master', perm: 'client.add', shortcut: 'Alt+C' },
+                { text: 'Client List', path: '/admin/client/list', perm: 'client.view', shortcut: 'Alt+L' },
+                { text: 'Client Contact Detail', path: '/admin/client/contact-detail', perm: 'client.view', shortcut: 'Alt+V' },
+                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger', perm: 'client.ledger', shortcut: 'Alt+K' }] : []),
             ]
         },
         {
@@ -103,9 +108,9 @@ export const AdminLayout: React.FC = () => {
             icon: <PersonIcon />,
             perm: ['employee.view', 'employee.add', 'employee.edit', 'employee.delete', 'employee.attendance', 'employee.timesheet'],
             children: [
-                { text: 'Employee Master', path: '/admin/employee/master', perm: 'employee.add' },
-                { text: 'Employee List', path: '/admin/employee/list', perm: 'employee.view' },
-                { text: 'Emp Task Schedule', path: '/admin/employee/tasks', perm: 'employee.view' },
+                { text: 'Employee Master', path: '/admin/employee/master', perm: 'employee.add', shortcut: 'Alt+W' },
+                { text: 'Employee List', path: '/admin/employee/list', perm: 'employee.view', shortcut: 'Alt+E' },
+                { text: 'Emp Task Schedule', path: '/admin/employee/tasks', perm: 'employee.view', shortcut: 'Alt+J' },
                 {
                     text: 'Time Sheet',
                     perm: ['employee.timesheet'],
@@ -115,8 +120,8 @@ export const AdminLayout: React.FC = () => {
                         { text: 'Task Wise', path: '/admin/employee/timesheet/task', perm: 'employee.timesheet' },
                     ]
                 },
-                { text: 'Free Employee List', path: '/admin/employee/free-list', perm: 'employee.view' },
-                { text: 'Employee Login Detail', path: '/admin/employee/login-detail', perm: 'employee.view' },
+                { text: 'Free Employee List', path: '/admin/employee/free-list', perm: 'employee.view', shortcut: 'Alt+1' },
+                { text: 'Employee Login Detail', path: '/admin/employee/login-detail', perm: 'employee.view', shortcut: 'Alt+2' },
                 {
                     text: 'Emp Attendance',
                     perm: ['employee.attendance'],
@@ -125,8 +130,8 @@ export const AdminLayout: React.FC = () => {
                         { text: 'Attendance List', path: '/admin/employee/attendance/list', perm: 'employee.attendance' },
                     ]
                 },
-                { text: 'Form 108', path: '/admin/employee/form108', perm: 'employee.view' },
-                ...(isAdmin ? [{ text: 'Staff Permissions', path: '/admin/employee/permissions' }] : []),
+                { text: 'Form 108', path: '/admin/employee/form108', perm: 'employee.view', shortcut: 'Alt+8' },
+                ...(isAdmin ? [{ text: 'Staff Permissions', path: '/admin/employee/permissions', shortcut: 'Alt+P' }] : []),
             ]
         },
         {
@@ -134,13 +139,13 @@ export const AdminLayout: React.FC = () => {
             icon: <AssignmentIcon />,
             perm: ['task.view', 'task.master.view', 'task.applicability', 'task.single', 'task.approve', 'task.transfer', 'task.information', 'task.udin'],
             children: [
-                { text: 'Task Dashboard', path: '/admin/tasks', perm: 'task.view' },
+                { text: 'Task Dashboard', path: '/admin/tasks', perm: 'task.view', shortcut: 'Alt+T' },
                 {
                     text: 'Task Master',
                     perm: ['task.master.view', 'task.master.create', 'task.master.edit', 'task.master.delete'],
                     children: [
-                        { text: 'Add Task', path: '/admin/task-master/add', perm: 'task.master.create' },
-                        { text: 'Task List', path: '/admin/task-master/list', perm: 'task.master.view' },
+                        { text: 'Add Task', path: '/admin/task-master/add', perm: 'task.master.create', shortcut: 'Alt+Q' },
+                        { text: 'Task List', path: '/admin/task-master/list', perm: 'task.master.view', shortcut: 'Alt+Y' },
                         { text: 'Task Category', path: '/admin/task-category', perm: 'task.master.view' },
                     ]
                 },
@@ -172,36 +177,78 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Task Cycle Detail', path: '/admin/tasks/cycle-detail', perm: 'task.view' },
                 { text: 'Task Information', path: '/admin/tasks/information', perm: 'task.information' },
                 { text: 'Ongoing Task', path: '/admin/tasks/ongoing', perm: 'task.view' },
-                { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin' },
+                { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin', shortcut: 'Alt+H' },
             ]
         },
-        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view' },
-        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view' },
+        { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view', shortcut: 'Alt+M' },
+        { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view', shortcut: 'Alt+B' },
         {
             text: 'Files & Documents',
             icon: <FolderIcon />,
             perm: ['files.view', 'files.upload', 'files.register'],
             children: [
-                { text: 'Upload Files', path: '/admin/upload', perm: 'files.upload' },
-                { text: 'Manage Files', path: '/admin/files', perm: 'files.view' },
+                { text: 'Upload Files', path: '/admin/upload', perm: 'files.upload', shortcut: 'Alt+U' },
+                { text: 'Manage Files', path: '/admin/files', perm: 'files.view', shortcut: 'Alt+O' },
                 { text: 'File Register', path: '/admin/fileregister', perm: 'files.register' },
             ]
         },
-        { text: 'Reminders', icon: <RemindersIcon />, path: '/admin/reminders', perm: 'reminders.view' },
-        ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings' }] : []),
+        { text: 'Reminders', icon: <RemindersIcon />, path: '/admin/reminders', perm: 'reminders.view', shortcut: 'Alt+N' },
+        ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings', shortcut: 'Alt+Z' }] : []),
         {
             text: 'Bank Statement',
             icon: <BankIcon />,
             perm: ['bankstatement.view', 'bankstatement.history'],
             children: [
-                { text: 'Bank Statement → Excel', path: '/admin/bank-statement', perm: 'bankstatement.view' },
+                { text: 'Bank Statement → Excel', path: '/admin/bank-statement', perm: 'bankstatement.view', shortcut: 'Alt+S' },
                 { text: 'Statement History', path: '/admin/bank-statement/history', perm: 'bankstatement.history' },
             ]
         },
-        { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses', perm: 'expenses.view' },
-        { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply', perm: 'notices.view' },
-        { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant', perm: 'assistant.view' },
+        { text: 'Expenses', icon: <WalletIcon />, path: '/admin/expenses', perm: 'expenses.view', shortcut: 'Alt+X' },
+        { text: 'Notice Reply AI', icon: <GavelIcon />, path: '/admin/notice-reply', perm: 'notices.view', shortcut: 'Alt+I' },
+        { text: 'CA Assistant AI', icon: <AssistantIcon />, path: '/admin/assistant', perm: 'assistant.view', shortcut: 'Alt+A' },
     ], [isAdmin]);
+
+    // Keyboard Shortcuts Listener
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const activeTag = document.activeElement?.tagName;
+            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+
+            if (e.altKey) {
+                // Determine the key combination string, e.g. "Alt+D"
+                let keyName = e.key;
+                if (keyName.length === 1) keyName = keyName.toUpperCase();
+                const keyCombo = `Alt+${e.shiftKey ? 'Shift+' : ''}${keyName}`;
+
+                // Check for Global Guide toggle
+                if (keyCombo.toUpperCase() === 'ALT+K') {
+                    e.preventDefault();
+                    setShowShortcutGuide(prev => !prev);
+                    return;
+                }
+
+                // Helper to recursively find path by shortcut
+                const findPath = (items: MenuItemDef[]): string | null => {
+                    for (const item of items) {
+                        if (item.shortcut?.toUpperCase() === keyCombo.toUpperCase()) return item.path || null;
+                        if (item.children) {
+                            const found = findPath(item.children);
+                            if (found) return found;
+                        }
+                    }
+                    return null;
+                };
+
+                const targetPath = findPath(rawMenuItems);
+                if (targetPath) {
+                    e.preventDefault();
+                    navigate(targetPath);
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [navigate, rawMenuItems]);
 
     // Filter menu items (and their children) based on user permissions
     const filterMenuItems = React.useCallback((items: MenuItemDef[]): MenuItemDef[] => {
@@ -508,20 +555,27 @@ export const AdminLayout: React.FC = () => {
             </Box>
 
             {/* Account Settings at Bottom */}
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', cursor: 'pointer', '&:hover': { background: 'rgba(0,0,0,0.02)' } }} onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <Avatar
-                    sx={{ width: 36, height: 36, bgcolor: '#222', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' }}
-                >
-                    {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
-                </Avatar>
-                <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden' }}>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-                        {user?.name || user?.username}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
-                        {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
-                    </Typography>
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1, '&:hover': { background: 'rgba(0,0,0,0.02)' } }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    <Avatar
+                        sx={{ width: 36, height: 36, bgcolor: '#222', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' }}
+                    >
+                        {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
+                    </Avatar>
+                    <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden' }}>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                            {user?.name || user?.username}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
+                            {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
+                        </Typography>
+                    </Box>
                 </Box>
+                <Tooltip title="Keyboard Shortcuts (Alt+K)">
+                    <IconButton size="small" onClick={() => setShowShortcutGuide(true)}>
+                        <KeyboardIcon fontSize="small" sx={{ color: '#666' }} />
+                    </IconButton>
+                </Tooltip>
             </Box>
              <AccountMenu
                 anchorEl={anchorEl}
@@ -634,6 +688,74 @@ export const AdminLayout: React.FC = () => {
                     <UpIcon />
                 </Fab>
             </Fade>
+
+            {/* Shortcut Guide Modal */}
+            <Dialog 
+                open={showShortcutGuide} 
+                onClose={() => setShowShortcutGuide(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: 4 } }}
+            >
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 700 }}>
+                    <KeyboardIcon color="primary" /> Keyboard Shortcuts Guide
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Use these `Alt + Key` combinations from anywhere to quickly navigate the admin panel.
+                    </Typography>
+
+                    <Grid container spacing={4}>
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase' }}>Main Navigation</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Dashboard</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + D</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Firm Master</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + F</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Reports</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + R</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Billing</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + B</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">DSC Management</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + M</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Expenses</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + X</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Bank Statement</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + S</Typography></Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase' }}>Clients & Staff</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Client List</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + L</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Add Client Group</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + G</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Client Ledger</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + K</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Employee List</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + E</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Add Employee</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + W</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Emp Task Schedule</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + J</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Staff Permissions</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + P</Typography></Box>
+                            </Box>
+                        </Grid>
+                        
+                        <Grid item xs={12}>
+                            <Divider sx={{ my: 1 }} />
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, mt: 1, textTransform: 'uppercase' }}>Tasks & Documents</Typography>
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} sm={6}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Task Dashboard</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + T</Typography></Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Add Task</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + Q</Typography></Box>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Upload Files</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + U</Typography></Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Manage Files</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + O</Typography></Box>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', bgcolor: '#f8fafc' }}>
+                    <Button variant="contained" onClick={() => setShowShortcutGuide(false)} sx={{ borderRadius: 2, px: 3 }}>Got it</Button>
+                </Box>
+            </Dialog>
         </Box>
     );
 };

@@ -3,7 +3,7 @@ import {
     Box, Paper, Typography, TextField, Button, IconButton, 
     List, ListItem, ListItemButton, ListItemText, ListItemIcon,
     CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
-    Tabs, Tab, Tooltip, InputAdornment
+    Tabs, Tab, Tooltip, InputAdornment, InputBase
 } from '@mui/material';
 import { 
     Send as SendIcon, AutoAwesome, UploadFile,
@@ -117,6 +117,7 @@ export const CAAssistant: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
     const [input, setInput] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [showAllHistory, setShowAllHistory] = useState(false);
     
@@ -477,18 +478,24 @@ export const CAAssistant: React.FC = () => {
                     alignItems: 'center', 
                     gap: 1, 
                     px: 2, 
-                    py: 1.5, 
+                    py: 1, 
                     mb: 3,
                     background: '#f8fafc',
                     borderRadius: 3,
                     border: '1px solid #e2e8f0'
                 }}>
                     <Search sx={{ fontSize: 18, color: '#94a3b8' }} />
-                    <Typography variant="body2" sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>Search chats</Typography>
-                    <Box sx={{ ml: 'auto', display: 'flex', gap: 0.5 }}>
-                        <Box sx={{ width: 6, height: 6, borderRadius: '2px', background: '#cbd5e1' }} />
-                        <Box sx={{ width: 6, height: 6, borderRadius: '2px', background: '#cbd5e1' }} />
-                    </Box>
+                    <InputBase
+                        placeholder="Search chats"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ 
+                            flex: 1, 
+                            fontSize: '0.85rem',
+                            color: '#334155',
+                            '& input::placeholder': { color: '#94a3b8', opacity: 1 }
+                        }}
+                    />
                 </Box>
 
                 {/* Navigation */}
@@ -523,7 +530,9 @@ export const CAAssistant: React.FC = () => {
                     {showAllHistory ? `All Chats (${chats.length})` : 'Recent'}
                 </Typography>
                 <List disablePadding sx={{ flexGrow: 1, overflowY: 'auto' }}>
-                    {(showAllHistory ? chats : chats.slice(0, 5)).map(c => (
+                    {(showAllHistory ? chats : chats.slice(0, 5))
+                        .filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map(c => (
                         <ListItem 
                             key={c._id} 
                             disablePadding 
