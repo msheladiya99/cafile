@@ -24,6 +24,7 @@ import { DSC } from '../models/DSC';
 import EmailTemplate from '../models/EmailTemplate';
 import { Expense } from '../models/Expense';
 import { ExpenseSettlement } from '../models/ExpenseSettlement';
+import Service from '../models/Service';
 
 
 /**
@@ -57,6 +58,7 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         EmailTemplate: getTenantModel(req, 'EmailTemplate', EmailTemplate),
         Expense: getTenantModel(req, 'Expense', Expense),
         ExpenseSettlement: getTenantModel(req, 'ExpenseSettlement', ExpenseSettlement),
+        Service: getTenantModel(req, 'Service', Service),
     };
 
 
