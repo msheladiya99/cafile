@@ -156,7 +156,7 @@ const SuperAdminDashboard: React.FC = () => {
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <Box className={`sa-page ${!isLoading ? 'page-content-fade' : ''}`} sx={{ maxWidth: 1200 }}>
+        <Box className={`sa-page ${!isLoading ? 'page-content-fade' : ''}`} sx={{ maxWidth: '100%', px: { lg: 2 } }}>
 
             {/* ── Header ── */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 4, flexWrap: 'wrap', gap: 2 }}>
@@ -205,7 +205,7 @@ const SuperAdminDashboard: React.FC = () => {
             {/* ── Main Content Grid ── */}
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
+                gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
                 gap: 2.5,
                 mb: 2.5,
             }}>
@@ -393,23 +393,40 @@ const SuperAdminDashboard: React.FC = () => {
             {/* ── Quick Stats Row ── */}
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' },
-                gap: 2,
+                gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                gap: 2.5,
             }}>
                 {[
-                    { label: 'Total Users', value: widgets.totalUsers, color: '#eef2ff', text: '#6366f1' },
-                    { label: 'Staff Members', value: widgets.totalStaff, color: '#ecfdf5', text: '#10b981' },
-                    { label: 'Total Tasks', value: widgets.totalTasks, color: '#fffbeb', text: '#f59e0b' },
-                    { label: 'Total Invoices', value: widgets.totalInvoices, color: '#fdf2f8', text: '#ec4899' },
+                    { label: 'Total Users', value: widgets.totalUsers, icon: <PeopleIcon />, color: '#eef2ff', accent: '#6366f1' },
+                    { label: 'Staff Members', value: widgets.totalStaff, icon: <PeopleIcon />, color: '#ecfdf5', accent: '#10b981' },
+                    { label: 'Total Tasks', value: widgets.totalTasks, icon: <TrendIcon />, color: '#fffbeb', accent: '#f59e0b' },
+                    { label: 'Total Invoices', value: widgets.totalInvoices, icon: <RevenueIcon />, color: '#fdf2f8', accent: '#ec4899' },
                 ].map(s => (
-                    <Box key={s.label} sx={{ bgcolor: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', p: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ width: 8, height: 36, borderRadius: '4px', bgcolor: s.color, flexShrink: 0 }}>
-                            <Box sx={{ width: '100%', height: '100%', borderRadius: '4px', bgcolor: s.text, opacity: 0.3 }} />
+                    <Box key={s.label} sx={{ 
+                        bgcolor: '#fff', 
+                        borderRadius: '24px', 
+                        border: '1px solid #f1f5f9', 
+                        p: 2.5,
+                        transition: 'all 0.2s ease',
+                        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 20px rgba(0,0,0,0.05)' }
+                    }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                            <Box sx={{ 
+                                width: 36, height: 36, borderRadius: '12px', 
+                                bgcolor: s.color, color: s.accent,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                '& svg': { fontSize: 18 }
+                            }}>
+                                {s.icon}
+                            </Box>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                {s.label.split(' ')[1] || s.label}
+                            </Typography>
                         </Box>
                         <Box>
-                            <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>{s.label}</Typography>
-                            {isLoading ? <Skeleton width={40} /> : (
-                                <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>
+                            <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, mb: 0.25 }}>{s.label}</Typography>
+                            {isLoading ? <Skeleton width={50} height={24} /> : (
+                                <Typography sx={{ fontWeight: 800, color: '#1e293b', fontSize: '1.5rem', lineHeight: 1.2 }}>
                                     {(s.value as number)?.toLocaleString('en-IN') || 0}
                                 </Typography>
                             )}

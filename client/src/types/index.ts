@@ -8,6 +8,9 @@ export interface Client {
     panNumber?: string;
     aadharNumber?: string;
     gstNumber?: string;
+    clientType?: string;
+    dscExpiry?: string;
+    complianceFlags?: string[];
     physicalFileNumber?: string;
     fileNo?: string;
     tradeName?: string;
@@ -211,14 +214,83 @@ export interface LoginResponse {
 export interface Reminder {
     _id: string;
     clientId: string | Client;
+    ruleId?: string | ReminderRule;
+    cycleKey?: string;
     title: string;
     description?: string;
     dueDate: string;
-    reminderType: 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER';
+    reminderType: 'ITR' | 'GST' | 'TDS' | 'DSC' | 'ACCOUNTING' | 'OTHER';
     priority: 'LOW' | 'MEDIUM' | 'HIGH';
     status: 'PENDING' | 'COMPLETED' | 'OVERDUE';
     notifyBefore: number;
     notificationSent: boolean;
+    lastSentAt?: string;
+    nextReminderAt?: string;
+    escalationLevel?: number;
+    generatedBy?: 'MANUAL' | 'RULE_ENGINE' | 'DSC_CRON';
+    createdAt: string;
+}
+
+export interface ReminderRule {
+    _id: string;
+    ruleName: string;
+    complianceType: 'ITR' | 'GST' | 'TDS' | 'DSC' | 'ACCOUNTING' | 'OTHER';
+    triggerCondition: string;
+    frequency: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'ONE_TIME';
+    dueDateLogic: {
+        type: 'FIXED_DAY_OF_MONTH' | 'FIXED_DATE' | 'DSC_EXPIRY_DATE' | 'RELATIVE_TO_CLIENT_DATE';
+        dayOfMonth?: number;
+        month?: number;
+        day?: number;
+        clientDateField?: string;
+        quarterDueDay?: number;
+        quarterDueMonthOffset?: number;
+    };
+    reminderOffsets: number[];
+    followUpIntervalDays: number;
+    overdueFollowUpIntervalDays: number;
+    maxEscalationLevel: number;
+    applicableClientsFilter: {
+        clientTypes?: string[];
+        requiresGstin?: boolean;
+        requiresPan?: boolean;
+        clientGroupIds?: string[];
+        includeClientIds?: string[];
+        excludeClientIds?: string[];
+        complianceFlags?: string[];
+    };
+    channels: ('WHATSAPP' | 'EMAIL' | 'SMS')[];
+    automationEnabled: boolean;
+    isSystemRule: boolean;
+    createdAt: string;
+}
+
+export interface MessageTemplate {
+    _id: string;
+    name: string;
+    complianceType: 'ITR' | 'GST' | 'TDS' | 'DSC' | 'ACCOUNTING' | 'OTHER';
+    channel: 'WHATSAPP' | 'EMAIL' | 'SMS';
+    tone: 'NORMAL' | 'OVERDUE' | 'MISSED';
+    subject?: string;
+    body: string;
+    isDefault: boolean;
+    isActive: boolean;
+    createdAt: string;
+}
+
+export interface NotificationLog {
+    _id: string;
+    reminderId: string | Reminder;
+    clientId: string | Client;
+    ruleId?: string | ReminderRule;
+    channel: 'WHATSAPP' | 'EMAIL' | 'SMS';
+    recipient: string;
+    subject?: string;
+    message: string;
+    status: 'QUEUED' | 'SENT' | 'FAILED' | 'SKIPPED';
+    provider?: string;
+    error?: string;
+    sentAt?: string;
     createdAt: string;
 }
 

@@ -2,14 +2,22 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IReminder extends Document {
     clientId: mongoose.Types.ObjectId;
+    ruleId?: mongoose.Types.ObjectId;
+    cycleKey?: string;
     title: string;
     description: string;
     dueDate: Date;
-    reminderType: 'ITR' | 'GST' | 'ACCOUNTING' | 'OTHER';
+    reminderType: 'ITR' | 'GST' | 'TDS' | 'DSC' | 'ACCOUNTING' | 'OTHER';
     priority: 'LOW' | 'MEDIUM' | 'HIGH';
     status: 'PENDING' | 'COMPLETED' | 'OVERDUE';
     notifyBefore: number; // Days before due date to send notification
     notificationSent: boolean;
+    lastSentAt?: Date;
+    nextReminderAt?: Date;
+    escalationLevel: number;
+    generatedBy: 'MANUAL' | 'RULE_ENGINE' | 'DSC_CRON';
+    completedAt?: Date;
+    completedByActionId?: mongoose.Types.ObjectId;
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
@@ -29,6 +37,15 @@ const ReminderSchema: Schema = new Schema(
             ref: 'Client',
             required: true,
         },
+        ruleId: {
+            type: Schema.Types.ObjectId,
+            ref: 'ReminderRule',
+            index: true,
+        },
+        cycleKey: {
+            type: String,
+            trim: true,
+        },
         title: {
             type: String,
             required: true,
@@ -44,7 +61,7 @@ const ReminderSchema: Schema = new Schema(
         },
         reminderType: {
             type: String,
-            enum: ['ITR', 'GST', 'ACCOUNTING', 'OTHER'],
+            enum: ['ITR', 'GST', 'TDS', 'DSC', 'ACCOUNTING', 'OTHER'],
             required: true,
         },
         priority: {
@@ -65,6 +82,31 @@ const ReminderSchema: Schema = new Schema(
             type: Boolean,
             default: false,
         },
+        lastSentAt: {
+            type: Date,
+        },
+        nextReminderAt: {
+            type: Date,
+            index: true,
+        },
+        escalationLevel: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        generatedBy: {
+            type: String,
+            enum: ['MANUAL', 'RULE_ENGINE', 'DSC_CRON'],
+            default: 'MANUAL',
+            index: true,
+        },
+        completedAt: {
+            type: Date,
+        },
+        completedByActionId: {
+            type: Schema.Types.ObjectId,
+            ref: 'ClientAction',
+        },
         createdBy: {
             type: Schema.Types.ObjectId,
             ref: 'Admin',
@@ -81,5 +123,10 @@ ReminderSchema.index({ clientId: 1, dueDate: 1 });
 ReminderSchema.index({ status: 1, dueDate: 1 });
 // Compound index for /upcoming and /overdue endpoints (firmId + status + dueDate)
 ReminderSchema.index({ firmId: 1, status: 1, dueDate: 1 });
+ReminderSchema.index(
+    { firmId: 1, clientId: 1, ruleId: 1, cycleKey: 1 },
+    { unique: true, partialFilterExpression: { ruleId: { $exists: true }, cycleKey: { $exists: true } } }
+);
+ReminderSchema.index({ firmId: 1, status: 1, nextReminderAt: 1 });
 
 export default mongoose.model<IReminder>('Reminder', ReminderSchema);

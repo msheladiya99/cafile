@@ -1,8 +1,300 @@
 import { Router, Request, Response } from 'express';
-import { authenticate as authMiddleware } from '../middleware/auth';
-import { sendEmail } from '../utils/email';
+import { authenticate as authMiddleware, requireRoles } from '../middleware/auth';
+import {
+    generateRemindersForFirm,
+    processReminderFollowUps,
+    recordClientAction,
+    runReminderAutomation
+} from '../services/reminderRuleEngine.service';
+import { calculateReminderPriority } from '../services/reminderPriority.service';
+import { defaultTemplates } from '../services/messageTemplate.service';
 
 const router = Router();
+const adminOnly = requireRoles(['ADMIN', 'MANAGER']);
+const validRuleFilter = { ruleName: { $exists: true, $ne: '' } };
+
+// Automation dashboard summary
+router.get('/automation/summary', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const { Reminder, ReminderRule, NotificationLog } = (req as any).models;
+        const firmId = (req as any).firmId;
+        const [rules, activeRules, automatedPending, overdue, sentToday, failedToday] = await Promise.all([
+            ReminderRule.countDocuments({ firmId, ...validRuleFilter }),
+            ReminderRule.countDocuments({ firmId, ...validRuleFilter, automationEnabled: true }),
+            Reminder.countDocuments({ firmId, generatedBy: 'RULE_ENGINE', status: 'PENDING' }),
+            Reminder.countDocuments({ firmId, status: 'OVERDUE' }),
+            NotificationLog.countDocuments({ firmId, status: 'SENT', createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
+            NotificationLog.countDocuments({ firmId, status: 'FAILED', createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
+        ]);
+
+        res.json({ rules, activeRules, automatedPending, overdue, sentToday, failedToday, manualWorkReductionTarget: 90 });
+    } catch (error) {
+        console.error('Error fetching automation summary:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Rule engine CRUD
+router.get('/rules', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const { ReminderRule } = (req as any).models;
+        const rules = await ReminderRule.find({ firmId: (req as any).firmId, ...validRuleFilter }).sort({ createdAt: -1 });
+        res.json(rules);
+    } catch (error) {
+        console.error('Error fetching reminder rules:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/rules', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { ReminderRule } = (req as any).models;
+        const rule = await ReminderRule.create({
+            ...req.body,
+            firmId: (req as any).firmId,
+            createdBy: (req as any).user.userId,
+        });
+        res.status(201).json(rule);
+    } catch (error: any) {
+        console.error('Error creating reminder rule:', error);
+        res.status(400).json({ message: error.message || 'Unable to create rule' });
+    }
+});
+
+router.put('/rules/:id', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { ReminderRule } = (req as any).models;
+        const rule = await ReminderRule.findOneAndUpdate(
+            { _id: req.params.id, firmId: (req as any).firmId },
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!rule) return res.status(404).json({ message: 'Rule not found' });
+        res.json(rule);
+    } catch (error: any) {
+        console.error('Error updating reminder rule:', error);
+        res.status(400).json({ message: error.message || 'Unable to update rule' });
+    }
+});
+
+router.delete('/rules/:id', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { ReminderRule } = (req as any).models;
+        const rule = await ReminderRule.findOneAndDelete({ _id: req.params.id, firmId: (req as any).firmId });
+        if (!rule) return res.status(404).json({ message: 'Rule not found' });
+        res.json({ message: 'Rule deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting reminder rule:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/rules/seed-defaults', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { ReminderRule, MessageTemplate } = (req as any).models;
+        const firmId = (req as any).firmId;
+        const createdBy = (req as any).user.userId;
+
+        const templates = [
+            { name: 'Default Email Reminder', channel: 'EMAIL', tone: 'NORMAL', body: defaultTemplates.normal },
+            { name: 'Default WhatsApp Reminder', channel: 'WHATSAPP', tone: 'NORMAL', body: defaultTemplates.normal },
+            { name: 'Default Overdue Reminder', channel: 'EMAIL', tone: 'OVERDUE', body: defaultTemplates.overdue },
+            { name: 'Default Missed Compliance Alert', channel: 'EMAIL', tone: 'MISSED', body: defaultTemplates.missed },
+        ];
+
+        for (const template of templates) {
+            await MessageTemplate.updateOne(
+                { firmId, name: template.name },
+                {
+                    $setOnInsert: {
+                        ...template,
+                        firmId,
+                        complianceType: 'OTHER',
+                        subject: 'Compliance reminder for {ClientName}',
+                        isDefault: true,
+                        isActive: true,
+                        createdBy,
+                    },
+                },
+                { upsert: true }
+            );
+        }
+
+        const rules = [
+            {
+                ruleName: 'GST Return (GSTR-3B)',
+                complianceType: 'GST',
+                triggerCondition: 'Monthly GSTR-3B filing for clients with GSTIN',
+                frequency: 'MONTHLY',
+                dueDateLogic: { type: 'FIXED_DAY_OF_MONTH', dayOfMonth: 20 },
+                reminderOffsets: [7, 3, 1, 0],
+                applicableClientsFilter: { requiresGstin: true },
+                channels: ['WHATSAPP', 'EMAIL'],
+            },
+            {
+                ruleName: 'GST Return (GSTR-1)',
+                complianceType: 'GST',
+                triggerCondition: 'Monthly or quarterly outward supply return for GST clients',
+                frequency: 'MONTHLY',
+                dueDateLogic: { type: 'FIXED_DAY_OF_MONTH', dayOfMonth: 11 },
+                reminderOffsets: [7, 3, 1, 0],
+                applicableClientsFilter: { requiresGstin: true },
+                channels: ['WHATSAPP', 'EMAIL'],
+            },
+            {
+                ruleName: 'ITR Filing',
+                complianceType: 'ITR',
+                triggerCondition: 'Yearly income tax return filing for PAN clients',
+                frequency: 'YEARLY',
+                dueDateLogic: { type: 'FIXED_DATE', month: 7, day: 31 },
+                reminderOffsets: [30, 15, 7, 3, 1],
+                applicableClientsFilter: { requiresPan: true },
+                channels: ['WHATSAPP', 'EMAIL'],
+            },
+            {
+                ruleName: 'TDS Return',
+                complianceType: 'TDS',
+                triggerCondition: 'Quarterly TDS return filing',
+                frequency: 'QUARTERLY',
+                dueDateLogic: { type: 'FIXED_DAY_OF_MONTH', quarterDueDay: 31, quarterDueMonthOffset: 1 },
+                reminderOffsets: [10, 5, 2, 0],
+                applicableClientsFilter: {},
+                channels: ['EMAIL'],
+            },
+            {
+                ruleName: 'DSC Expiry',
+                complianceType: 'DSC',
+                triggerCondition: 'Digital Signature Certificate expiry tracked from client DSC expiry date',
+                frequency: 'ONE_TIME',
+                dueDateLogic: { type: 'DSC_EXPIRY_DATE' },
+                reminderOffsets: [30, 7, 1, 0],
+                applicableClientsFilter: {},
+                channels: ['WHATSAPP', 'EMAIL'],
+            },
+        ];
+
+        let upserted = 0;
+        for (const rule of rules) {
+            const result = await ReminderRule.updateOne(
+                { firmId, ruleName: rule.ruleName },
+                {
+                    $setOnInsert: {
+                        ...rule,
+                        firmId,
+                        followUpIntervalDays: 3,
+                        overdueFollowUpIntervalDays: 1,
+                        maxEscalationLevel: 3,
+                        automationEnabled: true,
+                        isSystemRule: true,
+                        createdBy,
+                    },
+                },
+                { upsert: true }
+            );
+            upserted += result.upsertedCount || 0;
+        }
+
+        res.json({ message: `Default automation rules ready. Added ${upserted} new rules.` });
+    } catch (error: any) {
+        console.error('Error seeding default rules:', error);
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
+
+// Message templates
+router.get('/templates', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const { MessageTemplate } = (req as any).models;
+        const templates = await MessageTemplate.find({ firmId: (req as any).firmId }).sort({ createdAt: -1 });
+        res.json(templates);
+    } catch (error) {
+        console.error('Error fetching message templates:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/templates', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { MessageTemplate } = (req as any).models;
+        const template = await MessageTemplate.create({
+            ...req.body,
+            firmId: (req as any).firmId,
+            createdBy: (req as any).user.userId,
+        });
+        res.status(201).json(template);
+    } catch (error: any) {
+        console.error('Error creating message template:', error);
+        res.status(400).json({ message: error.message || 'Unable to create template' });
+    }
+});
+
+router.put('/templates/:id', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const { MessageTemplate } = (req as any).models;
+        const template = await MessageTemplate.findOneAndUpdate(
+            { _id: req.params.id, firmId: (req as any).firmId },
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!template) return res.status(404).json({ message: 'Template not found' });
+        res.json(template);
+    } catch (error: any) {
+        console.error('Error updating message template:', error);
+        res.status(400).json({ message: error.message || 'Unable to update template' });
+    }
+});
+
+// Logs and client action tracking
+router.get('/logs', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const { NotificationLog } = (req as any).models;
+        const logs = await NotificationLog.find({ firmId: (req as any).firmId })
+            .populate('clientId', 'name email phone')
+            .populate('reminderId', 'title dueDate status')
+            .sort({ createdAt: -1 })
+            .limit(200);
+        res.json(logs);
+    } catch (error) {
+        console.error('Error fetching reminder logs:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.post('/actions', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const action = await recordClientAction(
+            (req as any).models,
+            (req as any).firmId,
+            req.body,
+            (req as any).user.userId
+        );
+        res.status(201).json(action);
+    } catch (error: any) {
+        console.error('Error recording client action:', error);
+        res.status(400).json({ message: error.message || 'Unable to record action' });
+    }
+});
+
+// Manual automation controls
+router.post('/automation/run', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const result = await runReminderAutomation((req as any).models, (req as any).firmId);
+        res.json(result);
+    } catch (error: any) {
+        console.error('Error running reminder automation:', error);
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
+
+router.post('/automation/generate', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+    try {
+        const result = await generateRemindersForFirm((req as any).models, (req as any).firmId);
+        res.json(result);
+    } catch (error: any) {
+        console.error('Error generating reminders:', error);
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
 
 // Get all reminders (Admin only)
 router.get('/', authMiddleware, async (req: Request, res: Response) => {
@@ -146,8 +438,9 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
                 description,
                 dueDate: new Date(dueDate),
                 reminderType,
-                priority,
+                priority: priority || calculateReminderPriority(new Date(dueDate)),
                 notifyBefore: notifyBefore || 7,
+                nextReminderAt: new Date(),
                 createdBy: (req as any).user.userId,
                 firmId: (req as any).firmId,
             }));
@@ -169,8 +462,9 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
                 description,
                 dueDate: new Date(dueDate),
                 reminderType,
-                priority,
+                priority: priority || calculateReminderPriority(new Date(dueDate)),
                 notifyBefore: notifyBefore || 7,
+                nextReminderAt: new Date(),
                 createdBy: (req as any).user.userId,
                 firmId: (req as any).firmId,
             }));
@@ -184,8 +478,9 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
             description,
             dueDate: new Date(dueDate),
             reminderType,
-            priority,
+            priority: priority || calculateReminderPriority(new Date(dueDate)),
             notifyBefore: notifyBefore || 7,
+            nextReminderAt: new Date(),
             createdBy: (req as any).user.userId,
             firmId: (req as any).firmId,
         });
@@ -232,7 +527,7 @@ router.patch('/:id/complete', authMiddleware, async (req: Request, res: Response
 
         const reminder = await Reminder.findOneAndUpdate(
             { _id: id, firmId: (req as any).firmId },
-            { status: 'COMPLETED' },
+            { status: 'COMPLETED', completedAt: new Date(), nextReminderAt: null },
             { new: true }
         ).populate('clientId', 'name email');
 
@@ -269,64 +564,8 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Send reminder notifications (called by cron job)
 router.post('/send-notifications', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const { Reminder } = (req as any).models;
-        const today = new Date();
-
-        // Find reminders that need notification
-        const query: any = {
-            status: 'PENDING',
-            notificationSent: false,
-        };
-        // If not super admin root execution, scope to firm
-        if ((req as any).firmId !== 'ROOT' && (req as any).firmId) {
-            query.firmId = (req as any).firmId;
-        }
-
-        const reminders = await Reminder.find(query).populate('clientId', 'name email');
-
-        let sentCount = 0;
-
-        for (const reminder of reminders) {
-            const dueDate = new Date(reminder.dueDate);
-            const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-            // Send notification if due date is within notifyBefore days
-            if (daysUntilDue <= reminder.notifyBefore && daysUntilDue >= 0) {
-                const client = reminder.clientId as any;
-
-                // Send email notification
-                try {
-                    await sendEmail(
-                        client.email,
-                        `Reminder: ${reminder.title}`,
-                        `
-                        <h2>Filing Deadline Reminder</h2>
-                        <p>Dear ${client.name},</p>
-                        <p>This is a reminder that you have an upcoming deadline:</p>
-                        <ul>
-                            <li><strong>Title:</strong> ${reminder.title}</li>
-                            <li><strong>Type:</strong> ${reminder.reminderType}</li>
-                            <li><strong>Due Date:</strong> ${dueDate.toLocaleDateString()}</li>
-                            <li><strong>Days Remaining:</strong> ${daysUntilDue}</li>
-                            <li><strong>Priority:</strong> ${reminder.priority}</li>
-                        </ul>
-                        ${reminder.description ? `<p><strong>Details:</strong> ${reminder.description}</p>` : ''}
-                        <p>Please ensure all required documents are submitted before the deadline.</p>
-                        <p>Best regards,<br>Your CA Office</p>
-                        `
-                    );
-
-                    // Mark notification as sent
-                    reminder.notificationSent = true;
-                    await reminder.save();
-                    sentCount++;
-                } catch (emailError) {
-                    console.error('Error sending reminder email:', emailError);
-                }
-            }
-        }
-
-        res.json({ message: `Sent ${sentCount} reminder notifications` });
+        const result = await processReminderFollowUps((req as any).models, (req as any).firmId);
+        res.json({ message: `Processed ${result.scanned} reminders. Sent ${result.sent} notifications.`, ...result });
     } catch (error) {
         console.error('Error sending notifications:', error);
         res.status(500).json({ message: 'Server error' });

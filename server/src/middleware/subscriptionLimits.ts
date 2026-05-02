@@ -6,12 +6,13 @@ import { Addon } from '../models/Addon';
 export const checkPlanLimits = (limitType: 'clients' | 'staff' | 'storageGB') => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const tenantId = (req as any).tenantId;
-            if (!tenantId) {
-                return res.status(400).json({ message: 'Tenant context is missing.' });
+            const firmId = (req as any).firmId || (req as any).user?.firmId || (require('../utils/context').getFirmId)();
+            console.log(`🔍 [checkPlanLimits] firmId: ${firmId}, userFirmId: ${(req as any).user?.firmId}, reqFirmId: ${(req as any).firmId}`);
+            if (!firmId) {
+                return res.status(400).json({ message: `!!! Tenant context missing (Plan Check) !!! firmId: ${firmId}` });
             }
 
-            const firm = await Firm.findById(tenantId).populate('subscription.planId');
+            const firm = await Firm.findById(firmId).populate('subscription.planId');
             if (!firm) {
                 return res.status(404).json({ message: 'Firm not found.' });
             }
@@ -77,10 +78,12 @@ export const checkPlanLimits = (limitType: 'clients' | 'staff' | 'storageGB') =>
 export const checkFeatureAccess = (featureFlag: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const tenantId = (req as any).tenantId;
-            if (!tenantId) return res.status(400).json({ message: 'Missing tenant context' });
+            const firmId = (req as any).firmId || (req as any).user?.firmId || (require('../utils/context').getFirmId)();
+            if (!firmId) return res.status(400).json({ 
+                message: `!!! Missing tenant context (DSC Access) !!! Detected firmId: ${firmId}. Path: ${req.originalUrl}` 
+            });
 
-            const firm = await Firm.findById(tenantId).populate('subscription.planId');
+            const firm = await Firm.findById(firmId).populate('subscription.planId');
             if (!firm) return res.status(404).json({ message: 'Firm not found' });
 
             // Super Admin bypass

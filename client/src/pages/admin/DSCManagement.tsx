@@ -27,9 +27,9 @@ import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-    active:        { label: 'Active',        color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0' },
+    active: { label: 'Active', color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0' },
     expiring_soon: { label: 'Expiring Soon', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-    expired:       { label: 'Expired',       color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+    expired: { label: 'Expired', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
 };
 
 function daysUntil(date: string) {
@@ -38,10 +38,10 @@ function daysUntil(date: string) {
 
 // ─── Password Reveal Modal ────────────────────────────────────────────────────
 function PasswordModal({ dscId, dscLabel, onClose }: { dscId: string; dscLabel: string; onClose: () => void }) {
-    const [step, setStep]           = useState<'warn' | 'reveal' | 'show'>('warn');
-    const [password, setPassword]   = useState('');
-    const [visible, setVisible]     = useState(false);
-    const [loading, setLoading]     = useState(false);
+    const [step, setStep] = useState<'warn' | 'reveal' | 'show'>('warn');
+    const [password, setPassword] = useState('');
+    const [visible, setVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(10);
 
     useEffect(() => {
@@ -197,16 +197,16 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
     const { data: clients = [] } = useQuery({ queryKey: ['clients'], queryFn: adminService.getClients });
 
     const [form, setForm] = useState({
-        clientId:         (initial?.clientId as { _id: string } | null)?._id || (initial?.clientId as string) || '',
-        dscNumber:        initial?.dscNumber || '',
-        holderName:       initial?.holderName || '',
-        issueDate:        initial?.issueDate?.slice(0, 10) || '',
-        expiryDate:       initial?.expiryDate?.slice(0, 10) || '',
-        dscClass:         initial?.dscClass || '',
-        dscType:          initial?.dscType || '',
+        clientId: (initial?.clientId as { _id: string } | null)?._id || (initial?.clientId as string) || '',
+        dscNumber: initial?.dscNumber || '',
+        holderName: initial?.holderName || '',
+        issueDate: initial?.issueDate?.slice(0, 10) || '',
+        expiryDate: initial?.expiryDate?.slice(0, 10) || '',
+        dscClass: initial?.dscClass || '',
+        dscType: initial?.dscType || '',
         issuingAuthority: initial?.issuingAuthority || '',
-        purpose:          initial?.purpose || '',
-        dscPassword:      '',
+        purpose: initial?.purpose || '',
+        dscPassword: '',
     });
     const [saving, setSaving] = useState(false);
     const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -343,11 +343,11 @@ function DSCFormModal({ initial, onClose, onSuccess }: { initial?: DSCRecord | n
 export const DSCManagement: React.FC = () => {
     const qc = useQueryClient();
     const [statusFilter, setStatusFilter] = useState('');
-    const [search, setSearch]             = useState('');
-    const [showForm, setShowForm]         = useState(false);
-    const [editItem, setEditItem]         = useState<DSCRecord | null>(null);
-    const [pwdItem, setPwdItem]           = useState<DSCRecord | null>(null);
-    const [auditItem, setAuditItem]       = useState<DSCRecord | null>(null);
+    const [search, setSearch] = useState('');
+    const [showForm, setShowForm] = useState(false);
+    const [editItem, setEditItem] = useState<DSCRecord | null>(null);
+    const [pwdItem, setPwdItem] = useState<DSCRecord | null>(null);
+    const [auditItem, setAuditItem] = useState<DSCRecord | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<DSCRecord | null>(null);
 
     const { data: dashboard } = useQuery({ queryKey: ['dsc-dashboard'], queryFn: dscService.getDashboard });
@@ -383,10 +383,10 @@ export const DSCManagement: React.FC = () => {
 
     // Stat cards
     const statCards = [
-        { label: 'Total DSC',     value: dashboard?.total        ?? 0, icon: <GppGoodIcon />,      color: '#667eea', bg: 'linear-gradient(135deg,#667eea,#764ba2)' },
-        { label: 'Active',        value: dashboard?.active       ?? 0, icon: <GppGoodIcon />,      color: '#10b981', bg: 'linear-gradient(135deg,#10b981,#059669)' },
-        { label: 'Expiring Soon', value: dashboard?.expiringSoon ?? 0, icon: <WarningAmberIcon />,  color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b,#d97706)' },
-        { label: 'Expired',       value: dashboard?.expired      ?? 0, icon: <ErrorOutlineIcon />, color: '#ef4444', bg: 'linear-gradient(135deg,#ef4444,#dc2626)' },
+        { label: 'Total DSC', value: dashboard?.total ?? 0, icon: <GppGoodIcon />, color: '#667eea', bg: 'linear-gradient(135deg,#667eea,#764ba2)' },
+        { label: 'Active', value: dashboard?.active ?? 0, icon: <GppGoodIcon />, color: '#10b981', bg: 'linear-gradient(135deg,#10b981,#059669)' },
+        { label: 'Expiring Soon', value: dashboard?.expiringSoon ?? 0, icon: <WarningAmberIcon />, color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b,#d97706)' },
+        { label: 'Expired', value: dashboard?.expired ?? 0, icon: <ErrorOutlineIcon />, color: '#ef4444', bg: 'linear-gradient(135deg,#ef4444,#dc2626)' },
     ];
 
     return (
@@ -396,19 +396,19 @@ export const DSCManagement: React.FC = () => {
                 bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
                 color: '#1e293b', borderRadius: '0 0 16px 16px', px: 3, py: 2.5, mb: 3
             }}>
-                <Box sx={{ 
-                    display: 'flex', 
+                <Box sx={{
+                    display: 'flex',
                     flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between', 
-                    alignItems: { xs: 'flex-start', sm: 'center' }, 
-                    gap: 2.5 
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: 2.5
                 }}>
                     <Box>
-                        <Typography 
-                            variant="h5" 
-                            fontWeight={800} 
-                            display="flex" 
-                            alignItems="center" 
+                        <Typography
+                            variant="h5"
+                            fontWeight={800}
+                            display="flex"
+                            alignItems="center"
                             gap={1}
                             sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
                         >
@@ -418,9 +418,9 @@ export const DSCManagement: React.FC = () => {
                             Digital Signature Certificate — Expiry Tracking & Secure Password Vault
                         </Typography>
                     </Box>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1.5, 
+                    <Box sx={{
+                        display: 'flex',
+                        gap: 1.5,
                         width: { xs: '100%', sm: 'auto' },
                         '& > button': { flex: { xs: 1, sm: 'initial' } }
                     }}>
@@ -444,11 +444,11 @@ export const DSCManagement: React.FC = () => {
                         <Grid key={c.label} size={{ xs: 6, sm: 3 }}>
                             <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
                                 <CardContent sx={{ p: { xs: 1.5, sm: 2.5 }, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-                                    <Avatar sx={{ 
-                                        background: c.bg, 
-                                        width: { xs: 36, sm: 48 }, 
-                                        height: { xs: 36, sm: 48 }, 
-                                        boxShadow: `0 4px 12px ${c.color}40` 
+                                    <Avatar sx={{
+                                        background: c.bg,
+                                        width: { xs: 36, sm: 48 },
+                                        height: { xs: 36, sm: 48 },
+                                        boxShadow: `0 4px 12px ${c.color}40`
                                     }}>
                                         {React.cloneElement(c.icon as React.ReactElement<{ sx?: any }>, { sx: { fontSize: { xs: 18, sm: 24 } } })}
                                     </Avatar>
@@ -462,40 +462,101 @@ export const DSCManagement: React.FC = () => {
                     ))}
                 </Grid>
 
-                {/* ── Expiring Soon Widget ── */}
+                {/* ── Expiring Soon Widget (Redesigned) ── */}
                 {(dashboard?.upcoming || []).length > 0 && (
-                    <Alert severity="warning" sx={{ mb: 3, borderRadius: '12px' }}>
-                        <Typography variant="subtitle2" fontWeight={700} mb={1}>⏰ Expiring in Next 30 Days</Typography>
-                        <Grid container spacing={1}>
+                    <Box sx={{ mb: 4 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Typography variant="h6" fontWeight={800} sx={{ color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <WarningAmberIcon sx={{ color: '#f59e0b' }} /> Upcoming Expiries
+                            </Typography>
+                            <Chip 
+                                label={`${dashboard!.upcoming.length} Records`} 
+                                size="small" 
+                                sx={{ bgcolor: '#fff7ed', color: '#c2410b', fontWeight: 700, borderRadius: '8px' }} 
+                            />
+                        </Box>
+                        
+                        <Grid container spacing={2}>
                             {dashboard!.upcoming.map(d => {
                                 const days = daysUntil(d.expiryDate);
                                 return (
                                     <Grid key={d._id} size={{ xs: 12, sm: 6, md: 4 }}>
-                                        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Box>
-                                                <Typography variant="body2" fontWeight={700}>{(d.clientId as { name?: string })?.name || d.holderName}</Typography>
-                                                <Typography variant="caption" color="text.secondary" fontFamily="monospace">{d.dscNumber}</Typography>
+                                        <Paper elevation={0} sx={{ 
+                                            p: 2, 
+                                            borderRadius: '16px', 
+                                            display: 'flex', 
+                                            flexDirection: 'column',
+                                            gap: 1.5,
+                                            bgcolor: '#ffffff',
+                                            border: '1px solid #f1f5f9',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            '&:hover': { 
+                                                transform: 'translateY(-4px)', 
+                                                boxShadow: '0 12px 24px -10px rgba(0,0,0,0.1)',
+                                                borderColor: '#667eea40'
+                                            },
+                                            '&::before': {
+                                                content: '""',
+                                                position: 'absolute',
+                                                left: 0, top: 0, bottom: 0,
+                                                width: '4px',
+                                                bgcolor: days <= 7 ? '#ef4444' : '#f59e0b'
+                                            }
+                                        }}>
+                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                                                <Box sx={{ minWidth: 0 }}>
+                                                    <Typography variant="subtitle2" fontWeight={800} noWrap sx={{ color: '#1e293b', fontSize: '0.95rem' }}>
+                                                        {(d.clientId as { name?: string })?.name || d.holderName}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary" fontFamily="monospace" sx={{ letterSpacing: 0.5 }}>
+                                                        {d.dscNumber}
+                                                    </Typography>
+                                                </Box>
+                                                <Box sx={{ 
+                                                    textAlign: 'center', 
+                                                    px: 1.5, py: 0.5, 
+                                                    borderRadius: '10px', 
+                                                    bgcolor: days <= 7 ? '#fef2f2' : '#fffbeb',
+                                                    border: `1px solid ${days <= 7 ? '#fee2e2' : '#fef3c7'}`
+                                                }}>
+                                                    <Typography variant="caption" fontWeight={800} display="block" 
+                                                        sx={{ color: days <= 7 ? '#ef4444' : '#d97706', lineHeight: 1.2 }}>
+                                                        {days <= 0 ? 'EXPIRED' : `${days}d`}
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ fontSize: '0.65rem', color: days <= 7 ? '#f87171' : '#f59e0b', fontWeight: 600 }}>
+                                                        LEFT
+                                                    </Typography>
+                                                </Box>
                                             </Box>
-                                            <Chip label={days <= 0 ? 'Expired' : `${days}d`}
-                                                size="small"
-                                                sx={{ fontWeight: 800, bgcolor: days <= 0 ? '#fef2f2' : days <= 7 ? '#fff7ed' : '#fffbeb', color: days <= 0 ? '#ef4444' : days <= 7 ? '#ea580c' : '#d97706' }} />
+                                            
+                                            <Box display="flex" alignItems="center" gap={1}>
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                    Expires: {new Date(d.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                </Typography>
+                                                <Box sx={{ height: '4px', width: '4px', borderRadius: '50%', bgcolor: '#e2e8f0' }} />
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                                                    {d.dscClass || 'Class 3'}
+                                                </Typography>
+                                            </Box>
                                         </Paper>
                                     </Grid>
                                 );
                             })}
                         </Grid>
-                    </Alert>
+                    </Box>
                 )}
 
                 {/* ── Filters ── */}
-                <Paper elevation={1} sx={{ 
-                    borderRadius: 3, 
-                    p: 2, 
-                    mb: 2.5, 
-                    display: 'flex', 
-                    gap: 2, 
+                <Paper elevation={1} sx={{
+                    borderRadius: 3,
+                    p: 2,
+                    mb: 2.5,
+                    display: 'flex',
+                    gap: 2,
                     flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'stretch', sm: 'center' } 
+                    alignItems: { xs: 'stretch', sm: 'center' }
                 }}>
                     <TextField size="small" placeholder="Search DSC, holder or client..."
                         value={search} onChange={e => setSearch(e.target.value)}
@@ -547,7 +608,7 @@ export const DSCManagement: React.FC = () => {
                                         </TableHead>
                                         <TableBody>
                                             {filtered.map((dsc, i) => {
-                                                const cfg  = STATUS_CONFIG[dsc.dscStatus] || STATUS_CONFIG.active;
+                                                const cfg = STATUS_CONFIG[dsc.dscStatus] || STATUS_CONFIG.active;
                                                 const days = daysUntil(dsc.expiryDate);
                                                 const client = dsc.clientId as { name?: string; email?: string; panNumber?: string };
                                                 return (

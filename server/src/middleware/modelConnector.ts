@@ -25,6 +25,10 @@ import EmailTemplate from '../models/EmailTemplate';
 import { Expense } from '../models/Expense';
 import { ExpenseSettlement } from '../models/ExpenseSettlement';
 import Service from '../models/Service';
+import ReminderRule from '../models/ReminderRule';
+import MessageTemplate from '../models/MessageTemplate';
+import NotificationLog from '../models/NotificationLog';
+import ClientAction from '../models/ClientAction';
 
 
 /**
@@ -59,6 +63,10 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         Expense: getTenantModel(req, 'Expense', Expense),
         ExpenseSettlement: getTenantModel(req, 'ExpenseSettlement', ExpenseSettlement),
         Service: getTenantModel(req, 'Service', Service),
+        ReminderRule: getTenantModel(req, 'ReminderRule', ReminderRule),
+        MessageTemplate: getTenantModel(req, 'MessageTemplate', MessageTemplate),
+        NotificationLog: getTenantModel(req, 'NotificationLog', NotificationLog),
+        ClientAction: getTenantModel(req, 'ClientAction', ClientAction),
     };
 
 
