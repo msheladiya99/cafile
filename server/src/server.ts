@@ -45,6 +45,7 @@ import expenseSettlementRoutes from './routes/expenseSettlement';
 import taxNoticeRoutes from './routes/taxNotice';
 import caAssistantRoutes from './routes/caAssistant';
 import { startDSCCronJob } from './utils/dscCron';
+import { startReminderCronJob } from './utils/reminderCron';
 
 
 
@@ -194,6 +195,7 @@ startServer();
 startDSCCronJob();
 startSubscriptionCronJob();
 startTaskCronJob();
+startReminderCronJob();
 startEmailWorker();
 import './queues/parse.worker';
 
@@ -210,3 +212,5 @@ const shutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
+
+

@@ -61,6 +61,9 @@ export interface IClient extends Document {
     panNumber?: string;
     aadharNumber?: string;
     gstNumber?: string;
+    clientType?: string;
+    dscExpiry?: Date;
+    complianceFlags?: string[];
     profileImageUrl?: string;
 
     // Office File Tracking
@@ -180,6 +183,18 @@ const clientSchema = new Schema<IClient>({
         trim: true,
         uppercase: true
     },
+    clientType: {
+        type: String,
+        trim: true,
+        index: true
+    },
+    dscExpiry: {
+        type: Date
+    },
+    complianceFlags: [{
+        type: String,
+        trim: true
+    }],
     profileImageUrl: {
         type: String,
         trim: true
@@ -212,5 +227,7 @@ const clientSchema = new Schema<IClient>({
 // Index for faster queries
 clientSchema.index({ firmId: 1, email: 1 }, { unique: true });
 clientSchema.index({ firmId: 1, name: 1 });
+clientSchema.index({ firmId: 1, gstNumber: 1 });
+clientSchema.index({ firmId: 1, clientType: 1, status: 1 });
 
 export const Client = mongoose.model<IClient>('Client', clientSchema);

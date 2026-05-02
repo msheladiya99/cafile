@@ -38,12 +38,15 @@ import {
     FilterList as FilterIcon,
     History as HistoryIcon,
     Schedule as ScheduleIcon,
+    AutoAwesome as AutoAwesomeIcon,
+    Rule as RuleIcon,
+    PlayArrow as PlayArrowIcon,
 } from '@mui/icons-material';
 import { reminderService } from '../../services/reminderService';
 import { adminService } from '../../services/adminService';
 import { clientGroupService } from '../../services/clientGroupService';
 import type { ClientGroup } from '../../services/clientGroupService';
-import type { Reminder, Client } from '../../types';
+import type { Reminder, Client, NotificationLog, ReminderRule } from '../../types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@mui/material';
 import { CommonButton } from '../../components/common/UIComponents';
@@ -266,12 +269,28 @@ export const Reminders: React.FC = () => {
         queryFn: clientGroupService.getGroups
     });
 
+    const { data: automationSummary } = useQuery({
+        queryKey: ['reminderAutomationSummary'],
+        queryFn: reminderService.getAutomationSummary
+    });
+
+    const { data: rules = [] } = useQuery<ReminderRule[]>({
+        queryKey: ['reminderRules'],
+        queryFn: reminderService.getRules
+    });
+
+    const { data: logs = [] } = useQuery<NotificationLog[]>({
+        queryKey: ['reminderLogs'],
+        queryFn: reminderService.getLogs
+    });
+
     const isLoading = isLoadingReminders || isLoadingClients || isLoadingGroups;
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
     const [filter, setFilter] = useState('PENDING');
     const [notifying, setNotifying] = useState(false);
+    const [automationBusy, setAutomationBusy] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
         message: '',
@@ -338,11 +357,45 @@ export const Reminders: React.FC = () => {
             const result = await reminderService.sendNotifications();
             showSnackbar(result.message || 'Notifications sent successfully');
             queryClient.invalidateQueries({ queryKey: ['reminders'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderLogs'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderAutomationSummary'] });
         } catch (error) {
             console.error('Error sending notifications:', error);
             showSnackbar('Error sending automated notifications', 'error');
         } finally {
             setNotifying(false);
+        }
+    };
+
+    const handleSeedDefaults = async () => {
+        setAutomationBusy(true);
+        try {
+            const result = await reminderService.seedDefaultRules();
+            showSnackbar(result.message || 'Default rules created');
+            queryClient.invalidateQueries({ queryKey: ['reminderRules'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderAutomationSummary'] });
+        } catch (error) {
+            console.error('Error seeding default rules:', error);
+            showSnackbar('Failed to create default rules', 'error');
+        } finally {
+            setAutomationBusy(false);
+        }
+    };
+
+    const handleRunAutomation = async () => {
+        setAutomationBusy(true);
+        try {
+            await reminderService.runAutomation();
+            showSnackbar('Automation run completed');
+            queryClient.invalidateQueries({ queryKey: ['reminders'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderLogs'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderRules'] });
+            queryClient.invalidateQueries({ queryKey: ['reminderAutomationSummary'] });
+        } catch (error) {
+            console.error('Error running automation:', error);
+            showSnackbar('Failed to run automation', 'error');
+        } finally {
+            setAutomationBusy(false);
         }
     };
 
@@ -429,6 +482,123 @@ export const Reminders: React.FC = () => {
                     </CommonButton>
                 </Box>
             </Box>
+
+            <Paper sx={{ borderRadius: 3, mb: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+                <Box
+                    p={{ xs: 2, md: 2.5 }}
+                    display="flex"
+                    flexDirection={{ xs: 'column', lg: 'row' }}
+                    justifyContent="space-between"
+                    gap={2}
+                    borderBottom="1px solid #eef2f6"
+                >
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                        <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#e8f3ef', color: '#0f766e' }}>
+                            <AutoAwesomeIcon />
+                        </Box>
+                        <Box>
+                            <Typography variant="h6" fontWeight={800}>Intelligent Automation</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Rule-based compliance reminders, follow-ups, escalation, and notification logs.
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                        <CommonButton
+                            variant="outlined"
+                            startIcon={<RuleIcon />}
+                            loading={automationBusy}
+                            onClick={handleSeedDefaults}
+                        >
+                            Add Default Rules
+                        </CommonButton>
+                        <CommonButton
+                            variant="contained"
+                            startIcon={<PlayArrowIcon />}
+                            loading={automationBusy}
+                            onClick={handleRunAutomation}
+                        >
+                            Run Automation
+                        </CommonButton>
+                    </Stack>
+                </Box>
+
+                <Grid container spacing={0} sx={{ borderBottom: '1px solid #eef2f6' }}>
+                    {[
+                        ['Active Rules', automationSummary?.activeRules ?? rules.filter(rule => rule.automationEnabled).length],
+                        ['Auto Pending', automationSummary?.automatedPending ?? reminders.filter(r => r.generatedBy === 'RULE_ENGINE' && r.status === 'PENDING').length],
+                        ['Sent Today', automationSummary?.sentToday ?? logs.filter(log => log.status === 'SENT').length],
+                        ['Failed Today', automationSummary?.failedToday ?? logs.filter(log => log.status === 'FAILED').length],
+                    ].map(([label, value]) => (
+                        <Grid key={label} size={{ xs: 6, md: 3 }} sx={{ p: 2, borderRight: { md: '1px solid #eef2f6' } }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700}>{label}</Typography>
+                            <Typography variant="h5" fontWeight={800}>{value}</Typography>
+                        </Grid>
+                    ))}
+                </Grid>
+
+                <Grid container spacing={0}>
+                    <Grid size={{ xs: 12, lg: 7 }} sx={{ p: 2.5, borderRight: { lg: '1px solid #eef2f6' } }}>
+                        <Typography variant="subtitle2" fontWeight={800} mb={1.5}>Automation Rules</Typography>
+                        <Stack spacing={1}>
+                            {rules.slice(0, 5).map((rule) => (
+                                <Box
+                                    key={rule._id}
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="space-between"
+                                    gap={2}
+                                    sx={{ p: 1.5, border: '1px solid #eef2f6', borderRadius: 2, bgcolor: '#fbfcfd' }}
+                                >
+                                    <Box>
+                                        <Typography variant="body2" fontWeight={800}>{rule.ruleName}</Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {rule.frequency} · {rule.reminderOffsets?.join(', ')} days before · {rule.channels?.join(' + ')}
+                                        </Typography>
+                                    </Box>
+                                    <Chip
+                                        size="small"
+                                        label={rule.automationEnabled ? 'Active' : 'Paused'}
+                                        color={rule.automationEnabled ? 'success' : 'default'}
+                                        sx={{ fontWeight: 700 }}
+                                    />
+                                </Box>
+                            ))}
+                            {rules.length === 0 && (
+                                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                                    No automation rules yet. Add the default CA compliance rules to start generating reminders automatically.
+                                </Alert>
+                            )}
+                        </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 12, lg: 5 }} sx={{ p: 2.5 }}>
+                        <Typography variant="subtitle2" fontWeight={800} mb={1.5}>Recent Notification Logs</Typography>
+                        <Stack spacing={1}>
+                            {logs.slice(0, 5).map((log) => (
+                                <Box key={log._id} sx={{ p: 1.5, border: '1px solid #eef2f6', borderRadius: 2 }}>
+                                    <Box display="flex" justifyContent="space-between" gap={1}>
+                                        <Typography variant="body2" fontWeight={700} noWrap>{log.channel} to {log.recipient}</Typography>
+                                        <Chip
+                                            size="small"
+                                            label={log.status}
+                                            color={log.status === 'SENT' ? 'success' : log.status === 'FAILED' ? 'error' : 'default'}
+                                            sx={{ fontWeight: 700 }}
+                                        />
+                                    </Box>
+                                    <Typography variant="caption" color="text.secondary" noWrap display="block">
+                                        {log.subject || log.message}
+                                    </Typography>
+                                </Box>
+                            ))}
+                            {logs.length === 0 && (
+                                <Typography variant="body2" color="text.secondary">
+                                    Notification history will appear after automation or manual alerts run.
+                                </Typography>
+                            )}
+                        </Stack>
+                    </Grid>
+                </Grid>
+            </Paper>
 
             <Grid container spacing={3} mb={4}>
                 <Grid size={{ xs: 12, sm: 4 }}>
