@@ -1,829 +1,523 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-    Box, Paper, Typography, List, ListItem, ListItemText, ListItemIcon, 
-    Chip, Grid, Tooltip, IconButton, TextField, Avatar, Skeleton
+    Alert,
+    Avatar,
+    Box,
+    Chip,
+    Grid,
+    IconButton,
+    LinearProgress,
+    Paper,
+    Skeleton,
+    Stack,
+    Tooltip,
+    Typography,
 } from '@mui/material';
 import {
-    People as PeopleIcon,
-    CloudUpload as UploadIcon,
+    AccountBalanceWallet,
+    Add,
+    Assignment,
+    AutoAwesome,
+    CheckCircle,
+    ChevronLeft,
+    ChevronRight,
+    CloudUpload,
+    ErrorOutline,
+    Groups,
+    NotificationsActive,
+    Paid,
+    People,
+    PersonAdd,
+    ReceiptLong,
+    Send,
+    TaskAlt,
+    TrendingDown,
     TrendingUp,
-    Event as EventIcon,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    Add as AddIcon,
-    Delete as DeleteIcon,
-    CheckCircle as CheckCircleIcon,
-    RadioButtonUnchecked as UncheckedIcon,
-    Assignment as AssignmentIcon,
-    PieChart as PieChartIcon
+    WarningAmber,
 } from '@mui/icons-material';
-
-import { CommonButton } from '../../components/common/UIComponents';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip as ChartTooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { Helmet } from 'react-helmet-async';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
+import { reminderService } from '../../services/reminderService';
+import { CommonButton } from '../../components/common/UIComponents';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface ToDoItem {
-    id: number;
-    text: string;
-    completed: boolean;
+const cardSx = {
+    borderRadius: 3,
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+    border: '1px solid rgba(226,232,240,0.9)',
+    background: '#ffffff',
+};
+
+const money = (value = 0) => value.toLocaleString('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+});
+
+const formatDate = (value?: string) => value
+    ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+    : 'No date';
+
+interface DashboardPayload {
+    clientCount: number;
+    activeClientCount: number;
+    pendingTasks: number;
+    staffCount?: number;
+    reminders: any[];
+    overdueReminders: any[];
+    tasksDueToday: any[];
+    clientsPendingDocuments: any[];
+    highPriorityTasks: any[];
+    recentFiles: any[];
+    billing: {
+        totalInvoiced: number;
+        totalReceived: number;
+        pendingPayments: number;
+        collectionPending: number;
+        overdueInvoices: number;
+    };
+    performance: {
+        monthlyRevenue: Array<{ month: string; invoiced: number; received: number }>;
+        workCompletion: Array<{ month: string; completion: number }>;
+        clientGrowth: Array<{ month: string; clients: number }>;
+        filingSuccessRate: number;
+    };
+    employeeWorkload: Array<{ name: string; role: string; total: number; completed: number; pending: number; completionRate: number }>;
+    reminderStatus: {
+        sentToday: number;
+        failedToday: number;
+        skippedToday: number;
+        pendingReminders: number;
+        recentNotificationLogs: any[];
+    };
+    aiInsights: string[];
+    dscSummary: { total: number; expiringSoon: number; expired: number };
+    trends: { revenue: number; collection: number };
 }
+
+const priorityColor = (priority?: string) => {
+    if (priority === 'URGENT' || priority === 'HIGH') return 'error';
+    if (priority === 'MEDIUM') return 'warning';
+    return 'default';
+};
+
+const ComplianceCalendar: React.FC<{ reminders: any[]; overdue: any[] }> = ({ reminders, overdue }) => {
+    const [viewDate, setViewDate] = useState(new Date());
+    const [filter, setFilter] = useState('ALL');
+
+    const calendarEvents = useMemo(() => {
+        const staticEvents = [
+            { day: 7, type: 'TDS', label: 'TDS Payment', color: '#0f766e' },
+            { day: 11, type: 'GST', label: 'GSTR-1', color: '#4f46e5' },
+            { day: 20, type: 'GST', label: 'GSTR-3B', color: '#dc2626' },
+            { day: 31, type: 'TDS', label: 'TDS Return', color: '#d97706' },
+        ];
+        const dynamic = [...reminders, ...overdue].map((item) => ({
+            day: new Date(item.dueDate).getDate(),
+            type: item.reminderType || 'CUSTOM',
+            label: item.title,
+            color: item.status === 'OVERDUE' ? '#dc2626' : '#2563eb',
+        }));
+        return [...staticEvents, ...dynamic].filter((item) => filter === 'ALL' || item.type === filter);
+    }, [filter, overdue, reminders]);
+
+    const today = new Date();
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    return (
+        <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                <Box>
+                    <Typography variant="h6" fontWeight={800}>Smart Compliance Calendar</Typography>
+                    <Typography variant="body2" color="text.secondary">GST, TDS, ITR and custom reminders</Typography>
+                </Box>
+                <Stack direction="row" spacing={0.5}>
+                    <IconButton size="small" onClick={() => setViewDate(new Date(year, month - 1, 1))}><ChevronLeft /></IconButton>
+                    <IconButton size="small" onClick={() => setViewDate(new Date(year, month + 1, 1))}><ChevronRight /></IconButton>
+                </Stack>
+            </Stack>
+            <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
+                {['ALL', 'GST', 'TDS', 'ITR', 'CUSTOM'].map((item) => (
+                    <Chip key={item} label={item} size="small" onClick={() => setFilter(item)} color={filter === item ? 'primary' : 'default'} />
+                ))}
+            </Stack>
+            <Typography variant="subtitle2" fontWeight={800} mb={1}>
+                {viewDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.75 }}>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                    <Typography key={`${day}-${index}`} variant="caption" fontWeight={800} color="text.secondary" textAlign="center">{day}</Typography>
+                ))}
+                {Array.from({ length: firstDay }).map((_, index) => <Box key={`empty-${index}`} sx={{ minHeight: 42 }} />)}
+                {Array.from({ length: daysInMonth }).map((_, index) => {
+                    const day = index + 1;
+                    const events = calendarEvents.filter((event) => event.day === day).slice(0, 3);
+                    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                    return (
+                        <Tooltip key={day} title={events.map((event) => event.label).join(', ') || 'No compliance event'}>
+                            <Box
+                                sx={{
+                                    minHeight: 46,
+                                    borderRadius: 2,
+                                    border: isToday ? '2px solid #111827' : '1px solid #e5e7eb',
+                                    p: 0.75,
+                                    bgcolor: events.length ? '#f8fafc' : '#fff',
+                                    cursor: events.length ? 'pointer' : 'default',
+                                }}
+                            >
+                                <Typography variant="caption" fontWeight={isToday ? 900 : 700}>{day}</Typography>
+                                <Stack direction="row" spacing={0.35} mt={0.4}>
+                                    {events.map((event, eventIndex) => (
+                                        <Box key={`${event.label}-${eventIndex}`} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: event.color }} />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        </Tooltip>
+                    );
+                })}
+            </Box>
+        </Paper>
+    );
+};
 
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [viewDate, setViewDate] = useState(new Date());
-
-    const [tasks, setTasks] = useState<ToDoItem[]>(() => {
-        try {
-            const saved = localStorage.getItem('adminToDos');
-            return saved ? JSON.parse(saved) : [
-                { id: 1, text: 'Review pending GST filings', completed: false },
-                { id: 2, text: 'Send invoice reminders', completed: true },
-            ];
-        } catch (error) {
-            console.error('Failed to parse tasks from local storage', error);
-            return [
-                { id: 1, text: 'Review pending GST filings', completed: false },
-                { id: 2, text: 'Send invoice reminders', completed: true },
-            ];
-        }
-    });
-    const [newTask, setNewTask] = useState('');
-
-    const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+    const { user, isAdmin, isManager } = useAuth();
+    const { data, isLoading } = useQuery<DashboardPayload>({
         queryKey: ['admin-dashboard-stats'],
-        queryFn: adminService.getDashboardStats,
-        staleTime: 2 * 60 * 1000, // 2 minutes
+        queryFn: async () => (await adminService.getDashboardStats()) as unknown as DashboardPayload,
+        refetchInterval: 15000,
     });
 
-    const clientCount = dashboardData?.clientCount || 0;
-    const reminders = dashboardData?.reminders || [];
-    const isLoadingClients = isDashboardLoading;
-    const isLoadingReminders = isDashboardLoading;
+    const { data: automationSummary } = useQuery({
+        queryKey: ['reminderAutomationSummary'],
+        queryFn: reminderService.getAutomationSummary,
+        refetchInterval: 15000,
+    });
 
+    const pendingTasks = Number(data?.pendingTasks || 0);
+    const overdueCompliance = Number(data?.overdueReminders?.length || 0);
+    const billing = data?.billing;
+    const performance = data?.performance;
+    const reminderStatus = data?.reminderStatus;
+    const dscSummary = data?.dscSummary;
 
+    const kpis = [
+        { label: 'Total Clients', value: data?.clientCount || 0, icon: <People />, color: '#2563eb', bg: '#eff6ff', trend: '+8%', path: '/admin/client/list' },
+        { label: 'Active Clients', value: data?.activeClientCount || 0, icon: <Groups />, color: '#059669', bg: '#ecfdf5', trend: '+5%', path: '/admin/client/list' },
+        { label: 'Pending Tasks', value: pendingTasks, icon: <Assignment />, color: '#d97706', bg: '#fffbeb', trend: '+12%', path: '/admin/tasks' },
+        { label: 'Overdue Compliance', value: overdueCompliance, icon: <WarningAmber />, color: '#dc2626', bg: '#fef2f2', trend: overdueCompliance ? '+urgent' : '0', path: '/admin/reminders' },
+        { label: 'Revenue This Month', value: money(billing?.totalInvoiced || 0), icon: <Paid />, color: '#7c3aed', bg: '#f5f3ff', trend: `${data?.trends?.revenue || 0}%`, path: '/admin/billing' },
+        { label: 'Collection Pending', value: money(billing?.collectionPending || billing?.pendingPayments || 0), icon: <AccountBalanceWallet />, color: '#be123c', bg: '#fff1f2', trend: `${data?.trends?.collection || 0}%`, path: '/admin/client-ledger' },
+    ];
 
-    // Save tasks to LocalStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('adminToDos', JSON.stringify(tasks));
-    }, [tasks]);
+    const urgentActions = [
+        ...(data?.tasksDueToday || []).map((task: any) => ({ type: 'Due Today', title: task.title, meta: task.clientId?.name || 'Internal task', priority: task.priority, path: '/admin/tasks' })),
+        ...(data?.overdueReminders || []).map((reminder: any) => ({ type: 'Overdue Filing', title: reminder.title, meta: reminder.clientId?.name || 'Client', priority: 'URGENT', path: '/admin/reminders' })),
+        ...(data?.clientsPendingDocuments || []).map((task: any) => ({ type: 'Documents Pending', title: task.title, meta: task.clientId?.name || 'Client response needed', priority: 'HIGH', path: '/admin/tasks' })),
+        ...(data?.highPriorityTasks || []).map((task: any) => ({ type: 'High Priority', title: task.title, meta: formatDate(task.targetDate), priority: task.priority, path: '/admin/tasks' })),
+    ].slice(0, 8);
 
-    const handleAddTask = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newTask.trim()) return;
-        setTasks([{ id: Date.now(), text: newTask, completed: false }, ...tasks]);
-        setNewTask('');
-    };
+    const quickActions = [
+        { label: 'Add Client', icon: <PersonAdd />, path: '/admin/client/master' },
+        { label: 'Create Task', icon: <TaskAlt />, path: '/admin/task-applicability?single=true' },
+        { label: 'Upload Document', icon: <CloudUpload />, path: '/admin/upload' },
+        { label: 'Generate Invoice', icon: <ReceiptLong />, path: '/admin/billing' },
+        { label: 'Send Reminder', icon: <Send />, path: '/admin/reminders' },
+    ];
 
-    const toggleTask = (id: number) => {
-        setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-    };
-
-    const deleteTask = (id: number) => {
-        setTasks(tasks.filter(t => t.id !== id));
-    };
-
-    // Helper function to get deadline info
-    const getDeadlineInfo = (date: number) => {
-        // GST Deadlines
-        if (date === 11) return { type: 'GSTR-1', period: 'Monthly', color: '#667eea' };
-        if (date === 13) return { type: 'GSTR-1', period: 'Quarterly', color: '#764ba2' };
-        if (date === 20) return { type: 'GSTR-3B', period: 'Monthly', color: '#f093fb' };
-        if (date === 22) return { type: 'GSTR-3B', period: 'Quarterly (22nd)', color: '#f5576c' };
-        if (date === 24) return { type: 'GSTR-3B', period: 'Quarterly (24th)', color: '#f5576c' };
-
-        // TDS/TCS Deadlines
-        if (date === 7) return { type: 'TDS/TCS', period: 'Payment (Monthly)', color: '#10b981' };
-        if (date === 30) return { type: 'TDS Return', period: 'Quarterly Filing', color: '#059669' };
-
-        return null;
-    };
-
-    const handlePrevMonth = () => {
-        setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
-    };
-
-    const handleNextMonth = () => {
-        setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
-    };
-
-    const handleToday = () => {
-        setViewDate(new Date());
-    };
+    const workloadPie = (data?.employeeWorkload || []).slice(0, 5).map((item: any) => ({ name: item.name, value: item.pending }));
+    const pieColors = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626'];
 
     return (
-        <Box className={!isLoadingClients ? 'page-content-fade' : ''} sx={{ px: { xs: 2, sm: 3 }, pb: 5 }}>
+        <Box sx={{ px: { xs: 1, md: 2 }, pb: 5 }}>
             <Helmet>
-                <title>Admin Dashboard | MyCAFile - CA Office Portal</title>
-                <link rel="canonical" href="https://mycafile.in/admin/dashboard" />
-                <meta name="description" content="View firm statistics, management tasks, and filing deadlines on your MyCAFile dashboard." />
+                <title>Command Center | MyCAFile</title>
+                <meta name="description" content="Modern CA practice dashboard for compliance, billing, client activity and team workload." />
             </Helmet>
 
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between', 
-                    alignItems: { xs: 'flex-start', sm: 'center' }, 
-                    gap: { xs: 2.5, sm: 0 },
-                    mb: 4 
-                }}
-            >
+            <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', lg: 'center' }} spacing={2.5} mb={3}>
                 <Box>
-                    <Typography 
-                        variant="h4" 
-                        component="h1" 
-                        fontWeight="800" 
-                        sx={{ 
-                            fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                            background: 'linear-gradient(45deg, #2c3e50, #3498db)', 
-                            WebkitBackgroundClip: 'text', 
-                            WebkitTextFillColor: 'transparent' 
-                        }}
-                    >
-                        Dashboard
+                    <Chip label={isAdmin || isManager ? 'Firm Command Center' : 'My Work Dashboard'} size="small" sx={{ mb: 1, fontWeight: 800, bgcolor: '#e0f2fe', color: '#075985' }} />
+                    <Typography variant="h4" fontWeight={900} letterSpacing={0}>
+                        Good day, {user?.name || user?.username || 'Team'}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Welcome to your CA Admin Panel
+                    <Typography variant="body1" color="text.secondary">
+                        Urgent compliance, client activity, billing and workload in one operational view.
                     </Typography>
                 </Box>
-                <Box 
-                    sx={{ 
-                        display: 'flex', 
-                        flexDirection: { xs: 'row', sm: 'row' },
-                        flexWrap: 'wrap',
-                        gap: 2, 
-                        alignItems: 'center',
-                        width: { xs: '100%', sm: 'auto' },
-                        justifyContent: { xs: 'space-between', sm: 'flex-end' }
-                    }}
-                >
-                    <CommonButton
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => navigate('/admin/clients')}
-                        sx={{
-                            background: 'linear-gradient(45deg, #4c51bf, #667eea)',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            borderRadius: '12px',
-                            px: { xs: 2, sm: 3 },
-                            py: 1,
-                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                            boxShadow: '0 4px 14px 0 rgba(76, 81, 191, 0.39)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #434190, #5a67d8)',
-                                boxShadow: '0 6px 20px rgba(76, 81, 191, 0.23)',
-                            },
-                        }}
-                    >
-                        Add New Client
-                    </CommonButton>
-                    <Chip
-                        label="FY 2025-26"
-                        sx={{
-                            fontWeight: '600',
-                            bgcolor: '#1e3a5f',
-                            color: '#ffffff',
-                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
-                            '& .MuiChip-label': { color: '#ffffff' }
-                        }}
-                    />
-                </Box>
-            </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <CommonButton variant="outlined" startIcon={<NotificationsActive />} onClick={() => navigate('/admin/reminders')}>Reminder Center</CommonButton>
+                    <CommonButton variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/client/master')}>New Client</CommonButton>
+                </Stack>
+            </Stack>
 
-            {/* Top Stats Row */}
-            <Grid container spacing={2} mb={4}>
-                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
-                        <Box>
-                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Total Clients</Typography>
-                            {isLoadingClients ? (
-                                <Skeleton width={60} height={40} />
-                            ) : (
-                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#1a2e44', fontSize: { xs: '2rem', sm: '3rem' } }}>{clientCount}</Typography>
-                            )}
-                        </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
-                            <PeopleIcon />
-                        </Avatar>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
-                        <Box>
-                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Pending Tasks</Typography>
-                            {isLoadingReminders ? (
-                                <Skeleton width={60} height={40} />
-                            ) : (
-                                <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#b45309', fontSize: { xs: '2rem', sm: '3rem' } }}>{reminders.length}</Typography>
-                            )}
-                        </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(230, 126, 34, 0.1)', color: '#e67e22', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
-                            <AssignmentIcon />
-                        </Avatar>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
-                    <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
-                        <Box>
-                            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 600 }}>Filings Done</Typography>
-                            <Typography variant="h3" component="p" fontWeight={800} sx={{ color: '#166534', fontSize: { xs: '2rem', sm: '3rem' } }}>85%</Typography>
-                        </Box>
-                        <Avatar sx={{ bgcolor: 'rgba(39, 174, 96, 0.1)', color: '#27ae60', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>
-                            <PieChartIcon />
-                        </Avatar>
-                    </Paper>
-                </Grid>
+            <Grid container spacing={2.5} mb={2.5}>
+                {kpis.map((kpi) => (
+                    <Grid key={kpi.label} size={{ xs: 12, sm: 6, lg: 2 }}>
+                        <Paper onClick={() => navigate(kpi.path)} sx={{ ...cardSx, p: 2, height: '100%', cursor: 'pointer', transition: '0.2s ease', '&:hover': { transform: 'translateY(-3px)' } }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                <Avatar sx={{ bgcolor: kpi.bg, color: kpi.color, width: 42, height: 42 }}>{kpi.icon}</Avatar>
+                                <Chip
+                                    size="small"
+                                    icon={String(kpi.trend).startsWith('-') ? <TrendingDown /> : <TrendingUp />}
+                                    label={kpi.trend}
+                                    sx={{ height: 24, fontWeight: 800, bgcolor: '#f8fafc' }}
+                                />
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary" fontWeight={700} mt={2}>{kpi.label}</Typography>
+                            {isLoading ? <Skeleton height={42} /> : <Typography variant="h5" fontWeight={900}>{kpi.value}</Typography>}
+                        </Paper>
+                    </Grid>
+                ))}
             </Grid>
 
-            {/* Main Content Grid: Calendar + Quick Actions + To-Do List (Equal Heights) */}
-            <Grid container spacing={3} mb={6}>
-
-                {/* 1. Mini GST Compliance Calendar */}
-                <Grid size={{ xs: 12, md: 6, lg: 4 }} display="flex">
-                    <Paper
-                        sx={{
-                            p: { xs: 2, sm: 3 },
-                            borderRadius: 4,
-                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-                            background: '#ffffff',
-                            width: '100%',
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}
-                    >
-                        <Box mb={2.5} display="flex" alignItems="center" justifyContent="space-between">
-                            <IconButton onClick={handlePrevMonth} size="small" aria-label="View previous month">
-                                <ChevronLeftIcon />
-                            </IconButton>
-                            <Box textAlign="center" onClick={handleToday} sx={{ cursor: 'pointer' }} role="button" aria-label="Reset calendar to today" tabIndex={0}>
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{
-                                        fontSize: '0.75rem',
-                                        fontWeight: 600,
-                                        letterSpacing: '0.5px',
-                                        textTransform: 'uppercase',
-                                        mb: 0.5
-                                    }}
-                                >
-                                    {viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    display="block"
-                                    sx={{ fontSize: '0.7rem' }}
-                                >
-                                    GST Filing Deadlines
-                                </Typography>
+            <Grid container spacing={2.5}>
+                <Grid size={{ xs: 12, xl: 7 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Box>
+                                <Typography variant="h6" fontWeight={900}>Urgent Action Center</Typography>
+                                <Typography variant="body2" color="text.secondary">Today’s highest-impact work queue</Typography>
                             </Box>
-                            <IconButton onClick={handleNextMonth} size="small" aria-label="View next month">
-                                <ChevronRightIcon />
-                            </IconButton>
-                        </Box>
-
-                        <Box>
-                            {/* Day Headers */}
-                            <Box sx={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(7, 1fr)',
-                                gap: 0.5,
-                                mb: 1
-                            }}>
-                                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
-                                    <Box
-                                        key={day}
-                                        sx={{
-                                            textAlign: 'center',
-                                            py: 0.75,
-                                            fontWeight: 700,
-                                            fontSize: '0.7rem',
-                                            color: '#64748b',
-                                            letterSpacing: '0.5px'
-                                        }}
-                                    >
-                                        {day}
-                                    </Box>
-                                ))}
-                            </Box>
-
-                            {/* Calendar Dates */}
-                            <Box sx={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(7, 1fr)',
-                                gap: 0.5
-                            }}>
-                                {(() => {
-                                    const today = new Date();
-                                    const year = viewDate.getFullYear();
-                                    const month = viewDate.getMonth();
-                                    const firstDay = new Date(year, month, 1).getDay();
-                                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                                    const todayDate = today.getDate();
-                                    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
-
-                                    const dates = [];
-
-                                    for (let i = 0; i < firstDay; i++) {
-                                        dates.push(
-                                            <Box key={`empty-${i}`} sx={{ aspectRatio: '1', minHeight: 36 }} />
-                                        );
-                                    }
-
-                                    for (let date = 1; date <= daysInMonth; date++) {
-                                        const isToday = isCurrentMonth && date === todayDate;
-                                        const deadlineInfo = getDeadlineInfo(date);
-                                        const isGSTDeadline = deadlineInfo !== null;
-
-                                        let bgColor = 'transparent';
-                                        let textColor = 'text.primary';
-                                        let hoverBg = 'rgba(0,0,0,0.04)';
-
-                                        if (isToday) {
-                                            bgColor = '#334155'; // Dark Navy for maximum contrast with white text
-                                            textColor = '#ffffff';
-                                            hoverBg = '#1e293b';
-                                        } else if (isGSTDeadline) {
-                                            bgColor = `${deadlineInfo.color}15`;
-                                            hoverBg = `${deadlineInfo.color}30`;
-                                        }
-
-                                        const dateCell = (
-                                            <Box
-                                                key={date}
-                                                sx={{
-                                                    aspectRatio: '1',
-                                                    minHeight: 36,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    borderRadius: isToday ? '50%' : 1.5,
-                                                    bgcolor: bgColor,
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    '&:hover': {
-                                                        bgcolor: hoverBg,
-                                                        transform: isGSTDeadline ? 'scale(1.15)' : 'scale(1.05)',
-                                                        boxShadow: isGSTDeadline ? `0 4px 12px ${deadlineInfo.color}40` : 'none',
-                                                        zIndex: 10
-                                                    },
-                                                    position: 'relative'
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="body2"
-                                                    fontWeight={isToday ? 700 : isGSTDeadline ? 600 : 400}
-                                                    color={textColor}
-                                                    sx={{
-                                                        fontSize: '0.85rem',
-                                                        lineHeight: 1
-                                                    }}
-                                                >
-                                                    {date}
-                                                </Typography>
-                                                {isGSTDeadline && !isToday && (
-                                                    <Box
-                                                        sx={{
-                                                            position: 'absolute',
-                                                            bottom: 4,
-                                                            width: 3,
-                                                            height: 3,
-                                                            borderRadius: '50%',
-                                                            bgcolor: deadlineInfo.color
-                                                        }}
-                                                    />
-                                                )}
+                            <Chip label={`${urgentActions.length} actions`} color={urgentActions.length ? 'error' : 'success'} sx={{ fontWeight: 800 }} />
+                        </Stack>
+                        <Stack spacing={1.25}>
+                            {isLoading ? [1, 2, 3].map((item) => <Skeleton key={item} height={68} sx={{ borderRadius: 2 }} />) : urgentActions.length ? urgentActions.map((item, index) => (
+                                <Box key={`${item.type}-${index}`} sx={{ p: 1.5, borderRadius: 2, border: '1px solid #e5e7eb', bgcolor: item.priority === 'URGENT' ? '#fff1f2' : '#fffaf0' }}>
+                                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} spacing={1.5}>
+                                        <Stack direction="row" spacing={1.5} alignItems="center">
+                                            <Avatar sx={{ bgcolor: item.priority === 'URGENT' ? '#fee2e2' : '#fef3c7', color: item.priority === 'URGENT' ? '#dc2626' : '#b45309' }}>
+                                                {item.priority === 'URGENT' ? <ErrorOutline /> : <WarningAmber />}
+                                            </Avatar>
+                                            <Box>
+                                                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                                                    <Typography variant="subtitle2" fontWeight={900}>{item.title}</Typography>
+                                                    <Chip size="small" label={item.type} color={priorityColor(item.priority) as any} sx={{ fontWeight: 800 }} />
+                                                </Stack>
+                                                <Typography variant="caption" color="text.secondary">{item.meta}</Typography>
                                             </Box>
-                                        );
-
-                                        if (isGSTDeadline) {
-                                            dates.push(
-                                                <Tooltip
-                                                    key={date}
-                                                    enterTouchDelay={0}
-                                                    disableInteractive
-                                                    title={
-                                                        <Box sx={{ p: 0.5 }}>
-                                                            <Typography variant="caption" fontWeight={700} display="block">
-                                                                {deadlineInfo.type}
-                                                            </Typography>
-                                                            <Typography variant="caption" fontSize="0.65rem" display="block">
-                                                                {deadlineInfo.period} Filing
-                                                            </Typography>
-                                                            <Typography variant="caption" fontSize="0.65rem" display="block" sx={{ mt: 0.5, opacity: 0.8 }}>
-                                                                Due: {date} {viewDate.toLocaleDateString('en-US', { month: 'short' })}
-                                                            </Typography>
-                                                        </Box>
-                                                    }
-                                                    arrow
-                                                    placement="top"
-                                                    componentsProps={{
-                                                        tooltip: {
-                                                            sx: {
-                                                                bgcolor: deadlineInfo.color,
-                                                                '& .MuiTooltip-arrow': {
-                                                                    color: deadlineInfo.color,
-                                                                },
-                                                                boxShadow: `0 4px 12px ${deadlineInfo.color}60`,
-                                                                borderRadius: '12px'
-                                                            }
-                                                        }
-                                                    }}
-                                                >
-                                                    {dateCell}
-                                                </Tooltip>
-                                            );
-                                        } else {
-                                            dates.push(dateCell);
-                                        }
-                                    }
-
-                                    return dates;
-                                })()}
-                            </Box>
-                        </Box>
-
-                        <Box sx={{
-                            mt: 2,
-                            pt: 2,
-                            borderTop: '1px solid',
-                            borderColor: 'divider',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 0.75
-                        }}>
-                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#FF6B35' }} />
-                                    <Typography variant="caption" fontSize="0.7rem" color="text.secondary">Today</Typography>
+                                        </Stack>
+                                        <CommonButton size="small" variant="contained" onClick={() => navigate(item.path)}>Take Action</CommonButton>
+                                    </Stack>
                                 </Box>
-                                <Typography variant="caption" fontSize="0.7rem" fontWeight={600} color="text.primary">
-                                    {new Date().getDate()}
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }} />
-                                    <Typography variant="caption" fontSize="0.7rem" color="text.secondary">GSTR-1</Typography>
-                                </Box>
-                                <Typography variant="caption" fontSize="0.7rem" fontWeight={600} color="text.primary">
-                                    11th, 13th
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#f093fb' }} />
-                                    <Typography variant="caption" fontSize="0.7rem" color="text.secondary">GSTR-3B</Typography>
-                                </Box>
-                                <Typography variant="caption" fontSize="0.7rem" fontWeight={600} color="text.primary">
-                                    20th, 22nd, 24th
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
-                                    <Typography variant="caption" fontSize="0.7rem" color="text.secondary">TDS/TCS</Typography>
-                                </Box>
-                                <Typography variant="caption" fontSize="0.7rem" fontWeight={600} color="text.primary">
-                                    7th, 30th
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                {/* 2. Quick Actions Panel */}
-                <Grid size={{ xs: 12, md: 6, lg: 4 }} display="flex">
-                    <Paper
-                        sx={{
-                            p: { xs: 2.5, md: 3 },
-                            borderRadius: 3,
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                            background: '#ffffff',
-                            width: '100%',
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Typography variant="h6" component="h2" fontWeight="700" gutterBottom>
-                            Quick Actions
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mb={3}>
-                            Common tasks for your CA office
-                        </Typography>
-
-                        {/* Always 2 Columns for Better Grid */}
-                        <Box sx={{
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                            gap: { xs: 2, md: 2 }
-                        }}>
-                             <Box
-                                onClick={() => navigate('/admin/clients')}
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Add a new client"
-                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/clients')}
-                                sx={{
-                                    p: { xs: 2, md: 2 },
-                                    borderRadius: 3.5,
-                                    bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-                                    color: '#1e293b',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: 1,
-                                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-                                    },
-                                }}
-                            >
-                                <Box sx={{
-                                    p: 1.2,
-                                    borderRadius: '14px',
-                                    bgcolor: 'rgba(99, 102, 241, 0.08)', 
-                                    color: '#6366f1',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.05)'
-                                }}>
-                                    <PeopleIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
-                                        Add Client
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                             <Box
-                                onClick={() => navigate('/admin/reminders')}
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Go to reminders"
-                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/reminders')}
-                                sx={{
-                                    p: { xs: 2, md: 2 },
-                                    borderRadius: 3.5,
-                                    background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: 1,
-                                    boxShadow: '0 4px 15px rgba(250, 112, 154, 0.3)',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 8px 25px rgba(250, 112, 154, 0.4)',
-                                    },
-                                }}
-                            >
-                                <Box sx={{
-                                    p: 1.2,
-                                    borderRadius: '14px',
-                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backdropFilter: 'blur(4px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                                }}>
-                                    <EventIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
-                                        Reminder
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                            {/* Upload Action */}
-                             <Box
-                                onClick={() => navigate('/admin/upload')}
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Upload files"
-                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/upload')}
-                                sx={{
-                                    p: { xs: 2, md: 2 },
-                                    borderRadius: 3.5,
-                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: 1,
-                                    boxShadow: '0 4px 15px rgba(240, 147, 251, 0.3)',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 8px 25px rgba(240, 147, 251, 0.4)',
-                                    },
-                                }}
-                            >
-                                <Box sx={{
-                                    p: 1.2,
-                                    borderRadius: '14px',
-                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backdropFilter: 'blur(4px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                                }}>
-                                    <UploadIcon sx={{ fontSize: { xs: 24, md: 28 } }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
-                                        Upload
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                            {/* Invoice Action */}
-                             <Box
-                                onClick={() => navigate('/admin/billing')}
-                                role="button"
-                                tabIndex={0}
-                                aria-label="Go to billing"
-                                onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/billing')}
-                                sx={{
-                                    p: { xs: 2, md: 2 },
-                                    borderRadius: 3.5,
-                                    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: 1,
-                                    boxShadow: '0 4px 15px rgba(79, 172, 254, 0.3)',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: '0 8px 25px rgba(79, 172, 254, 0.4)',
-                                    },
-                                }}
-                            >
-                                <Box sx={{
-                                    p: 1.2,
-                                    borderRadius: '14px',
-                                    bgcolor: 'rgba(255, 255, 255, 0.25)',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backdropFilter: 'blur(4px)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                                }}>
-                                    <TrendingUp sx={{ fontSize: { xs: 24, md: 28 } }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
-                                        Invoice
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                {/* 3. Smart To-Do List Section */}
-                <Grid size={{ xs: 12, md: 12, lg: 4 }} display="flex">
-                    <Paper
-                        sx={{
-                            p: { xs: 2, md: 3 },
-                            borderRadius: 3,
-                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                            background: '#ffffff',
-                            width: '100%',
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}
-                    >
-                        <Box mb={2}>
-                            <Typography variant="h6" component="h2" fontWeight="700" gutterBottom>
-                                Smart To-Do
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Daily admin tasks
-                            </Typography>
-                        </Box>
-
-                        <form onSubmit={handleAddTask}>
-                            <Box sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center' }}>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    placeholder="Add task..."
-                                    value={newTask}
-                                    onChange={(e) => setNewTask(e.target.value)}
-                                    size="small"
-                                    InputProps={{
-                                        sx: { borderRadius: '12px', fontSize: '0.9rem', bgcolor: '#f8fafc' }
-                                    }}
-                                />
-                                <CommonButton
-                                    variant="contained"
-                                    type="submit"
-                                    aria-label="Add task"
-                                    sx={{
-                                        borderRadius: '12px',
-                                        minWidth: '45px',
-                                        height: '40px',
-                                        p: 0,
-                                        background: 'linear-gradient(45deg, #11998e 30%, #38ef7d 90%)',
-                                    }}
-                                >
-                                    <AddIcon />
-                                </CommonButton>
-                            </Box>
-                        </form>
-
-                        <List disablePadding sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: '100%' }}>
-                            {tasks.length === 0 ? (
-                                <Box py={4} textAlign="center" color="text.secondary">
-                                    <Typography variant="caption">No tasks yet.</Typography>
-                                </Box>
-                            ) : (
-                                tasks.map((task) => (
-                                    <ListItem
-                                        key={task.id}
-                                        sx={{
-                                            px: 1.5,
-                                            py: 0.5,
-                                            mb: 1,
-                                            borderRadius: '12px',
-                                            bgcolor: task.completed ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,1)',
-                                            border: '1px solid',
-                                            borderColor: 'divider',
-                                            transition: 'background-color 0.2s, transform 0.2s',
-                                            animation: 'fadeSlideIn 0.25s ease-out',
-                                            '@keyframes fadeSlideIn': {
-                                                from: { opacity: 0, transform: 'translateY(-6px)' },
-                                                to: { opacity: 1, transform: 'translateY(0)' },
-                                            },
-                                            '&:hover': {
-                                                bgcolor: 'rgba(0,0,0,0.04)',
-                                                transform: 'translateX(3px)'
-                                            }
-                                        }}
-                                        secondaryAction={
-                                            <IconButton edge="end" aria-label={`Delete task: ${task.text}`} onClick={() => deleteTask(task.id)} size="small" color="error">
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemIcon sx={{ minWidth: 30 }} onClick={() => toggleTask(task.id)}>
-                                            <IconButton size="small" color={task.completed ? "success" : "default"} aria-label={task.completed ? `Mark "${task.text}" as incomplete` : `Mark "${task.text}" as complete`}>
-                                                {task.completed ? <CheckCircleIcon fontSize="small" /> : <UncheckedIcon fontSize="small" />}
-                                            </IconButton>
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        textDecoration: task.completed ? 'line-through' : 'none',
-                                                        color: task.completed ? 'text.secondary' : 'text.primary',
-                                                        fontWeight: task.completed ? 400 : 500,
-                                                        fontSize: '0.85rem'
-                                                    }}
-                                                >
-                                                    {task.text}
-                                                </Typography>
-                                            }
-                                        />
-                                    </ListItem>
-                                ))
+                            )) : (
+                                <Alert severity="success" sx={{ borderRadius: 2 }}>No urgent action pending. The desk is clear.</Alert>
                             )}
-                        </List>
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, xl: 5 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Typography variant="h6" fontWeight={900}>Quick Action Panel</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>One-click paths for daily CA workflows</Typography>
+                        <Grid container spacing={1.5}>
+                            {quickActions.map((action) => (
+                                <Grid key={action.label} size={{ xs: 12, sm: action.label === 'Send Reminder' ? 12 : 6 }}>
+                                    <Box onClick={() => navigate(action.path)} sx={{ p: 2, borderRadius: 2, border: '1px solid #e5e7eb', bgcolor: '#f8fafc', cursor: 'pointer', '&:hover': { bgcolor: '#eef2ff' } }}>
+                                        <Stack direction="row" spacing={1.25} alignItems="center">
+                                            <Avatar sx={{ bgcolor: '#fff', color: '#4f46e5' }}>{action.icon}</Avatar>
+                                            <Typography variant="body2" fontWeight={900}>{action.label}</Typography>
+                                        </Stack>
+                                    </Box>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 7 }}>
+                    <ComplianceCalendar reminders={data?.reminders || []} overdue={data?.overdueReminders || []} />
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 5 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
+                            <Avatar sx={{ bgcolor: '#eef2ff', color: '#4f46e5' }}><AutoAwesome /></Avatar>
+                            <Box>
+                                <Typography variant="h6" fontWeight={900}>AI Insights</Typography>
+                                <Typography variant="body2" color="text.secondary">Smart exceptions and workload signals</Typography>
+                            </Box>
+                        </Stack>
+                        <Stack spacing={1.25}>
+                            {(data?.aiInsights || []).map((insight: string, index: number) => (
+                                <Alert key={index} icon={index < 2 ? <WarningAmber /> : <AutoAwesome />} severity={index < 2 ? 'warning' : 'info'} sx={{ borderRadius: 2 }}>
+                                    {insight}
+                                </Alert>
+                            ))}
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5 }}>
+                        <Typography variant="h6" fontWeight={900}>Firm Performance Analytics</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>Revenue, work completion and client growth</Typography>
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, md: 7 }}>
+                                <Box sx={{ height: 260 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={performance?.monthlyRevenue || []}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis dataKey="month" />
+                                            <YAxis />
+                                            <ChartTooltip formatter={(value) => money(Number(value || 0))} />
+                                            <Area type="monotone" dataKey="invoiced" stroke="#4f46e5" fill="#c7d2fe" name="Invoiced" />
+                                            <Area type="monotone" dataKey="received" stroke="#059669" fill="#bbf7d0" name="Received" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 5 }}>
+                                <Box sx={{ height: 120, mb: 2 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={performance?.workCompletion || []}>
+                                            <XAxis dataKey="month" hide />
+                                            <YAxis hide domain={[0, 100]} />
+                                            <ChartTooltip />
+                                            <Line type="monotone" dataKey="completion" stroke="#0f766e" strokeWidth={3} dot={false} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                                <Box sx={{ height: 120 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={performance?.clientGrowth || []}>
+                                            <XAxis dataKey="month" hide />
+                                            <YAxis hide />
+                                            <ChartTooltip />
+                                            <Bar dataKey="clients" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Typography variant="h6" fontWeight={900}>Auto Reminder Status</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>Notification automation health</Typography>
+                        <Grid container spacing={1.5}>
+                            {[
+                                ['Sent Today', reminderStatus?.sentToday ?? automationSummary?.sentToday ?? 0, '#059669'],
+                                ['Failed', reminderStatus?.failedToday ?? automationSummary?.failedToday ?? 0, '#dc2626'],
+                                ['Pending', reminderStatus?.pendingReminders ?? automationSummary?.automatedPending ?? 0, '#d97706'],
+                                ['DSC Soon', dscSummary?.expiringSoon ?? 0, '#7c3aed'],
+                            ].map(([label, value, color]) => (
+                                <Grid key={label as string} size={{ xs: 6 }}>
+                                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#f8fafc' }}>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={800}>{label}</Typography>
+                                        <Typography variant="h5" fontWeight={900} sx={{ color }}>{value}</Typography>
+                                    </Box>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Typography variant="h6" fontWeight={900}>Client Activity Panel</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>Recent uploads and responses</Typography>
+                        <Stack spacing={1.25}>
+                            {(data?.recentFiles || []).slice(0, 6).map((file: any) => (
+                                <Stack key={file._id} direction="row" spacing={1.25} alignItems="center">
+                                    <Avatar sx={{ bgcolor: '#ecfeff', color: '#0891b2' }}><CloudUpload /></Avatar>
+                                    <Box minWidth={0}>
+                                        <Typography variant="body2" fontWeight={800} noWrap>{file.originalFileName || file.fileName}</Typography>
+                                        <Typography variant="caption" color="text.secondary" noWrap display="block">{file.clientId?.name || 'Client'} · {formatDate(file.uploadedAt)}</Typography>
+                                    </Box>
+                                </Stack>
+                            ))}
+                            {!(data?.recentFiles || []).length && <Typography variant="body2" color="text.secondary">No recent client activity yet.</Typography>}
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Typography variant="h6" fontWeight={900}>Billing & Collection Summary</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>Invoice movement and pending money</Typography>
+                        {[
+                            ['Total Invoiced', money(billing?.totalInvoiced || 0), '#4f46e5'],
+                            ['Amount Received', money(billing?.totalReceived || 0), '#059669'],
+                            ['Pending Payments', money(billing?.pendingPayments || 0), '#d97706'],
+                            ['Overdue Invoices', billing?.overdueInvoices || 0, '#dc2626'],
+                        ].map(([label, value, color]) => (
+                            <Box key={label as string} mb={1.6}>
+                                <Stack direction="row" justifyContent="space-between">
+                                    <Typography variant="body2" color="text.secondary">{label}</Typography>
+                                    <Typography variant="body2" fontWeight={900} sx={{ color }}>{value}</Typography>
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5, height: '100%' }}>
+                        <Typography variant="h6" fontWeight={900}>Employee Task Tracking</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>Assigned tasks and workload distribution</Typography>
+                        <Box sx={{ height: 150, mb: 1 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={workloadPie} dataKey="value" nameKey="name" innerRadius={42} outerRadius={68}>
+                                        {workloadPie.map((_: any, index: number) => <Cell key={index} fill={pieColors[index % pieColors.length]} />)}
+                                    </Pie>
+                                    <ChartTooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </Box>
+                        <Stack spacing={1}>
+                            {(data?.employeeWorkload || []).slice(0, 5).map((employee: any) => (
+                                <Box key={employee.name}>
+                                    <Stack direction="row" justifyContent="space-between" mb={0.5}>
+                                        <Typography variant="caption" fontWeight={800}>{employee.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">{employee.pending} pending · {employee.completionRate}%</Typography>
+                                    </Stack>
+                                    <LinearProgress variant="determinate" value={employee.completionRate} sx={{ height: 7, borderRadius: 10 }} />
+                                </Box>
+                            ))}
+                            {!(data?.employeeWorkload || []).length && <Typography variant="body2" color="text.secondary">No employee workload yet.</Typography>}
+                        </Stack>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Paper sx={{ ...cardSx, p: 2.5 }}>
+                        <Stack direction="row" spacing={1.25} alignItems="center" mb={1}>
+                            <Avatar sx={{ bgcolor: '#ecfdf5', color: '#059669' }}><CheckCircle /></Avatar>
+                            <Box>
+                                <Typography variant="h6" fontWeight={900}>Operating Rhythm</Typography>
+                                <Typography variant="body2" color="text.secondary">Real-time dashboard refreshes every 15 seconds with cached API queries for smooth performance.</Typography>
+                            </Box>
+                        </Stack>
                     </Paper>
                 </Grid>
             </Grid>
         </Box>
     );
 };
-
-
-
-
-
