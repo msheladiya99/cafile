@@ -402,31 +402,193 @@ router.get('/clients/count', async (req: AuthRequest, res: Response) => {
 // Single optimized Dashboard endpoint: returns multiple stats in parallel
 router.get('/dashboard', async (req: AuthRequest, res: Response) => {
     try {
-        const { Client, Reminder, File } = (req as any).models;
+        const { Client, Reminder, File, Task, Invoice, User, DSC, NotificationLog } = (req as any).models;
+        const firmId = req.firmId;
+        const firmObjectId = new mongoose.Types.ObjectId(firmId);
+        const isEmployeeView = req.user?.role && !['ADMIN', 'MANAGER', 'SUPER_ADMIN'].includes(req.user.role);
 
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
         const next30Days = new Date();
         next30Days.setDate(today.getDate() + 30);
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const previousMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const previousMonthEnd = new Date(monthStart);
+        previousMonthEnd.setMilliseconds(-1);
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+        const staffTaskScope = isEmployeeView ? { assignedTo: req.user?.userId } : {};
 
-        const [clientCount, upcomingReminders, firmDoc, staffCount, storageResult] = await Promise.all([
-            Client.countDocuments({ firmId: req.firmId }),
+        const [
+            clientCount,
+            activeClientCount,
+            upcomingReminders,
+            overdueReminders,
+            pendingTasks,
+            tasksDueToday,
+            clientsPendingDocuments,
+            highPriorityTasks,
+            recentFiles,
+            firmDoc,
+            staffCount,
+            storageResult,
+            invoiceSummary,
+            previousInvoiceSummary,
+            monthlyRevenue,
+            monthlyTasks,
+            clientGrowth,
+            employeeWorkload,
+            dscDashboard,
+            reminderStatus,
+            recentNotificationLogs,
+        ] = await Promise.all([
+            Client.countDocuments({ firmId }),
+            Client.countDocuments({ firmId, status: { $ne: false } }),
             Reminder.find({
-                firmId: req.firmId,
+                firmId,
                 dueDate: { $gte: today, $lte: next30Days },
                 status: 'PENDING'
             })
+            .populate('clientId', 'name email phone')
             .sort({ dueDate: 1 })
             .limit(10)
             .lean(),
-            Firm.findById(req.firmId).lean(),
-            User.countDocuments({ firmId: req.firmId, role: { $ne: 'CLIENT' } }),
+            Reminder.find({ firmId, dueDate: { $lt: today }, status: { $in: ['PENDING', 'OVERDUE'] } })
+                .populate('clientId', 'name email phone')
+                .sort({ dueDate: 1 })
+                .limit(10)
+                .lean(),
+            Task.countDocuments({ firmId, status: { $nin: ['DONE', 'CANCELLED'] }, ...staffTaskScope }),
+            Task.find({ firmId, targetDate: { $gte: today, $lt: tomorrow }, status: { $nin: ['DONE', 'CANCELLED'] }, ...staffTaskScope })
+                .populate('clientId', 'name')
+                .populate('assignedTo', 'name username role')
+                .sort({ priority: -1, targetDate: 1 })
+                .limit(8)
+                .lean(),
+            Task.find({ firmId, status: 'PENDING_FROM_CLIENT', ...staffTaskScope })
+                .populate('clientId', 'name email phone')
+                .sort({ updatedAt: -1 })
+                .limit(8)
+                .lean(),
+            Task.find({ firmId, priority: { $in: ['HIGH', 'URGENT'] }, status: { $nin: ['DONE', 'CANCELLED'] }, ...staffTaskScope })
+                .populate('clientId', 'name')
+                .populate('assignedTo', 'name username role')
+                .sort({ targetDate: 1 })
+                .limit(8)
+                .lean(),
+            File.find({ firmId })
+                .populate('clientId', 'name email')
+                .populate('uploadedBy', 'name username role')
+                .sort({ uploadedAt: -1 })
+                .limit(8)
+                .lean(),
+            Firm.findById(firmId).lean(),
+            User.countDocuments({ firmId, role: { $ne: 'CLIENT' } }),
             File.aggregate([
-                { $match: { firmId: new mongoose.Types.ObjectId(req.firmId) } },
+                { $match: { firmId: firmObjectId } },
                 { $group: { _id: null, totalBytes: { $sum: "$fileSize" } } }
-            ])
+            ]),
+            Invoice.aggregate([
+                { $match: { firmId: firmObjectId, status: { $ne: 'CANCELLED' } } },
+                {
+                    $group: {
+                        _id: null,
+                        totalInvoiced: { $sum: '$totalAmount' },
+                        totalReceived: { $sum: '$paidAmount' },
+                        pendingPayments: { $sum: '$balanceAmount' },
+                        overdueInvoices: {
+                            $sum: {
+                                $cond: [
+                                    { $and: [{ $lt: ['$dueDate', today] }, { $gt: ['$balanceAmount', 0] }] },
+                                    1,
+                                    0
+                                ]
+                            }
+                        },
+                        collectionPending: {
+                            $sum: {
+                                $cond: [
+                                    { $and: [{ $lt: ['$dueDate', today] }, { $gt: ['$balanceAmount', 0] }] },
+                                    '$balanceAmount',
+                                    0
+                                ]
+                            }
+                        },
+                    }
+                }
+            ]),
+            Invoice.aggregate([
+                { $match: { firmId: firmObjectId, issueDate: { $gte: previousMonthStart, $lte: previousMonthEnd }, status: { $ne: 'CANCELLED' } } },
+                { $group: { _id: null, totalInvoiced: { $sum: '$totalAmount' }, totalReceived: { $sum: '$paidAmount' } } }
+            ]),
+            Invoice.aggregate([
+                { $match: { firmId: firmObjectId, issueDate: { $gte: sixMonthsAgo }, status: { $ne: 'CANCELLED' } } },
+                {
+                    $group: {
+                        _id: { year: { $year: '$issueDate' }, month: { $month: '$issueDate' } },
+                        invoiced: { $sum: '$totalAmount' },
+                        received: { $sum: '$paidAmount' }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ]),
+            Task.aggregate([
+                { $match: { firmId: firmObjectId, createdAt: { $gte: sixMonthsAgo }, ...staffTaskScope } },
+                {
+                    $group: {
+                        _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+                        total: { $sum: 1 },
+                        completed: { $sum: { $cond: [{ $eq: ['$status', 'DONE'] }, 1, 0] } }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ]),
+            Client.aggregate([
+                { $match: { firmId: firmObjectId, createdAt: { $gte: sixMonthsAgo } } },
+                { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, clients: { $sum: 1 } } },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ]),
+            Task.aggregate([
+                { $match: { firmId: firmObjectId, assignedTo: { $exists: true, $ne: [] } } },
+                { $unwind: '$assignedTo' },
+                {
+                    $group: {
+                        _id: '$assignedTo',
+                        total: { $sum: 1 },
+                        completed: { $sum: { $cond: [{ $eq: ['$status', 'DONE'] }, 1, 0] } },
+                        pending: { $sum: { $cond: [{ $not: [{ $in: ['$status', ['DONE', 'CANCELLED']] }] }, 1, 0] } },
+                    }
+                },
+                { $sort: { pending: -1 } },
+                { $limit: 8 },
+                { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                { $project: { total: 1, completed: 1, pending: 1, name: { $ifNull: ['$user.name', '$user.username'] }, role: '$user.role' } }
+            ]),
+            DSC.countDocuments ? Promise.all([
+                DSC.countDocuments({ firmId }),
+                DSC.countDocuments({ firmId, dscStatus: 'expiring_soon' }),
+                DSC.countDocuments({ firmId, dscStatus: 'expired' }),
+            ]) : Promise.resolve([0, 0, 0]),
+            NotificationLog.aggregate([
+                { $match: { firmId: firmObjectId, createdAt: { $gte: today } } },
+                { $group: { _id: '$status', count: { $sum: 1 } } }
+            ]),
+            NotificationLog.find({ firmId }).sort({ createdAt: -1 }).limit(5).lean()
         ]);
         
         const storageUsedGB = storageResult.length > 0 ? (storageResult[0].totalBytes / (1024 * 1024 * 1024)) : 0;
+        const billing = invoiceSummary[0] || { totalInvoiced: 0, totalReceived: 0, pendingPayments: 0, collectionPending: 0, overdueInvoices: 0 };
+        const previousBilling = previousInvoiceSummary[0] || { totalInvoiced: 0, totalReceived: 0 };
+        const totalCompleted = monthlyTasks.reduce((sum: number, item: any) => sum + item.completed, 0);
+        const totalWork = monthlyTasks.reduce((sum: number, item: any) => sum + item.total, 0);
+        const filingSuccessRate = totalWork ? Math.round((totalCompleted / totalWork) * 100) : 0;
+        const reminderBuckets = reminderStatus.reduce((acc: any, item: any) => {
+            acc[item._id] = item.count;
+            return acc;
+        }, {});
+        const monthLabel = (item: any) => `${item._id.month}/${String(item._id.year).slice(-2)}`;
         
         let planLimits = { clients: 500, storageGB: 0.5, staff: 5 };
         if (firmDoc?.plan) {
@@ -437,9 +599,50 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
 
         res.json({
             clientCount,
+            activeClientCount,
             staffCount,
             storageUsedGB,
             reminders: upcomingReminders,
+            overdueReminders,
+            pendingTasks,
+            tasksDueToday,
+            clientsPendingDocuments,
+            highPriorityTasks,
+            recentFiles,
+            billing,
+            performance: {
+                monthlyRevenue: monthlyRevenue.map((item: any) => ({ month: monthLabel(item), invoiced: item.invoiced, received: item.received })),
+                workCompletion: monthlyTasks.map((item: any) => ({ month: monthLabel(item), completion: item.total ? Math.round((item.completed / item.total) * 100) : 0 })),
+                clientGrowth: clientGrowth.map((item: any) => ({ month: monthLabel(item), clients: item.clients })),
+                filingSuccessRate,
+            },
+            employeeWorkload: employeeWorkload.map((item: any) => ({
+                name: item.name || 'Unassigned',
+                role: item.role || 'STAFF',
+                total: item.total,
+                completed: item.completed,
+                pending: item.pending,
+                completionRate: item.total ? Math.round((item.completed / item.total) * 100) : 0,
+            })),
+            reminderStatus: {
+                sentToday: reminderBuckets.SENT || 0,
+                failedToday: reminderBuckets.FAILED || 0,
+                skippedToday: reminderBuckets.SKIPPED || 0,
+                pendingReminders: upcomingReminders.length,
+                recentNotificationLogs,
+            },
+            aiInsights: [
+                `${overdueReminders.length} compliance item${overdueReminders.length === 1 ? '' : 's'} need immediate review.`,
+                `${clientsPendingDocuments.length} client${clientsPendingDocuments.length === 1 ? '' : 's'} are pending documents.`,
+                `${dscDashboard[1]} DSC${dscDashboard[1] === 1 ? '' : 's'} expiring soon.`,
+                totalWork ? `Team completion is ${filingSuccessRate}% across recent work.` : 'No recent task completion data yet.',
+                billing.collectionPending > 0 ? `Collection follow-up needed for ${billing.collectionPending.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}.` : 'Collections are under control today.',
+            ],
+            dscSummary: { total: dscDashboard[0], expiringSoon: dscDashboard[1], expired: dscDashboard[2] },
+            trends: {
+                revenue: previousBilling.totalInvoiced ? Math.round(((billing.totalInvoiced - previousBilling.totalInvoiced) / previousBilling.totalInvoiced) * 100) : 0,
+                collection: previousBilling.totalReceived ? Math.round(((billing.totalReceived - previousBilling.totalReceived) / previousBilling.totalReceived) * 100) : 0,
+            },
             firmSubscription: firmDoc?.subscription || null,
             firmPlan: firmDoc?.plan || 'Free Trial',
             planLimits
