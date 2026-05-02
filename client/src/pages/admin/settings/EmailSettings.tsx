@@ -373,7 +373,7 @@ export const EmailSettings: React.FC = () => {
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>
                                         <TextField label="Display Name (From Name)" fullWidth size="small"
-                                            placeholder="Lalit Hirpara & Co."
+                                            placeholder="Company name"
                                             value={smtp.fromName} onChange={e => setSmtp(p => ({ ...p, fromName: e.target.value }))} disabled={!smtp.smtpEnabled} />
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>
