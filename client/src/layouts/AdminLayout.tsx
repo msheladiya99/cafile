@@ -715,7 +715,7 @@ export const AdminLayout: React.FC = () => {
                     </Typography>
 
                     <Grid container spacing={4}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase' }}>Main Navigation</Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Dashboard</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + D</Typography></Box>
@@ -729,7 +729,7 @@ export const AdminLayout: React.FC = () => {
                             </Box>
                         </Grid>
 
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase' }}>Clients & Staff</Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Client List</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + L</Typography></Box>
@@ -742,17 +742,17 @@ export const AdminLayout: React.FC = () => {
                             </Box>
                         </Grid>
                         
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Divider sx={{ my: 1 }} />
                             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, mt: 1, textTransform: 'uppercase' }}>Tasks & Documents</Typography>
                             <Grid container spacing={4}>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Task Dashboard</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + T</Typography></Box>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Add Task</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + Q</Typography></Box>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Upload Files</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + U</Typography></Box>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Manage Files</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + O</Typography></Box>

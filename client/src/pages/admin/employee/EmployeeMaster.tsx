@@ -142,7 +142,7 @@ const Section = ({ title, icon, children }: SectionProps) => (
     </Paper>
 );
 
-const SummaryHeader = ({ data, id, isEditMode }: { data: any, id?: string, isEditMode: boolean }) => {
+const SummaryHeader = ({ data, id, isEditMode }: { data: Partial<User>, id?: string, isEditMode: boolean }) => {
     const theme = useTheme();
     return (
         <Box sx={{ mb: 3, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: '12px', border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`, display: 'flex', alignItems: 'center', gap: 2 }}>
