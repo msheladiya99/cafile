@@ -1305,7 +1305,9 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
     try {
         const { User, ActivityLog } = (req as any).models;
         const { userId, startDate, endDate } = req.query;
-
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const skip = (page - 1) * limit;
 
         // Find staff members (non-clients)
         const query: any = { role: { $ne: 'CLIENT' } };
@@ -1315,7 +1317,6 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
 
         const staffUsers = await User.find(query).select('_id name username role').lean();
         const staffIds = staffUsers.map((u: any) => u._id);
-
 
         const filter: any = {
             action: 'LOGIN',
@@ -1336,12 +1337,23 @@ router.get('/employee/login-logs', requireRoles(['ADMIN', 'MANAGER']), async (re
                 filter.timestamp.$lte = eDate;
             }
         }
-        const logs = await ActivityLog.find(filter)
-            .populate('userId', 'name username role')
-            .sort({ timestamp: -1 })
-            .lean();
 
-        res.json(logs);
+        const [logs, total] = await Promise.all([
+            ActivityLog.find(filter)
+                .populate('userId', 'name username role')
+                .sort({ timestamp: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            ActivityLog.countDocuments(filter)
+        ]);
+
+        res.json({
+            logs,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
     } catch (error) {
         console.error('Fetch login logs error:', error);
         res.status(500).json({ message: 'Server error' });

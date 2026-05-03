@@ -15,7 +15,8 @@ import {
     TableRow,
     CircularProgress,
     TextField,
-    Grid
+    Grid,
+    TablePagination
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -29,6 +30,8 @@ export const EmployeeLoginDetail: React.FC = () => {
     const [selectedEmployee, setSelectedEmployee] = useState<string>('');
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(50);
 
     // Fetch Staff Users for the dropdown
     const { data: staffMembers = [], isLoading: isLoadingStaff } = useQuery({
@@ -36,18 +39,30 @@ export const EmployeeLoginDetail: React.FC = () => {
         queryFn: adminService.getStaffUsers
     });
 
-    // Fetch Logs based on filters -> Notice: we only created param for a single date? Let's use `dateFrom` and `dateTo` or just pass `dateFrom` for now. Wait, I will adjust the backend to handle `startDate` and `endDate` so we match "from To".
-    // Wait, the API I wrote just has `date` which gets exactly that day. Let's fix backend to support startDate and endDate.
-    const { data: logs = [], isLoading: isLoadingLogs } = useQuery({
-        queryKey: ['loginLogs', selectedEmployee, dateFrom, dateTo],
-        queryFn: async () => adminService.getLoginLogs(selectedEmployee, dateFrom, dateTo)
+    // Fetch Logs based on filters and pagination
+    const { data: logResponse = { logs: [], total: 0 }, isLoading: isLoadingLogs } = useQuery({
+        queryKey: ['loginLogs', selectedEmployee, dateFrom, dateTo, page, rowsPerPage],
+        queryFn: async () => adminService.getLoginLogs(selectedEmployee, dateFrom, dateTo, page + 1, rowsPerPage)
     });
 
     const handleClear = () => {
         setSelectedEmployee('');
         setDateFrom('');
         setDateTo('');
+        setPage(0);
     };
+
+    const handleChangePage = (_: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const logs = logResponse.logs;
+    const totalCount = logResponse.total;
 
     return (
         <Box sx={{ p: { xs: 2, md: 3 } }}>
@@ -67,10 +82,14 @@ export const EmployeeLoginDetail: React.FC = () => {
                                 <Select
                                     displayEmpty
                                     value={selectedEmployee}
-                                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                                    onChange={(e) => {
+                                        setSelectedEmployee(e.target.value);
+                                        setPage(0);
+                                    }}
                                     sx={{ borderRadius: '8px' }}
                                 >
                                     <MenuItem value="" disabled>Choose Employee...</MenuItem>
+                                    <MenuItem value="">All Employees</MenuItem>
                                     {!isLoadingStaff && staffMembers.map((staff: { _id: string, name?: string, username: string }) => (
                                         <MenuItem key={staff._id} value={staff._id}>{staff.name || staff.username}</MenuItem>
                                     ))}
@@ -90,7 +109,10 @@ export const EmployeeLoginDetail: React.FC = () => {
                                     type="date"
                                     size="small"
                                     value={dateFrom}
-                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    onChange={(e) => {
+                                        setDateFrom(e.target.value);
+                                        setPage(0);
+                                    }}
                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Grid>
@@ -105,7 +127,10 @@ export const EmployeeLoginDetail: React.FC = () => {
                                     type="date"
                                     size="small"
                                     value={dateTo}
-                                    onChange={(e) => setDateTo(e.target.value)}
+                                    onChange={(e) => {
+                                        setDateTo(e.target.value);
+                                        setPage(0);
+                                    }}
                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                                 />
                             </Grid>
@@ -143,26 +168,38 @@ export const EmployeeLoginDetail: React.FC = () => {
                         <Typography variant="body2">No Record Found</Typography>
                     </Box>
                 ) : (
-                    <TableContainer>
-                        <Table size="small">
-                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IP Address</TableCell>
-                                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Log Date & Time</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {logs.map((log: { userId?: { name?: string, username: string }, ipAddress?: string, timestamp: string }, index: number) => (
-                                    <TableRow key={index} hover>
-                                        <TableCell>{log.userId?.name || log.userId?.username}</TableCell>
-                                        <TableCell>{log.ipAddress || 'N/A'}</TableCell>
-                                        <TableCell>{format(new Date(log.timestamp), 'dd-MMM-yyyy hh:mm a')}</TableCell>
+                    <>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Employee Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IP Address</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Log Date & Time</TableCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                </TableHead>
+                                <TableBody>
+                                    {logs.map((log: { userId?: { name?: string, username: string }, ipAddress?: string, timestamp: string }, index: number) => (
+                                        <TableRow key={index} hover>
+                                            <TableCell>{log.userId?.name || log.userId?.username}</TableCell>
+                                            <TableCell>{log.ipAddress || 'N/A'}</TableCell>
+                                            <TableCell>{format(new Date(log.timestamp), 'dd-MMM-yyyy hh:mm a')}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 25, 50, 100]}
+                            component="div"
+                            count={totalCount}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            sx={{ borderTop: '1px solid #e2e8f0' }}
+                        />
+                    </>
                 )}
             </Paper>
         </Box>

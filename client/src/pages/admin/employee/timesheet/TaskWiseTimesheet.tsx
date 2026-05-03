@@ -61,12 +61,12 @@ const statusColor: Record<string, string> = {
 
 interface FilterState {
     groupName: string; clientName: string; task: string; frequency: string;
-    reportingManager: string; year: string; status: string; approvalStatus: string;
+    year: string; status: string; approvalStatus: string;
     dateFrom: string; dateTo: string;
 }
 const empty: FilterState = {
     groupName: '', clientName: '', task: '', frequency: '',
-    reportingManager: '', year: '', status: '', approvalStatus: '',
+    year: '', status: '', approvalStatus: '',
     dateFrom: '', dateTo: ''
 };
 
@@ -76,7 +76,6 @@ export const TaskWiseTimesheet: React.FC = () => {
 
     const { data: clients = [], isLoading: loadingClients } = useQuery<Client[]>({ queryKey: ['clients'], queryFn: adminService.getClients });
     const { data: groups = [], isLoading: loadingGroups } = useQuery<{ _id: string; groupName: string }[]>({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
-    const { data: staff = [], isLoading: loadingStaff } = useQuery<User[]>({ queryKey: ['staff'], queryFn: staffService.getStaff });
     const { data: tasks = [], isLoading: loadingTasks } = useQuery<Task[]>({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
 
     const frequencies = ['One Time', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
@@ -95,7 +94,6 @@ export const TaskWiseTimesheet: React.FC = () => {
         clientId: f.clientName || undefined,
         taskMasterId: f.task || undefined,
         frequency: f.frequency || undefined,
-        reportingManager: f.reportingManager || undefined,
         year: f.year || undefined,
         status: f.status || undefined,
         dateFrom: f.dateFrom || undefined,
@@ -195,18 +193,6 @@ export const TaskWiseTimesheet: React.FC = () => {
                     </Grid>
 
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Reporting Manager</Typography>
-                        <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.reportingManager} onChange={handleChange('reportingManager')} sx={{ borderRadius: '8px' }}>
-                                <MenuItem value="">All Managers</MenuItem>
-                                {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    staff.filter((s: User) => ['ADMIN', 'MANAGER', 'STAFF'].includes(s.role))
-                                        .map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} ({s.role})</MenuItem>)}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Year</Typography>
                         <FormControl size="small" fullWidth>
                             <Select displayEmpty value={filterData.year} onChange={handleChange('year')} sx={{ borderRadius: '8px' }}>
@@ -301,7 +287,6 @@ export const TaskWiseTimesheet: React.FC = () => {
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>#</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea', minWidth: 200 }}>Task</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Client</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Assigned To</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Est. Hrs</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Actual Hrs</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea', minWidth: 100 }}>Progress</TableCell>
@@ -332,22 +317,6 @@ export const TaskWiseTimesheet: React.FC = () => {
                                             ) : row.clientGroup ? (
                                                 <Typography fontSize={12} color="text.secondary">{row.clientGroup.groupName}</Typography>
                                             ) : <Typography fontSize={12} color="text.disabled">Internal</Typography>}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                {row.assignedTo?.slice(0, 3).map((u: User) => (
-                                                    <Tooltip key={u._id} title={`${u.name || u.username} (${u.role})`}>
-                                                        <Avatar sx={{ width: 26, height: 26, fontSize: 11, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
-                                                            {(u.name || u.username || '?')[0].toUpperCase()}
-                                                        </Avatar>
-                                                    </Tooltip>
-                                                ))}
-                                                {row.assignedTo?.length > 3 && (
-                                                    <Avatar sx={{ width: 26, height: 26, fontSize: 11, bgcolor: '#764ba2' }}>
-                                                        +{row.assignedTo.length - 3}
-                                                    </Avatar>
-                                                )}
-                                            </Box>
                                         </TableCell>
                                         <TableCell>
                                             <Typography fontSize={12} fontWeight={600}>{row.estimatedHours}h</Typography>
@@ -401,7 +370,7 @@ export const TaskWiseTimesheet: React.FC = () => {
                                 {/* Summary Row */}
                                 {summary && (
                                     <TableRow sx={{ bgcolor: '#f0f0ff' }}>
-                                        <TableCell colSpan={4} sx={{ fontWeight: 700, color: '#667eea' }}>Total ({filteredRows.length} tasks)</TableCell>
+                                        <TableCell colSpan={3} sx={{ fontWeight: 700, color: '#667eea' }}>Total ({filteredRows.length} tasks)</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>{summary.totalEstimatedHours}h</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>{summary.totalActualHours}h</TableCell>
                                         <TableCell colSpan={4} />
