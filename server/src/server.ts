@@ -190,6 +190,7 @@ import { startSubscriptionCronJob } from './utils/subscriptionCron';
 import { startTaskCronJob } from './utils/taskCron';
 import { startEmailWorker } from './workers/emailWorker';
 import './queues/parse.worker'; // This starts the worker listener
+import './workers/drive.worker';
 
 startServer();
 startDSCCronJob();
