@@ -76,17 +76,49 @@ const formatDate = (value?: string) => value
     ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
     : 'No date';
 
+interface Reminder {
+    _id: string;
+    title: string;
+    dueDate: string;
+    reminderType: string;
+    status: string;
+    clientId?: { name: string };
+}
+
+interface Task {
+    _id: string;
+    title: string;
+    priority: string;
+    targetDate?: string;
+    clientId?: { name: string };
+}
+
+interface RecentFile {
+    _id: string;
+    fileName: string;
+    originalFileName?: string;
+    uploadedAt: string;
+    clientId?: { name: string };
+}
+
+interface NotificationLog {
+    _id: string;
+    type: string;
+    status: string;
+    createdAt: string;
+}
+
 interface DashboardPayload {
     clientCount: number;
     activeClientCount: number;
     pendingTasks: number;
     staffCount?: number;
-    reminders: any[];
-    overdueReminders: any[];
-    tasksDueToday: any[];
-    clientsPendingDocuments: any[];
-    highPriorityTasks: any[];
-    recentFiles: any[];
+    reminders: Reminder[];
+    overdueReminders: Reminder[];
+    tasksDueToday: Task[];
+    clientsPendingDocuments: Task[];
+    highPriorityTasks: Task[];
+    recentFiles: RecentFile[];
     billing: {
         totalInvoiced: number;
         totalReceived: number;
@@ -106,7 +138,7 @@ interface DashboardPayload {
         failedToday: number;
         skippedToday: number;
         pendingReminders: number;
-        recentNotificationLogs: any[];
+        recentNotificationLogs: NotificationLog[];
     };
     aiInsights: string[];
     dscSummary: { total: number; expiringSoon: number; expired: number };
@@ -119,7 +151,7 @@ const priorityColor = (priority?: string) => {
     return 'default';
 };
 
-const ComplianceCalendar: React.FC<{ reminders: any[]; overdue: any[] }> = ({ reminders, overdue }) => {
+const ComplianceCalendar: React.FC<{ reminders: Reminder[]; overdue: Reminder[] }> = ({ reminders, overdue }) => {
     const [viewDate, setViewDate] = useState(new Date());
     const [filter, setFilter] = useState('ALL');
 
@@ -203,7 +235,7 @@ const ComplianceCalendar: React.FC<{ reminders: any[]; overdue: any[] }> = ({ re
 
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const { user, isAdmin, isManager } = useAuth();
+    const { user } = useAuth();
     const { data, isLoading } = useQuery<DashboardPayload>({
         queryKey: ['admin-dashboard-stats'],
         queryFn: async () => (await adminService.getDashboardStats()) as unknown as DashboardPayload,
@@ -233,10 +265,10 @@ export const AdminDashboard: React.FC = () => {
     ];
 
     const urgentActions = [
-        ...(data?.tasksDueToday || []).map((task: any) => ({ type: 'Due Today', title: task.title, meta: task.clientId?.name || 'Internal task', priority: task.priority, path: '/admin/tasks' })),
-        ...(data?.overdueReminders || []).map((reminder: any) => ({ type: 'Overdue Filing', title: reminder.title, meta: reminder.clientId?.name || 'Client', priority: 'URGENT', path: '/admin/reminders' })),
-        ...(data?.clientsPendingDocuments || []).map((task: any) => ({ type: 'Documents Pending', title: task.title, meta: task.clientId?.name || 'Client response needed', priority: 'HIGH', path: '/admin/tasks' })),
-        ...(data?.highPriorityTasks || []).map((task: any) => ({ type: 'High Priority', title: task.title, meta: formatDate(task.targetDate), priority: task.priority, path: '/admin/tasks' })),
+        ...(data?.tasksDueToday || []).map((task) => ({ type: 'Due Today', title: task.title, meta: task.clientId?.name || 'Internal task', priority: task.priority, path: '/admin/tasks' })),
+        ...(data?.overdueReminders || []).map((reminder) => ({ type: 'Overdue Filing', title: reminder.title, meta: reminder.clientId?.name || 'Client', priority: 'URGENT', path: '/admin/reminders' })),
+        ...(data?.clientsPendingDocuments || []).map((task) => ({ type: 'Documents Pending', title: task.title, meta: task.clientId?.name || 'Client response needed', priority: 'HIGH', path: '/admin/tasks' })),
+        ...(data?.highPriorityTasks || []).map((task) => ({ type: 'High Priority', title: task.title, meta: formatDate(task.targetDate), priority: task.priority, path: '/admin/tasks' })),
     ].slice(0, 8);
 
     const quickActions = [
@@ -247,7 +279,7 @@ export const AdminDashboard: React.FC = () => {
         { label: 'Send Reminder', icon: <Send />, path: '/admin/reminders' },
     ];
 
-    const workloadPie = (data?.employeeWorkload || []).slice(0, 5).map((item: any) => ({ name: item.name, value: item.pending }));
+    const workloadPie = (data?.employeeWorkload || []).slice(0, 5).map((item) => ({ name: item.name, value: item.pending }));
     const pieColors = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626'];
 
     return (
@@ -259,12 +291,14 @@ export const AdminDashboard: React.FC = () => {
 
             <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', lg: 'center' }} spacing={2.5} mb={3}>
                 <Box>
-                    <Chip label={isAdmin || isManager ? 'Firm Command Center' : 'My Work Dashboard'} size="small" sx={{ mb: 1, fontWeight: 800, bgcolor: '#e0f2fe', color: '#075985' }} />
+                    <Typography variant="body2" fontWeight={700} color="#667eea" mb={0.5}>
+                        {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </Typography>
                     <Typography variant="h4" fontWeight={900} letterSpacing={0}>
-                        Good day, {user?.name || user?.username || 'Team'}
+                        Good day, {user?.name || user?.username || 'Team'} 👋
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Urgent compliance, client activity, billing and workload in one operational view.
+                        Here's an overview of your firm's performance and pending actions.
                     </Typography>
                 </Box>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -314,7 +348,7 @@ export const AdminDashboard: React.FC = () => {
                                             <Box>
                                                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                                                     <Typography variant="subtitle2" fontWeight={900}>{item.title}</Typography>
-                                                    <Chip size="small" label={item.type} color={priorityColor(item.priority) as any} sx={{ fontWeight: 800 }} />
+                                                    <Chip size="small" label={item.type} color={priorityColor(item.priority) as 'error' | 'warning' | 'default'} sx={{ fontWeight: 800 }} />
                                                 </Stack>
                                                 <Typography variant="caption" color="text.secondary">{item.meta}</Typography>
                                             </Box>
@@ -443,7 +477,7 @@ export const AdminDashboard: React.FC = () => {
                         <Typography variant="h6" fontWeight={900}>Client Activity Panel</Typography>
                         <Typography variant="body2" color="text.secondary" mb={2}>Recent uploads and responses</Typography>
                         <Stack spacing={1.25}>
-                            {(data?.recentFiles || []).slice(0, 6).map((file: any) => (
+                            {(data?.recentFiles || []).slice(0, 6).map((file) => (
                                 <Stack key={file._id} direction="row" spacing={1.25} alignItems="center">
                                     <Avatar sx={{ bgcolor: '#ecfeff', color: '#0891b2' }}><CloudUpload /></Avatar>
                                     <Box minWidth={0}>
@@ -485,14 +519,14 @@ export const AdminDashboard: React.FC = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie data={workloadPie} dataKey="value" nameKey="name" innerRadius={42} outerRadius={68}>
-                                        {workloadPie.map((_: any, index: number) => <Cell key={index} fill={pieColors[index % pieColors.length]} />)}
+                                        {workloadPie.map((_, index: number) => <Cell key={index} fill={pieColors[index % pieColors.length]} />)}
                                     </Pie>
                                     <ChartTooltip />
                                 </PieChart>
                             </ResponsiveContainer>
                         </Box>
                         <Stack spacing={1}>
-                            {(data?.employeeWorkload || []).slice(0, 5).map((employee: any) => (
+                            {(data?.employeeWorkload || []).slice(0, 5).map((employee) => (
                                 <Box key={employee.name}>
                                     <Stack direction="row" justifyContent="space-between" mb={0.5}>
                                         <Typography variant="caption" fontWeight={800}>{employee.name}</Typography>
