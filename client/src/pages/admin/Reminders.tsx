@@ -574,20 +574,32 @@ export const Reminders: React.FC = () => {
                     <Grid size={{ xs: 12, lg: 5 }} sx={{ p: 2.5 }}>
                         <Typography variant="subtitle2" fontWeight={800} mb={1.5}>Recent Notification Logs</Typography>
                         <Stack spacing={1}>
-                            {logs.slice(0, 5).map((log) => (
-                                <Box key={log._id} sx={{ p: 1.5, border: '1px solid #eef2f6', borderRadius: 2 }}>
-                                    <Box display="flex" justifyContent="space-between" gap={1}>
-                                        <Typography variant="body2" fontWeight={700} noWrap>{log.channel} to {log.recipient}</Typography>
+                            {logs.slice(0, 10).map((log) => (
+                                <Box key={log._id} sx={{ p: 1.5, border: '1px solid #eef2f6', borderRadius: 2, bgcolor: log.status === 'FAILED' ? '#fffafb' : log.status === 'SKIPPED' ? '#fffdf9' : 'transparent' }}>
+                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1} mb={0.5}>
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <Typography variant="body2" fontWeight={800} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                {log.channel === 'EMAIL' ? '📧' : '💬'} {log.channel}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                to {log.recipient}
+                                            </Typography>
+                                        </Box>
                                         <Chip
                                             size="small"
                                             label={log.status}
-                                            color={log.status === 'SENT' ? 'success' : log.status === 'FAILED' ? 'error' : 'default'}
-                                            sx={{ fontWeight: 700 }}
+                                            color={log.status === 'SENT' ? 'success' : log.status === 'FAILED' ? 'error' : log.status === 'SKIPPED' ? 'warning' : 'default'}
+                                            sx={{ fontWeight: 700, height: 20, fontSize: '0.65rem' }}
                                         />
                                     </Box>
-                                    <Typography variant="caption" color="text.secondary" noWrap display="block">
-                                        {log.subject || log.message}
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontStyle: 'italic' }}>
+                                        {log.subject || 'Reminder Alert'}
                                     </Typography>
+                                    {log.error && (
+                                        <Typography variant="caption" color="error" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                                            Error: {log.error}
+                                        </Typography>
+                                    )}
                                 </Box>
                             ))}
                             {logs.length === 0 && (

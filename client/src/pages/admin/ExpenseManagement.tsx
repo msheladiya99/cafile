@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Stack, Chip,
-  Grid, CircularProgress, Select, FormControl, InputAdornment, Tabs, Tab
+  Grid, CircularProgress, Select, FormControl, InputAdornment, Tabs, Tab, Drawer, Divider, Tooltip
 } from '@mui/material';
 import { 
   Add as AddIcon, Delete as DeleteIcon, 
   CheckCircle as CheckCircleIcon, Cancel as CancelIcon, 
-  Visibility as ViewIcon, Search as SearchIcon
+  Visibility as ViewIcon, Search as SearchIcon,
+  Close as CloseIcon, Receipt as ReceiptIcon, OpenInNew as OpenInNewIcon,
+  Business as BusinessIcon, AttachMoney as MoneyIcon, AccountCircle as PersonIcon
 } from '@mui/icons-material';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -95,6 +97,9 @@ export const ExpenseManagement: React.FC = () => {
   const [summary, setSummary] = useState({ totalAmount: 0, approvedAmount: 0, count: 0 });
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<{_id: string, firstName: string, lastName: string, username: string, email: string, role: string}[]>([]);
+
+  // Split-view panel
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   // Filters
   const [filterMonth] = useState('');
@@ -354,7 +359,18 @@ export const ExpenseManagement: React.FC = () => {
               <TableRow><TableCell colSpan={7} align="center" sx={{ py: 10 }}><Typography color="textDisabled">No transactions found.</Typography></TableCell></TableRow>
             ) : (
               filteredExpenses.map(exp => (
-                <TableRow key={exp._id} hover>
+                <TableRow
+                  key={exp._id}
+                  hover
+                  onClick={() => setSelectedExpense(exp)}
+                  sx={{
+                    cursor: 'pointer',
+                    transition: 'background 0.15s',
+                    bgcolor: selectedExpense?._id === exp._id ? '#eef2ff' : 'transparent',
+                    '&:hover': { bgcolor: selectedExpense?._id === exp._id ? '#e0e7ff' : '#f8fafc' },
+                    borderLeft: selectedExpense?._id === exp._id ? '3px solid #667eea' : '3px solid transparent',
+                  }}
+                >
                   <TableCell>
                     <Typography variant="body2" fontWeight={700} color="primary">{exp.expenseId}</Typography>
                     <Typography variant="caption" color="textSecondary">{exp.paymentMethod}</Typography>
@@ -376,16 +392,18 @@ export const ExpenseManagement: React.FC = () => {
                     <Typography variant="caption" color="textSecondary">Tax: ₹{exp.taxAmount}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={exp.status} size="small" 
-                        color={exp.status === 'APPROVED' ? 'success' : exp.status === 'REJECTED' ? 'error' : 'warning'} 
-                        sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
+                    <Chip label={exp.status} size="small"
+                      color={exp.status === 'APPROVED' ? 'success' : exp.status === 'REJECTED' ? 'error' : 'warning'}
+                      sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
                   </TableCell>
                   <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={e => e.stopPropagation()}>
                       {exp.receiptUrl && (
-                        <IconButton size="small" component="a" href={exp.receiptUrl} target="_blank" color="info">
-                          <ViewIcon fontSize="small" />
-                        </IconButton>
+                        <Tooltip title="View Bill">
+                          <IconButton size="small" color="info" onClick={() => setSelectedExpense(exp)}>
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       )}
                       {isManagerOrAdmin && exp.status === 'PENDING' && (
                         <>
@@ -404,6 +422,230 @@ export const ExpenseManagement: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* ── Split-View Bill Detail Drawer ── */}
+      <Drawer
+        anchor="right"
+        open={!!selectedExpense}
+        onClose={() => setSelectedExpense(null)}
+        PaperProps={{
+          sx: {
+            width: { xs: '100vw', md: '75vw', lg: '68vw' },
+            display: 'flex',
+            flexDirection: 'row',
+            overflow: 'hidden',
+          }
+        }}
+      >
+        {selectedExpense && (
+          <>
+            {/* LEFT: Bill Entry Details */}
+            <Box sx={{
+              width: { xs: '100%', md: '42%' },
+              display: 'flex',
+              flexDirection: 'column',
+              bgcolor: '#fff',
+              borderRight: '1px solid #e2e8f0',
+              overflow: 'hidden',
+            }}>
+              {/* Header */}
+              <Box sx={{ px: 3, py: 2.5, background: 'linear-gradient(135deg,#101828 0%,#1d3461 100%)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                <Box>
+                  <Typography fontWeight={800} fontSize="1rem">Expense Details</Typography>
+                  <Typography fontSize="0.75rem" sx={{ opacity: 0.75 }}>{selectedExpense.expenseId}</Typography>
+                </Box>
+                <IconButton size="small" sx={{ color: '#fff' }} onClick={() => setSelectedExpense(null)}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <Box sx={{ overflowY: 'auto', flex: 1, p: 2.5 }}>
+
+                {/* Status Badge */}
+                <Box sx={{ mb: 2.5 }}>
+                  <Chip
+                    label={selectedExpense.status}
+                    color={selectedExpense.status === 'APPROVED' ? 'success' : selectedExpense.status === 'REJECTED' ? 'error' : 'warning'}
+                    sx={{ fontWeight: 800, fontSize: '0.8rem', px: 1 }}
+                  />
+                  {selectedExpense.remarks && (
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary', fontStyle: 'italic' }}>
+                      Remarks: {selectedExpense.remarks}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Section: Basic */}
+                <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ReceiptIcon sx={{ fontSize: 14, color: '#667eea' }} />
+                    <Typography fontSize="0.75rem" fontWeight={700} color="#444">Basic Information</Typography>
+                  </Box>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    {([
+                      ['Date', format(new Date(selectedExpense.date), 'dd MMM yyyy')],
+                      ['Type', selectedExpense.expenseType],
+                      ['Payment Mode', selectedExpense.paymentMethod],
+                      ['Reference No', selectedExpense.referenceNo || '—'],
+                    ] as [string, string][]).map(([label, val]) => (
+                      <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.6, borderBottom: '1px dashed #f0f0f0' }}>
+                        <Typography fontSize="0.78rem" color="text.secondary">{label}</Typography>
+                        <Typography fontSize="0.78rem" fontWeight={600}>{val}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+
+                {/* Section: Vendor */}
+                <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <BusinessIcon sx={{ fontSize: 14, color: '#667eea' }} />
+                    <Typography fontSize="0.75rem" fontWeight={700} color="#444">Vendor Details</Typography>
+                  </Box>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    {([
+                      ['Vendor Name', selectedExpense.vendorName || '—'],
+                      ['Contact', selectedExpense.vendorContact || '—'],
+                      ['GSTIN', selectedExpense.vendorGst || '—'],
+                      ['Address', selectedExpense.vendorAddress || '—'],
+                    ] as [string, string][]).map(([label, val]) => (
+                      <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.6, borderBottom: '1px dashed #f0f0f0' }}>
+                        <Typography fontSize="0.78rem" color="text.secondary">{label}</Typography>
+                        <Typography fontSize="0.78rem" fontWeight={600} sx={{ textAlign: 'right', maxWidth: '55%' }}>{val}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+
+                {/* Section: Financial */}
+                <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2, overflow: 'hidden', border: '1px solid #d1fae5' }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: '#f0fdf4', borderBottom: '1px solid #d1fae5', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <MoneyIcon sx={{ fontSize: 14, color: '#10b981' }} />
+                    <Typography fontSize="0.75rem" fontWeight={700} color="#065f46">Financial Summary</Typography>
+                  </Box>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    {([
+                      ['Category', selectedExpense.category],
+                      ['Base Amount', `₹ ${selectedExpense.amount?.toLocaleString()}`],
+                      ['Tax Amount', `₹ ${selectedExpense.taxAmount?.toLocaleString()}`],
+                    ] as [string, string][]).map(([label, val]) => (
+                      <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.6, borderBottom: '1px dashed #f0f0f0' }}>
+                        <Typography fontSize="0.78rem" color="text.secondary">{label}</Typography>
+                        <Typography fontSize="0.78rem" fontWeight={600}>{val}</Typography>
+                      </Box>
+                    ))}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1, mt: 0.5, borderTop: '2px solid #10b981' }}>
+                      <Typography fontSize="0.85rem" fontWeight={700} color="#065f46">Total Amount</Typography>
+                      <Typography fontSize="0.85rem" fontWeight={800} color="#065f46">₹ {selectedExpense.totalAmount?.toLocaleString()}</Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+
+                {/* Section: Allocation */}
+                <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                  <Box sx={{ px: 2, py: 1, bgcolor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PersonIcon sx={{ fontSize: 14, color: '#667eea' }} />
+                    <Typography fontSize="0.75rem" fontWeight={700} color="#444">Allocation & Workflow</Typography>
+                  </Box>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    {([
+                      ['Paid By', selectedExpense.paidBy ? `${selectedExpense.paidBy.firstName || ''} ${selectedExpense.paidBy.lastName || ''}`.trim() || selectedExpense.paidBy.username : '—'],
+                      ['Approved By', selectedExpense.approvedBy ? `${selectedExpense.approvedBy.firstName} ${selectedExpense.approvedBy.lastName}` : '—'],
+                      ['Client', selectedExpense.clientName || '—'],
+                      ['Project/Work', selectedExpense.projectWork || '—'],
+                      ['Billable Status', selectedExpense.billableStatus],
+                    ] as [string, string][]).map(([label, val]) => (
+                      <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.6, borderBottom: '1px dashed #f0f0f0' }}>
+                        <Typography fontSize="0.78rem" color="text.secondary">{label}</Typography>
+                        <Typography fontSize="0.78rem" fontWeight={600}>{val}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+
+              </Box>
+
+              {/* Footer Actions */}
+              {isManagerOrAdmin && selectedExpense.status === 'PENDING' && (
+                <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid #e2e8f0', display: 'flex', gap: 1.5, flexShrink: 0 }}>
+                  <Button fullWidth variant="contained" color="success" size="small"
+                    onClick={() => { updateStatus(selectedExpense._id, 'APPROVED'); setSelectedExpense(null); }}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    startIcon={<CheckCircleIcon />}>
+                    Approve
+                  </Button>
+                  <Button fullWidth variant="outlined" color="error" size="small"
+                    onClick={() => { updateStatus(selectedExpense._id, 'REJECTED'); setSelectedExpense(null); }}
+                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    startIcon={<CancelIcon />}>
+                    Reject
+                  </Button>
+                </Box>
+              )}
+            </Box>
+
+            {/* RIGHT: Full Bill / Receipt Viewer */}
+            <Box sx={{
+              flex: 1,
+              display: { xs: 'none', md: 'flex' },
+              flexDirection: 'column',
+              bgcolor: '#1a1a2e',
+              overflow: 'hidden',
+            }}>
+              {/* Viewer Header */}
+              <Box sx={{ px: 3, py: 2, bgcolor: '#16213e', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #0f3460' }}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <ReceiptIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                  <Box>
+                    <Typography color="#fff" fontWeight={700} fontSize="0.88rem">Bill / Receipt</Typography>
+                    <Typography color="rgba(255,255,255,0.5)" fontSize="0.7rem">Attached document preview</Typography>
+                  </Box>
+                </Stack>
+                {selectedExpense.receiptUrl && (
+                  <Tooltip title="Open in new tab">
+                    <IconButton size="small" component="a" href={selectedExpense.receiptUrl} target="_blank" sx={{ color: '#667eea' }}>
+                      <OpenInNewIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+
+              {/* Viewer Body */}
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', p: 2 }}>
+                {selectedExpense.receiptUrl ? (
+                  selectedExpense.receiptUrl.toLowerCase().endsWith('.pdf') ? (
+                    <iframe
+                      src={selectedExpense.receiptUrl}
+                      title="Bill Receipt"
+                      style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
+                    />
+                  ) : (
+                    <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img
+                        src={selectedExpense.receiptUrl}
+                        alt="Bill Receipt"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'contain',
+                          borderRadius: '8px',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                        }}
+                      />
+                    </Box>
+                  )
+                ) : (
+                  <Box sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
+                    <ReceiptIcon sx={{ fontSize: 80, mb: 2, opacity: 0.3 }} />
+                    <Typography fontSize="1rem" fontWeight={600} color="rgba(255,255,255,0.35)">No Bill Attached</Typography>
+                    <Typography fontSize="0.78rem" color="rgba(255,255,255,0.2)" mt={0.5}>No receipt was uploaded for this expense.</Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </>
+        )}
+      </Drawer>
 
       {/* Firm Master Style Dialog */}
       <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>

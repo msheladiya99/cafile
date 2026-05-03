@@ -159,7 +159,7 @@ router.post('/rules/seed-defaults', authMiddleware, adminOnly, async (req: Reque
                 dueDateLogic: { type: 'FIXED_DAY_OF_MONTH', quarterDueDay: 31, quarterDueMonthOffset: 1 },
                 reminderOffsets: [10, 5, 2, 0],
                 applicableClientsFilter: {},
-                channels: ['EMAIL'],
+                channels: ['WHATSAPP', 'EMAIL'],
             },
             {
                 ruleName: 'DSC Expiry',
@@ -486,9 +486,29 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
         });
 
         await reminder.save();
-        await reminder.populate('clientId', 'name email');
+        const populated = await Reminder.findById(reminder._id)
+            .populate('clientId', 'name email phone mobile altPhoneM');
 
-        res.status(201).json(reminder);
+        // Send immediate notification
+        try {
+            const { NotificationLog, MessageTemplate, ReminderRule } = (req as any).models;
+            const firmId = (req as any).firmId;
+            
+            const { sendReminderNotifications } = require('../services/notification.service');
+            await sendReminderNotifications({
+                NotificationLog,
+                MessageTemplate,
+                reminder: populated,
+                client: populated.clientId,
+                rule: null, // Manual reminders don't have rules
+                firmId,
+                tone: 'NORMAL'
+            });
+        } catch (notifError) {
+            console.error('Immediate notification failed:', notifError);
+        }
+
+        res.status(201).json(populated);
     } catch (error) {
         console.error('Error creating reminder:', error);
         res.status(500).json({ message: 'Server error' });

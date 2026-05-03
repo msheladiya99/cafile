@@ -82,7 +82,7 @@ const ReminderRuleSchema = new Schema<IReminderRule>({
         excludeClientIds: [{ type: Schema.Types.ObjectId, ref: 'Client' }],
         complianceFlags: [{ type: String, trim: true }]
     },
-    channels: [{ type: String, enum: ['WHATSAPP', 'EMAIL', 'SMS'], default: 'WHATSAPP' }],
+    channels: [{ type: String, enum: ['WHATSAPP', 'EMAIL', 'SMS'], default: ['WHATSAPP', 'EMAIL'] }],
     templateIds: {
         normal: { type: Schema.Types.ObjectId, ref: 'MessageTemplate' },
         overdue: { type: Schema.Types.ObjectId, ref: 'MessageTemplate' },
