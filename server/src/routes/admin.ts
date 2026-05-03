@@ -234,90 +234,88 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
         const clientLimit = plan ? plan.limits.clients : 10;
         let currentClientsCount = await Client.countDocuments({ firmId });
 
-        for (let i = 0; i < clients.length; i++) {
-            const clientData = clients[i];
+        // Enqueue Google Drive folder structure creation
+        const { enqueueDriveFolderCreation } = await import('../queues/drive.queue');
 
-            if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
-                results.failed++;
-                results.errors.push(`Row ${i + 1}: Client limit reached for your ${plan?.name || firm?.plan} plan`);
-                continue;
-            }
-
-            try {
-                if (!clientData.name || !clientData.email || !clientData.phone) {
-                    throw new Error(`Row ${i + 1}: Name, email, and phone are required for ${clientData.name || 'Unknown'}`);
-                }
-
-                const existingClient = await Client.findOne({ email: clientData.email, firmId });
-                if (existingClient) {
-                    throw new Error(`Row ${i + 1}: Client with email ${clientData.email} already exists`);
-                }
-
-                if (clientData.panNumber) {
-                     const existingPan = await Client.findOne({ panNumber: clientData.panNumber, firmId });
-                     if (existingPan) {
-                          throw new Error(`Row ${i + 1}: Client with PAN ${clientData.panNumber} already exists`);
-                     }
-                }
-
-                if (clientData.clientCode) {
-                    const existingCode = await Client.findOne({ clientCode: clientData.clientCode, firmId });
-                    if (existingCode) {
-                        throw new Error(`Row ${i + 1}: Client Code ${clientData.clientCode} is already taken`);
+        // Process in batches of 50 to avoid overwhelming the DB/CPU while still being fast
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < clients.length; i += BATCH_SIZE) {
+            const batch = clients.slice(i, i + BATCH_SIZE);
+            
+            await Promise.all(batch.map(async (clientData, index) => {
+                const rowIndex = i + index + 1;
+                try {
+                    if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Client limit reached`);
+                        return;
                     }
-                }
 
-                let username = clientData.username;
-                if (username) {
-                    const existingUser = await User.findOne({ username });
-                    if (existingUser) {
-                        throw new Error(`Row ${i + 1}: Username ${username} is already taken`);
+                    if (!clientData.name || !clientData.email || !clientData.phone) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Name, email, and phone are required`);
+                        return;
                     }
-                } else {
-                    username = generateUsername(clientData.name);
+
+                    // Check for existing client in this batch/firm
+                    const existingClient = await Client.findOne({ email: clientData.email, firmId });
+                    if (existingClient) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Email ${clientData.email} already exists`);
+                        return;
+                    }
+
+                    let username = clientData.username;
+                    if (username) {
+                        const existingUser = await User.findOne({ username });
+                        if (existingUser) {
+                            results.failed++;
+                            results.errors.push(`Row ${rowIndex}: Username ${username} taken`);
+                            return;
+                        }
+                    } else {
+                        username = generateUsername(clientData.name);
+                    }
+
+                    // 1. Create client
+                    const client = new Client({ firmId, ...clientData });
+                    await client.save();
+
+                    // 2. Create user with hashed password
+                    const password = generatePassword();
+                    const passwordHash = await bcrypt.hash(password, 10);
+                    const user = new User({
+                        firmId,
+                        username,
+                        passwordHash,
+                        role: 'CLIENT',
+                        clientId: client._id
+                    });
+                    await user.save();
+
+                    // 3. Enqueue Drive Task (Background)
+                    enqueueDriveFolderCreation({
+                        clientId: client._id as string,
+                        clientName: client.name,
+                        panNumber: client.panNumber,
+                        firmId: firmId as string
+                    }).catch(err => console.error('Drive enqueue error:', err));
+
+                    // 4. Send Email (Background)
+                    sendWelcomeEmail({
+                        clientEmail: client.email,
+                        clientName: client.name,
+                        username,
+                        password
+                    }).catch(err => console.error('Email send error:', err));
+
+                    currentClientsCount++;
+                    results.successful++;
+                } catch (err: any) {
+                    results.failed++;
+                    results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
                 }
-
-                const client = new Client({
-                    firmId,
-                    ...clientData
-                });
-                await client.save();
-
-                const password = generatePassword();
-                const passwordHash = await bcrypt.hash(password, 10);
-
-                const user = new User({
-                    firmId,
-                    username,
-                    passwordHash,
-                    role: 'CLIENT',
-                    clientId: client._id
-                });
-                await user.save();
-
-                // Enqueue Google Drive folder structure creation
-                const { enqueueDriveFolderCreation } = await import('../queues/drive.queue');
-                enqueueDriveFolderCreation({
-                    clientId: client._id as string,
-                    clientName: client.name,
-                    panNumber: client.panNumber,
-                    firmId: firmId as string
-                }).catch(err => console.error('Failed to enqueue drive creation:', err));
-
-                // Send welcome email async
-                sendWelcomeEmail({
-                    clientEmail: client.email,
-                    clientName: client.name,
-                    username,
-                    password
-                }).catch(err => console.error('Failed to send welcome email in bulk:', err));
-
-                currentClientsCount++;
-                results.successful++;
-            } catch (err: any) {
-                results.failed++;
-                results.errors.push(err.message || `Row ${i + 1}: Failed to import client ${clientData.name}`);
-            }
+            }));
         }
 
         res.status(200).json(results);
