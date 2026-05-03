@@ -29,6 +29,7 @@ import {
     Keyboard as KeyboardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { Calculator } from '../components/common/Calculator';
 
 import AccountMenu from '../components/common/AccountMenu';
 
@@ -52,6 +53,7 @@ export const AdminLayout: React.FC = () => {
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
     const [showScroll, setShowScroll] = useState(false);
     const [showShortcutGuide, setShowShortcutGuide] = useState(false);
+    const [calcOpen, setCalcOpen] = useState(false);
 
     useEffect(() => {
         const checkScrollTop = () => {
@@ -224,6 +226,12 @@ export const AdminLayout: React.FC = () => {
                 if (keyCombo.toUpperCase() === 'ALT+K') {
                     e.preventDefault();
                     setShowShortcutGuide(prev => !prev);
+                    return;
+                }
+
+                if (keyCombo.toUpperCase() === 'ALT+C') {
+                    e.preventDefault();
+                    setCalcOpen(prev => !prev);
                     return;
                 }
 
@@ -590,6 +598,7 @@ export const AdminLayout: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex' }}>
+            <Calculator open={calcOpen} onClose={() => setCalcOpen(false)} />
             {/* Mobile Only AppBar */}
             <AppBar
                 position="fixed"
@@ -716,6 +725,7 @@ export const AdminLayout: React.FC = () => {
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">DSC Management</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + M</Typography></Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Expenses</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + X</Typography></Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2">Bank Statement</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#64748b' }}>Alt + S</Typography></Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 600 }}>Scientific Calculator</Typography><Typography variant="body2" sx={{ fontWeight: 'bold', color: '#6366f1' }}>Alt + C</Typography></Box>
                             </Box>
                         </Grid>
 

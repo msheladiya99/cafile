@@ -44,7 +44,8 @@ router.post('/', authenticate, upload.single('billFile'), async (req: AuthReques
                     expensesFolderId
                 );
                 
-                receiptUrl = uploadedFile.webViewLink;
+                // Make the file shareable so it can be previewed in the UI
+                receiptUrl = await driveService.createShareableLink(uploadedFile.fileId);
             } catch (error: any) {
                 console.error('Failed to upload bill to Google Drive:', error);
                 // Continue without file if needed, or error out
@@ -92,8 +93,8 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         if (billableStatus) query.billableStatus = billableStatus;
 
         const expenses = await Expense.find(query)
-            .populate('paidBy', 'username firstName lastName email')
-            .populate('approvedBy', 'username firstName lastName')
+            .populate('paidBy', 'username name firstName lastName email')
+            .populate('approvedBy', 'username name firstName lastName')
             .populate('reimbursedBy', 'username firstName lastName')
             .sort({ date: -1 })
             .lean();
@@ -137,7 +138,7 @@ router.patch('/:id/status', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN', 
                 approvedBy: ['APPROVED', 'REJECTED'].includes(status) ? req.user!._id : undefined 
             },
             { new: true }
-        ).populate('paidBy', 'firstName lastName').populate('approvedBy', 'firstName lastName');
+        ).populate('paidBy', 'username name firstName lastName').populate('approvedBy', 'username name firstName lastName');
 
         if (!expense) return res.status(404).json({ message: 'Expense not found' });
 
@@ -201,6 +202,67 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     } catch (error: any) {
         console.error('Error deleting expense:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// ✅ UPDATE Expense (Full Edit)
+router.patch('/:id', authenticate, upload.single('billFile'), async (req: AuthRequest, res: Response) => {
+    try {
+        const { Expense } = (req as any).models;
+        const { id } = req.params;
+        const body = req.body;
+
+        const expense = await Expense.findOne({ _id: id, firmId: req.firmId });
+        if (!expense) return res.status(404).json({ message: 'Expense not found' });
+
+        // Must be admin/manager or the person who created it
+        const isEligible = ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(req.user!.role) || 
+                          expense.paidBy.toString() === req.user!._id.toString();
+
+        if (!isEligible) return res.status(403).json({ message: 'Unauthorized to edit this expense' });
+
+        let receiptUrl = expense.receiptUrl;
+
+        // If a new file is uploaded
+        if (req.file) {
+            try {
+                const driveService = getTenantDriveService(req.firm?.googleDriveRootFolderId);
+                const expensesFolderId = await driveService.ensureFolder('Expenses', req.firm?.googleDriveRootFolderId!);
+                
+                const uploadedFile = await driveService.uploadFile(
+                    req.file.buffer,
+                    req.file.originalname,
+                    req.file.mimetype,
+                    expensesFolderId
+                );
+                
+                receiptUrl = await driveService.createShareableLink(uploadedFile.fileId);
+            } catch (error: any) {
+                console.error('Failed to update bill on Google Drive:', error);
+            }
+        }
+
+        const subtotal = body.amount ? Number(body.amount) : expense.amount;
+        const tax = body.taxAmount !== undefined ? Number(body.taxAmount) : expense.taxAmount;
+        const totalAmount = body.totalAmount ? Number(body.totalAmount) : (subtotal + tax);
+
+        const updatedExpense = await Expense.findByIdAndUpdate(
+            id,
+            {
+                ...body,
+                amount: subtotal,
+                taxAmount: tax,
+                totalAmount,
+                receiptUrl,
+                date: body.date ? new Date(body.date) : expense.date
+            },
+            { new: true }
+        ).populate('paidBy', 'username firstName lastName email');
+
+        return res.status(200).json(updatedExpense);
+    } catch (error: any) {
+        console.error('Error updating expense:', error);
+        res.status(500).json({ message: error.message || 'Internal server error' });
     }
 });
 

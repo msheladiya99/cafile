@@ -3,14 +3,15 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Stack, Chip,
-  Grid, CircularProgress, Select, FormControl, InputAdornment, Tabs, Tab, Drawer, Divider, Tooltip
+  Grid, CircularProgress, Select, FormControl, InputAdornment, Tabs, Tab, Drawer, Tooltip
 } from '@mui/material';
 import { 
   Add as AddIcon, Delete as DeleteIcon, 
   CheckCircle as CheckCircleIcon, Cancel as CancelIcon, 
   Visibility as ViewIcon, Search as SearchIcon,
   Close as CloseIcon, Receipt as ReceiptIcon, OpenInNew as OpenInNewIcon,
-  Business as BusinessIcon, AttachMoney as MoneyIcon, AccountCircle as PersonIcon
+  Business as BusinessIcon, AttachMoney as MoneyIcon, AccountCircle as PersonIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -173,7 +174,9 @@ export const ExpenseManagement: React.FC = () => {
     } catch { /* ignore */ }
   };
 
-  const handleCreate = async () => {
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
+  const handleCreateOrUpdate = async () => {
     if (!formData.amount || !formData.category || !formData.paidBy) {
       toast.error('Please fill required fields (Amount, Category, Paid By)');
       return;
@@ -186,15 +189,23 @@ export const ExpenseManagement: React.FC = () => {
     if (file) payload.append('billFile', file);
 
     try {
-      const loadingToast = toast.loading('Saving expense details...');
-      await api.post('/expense', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success('Expense recorded successfully!', { id: loadingToast });
+      const loadingToast = toast.loading(editingExpense ? 'Updating expense details...' : 'Saving expense details...');
+      
+      if (editingExpense) {
+        await api.patch(`/expense/${editingExpense._id}`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+        toast.success('Expense updated successfully!', { id: loadingToast });
+      } else {
+        await api.post('/expense', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+        toast.success('Expense recorded successfully!', { id: loadingToast });
+      }
+
       setOpenAddDialog(false);
+      setEditingExpense(null);
       resetForm();
       fetchExpenses();
     } catch (err) {
       const error = err as import('axios').AxiosError<{message: string}>;
-      toast.error(error.response?.data?.message || 'Failed to create expense');
+      toast.error(error.response?.data?.message || `Failed to ${editingExpense ? 'update' : 'create'} expense`);
     }
   };
 
@@ -209,6 +220,45 @@ export const ExpenseManagement: React.FC = () => {
       remarks: ''
     });
     setFile(null);
+  };
+
+  const startEdit = (exp: Expense) => {
+    setEditingExpense(exp);
+    setFormData({
+      expenseId: exp.expenseId || '',
+      date: format(new Date(exp.date), 'yyyy-MM-dd'),
+      expenseType: exp.expenseType,
+      paymentMethod: exp.paymentMethod,
+      referenceNo: exp.referenceNo || '',
+      vendorName: exp.vendorName || '',
+      vendorContact: exp.vendorContact || '',
+      vendorGst: exp.vendorGst || '',
+      vendorAddress: exp.vendorAddress || '',
+      category: exp.category,
+      description: exp.description || '',
+      amount: exp.amount.toString(),
+      taxAmount: exp.taxAmount.toString(),
+      totalAmount: exp.totalAmount.toString(),
+      clientName: exp.clientName || '',
+      projectWork: exp.projectWork || '',
+      billableStatus: exp.billableStatus,
+      paidBy: exp.paidBy?._id || '',
+      reimbursementStatus: 'NOT_APPLICABLE',
+      remarks: exp.remarks || ''
+    });
+    setOpenAddDialog(true);
+  };
+
+  const resolveName = (u: { firstName?: string; lastName?: string; name?: string; username?: string } | null | undefined) => {
+    if (!u) return '—';
+    const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+    if (fullName) return fullName;
+    if (u.name) return u.name;
+    if (u.username && u.username.includes('@')) {
+      const part = u.username.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return u.username || '—';
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -270,27 +320,27 @@ export const ExpenseManagement: React.FC = () => {
 
       <Grid container spacing={3} mb={4}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, borderLeft: '6px solid #10b981', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: 'text.secondary' }}>Approved Total</Typography>
-            <Typography variant="h4" fontWeight={800}>₹ {summary.approvedAmount.toLocaleString()}</Typography>
+          <Paper sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '1px solid #a7f3d0', boxShadow: 'none' }}>
+            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: '#065f46' }}>✅ Approved Total</Typography>
+            <Typography variant="h4" fontWeight={800} color="#047857">₹ {summary.approvedAmount.toLocaleString()}</Typography>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, borderLeft: '6px solid #f59e0b', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: 'text.secondary' }}>Total Pending</Typography>
-            <Typography variant="h4" fontWeight={800} color="warning.main">₹ {(summary.totalAmount - summary.approvedAmount).toLocaleString()}</Typography>
+          <Paper sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg,#fffbeb,#fef3c7)', border: '1px solid #fde68a', boxShadow: 'none' }}>
+            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: '#92400e' }}>⏳ Total Pending</Typography>
+            <Typography variant="h4" fontWeight={800} color="#b45309">₹ {(summary.totalAmount - summary.approvedAmount).toLocaleString()}</Typography>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, borderLeft: '6px solid #3b82f6', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: 'text.secondary' }}>Total Transactions</Typography>
-            <Typography variant="h4" fontWeight={800}>{summary.count}</Typography>
+          <Paper sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', border: '1px solid #bfdbfe', boxShadow: 'none' }}>
+            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: '#1e40af' }}>📊 Transactions</Typography>
+            <Typography variant="h4" fontWeight={800} color="#1d4ed8">{summary.count}</Typography>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: 'text.secondary' }}>Gross Lodged</Typography>
-            <Typography variant="h4" fontWeight={800} color="text.primary">₹ {summary.totalAmount.toLocaleString()}</Typography>
+          <Paper sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '1px solid #ddd6fe', boxShadow: 'none' }}>
+            <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, color: '#5b21b6' }}>💰 Gross Lodged</Typography>
+            <Typography variant="h4" fontWeight={800} color="#6d28d9">₹ {summary.totalAmount.toLocaleString()}</Typography>
           </Paper>
         </Grid>
       </Grid>
@@ -338,6 +388,47 @@ export const ExpenseManagement: React.FC = () => {
           </Grid>
         </Grid>
       </Paper>
+
+      {/* ── Spend by Category ── */}
+      {filteredExpenses.length > 0 && (() => {
+        const categoryMap: Record<string, number> = {};
+        filteredExpenses.forEach(exp => {
+          const cat = exp.category || 'Uncategorized';
+          categoryMap[cat] = (categoryMap[cat] || 0) + exp.totalAmount;
+        });
+        const sorted = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+        const maxVal = sorted[0]?.[1] || 1;
+        const colors = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899'];
+        return (
+          <Paper sx={{ p: 2.5, mb: 3, borderRadius: 3, border: '1px solid #e5e7eb', boxShadow: 'none' }}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+              <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: '#667eea' }} />
+              <Typography fontSize="0.72rem" fontWeight={800} letterSpacing={1} color="#475569" sx={{ textTransform: 'uppercase' }}>
+                Spend by Category
+              </Typography>
+            </Stack>
+            <Stack spacing={1.2}>
+              {sorted.map(([cat, amt], i) => (
+                <Box key={cat} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography fontSize="0.78rem" color="#334155" sx={{ width: 130, flexShrink: 0 }}>{cat}</Typography>
+                  <Box sx={{ flex: 1, height: 8, bgcolor: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                    <Box sx={{
+                      height: '100%',
+                      width: `${(amt / maxVal) * 100}%`,
+                      bgcolor: colors[i % colors.length],
+                      borderRadius: 4,
+                      transition: 'width 0.6s ease'
+                    }} />
+                  </Box>
+                  <Typography fontSize="0.78rem" fontWeight={700} color="#334155" sx={{ width: 80, textAlign: 'right', flexShrink: 0 }}>
+                    ₹{amt.toLocaleString()}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Paper>
+        );
+      })()}
 
       <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid #e5e7eb', boxShadow: 'none', overflow: 'hidden' }}>
         <Table size="small">
@@ -398,19 +489,16 @@ export const ExpenseManagement: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={e => e.stopPropagation()}>
-                      {exp.receiptUrl && (
-                        <Tooltip title="View Bill">
-                          <IconButton size="small" color="info" onClick={() => setSelectedExpense(exp)}>
-                            <ViewIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+
                       {isManagerOrAdmin && exp.status === 'PENDING' && (
                         <>
                           <IconButton size="small" color="success" onClick={() => updateStatus(exp._id, 'APPROVED')}><CheckCircleIcon fontSize="small" /></IconButton>
                           <IconButton size="small" color="error" onClick={() => updateStatus(exp._id, 'REJECTED')}><CancelIcon fontSize="small" /></IconButton>
                         </>
                       )}
+                       <IconButton size="small" color="info" onClick={() => setSelectedExpense(exp)}>
+                        <ViewIcon fontSize="small" />
+                      </IconButton>
                       {(isAdmin || exp.paidBy?._id === user?._id) && (
                         <IconButton size="small" color="error" onClick={() => deleteExpense(exp._id)}><DeleteIcon fontSize="small" /></IconButton>
                       )}
@@ -449,14 +537,23 @@ export const ExpenseManagement: React.FC = () => {
               overflow: 'hidden',
             }}>
               {/* Header */}
-              <Box sx={{ px: 3, py: 2.5, background: 'linear-gradient(135deg,#101828 0%,#1d3461 100%)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <Box sx={{ px: 3, py: 2.5, background: '#fff', borderBottom: '2px solid #eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                 <Box>
-                  <Typography fontWeight={800} fontSize="1rem">Expense Details</Typography>
-                  <Typography fontSize="0.75rem" sx={{ opacity: 0.75 }}>{selectedExpense.expenseId}</Typography>
+                  <Typography fontWeight={800} fontSize="1rem" color="#1e293b">Expense Details</Typography>
+                  <Typography fontSize="0.75rem" color="#667eea" fontWeight={600}>{selectedExpense.expenseId}</Typography>
                 </Box>
-                <IconButton size="small" sx={{ color: '#fff' }} onClick={() => setSelectedExpense(null)}>
-                  <CloseIcon fontSize="small" />
-                </IconButton>
+                <Stack direction="row" spacing={0.5}>
+                  {(isAdmin || selectedExpense.paidBy?._id === user?._id) && (
+                    <Tooltip title="Edit Expense">
+                      <IconButton size="small" sx={{ color: '#667eea', bgcolor: '#eef2ff', '&:hover': { bgcolor: '#e0e7ff' } }} onClick={() => startEdit(selectedExpense)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <IconButton size="small" sx={{ color: '#94a3b8', '&:hover': { bgcolor: '#f1f5f9' } }} onClick={() => setSelectedExpense(null)}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
               </Box>
 
               <Box sx={{ overflowY: 'auto', flex: 1, p: 2.5 }}>
@@ -549,8 +646,8 @@ export const ExpenseManagement: React.FC = () => {
                   </Box>
                   <Box sx={{ px: 2, py: 1.5 }}>
                     {([
-                      ['Paid By', selectedExpense.paidBy ? `${selectedExpense.paidBy.firstName || ''} ${selectedExpense.paidBy.lastName || ''}`.trim() || selectedExpense.paidBy.username : '—'],
-                      ['Approved By', selectedExpense.approvedBy ? `${selectedExpense.approvedBy.firstName} ${selectedExpense.approvedBy.lastName}` : '—'],
+                      ['Paid By', resolveName(selectedExpense.paidBy)],
+                      ['Approved By', resolveName(selectedExpense.approvedBy)],
                       ['Client', selectedExpense.clientName || '—'],
                       ['Project/Work', selectedExpense.projectWork || '—'],
                       ['Billable Status', selectedExpense.billableStatus],
@@ -589,21 +686,23 @@ export const ExpenseManagement: React.FC = () => {
               flex: 1,
               display: { xs: 'none', md: 'flex' },
               flexDirection: 'column',
-              bgcolor: '#1a1a2e',
+              bgcolor: '#f8faff',
               overflow: 'hidden',
             }}>
               {/* Viewer Header */}
-              <Box sx={{ px: 3, py: 2, bgcolor: '#16213e', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #0f3460' }}>
+              <Box sx={{ px: 3, py: 2, bgcolor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #e8ecf8' }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
-                  <ReceiptIcon sx={{ color: '#667eea', fontSize: 20 }} />
+                  <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ReceiptIcon sx={{ color: '#667eea', fontSize: 18 }} />
+                  </Box>
                   <Box>
-                    <Typography color="#fff" fontWeight={700} fontSize="0.88rem">Bill / Receipt</Typography>
-                    <Typography color="rgba(255,255,255,0.5)" fontSize="0.7rem">Attached document preview</Typography>
+                    <Typography color="#1e293b" fontWeight={700} fontSize="0.88rem">Bill / Receipt</Typography>
+                    <Typography color="#94a3b8" fontSize="0.7rem">Attached document preview</Typography>
                   </Box>
                 </Stack>
                 {selectedExpense.receiptUrl && (
                   <Tooltip title="Open in new tab">
-                    <IconButton size="small" component="a" href={selectedExpense.receiptUrl} target="_blank" sx={{ color: '#667eea' }}>
+                    <IconButton size="small" component="a" href={selectedExpense.receiptUrl} target="_blank" sx={{ color: '#667eea', bgcolor: '#eef2ff', '&:hover': { bgcolor: '#e0e7ff' } }}>
                       <OpenInNewIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -613,32 +712,56 @@ export const ExpenseManagement: React.FC = () => {
               {/* Viewer Body */}
               <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', p: 2 }}>
                 {selectedExpense.receiptUrl ? (
-                  selectedExpense.receiptUrl.toLowerCase().endsWith('.pdf') ? (
-                    <iframe
-                      src={selectedExpense.receiptUrl}
-                      title="Bill Receipt"
-                      style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
-                    />
-                  ) : (
-                    <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <img
-                        src={selectedExpense.receiptUrl}
-                        alt="Bill Receipt"
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: '100%',
-                          objectFit: 'contain',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                        }}
-                      />
-                    </Box>
-                  )
+                  (() => {
+                    const url = selectedExpense.receiptUrl;
+                    const isGoogleDrive = url.includes('drive.google.com');
+                    let previewUrl = url;
+                    const isImage = !url.toLowerCase().endsWith('.pdf');
+
+                    if (isGoogleDrive) {
+                      const fileId = url.split('/d/')[1]?.split('/')[0];
+                      if (fileId) {
+                        // For Google Drive, we use the /preview link for both images and PDFs in an iframe
+                        // as it provides a better UI with zoom/rotate
+                        previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                        // However, for images we could also use the direct link if we want to use <img>
+                        // But /preview works great for both in an iframe.
+                      }
+                    }
+
+                    if (isGoogleDrive || !isImage) {
+                      return (
+                        <iframe
+                          src={previewUrl}
+                          title="Bill Receipt"
+                          style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px', background: '#fff' }}
+                        />
+                      );
+                    }
+
+                    return (
+                      <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img
+                          src={previewUrl}
+                          alt="Bill Receipt"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            objectFit: 'contain',
+                            borderRadius: '8px',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                          }}
+                        />
+                      </Box>
+                    );
+                  })()
                 ) : (
-                  <Box sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>
-                    <ReceiptIcon sx={{ fontSize: 80, mb: 2, opacity: 0.3 }} />
-                    <Typography fontSize="1rem" fontWeight={600} color="rgba(255,255,255,0.35)">No Bill Attached</Typography>
-                    <Typography fontSize="0.78rem" color="rgba(255,255,255,0.2)" mt={0.5}>No receipt was uploaded for this expense.</Typography>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Box sx={{ width: 80, height: 80, borderRadius: '50%', bgcolor: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>
+                      <ReceiptIcon sx={{ fontSize: 40, color: '#c7d2fe' }} />
+                    </Box>
+                    <Typography fontSize="1rem" fontWeight={700} color="#334155">No Bill Attached</Typography>
+                    <Typography fontSize="0.78rem" color="#94a3b8" mt={0.5}>No receipt was uploaded for this expense.</Typography>
                   </Box>
                 )}
               </Box>
@@ -651,8 +774,8 @@ export const ExpenseManagement: React.FC = () => {
       <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ p: 0 }}>
           <Box sx={{ p: 3, background: '#101828', color: 'white' }}>
-            <Typography variant="h6" fontWeight={700}>Log Office Expense</Typography>
-            <Typography variant="body2" sx={{ opacity: 0.8 }}>Record financial and operational expenditures</Typography>
+            <Typography variant="h6" fontWeight={700}>{editingExpense ? 'Edit Expense' : 'Log Office Expense'}</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8 }}>{editingExpense ? `Updating ${editingExpense.expenseId}` : 'Record financial and operational expenditures'}</Typography>
           </Box>
         </DialogTitle>
 
@@ -735,11 +858,11 @@ export const ExpenseManagement: React.FC = () => {
                         </Row>
                         <Row label="Paid By *">
                             <Select value={formData.paidBy} onChange={e => setFormData({...formData, paidBy: e.target.value})} fullWidth {...selSx}>
-                                {users.map((u: any) => {
-                                    const displayName = (u.firstName && u.lastName) ? `${u.firstName} ${u.lastName}` : (u.name || u.username);
+                                {users.map((u) => {
+                                    const displayName = (u.firstName && u.lastName) ? `${u.firstName} ${u.lastName}` : (u.username);
                                     return <MenuItem key={u._id} value={u._id}>{displayName} ({u.role})</MenuItem>;
                                 })}
-                                {users.length === 0 && <MenuItem value={user?._id}>{(user?.firstName && user?.lastName) ? `${user.firstName} ${user.lastName}` : (user?.name || user?.username)} ({user?.role})</MenuItem>}
+                                {users.length === 0 && <MenuItem value={user?._id}>{(user?.firstName && user?.lastName) ? `${user.firstName} ${user.lastName}` : (user?.username)} ({user?.role})</MenuItem>}
                             </Select>
                         </Row>
                         <Row label="Reimbursement">
@@ -761,10 +884,10 @@ export const ExpenseManagement: React.FC = () => {
         </DialogContent>
 
         <DialogActions sx={{ p: 3, borderTop: '1px solid #e5e7eb', justifyContent: 'center', gap: 2 }}>
-          <Button variant="contained" color="primary" onClick={handleCreate} disabled={loading} sx={{ px: 6, py: 1, borderRadius: 2, textTransform: 'none', background: '#101828' }}>
-            Save Expense
+          <Button variant="contained" color="primary" onClick={handleCreateOrUpdate} disabled={loading} sx={{ px: 6, py: 1, borderRadius: 2, textTransform: 'none', background: '#101828' }}>
+            {editingExpense ? 'Update Expense' : 'Save Expense'}
           </Button>
-          <Button variant="outlined" onClick={() => setOpenAddDialog(false)} color="error" sx={{ px: 6, py: 1, borderRadius: 2, textTransform: 'none' }}>
+          <Button variant="outlined" onClick={() => { setOpenAddDialog(false); setEditingExpense(null); }} color="error" sx={{ px: 6, py: 1, borderRadius: 2, textTransform: 'none' }}>
             Cancel
           </Button>
         </DialogActions>
