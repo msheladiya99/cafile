@@ -23,7 +23,8 @@ import {
     alpha,
     useTheme,
     Select,
-    useMediaQuery
+    useMediaQuery,
+    Avatar
 } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -484,20 +485,22 @@ export const ClientLedger: React.FC = () => {
                                                 width: '100%',
                                                 minWidth: 0
                                             }}>
-                                                <Box
+                                                <Avatar
+                                                    variant="rounded"
+                                                    src={clientLedger.client.logoUrl}
                                                     sx={{
                                                         width: { xs: 36, sm: 40 },
                                                         height: { xs: 36, sm: 40 },
-                                                        borderRadius: '8px',
-                                                        bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        flexShrink: 0,
+                                                        borderRadius: '10px',
+                                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                                        color: theme.palette.primary.main,
+                                                        fontWeight: 700,
+                                                        fontSize: '1rem',
+                                                        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
                                                     }}
                                                 >
-                                                    <PersonIcon sx={{ color: 'white', fontSize: { xs: 18, sm: 20 } }} />
-                                                </Box>
+                                                    {clientLedger.client.name?.charAt(0).toUpperCase() || <PersonIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
+                                                </Avatar>
                                                 
                                                 <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
                                                     <Box sx={{ minWidth: 0 }}>

@@ -751,6 +751,7 @@ const PartnersTab: React.FC<{
     const [curr, setCurr] = useState(PARTNER_BLANK);
     const [editIdx, setEditIdx] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [showForm, setShowForm] = useState(false);
 
     const handleAdd = () => {
         if (!curr.name) { toast('Partner Name is required', 'error'); return; }
@@ -760,6 +761,7 @@ const PartnersTab: React.FC<{
         onUpdate(newArr);
         setCurr(PARTNER_BLANK);
         setEditIdx(null);
+        setShowForm(false);
     };
 
     const handleSignUpload = async (file: File) => {
@@ -774,43 +776,66 @@ const PartnersTab: React.FC<{
 
     return (
         <Box>
-            <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px' }}>
-                <Typography fontSize="0.9rem" fontWeight={700} color="#444" mb={2}>{editIdx !== null ? 'Edit Partner' : 'Add New Partner'}</Typography>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <Row label="Full Name*"><TextField value={curr.name} onChange={(e) => setCurr(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} /></Row>
-                        <Row label="Designation*"><TextField value={curr.designation} onChange={(e) => setCurr(p => ({ ...p, designation: e.target.value }))} fullWidth {...sx} /></Row>
+            {(showForm || editIdx !== null) && (
+                <Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: '8px', bgcolor: '#fff', border: '1px solid #e2e8f0' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography fontSize="0.9rem" fontWeight={700} color="#444">{editIdx !== null ? 'Edit Partner' : 'Add New Partner'}</Typography>
+                        <IconButton size="small" onClick={() => { setShowForm(false); setEditIdx(null); setCurr(PARTNER_BLANK); }}>
+                            <X size={18} color="#666" />
+                        </IconButton>
+                    </Box>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Row label="Full Name*"><TextField value={curr.name} onChange={(e) => setCurr(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} /></Row>
+                            <Row label="Designation*"><TextField value={curr.designation} onChange={(e) => setCurr(p => ({ ...p, designation: e.target.value }))} fullWidth {...sx} /></Row>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Row label="ICAI Mem. No."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
+                            <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: '8px', textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
+                                <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
+                                {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
+                                    <Box component="img" src={curr.signatureImageUrl} alt={`Partner signature - ${curr.name}`} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
+                                ) : <Camera size={24} color="#ccc" />}
+                                <CommonButton component="label" size="small" variant="outlined" sx={{ py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
+                                    {curr.signatureImageUrl ? 'Change' : 'Upload'}
+                                    <input type="file" hidden accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSignUpload(f); }} />
+                                </CommonButton>
+                            </Box>
+                        </Grid>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <Row label="ICAI Mem. No."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
-                        <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: '8px', textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
-                            <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
-                            {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
-                                <Box component="img" src={curr.signatureImageUrl} alt={`Partner signature - ${curr.name}`} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
-                            ) : <Camera size={24} color="#ccc" />}
-                            <CommonButton component="label" size="small" variant="outlined" sx={{ py: 0, px: 1, fontSize: '0.7rem', display: 'block', mx: 'auto', mt: 0.5 }}>
-                                {curr.signatureImageUrl ? 'Change' : 'Upload'}
-                                <input type="file" hidden accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSignUpload(f); }} />
-                            </CommonButton>
-                        </Box>
-                    </Grid>
-                </Grid>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3 }}>
-                    <CommonButton variant="contained" size="small" onClick={handleAdd}
-                        sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: '8px', px: 4 }}>
-                        {editIdx !== null ? 'Update Partner' : 'Add to List'}
-                    </CommonButton>
-                    {editIdx !== null && <CommonButton variant="outlined" size="small" onClick={() => { setCurr(PARTNER_BLANK); setEditIdx(null); }}>Cancel</CommonButton>}
-                </Box>
-            </Paper>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3 }}>
+                        <CommonButton variant="contained" size="small" onClick={handleAdd}
+                            sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4f46e5' }, borderRadius: '8px', px: 4, boxShadow: 'none' }}>
+                            {editIdx !== null ? 'Update Partner' : 'Add to List'}
+                        </CommonButton>
+                        <CommonButton variant="outlined" size="small" color="error" onClick={() => { setCurr(PARTNER_BLANK); setEditIdx(null); setShowForm(false); }}
+                            sx={{ borderRadius: '8px', px: 3 }}>
+                            Cancel
+                        </CommonButton>
+                    </Box>
+                </Paper>
+            )}
 
             <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Building2 size={16} />
-                    <Typography fontWeight={700} fontSize="0.875rem">Firm Partners List</Typography>
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Building2 size={16} />
+                        <Typography fontWeight={700} fontSize="0.875rem">Firm Partners List</Typography>
+                    </Box>
+                    {!showForm && editIdx === null && (
+                        <CommonButton 
+                            variant="contained" 
+                            size="small" 
+                            startIcon={<Plus size={18} />}
+                            onClick={() => setShowForm(true)}
+                            sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4f46e5' }, borderRadius: '8px', fontSize: '0.78rem', boxShadow: 'none' }}
+                        >
+                            Add Partner
+                        </CommonButton>
+                    )}
                 </Box>
                 {partners.length === 0 ? (
                     <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary', fontSize: '0.85rem' }}>No partners added yet.</Box>

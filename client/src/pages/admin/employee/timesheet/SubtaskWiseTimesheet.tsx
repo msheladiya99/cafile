@@ -36,12 +36,12 @@ const categoryColors = ['#667eea', '#4f46e5', '#10b981', '#ef4444', '#8b5cf6', '
 
 interface FilterState {
     groupName: string; clientName: string; task: string; frequency: string;
-    subTask: string; year: string; employee: string; status: string;
+    subTask: string; year: string; status: string;
     dateFrom: string; dateTo: string;
 }
 const empty: FilterState = {
     groupName: '', clientName: '', task: '', frequency: '',
-    subTask: '', year: '', employee: '', status: '', dateFrom: '', dateTo: ''
+    subTask: '', year: '', status: '', dateFrom: '', dateTo: ''
 };
 
 interface TimesheetSubtaskRow {
@@ -69,7 +69,6 @@ export const SubtaskWiseTimesheet: React.FC = () => {
 
     const { data: clients = [], isLoading: loadingClients } = useQuery<Client[]>({ queryKey: ['clients'], queryFn: adminService.getClients });
     const { data: groups = [], isLoading: loadingGroups } = useQuery<{ _id: string; groupName: string }[]>({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
-    const { data: staff = [], isLoading: loadingStaff } = useQuery<User[]>({ queryKey: ['staff'], queryFn: staffService.getStaff });
     const { data: tasks = [], isLoading: loadingTasks } = useQuery<Task[]>({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
     const { data: subMasters = [], isLoading: loadingSubMasters } = useQuery<{ _id: string; name: string }[]>({ queryKey: ['subMasters'], queryFn: () => masterService.getSubMasters() as unknown as Promise<{ _id: string; name: string }[]> });
 
@@ -89,7 +88,6 @@ export const SubtaskWiseTimesheet: React.FC = () => {
         clientId: f.clientName || undefined,
         taskMasterId: f.task || undefined,
         frequency: f.frequency || undefined,
-        assignedTo: f.employee || undefined,
         year: f.year || undefined,
         status: f.status || undefined,
         dateFrom: f.dateFrom || undefined,
@@ -227,17 +225,6 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                     </Grid>
 
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Employee</Typography>
-                        <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: '8px' }}>
-                                <MenuItem value="">All Employees</MenuItem>
-                                {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    staff.map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 6 }}>
                         <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Status</Typography>
                         <FormControl size="small" fullWidth>
                             <Select displayEmpty value={filterData.status} onChange={handleChange('status')} sx={{ borderRadius: '8px' }}>
@@ -344,7 +331,6 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea' }}>#</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea', minWidth: 160 }}>Task</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea' }}>Client</TableCell>
-                                                        <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea' }}>Assigned To</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea' }}>Est.</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea' }}>Actual</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11, color: '#667eea', minWidth: 90 }}>Progress</TableCell>
@@ -372,22 +358,6 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                                                                 ) : row.clientGroup ? (
                                                                     <Typography fontSize={11} color="text.secondary">{row.clientGroup.groupName}</Typography>
                                                                 ) : <Typography fontSize={11} color="text.disabled">Internal</Typography>}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                                    {row.assignedTo?.slice(0, 2).map((u: User) => (
-                                                                        <Tooltip key={u._id} title={u.name || u.username}>
-                                                                            <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: color }}>
-                                                                                {(u.name || u.username || '?')[0].toUpperCase()}
-                                                                            </Avatar>
-                                                                        </Tooltip>
-                                                                    ))}
-                                                                    {row.assignedTo?.length > 2 && (
-                                                                        <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: '#764ba2' }}>
-                                                                            +{row.assignedTo.length - 2}
-                                                                        </Avatar>
-                                                                    )}
-                                                                </Box>
                                                             </TableCell>
                                                             <TableCell>
                                                                 <Typography fontSize={11} fontWeight={600}>{row.estimatedHours}h</Typography>
@@ -427,7 +397,7 @@ export const SubtaskWiseTimesheet: React.FC = () => {
                                                     ))}
                                                     {/* Category subtotal */}
                                                     <TableRow sx={{ bgcolor: color + '10' }}>
-                                                        <TableCell colSpan={4} sx={{ fontWeight: 700, fontSize: 11, color }}>
+                                                        <TableCell colSpan={3} sx={{ fontWeight: 700, fontSize: 11, color }}>
                                                             Subtotal — {category.replace(/_/g, ' ')} ({catRows.length} tasks)
                                                         </TableCell>
                                                         <TableCell sx={{ fontWeight: 700, fontSize: 11 }}>{Math.round(catEst * 100) / 100}h</TableCell>

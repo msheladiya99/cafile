@@ -113,15 +113,6 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Employee Master', path: '/admin/employee/master', perm: 'employee.add', shortcut: 'Alt+W' },
                 { text: 'Employee List', path: '/admin/employee/list', perm: 'employee.view', shortcut: 'Alt+E' },
                 { text: 'Emp Task Schedule', path: '/admin/employee/tasks', perm: 'employee.view', shortcut: 'Alt+J' },
-                {
-                    text: 'Time Sheet',
-                    perm: ['employee.timesheet'],
-                    children: [
-                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry', perm: 'employee.timesheet' },
-                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask', perm: 'employee.timesheet' },
-                        { text: 'Task Wise', path: '/admin/employee/timesheet/task', perm: 'employee.timesheet' },
-                    ]
-                },
                 { text: 'Free Employee List', path: '/admin/employee/free-list', perm: 'employee.view', shortcut: 'Alt+1' },
                 { text: 'Employee Login Detail', path: '/admin/employee/login-detail', perm: 'employee.view', shortcut: 'Alt+2' },
                 {
@@ -180,6 +171,15 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Task Information', path: '/admin/tasks/information', perm: 'task.information' },
                 { text: 'Ongoing Task', path: '/admin/tasks/ongoing', perm: 'task.view' },
                 { text: 'UDIN List', path: '/admin/tasks/udin-list', perm: 'task.udin', shortcut: 'Alt+H' },
+                {
+                    text: 'Time Sheet',
+                    perm: ['employee.timesheet'],
+                    children: [
+                        { text: 'Entry Wise', path: '/admin/employee/timesheet/entry', perm: 'employee.timesheet' },
+                        { text: 'Subtask Wise', path: '/admin/employee/timesheet/subtask', perm: 'employee.timesheet' },
+                        { text: 'Task Wise', path: '/admin/employee/timesheet/task', perm: 'employee.timesheet' },
+                    ]
+                },
             ]
         },
         { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view', shortcut: 'Alt+M' },

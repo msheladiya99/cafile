@@ -46,13 +46,13 @@ const priorityColor: Record<string, string> = {
 
 interface FilterState {
     groupName: string; clientName: string; task: string;
-    frequency: string; employee: string; year: string;
+    frequency: string; year: string;
     status: string; dateFrom: string; dateTo: string;
 }
 
 const empty: FilterState = {
     groupName: '', clientName: '', task: '', frequency: '',
-    employee: '', year: '', status: '', dateFrom: '', dateTo: ''
+    year: '', status: '', dateFrom: '', dateTo: ''
 };
 
 interface TimesheetEntry {
@@ -77,7 +77,6 @@ export const EntryWiseTimesheet: React.FC = () => {
 
     const { data: clients = [], isLoading: loadingClients } = useQuery({ queryKey: ['clients'], queryFn: adminService.getClients });
     const { data: groups = [], isLoading: loadingGroups } = useQuery({ queryKey: ['clientGroups'], queryFn: clientGroupService.getGroups });
-    const { data: staff = [], isLoading: loadingStaff } = useQuery({ queryKey: ['staff'], queryFn: staffService.getStaff });
     const { data: tasks = [], isLoading: loadingTasks } = useQuery({ queryKey: ['tasks'], queryFn: () => taskService.getTasks() });
 
     const frequencies = ['One Time', 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
@@ -100,7 +99,6 @@ export const EntryWiseTimesheet: React.FC = () => {
         clientId: f.clientName || undefined,
         taskMasterId: f.task || undefined,
         frequency: f.frequency || undefined,
-        assignedTo: f.employee || undefined,
         year: f.year || undefined,
         status: f.status || undefined,
         dateFrom: f.dateFrom || undefined,
@@ -188,18 +186,6 @@ export const EntryWiseTimesheet: React.FC = () => {
                             <Select displayEmpty value={filterData.frequency} onChange={handleChange('frequency')} sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Frequencies</MenuItem>
                                 {frequencies.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    {/* Employee */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: 12, mb: 0.5, fontWeight: 500 }}>Employee</Typography>
-                        <FormControl size="small" fullWidth>
-                            <Select displayEmpty value={filterData.employee} onChange={handleChange('employee')} sx={{ borderRadius: '8px' }}>
-                                <MenuItem value="">All Employees</MenuItem>
-                                {loadingStaff ? <MenuItem disabled><CircularProgress size={16} /></MenuItem> :
-                                    staff.map((s: User) => <MenuItem key={s._id} value={s._id}>{s.name} {s.role ? `(${s.role})` : ''}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -295,7 +281,6 @@ export const EntryWiseTimesheet: React.FC = () => {
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>#</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Task</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Client</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Employee(s)</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Start Time</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>End Time</TableCell>
                                     <TableCell sx={{ fontWeight: 700, fontSize: 12, color: '#667eea' }}>Duration</TableCell>
@@ -322,22 +307,6 @@ export const EntryWiseTimesheet: React.FC = () => {
                                                 <Typography fontSize={12} color="text.secondary">{row.clientGroup.groupName}</Typography>
                                             ) : <Typography fontSize={12} color="text.disabled">—</Typography>}
                                         </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                                {row.assignedTo?.slice(0, 2).map((u: User) => (
-                                                    <Tooltip key={u._id} title={u.name || u.username}>
-                                                        <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
-                                                            {(u.name || u.username || '?')[0].toUpperCase()}
-                                                        </Avatar>
-                                                    </Tooltip>
-                                                ))}
-                                                {row.assignedTo?.length > 2 && (
-                                                    <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: '#764ba2' }}>
-                                                        +{row.assignedTo.length - 2}
-                                                    </Avatar>
-                                                )}
-                                            </Box>
-                                        </TableCell>
                                         <TableCell sx={{ fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(row.startTime)}</TableCell>
                                         <TableCell sx={{ fontSize: 12, whiteSpace: 'nowrap' }}>{fmtDateTime(row.endTime)}</TableCell>
                                         <TableCell>
@@ -357,7 +326,7 @@ export const EntryWiseTimesheet: React.FC = () => {
                                 ))}
                                 {/* Summary Row */}
                                 <TableRow sx={{ bgcolor: '#f0f0ff', fontWeight: 700 }}>
-                                    <TableCell colSpan={6} sx={{ fontWeight: 700, color: '#667eea' }}>Total</TableCell>
+                                    <TableCell colSpan={5} sx={{ fontWeight: 700, color: '#667eea' }}>Total</TableCell>
                                     <TableCell>
                                         <Chip label={fmtDuration(totalMinutes)} size="small"
                                             sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', fontWeight: 700 }} />
