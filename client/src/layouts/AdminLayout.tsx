@@ -420,7 +420,7 @@ export const AdminLayout: React.FC = () => {
             </Box>
 
             {/* Navigation Menu */}
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none', px: 1 }}>
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none', px: 1 }}>
                 <List>
                     {menuItems.map((item) => (
                         <React.Fragment key={item.text}>
@@ -445,7 +445,7 @@ export const AdminLayout: React.FC = () => {
                                             }}
                                         >
                                             <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                                            <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
+                                            <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500, noWrap: true }} />
                                             {openMenus[item.text] ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
                                         </ListItemButton>
                                     </ListItem>
@@ -469,7 +469,7 @@ export const AdminLayout: React.FC = () => {
                                                                         }
                                                                     }}
                                                                 >
-                                                                    <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                                    <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400, noWrap: true }} />
                                                                     {openMenus[child.text] ? <ExpandLess sx={{ fontSize: 16 }} /> : <ExpandMore sx={{ fontSize: 16 }} />}
                                                                 </ListItemButton>
                                                             </ListItem>
@@ -493,7 +493,7 @@ export const AdminLayout: React.FC = () => {
                                                                                     },
                                                                                 }}
                                                                             >
-                                                                                <ListItemText primary={subChild.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                                                <ListItemText primary={subChild.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400, noWrap: true }} />
                                                                             </ListItemButton>
                                                                         </ListItem>
                                                                     ))}
@@ -520,7 +520,7 @@ export const AdminLayout: React.FC = () => {
                                                                     },
                                                                 }}
                                                             >
-                                                                <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400 }} />
+                                                                <ListItemText primary={child.text} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 400, noWrap: true }} />
                                                             </ListItemButton>
                                                         </ListItem>
                                                     )}
@@ -553,7 +553,7 @@ export const AdminLayout: React.FC = () => {
                                         }}
                                     >
                                         <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
+                                        <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500, noWrap: true }} />
                                     </ListItemButton>
                                 </ListItem>
                             )}
@@ -563,14 +563,14 @@ export const AdminLayout: React.FC = () => {
             </Box>
 
             {/* Account Settings at Bottom */}
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1, '&:hover': { background: 'rgba(0,0,0,0.02)' } }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flexGrow: 1, '&:hover': { background: 'rgba(0,0,0,0.02)' }, minWidth: 0, overflow: 'hidden' }} onClick={(e) => setAnchorEl(e.currentTarget)}>
                     <Avatar
                         sx={{ width: 36, height: 36, bgcolor: '#222', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' }}
                     >
                         {(user?.name || user?.username)?.charAt(0).toUpperCase() || 'A'}
                     </Avatar>
-                    <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden' }}>
+                    <Box sx={{ ml: 1.5, flexGrow: 1, overflow: 'hidden', minWidth: 0 }}>
                         <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: '#1a1a1a' }}>
                             {user?.name || user?.username}
                         </Typography>
@@ -580,7 +580,7 @@ export const AdminLayout: React.FC = () => {
                     </Box>
                 </Box>
                 <Tooltip title="Keyboard Shortcuts (Alt+K)">
-                    <IconButton size="small" onClick={() => setShowShortcutGuide(true)}>
+                    <IconButton size="small" onClick={() => setShowShortcutGuide(true)} sx={{ flexShrink: 0 }}>
                         <KeyboardIcon fontSize="small" sx={{ color: '#666' }} />
                     </IconButton>
                 </Tooltip>
@@ -640,6 +640,7 @@ export const AdminLayout: React.FC = () => {
                         boxSizing: 'border-box',
                         background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
                         borderRight: 'none',
+                        overflowX: 'hidden',
                     },
                 }}
             >
@@ -658,6 +659,7 @@ export const AdminLayout: React.FC = () => {
                         boxSizing: 'border-box',
                         background: 'linear-gradient(180deg, #e3f0ef 0%, #f4f7f8 100%)',
                         borderRight: 'none',
+                        overflowX: 'hidden',
                     },
                 }}
             >
