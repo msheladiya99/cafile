@@ -63,6 +63,7 @@ const CareersPage: React.FC = () => {
                 <meta name="description" content="Join My CA File — India's leading CA practice management SaaS. We're hiring engineers, designers, and growth specialists. Remote-first, equity, and fast growth." />
                 <link rel="canonical" href="https://mycafile.in/careers" />
                 
+                <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Careers at My CA File | Grow with us" />
                 <meta property="og:description" content="Join our remote-first team building the future of CA practice software in India. Engineering, Growth, and Success roles." />

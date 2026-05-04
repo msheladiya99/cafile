@@ -32,6 +32,7 @@ const AboutPage: React.FC = () => {
                 <meta name="description" content="Learn about My CA File — the leading CA office management software built for Chartered Accountants in India. Our mission, team, and story." />
                 <link rel="canonical" href="https://mycafile.in/about" />
                 
+                <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="About My CA File | Our Mission & Story" />
                 <meta property="og:description" content="Modernizing CA practices across India with secure, automated practice management. Meet the team and learn our story." />

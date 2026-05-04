@@ -52,6 +52,7 @@ const PressPage: React.FC = () => {
                 <meta name="description" content="My CA File press room. Read our latest news, download brand assets, and get in touch with the media team. India's leading CA practice management SaaS." />
                 <link rel="canonical" href="https://mycafile.in/press" />
 
+                <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Press & Media | My CA File News" />
                 <meta property="og:description" content="Official press releases and media assets for My CA File. Stay updated with our growth and product launches." />

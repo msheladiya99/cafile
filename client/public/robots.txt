@@ -1,10 +1,27 @@
 User-agent: *
 Allow: /
+
+# === INDEXABLE PUBLIC PAGES ===
+Allow: /gst-software-india
+Allow: /itr-filing-software
 Allow: /ca-practice-management
 Allow: /pricing
-Allow: /login
+Allow: /about
+Allow: /contact
+Allow: /careers
+Allow: /press
+Allow: /privacy-policy
+Allow: /terms-of-service
+
+# === DISALLOW ADMIN & APP ROUTES (not for Google) ===
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /superadmin/
+Disallow: /super_admin/
+Disallow: /client/
+Disallow: /login
 Disallow: /api/
-Disallow: /admin/config/
 Disallow: /cdn-cgi/
 
-Sitemap: https://www.mycafile.in/sitemap.xml
+# === SITEMAP ===
+Sitemap: https://mycafile.in/sitemap.xml
