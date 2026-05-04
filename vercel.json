@@ -1,15 +1,31 @@
 {
     "rewrites": [
         {
-            "source": "/client/(.*)",
-            "destination": "/client/index.html"
-        },
-        {
             "source": "/admin/(.*)",
             "destination": "/client/index.html"
         },
         {
+            "source": "/super-admin/(.*)",
+            "destination": "/client/index.html"
+        },
+        {
+            "source": "/superadmin/(.*)",
+            "destination": "/client/index.html"
+        },
+        {
+            "source": "/super_admin/(.*)",
+            "destination": "/client/index.html"
+        },
+        {
+            "source": "/client/(.*)",
+            "destination": "/client/index.html"
+        },
+        {
             "source": "/login",
+            "destination": "/client/index.html"
+        },
+        {
+            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management)",
             "destination": "/client/index.html"
         }
     ]
