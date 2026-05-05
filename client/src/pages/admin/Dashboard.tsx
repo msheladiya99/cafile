@@ -235,7 +235,15 @@ const ComplianceCalendar: React.FC<{ reminders: Reminder[]; overdue: Reminder[] 
 
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, isAdmin, isManager } = useAuth();
+
+    // Non-admin staff (STAFF / INTERN) see their personal My Tasks page
+    React.useEffect(() => {
+        if (user && !isAdmin && !isManager) {
+            navigate('/admin/my-tasks', { replace: true });
+        }
+    }, [user, isAdmin, isManager, navigate]);
+
     const { data, isLoading } = useQuery<DashboardPayload>({
         queryKey: ['admin-dashboard-stats'],
         queryFn: async () => (await adminService.getDashboardStats()) as unknown as DashboardPayload,

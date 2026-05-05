@@ -91,6 +91,7 @@ export const AdminLayout: React.FC = () => {
 
     const rawMenuItems = React.useMemo(() => [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard', perm: 'dashboard.view', shortcut: 'Alt+D' },
+        ...(!isAdmin ? [{ text: 'My Tasks', icon: <AssignmentIcon />, path: '/admin/my-tasks' }] : []),
         ...(isAdmin ? [{ text: 'Firm Master', icon: <BusinessIcon />, path: '/admin/firm-master', shortcut: 'Alt+F' }] : []),
         { text: 'Reports', icon: <ReportsIcon />, path: '/admin/reports', perm: 'reports.view', shortcut: 'Alt+R' },
         {
