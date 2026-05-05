@@ -77,6 +77,7 @@ const CAAssistant = lazy(() => import('./pages/admin/assistant/CAAssistant'));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
+const StaffMyTasks = lazy(() => import('./pages/admin/StaffMyTasks').then(module => ({ default: module.StaffMyTasks })));
 const GSTSoftwarePage = lazy(() => import('./pages/seo/GSTSoftwarePage'));
 const ITRSoftwarePage = lazy(() => import('./pages/seo/ITRSoftwarePage'));
 const CAPracticeManagementPage = lazy(() => import('./pages/seo/CAPracticeManagementPage'));
@@ -280,6 +281,7 @@ const AppRoutes: React.FC = () => {
         {/* Admin/Staff Routes */}
         <Route path="/admin" element={<ProtectedRoute requireStaff><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="my-tasks" element={<StaffMyTasks />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="reports" element={<MonthlyReports />} />
           <Route path="clients" element={<Clients />} />
