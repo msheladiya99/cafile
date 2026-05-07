@@ -11,6 +11,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TablePagination,
     Chip,
     CircularProgress,
     Card,
@@ -55,6 +56,15 @@ export const ClientContactDetail: React.FC = () => {
 
     const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
 
+    // Pagination State
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+    // Reset page when filters change
+    React.useEffect(() => {
+        setPage(0);
+    }, [filterGroup, filterClient, filterSubMaster, filterSearchType, filterSearchText]);
+
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
         return clients.filter((client) => {
@@ -80,6 +90,12 @@ export const ClientContactDetail: React.FC = () => {
                     const primaryMatch = client.phone?.includes(filterSearchText);
                     const contactMatch = client.multipleContacts?.some(contact => 
                         contact.mobile?.includes(filterSearchText)
+                    );
+                    if (!primaryMatch && !contactMatch) return false;
+                } else if (filterSearchType === 'email') {
+                    const primaryMatch = client.email?.toLowerCase().includes(searchLower);
+                    const contactMatch = client.multipleContacts?.some(contact => 
+                        contact.email?.toLowerCase().includes(searchLower)
                     );
                     if (!primaryMatch && !contactMatch) return false;
                 }
@@ -171,6 +187,7 @@ export const ClientContactDetail: React.FC = () => {
                                     >
                                         <MenuItem value="name">By Contact Name</MenuItem>
                                         <MenuItem value="mobile">By Contact Number</MenuItem>
+                                        <MenuItem value="email">By Email</MenuItem>
                                     </Select>
                                     <TextField
                                         id="filter-search-text"
@@ -206,7 +223,7 @@ export const ClientContactDetail: React.FC = () => {
                         </Box>
                     ) : isMobile ? (
                         <Stack spacing={2}>
-                            {filteredClients.map((client) => {
+                            {filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((client) => {
                                 const contacts = client.multipleContacts || [];
                                 const allContacts = [
                                     {
@@ -288,7 +305,7 @@ export const ClientContactDetail: React.FC = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {filteredClients.map((client) => {
+                                    {filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((client) => {
                                         const contacts = client.multipleContacts || [];
                                         const allContacts = [
                                             {
@@ -338,6 +355,21 @@ export const ClientContactDetail: React.FC = () => {
                                 </TableBody>
                             </Table>
                         </TableContainer>
+                    )}
+
+                    {filteredClients.length > 0 && (
+                        <TablePagination
+                            rowsPerPageOptions={[10, 20, 30, 40, 50]}
+                            component="div"
+                            count={filteredClients.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={(_, newPage) => setPage(newPage)}
+                            onRowsPerPageChange={(e) => {
+                                setRowsPerPage(parseInt(e.target.value, 10));
+                                setPage(0);
+                            }}
+                        />
                     )}
                 </Section>
             </ContentContainer>

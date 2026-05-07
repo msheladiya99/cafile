@@ -7,4 +7,4 @@ Disallow: /api/
 Disallow: /admin/config/
 Disallow: /cdn-cgi/
 
-Sitemap: https://www.mycafile.in/sitemap.xml
+Sitemap: https://mycafile.in/sitemap.xml
