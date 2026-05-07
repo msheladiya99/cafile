@@ -48,6 +48,7 @@ const ContactPage: React.FC = () => {
                 <meta name="description" content="Contact the My CA File team. Get a demo, ask a question, or start your free trial. We respond within 24 hours. Support for GST and ITR software integration." />
                 <link rel="canonical" href="https://mycafile.in/contact" />
 
+                <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Contact My CA File | Support & Sales" />
                 <meta property="og:description" content="Have questions about our CA practice management software? Get in touch for a demo or support." />

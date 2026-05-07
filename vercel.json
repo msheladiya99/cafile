@@ -1,4 +1,17 @@
 {
+    "redirects": [
+        {
+            "source": "/(.*)",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "www.mycafile.in"
+                }
+            ],
+            "destination": "https://mycafile.in/$1",
+            "permanent": true
+        }
+    ],
     "rewrites": [
         {
             "source": "/admin/(.*)",
