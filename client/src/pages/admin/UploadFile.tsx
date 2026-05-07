@@ -12,6 +12,8 @@ import {
     Stack,
     Divider,
     IconButton,
+    Autocomplete,
+    TextField,
 } from '@mui/material';
 import {
     CloudUpload as UploadIcon,
@@ -370,32 +372,51 @@ export const UploadFile: React.FC = () => {
                             <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', mb: 0.75 }}>
                                 Target Client <span style={{ color: '#ef4444' }}>*</span>
                             </Typography>
-                            <FormControl fullWidth size="small">
-                                <Select
-                                    displayEmpty
-                                    value={selectedClient}
-                                    onChange={(e) => setSelectedClient(e.target.value)}
-                                    renderValue={(value) => {
-                                        if (!value) return <span style={{ color: '#9ca3af' }}>Select a client</span>;
-                                        const client = clients.find(c => c._id === value);
-                                        return client ? client.name : value;
-                                    }}
-                                    sx={selectSx}
-                                >
-                                    {loadingClients ? (
-                                        <MenuItem disabled>
-                                            <CircularProgress size={16} sx={{ mr: 1 }} /> Loading...
-                                        </MenuItem>
-                                    ) : clients.map((client) => (
-                                        <MenuItem key={client._id} value={client._id}>
-                                            <Box>
-                                                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{client.name}</Typography>
-                                                <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>{client.email}</Typography>
-                                            </Box>
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <Autocomplete
+                                fullWidth
+                                size="small"
+                                options={clients}
+                                loading={loadingClients}
+                                getOptionLabel={(option) => option.name || ''}
+                                value={clients.find((c) => c._id === selectedClient) || null}
+                                onChange={(_, newValue) => {
+                                    setSelectedClient(newValue ? newValue._id : '');
+                                }}
+                                isOptionEqualToValue={(option, value) => option._id === value._id}
+                                renderOption={(props, option) => (
+                                    <li {...props} key={option._id}>
+                                        <Box>
+                                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{option.name}</Typography>
+                                            <Typography sx={{ fontSize: '0.75rem', color: '#9ca3af' }}>{option.email}</Typography>
+                                        </Box>
+                                    </li>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Search and select a client"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            endAdornment: (
+                                                <React.Fragment>
+                                                    {loadingClients ? <CircularProgress color="inherit" size={20} /> : null}
+                                                    {params.InputProps.endAdornment}
+                                                </React.Fragment>
+                                            ),
+                                        }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '8px',
+                                                bgcolor: '#fff',
+                                                fontSize: '0.875rem',
+                                                '& fieldset': { borderColor: '#e5e7eb' },
+                                                '&:hover fieldset': { borderColor: '#9ca3af' },
+                                                '&.Mui-focused fieldset': { borderColor: '#111827', borderWidth: '1.5px' },
+                                            }
+                                        }}
+                                    />
+                                )}
+                            />
                         </Box>
 
                         {/* Document Type + Financial Year row */}
