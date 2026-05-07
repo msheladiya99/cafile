@@ -379,7 +379,7 @@ export const UploadFile: React.FC = () => {
                                 loading={loadingClients}
                                 getOptionLabel={(option) => option.name || ''}
                                 value={clients.find((c) => c._id === selectedClient) || null}
-                                onChange={(event, newValue) => {
+                                onChange={(_, newValue) => {
                                     setSelectedClient(newValue ? newValue._id : '');
                                 }}
                                 isOptionEqualToValue={(option, value) => option._id === value._id}
