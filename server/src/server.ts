@@ -48,11 +48,14 @@ import { startDSCCronJob } from './utils/dscCron';
 import { startReminderCronJob } from './utils/reminderCron';
 import { slackErrorHandler } from './middleware/slackErrorHandler';
 import { logger } from './utils/logger';
-import { sendSlackAlert } from './utils/slackNotifier';
+import { sendSlackAlert, captureConsoleError } from './utils/slackNotifier';
 
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
+
+// Intercept console.error to send alerts to Slack
+captureConsoleError();
 
 // Middleware
 app.use(helmet());

@@ -64,6 +64,33 @@ export const sendSlackAlert = async (error: any, req: any = null) => {
     try {
         await axios.post(SLACK_WEBHOOK_URL, message);
     } catch (slackError: any) {
-        console.error('Failed to send Slack alert:', slackError.message);
+        // Use process.stderr.write to avoid infinite loops if we intercept console.error later
+        process.stderr.write(`Failed to send Slack alert: ${slackError.message}\n`);
     }
 };
+
+let isSlackAlertActive = false;
+
+export const captureConsoleError = () => {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+        originalConsoleError(...args);
+        
+        if (!isSlackAlertActive) {
+            isSlackAlertActive = true;
+            
+            // Extract the first Error object, or concatenate everything into a message
+            const errorObj = args.find(a => a instanceof Error);
+            const msg = args.map(a => {
+                if (typeof a === 'string') return a;
+                if (a instanceof Error) return a.message;
+                try { return JSON.stringify(a); } catch { return 'Unknown object'; }
+            }).join(' ');
+
+            sendSlackAlert(errorObj || new Error(msg)).finally(() => {
+                isSlackAlertActive = false;
+            });
+        }
+    };
+};
+
