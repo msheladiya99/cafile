@@ -1,10 +1,10 @@
 import axios from 'axios';
 import os from 'os';
 
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 const ENVIRONMENT = process.env.NODE_ENV || 'development';
 
 export const sendSlackAlert = async (error: any, req: any = null) => {
+    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
     if (!SLACK_WEBHOOK_URL) {
         console.warn('Slack Webhook URL is not configured. Skipping Slack alert.');
         return;
@@ -21,6 +21,9 @@ export const sendSlackAlert = async (error: any, req: any = null) => {
     const memUsage = process.memoryUsage();
     const serverStatus = `CPU: ${(cpuUsage.user / 1000000).toFixed(2)}s | RAM: ${(memUsage.rss / 1024 / 1024).toFixed(2)}MB`;
 
+    const safeErrorMessage = error instanceof Error ? error.message : (error?.message || (typeof error === 'string' ? error : JSON.stringify(error) || 'Unknown Error'));
+    const safeErrorStack = error?.stack || '';
+
     const message: any = {
         text: "🚨 *BACKEND ERROR ALERT*",
         blocks: [
@@ -30,7 +33,7 @@ export const sendSlackAlert = async (error: any, req: any = null) => {
             },
             {
                 type: "section",
-                text: { type: "mrkdwn", text: `*❌ Error:*\n${error.message || error}` }
+                text: { type: "mrkdwn", text: `*❌ Error:*\n${safeErrorMessage}` }
             },
             {
                 type: "section",
@@ -51,10 +54,10 @@ export const sendSlackAlert = async (error: any, req: any = null) => {
         ]
     };
 
-    if (error.stack) {
+    if (safeErrorStack) {
         message.blocks.push({
             type: "section",
-            text: { type: "mrkdwn", text: `*📜 Stack Trace:*\n\`\`\`${error.stack.substring(0, 1000)}\`\`\`` }
+            text: { type: "mrkdwn", text: `*📜 Stack Trace:*\n\`\`\`${safeErrorStack.substring(0, 1000)}\`\`\`` }
         });
     }
 
