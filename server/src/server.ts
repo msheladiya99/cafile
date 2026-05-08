@@ -46,9 +46,9 @@ import taxNoticeRoutes from './routes/taxNotice';
 import caAssistantRoutes from './routes/caAssistant';
 import { startDSCCronJob } from './utils/dscCron';
 import { startReminderCronJob } from './utils/reminderCron';
-
-
-
+import { slackErrorHandler } from './middleware/slackErrorHandler';
+import { logger } from './utils/logger';
+import { sendSlackAlert } from './utils/slackNotifier';
 
 const app = express();
 const httpServer = createServer(app);
@@ -155,13 +155,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Error:', err);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-});
+app.use(slackErrorHandler);
 
 // 404 handler
 app.use((req, res) => {
@@ -180,8 +174,9 @@ const startServer = async () => {
             console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🌐 API URL: http://localhost:${PORT}/api`);
         });
-    } catch (error) {
-        console.error('Failed to start server:', error);
+    } catch (error: any) {
+        logger.error(`Failed to start server (possibly MongoDB Connection Failed): ${error.message}`);
+        await sendSlackAlert(new Error(`Failed to start server: ${error.message}`));
         process.exit(1);
     }
 };
@@ -213,5 +208,15 @@ const shutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
+
+process.on('uncaughtException', (err) => {
+    logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
+    sendSlackAlert(err).finally(() => process.exit(1));
+});
+
+process.on('unhandledRejection', (reason: any) => {
+    logger.error(`Unhandled Rejection: ${reason}`);
+    sendSlackAlert(reason).finally(() => process.exit(1));
+});
 
 
