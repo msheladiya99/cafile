@@ -13,7 +13,7 @@ const PrivacyPolicyPage: React.FC = () => {
             <Helmet>
                 <title>Privacy Policy | My CA File - Secure CA Practice Management</title>
                 <meta name="description" content="Learn how My CA File protects your CA firm's data. Our privacy policy outlines data encryption, multi-tenant isolation, and our commitment to security." />
-                <link rel="canonical" href="https://mycafile.in/privacy-policy" />
+                <link rel="canonical" href="https://www.mycafile.in/privacy-policy" />
                 <meta name="robots" content="index, follow" />
             </Helmet>
 

@@ -46,14 +46,14 @@ const ContactPage: React.FC = () => {
             <Helmet>
                 <title>Contact Us | My CA File - CA Practice Management Software</title>
                 <meta name="description" content="Contact the My CA File team. Get a demo, ask a question, or start your free trial. We respond within 24 hours. Support for GST and ITR software integration." />
-                <link rel="canonical" href="https://mycafile.in/contact" />
+                <link rel="canonical" href="https://www.mycafile.in/contact" />
 
                 <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Contact My CA File | Support & Sales" />
                 <meta property="og:description" content="Have questions about our CA practice management software? Get in touch for a demo or support." />
-                <meta property="og:url" content="https://mycafile.in/contact" />
-                <meta property="og:image" content="https://mycafile.in/og-contact.png" />
+                <meta property="og:url" content="https://www.mycafile.in/contact" />
+                <meta property="og:image" content="https://www.mycafile.in/og-contact.png" />
 
                 {/* Structured Data: BreadcrumbList */}
                 <script type="application/ld+json">
@@ -66,13 +66,13 @@ const ContactPage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://mycafile.in"
+                                "item": "https://www.mycafile.in"
                             },
                             {
                                 "@type": "ListItem",
                                 "position": 2,
                                 "name": "Contact",
-                                "item": "https://mycafile.in/contact"
+                                "item": "https://www.mycafile.in/contact"
                             }
                         ]
                     }

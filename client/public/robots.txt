@@ -16,3 +16,4 @@ Disallow: /cdn-cgi/
 
 # Sitemap
 Sitemap: https://mycafile.in/sitemap.xml
+Sitemap: https://www.mycafile.in/sitemap.xml

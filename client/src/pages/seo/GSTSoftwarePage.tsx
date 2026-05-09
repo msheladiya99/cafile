@@ -40,18 +40,18 @@ export const GSTSoftwarePage: React.FC = () => {
                 <title>GST Software for CA Firms India | My CA File</title>
                 <meta name="description" content="Best GST practice management software for Chartered Accountants in India. Track GSTR-1, GSTR-3B, GSTR-9 deadlines, manage 1000+ clients, and automate workflows. Try free." />
                 <meta name="keywords" content="GST software India, GST management software for CA, GST return tracking, GSTR-1 tracker, CA GST software, GST compliance tool India" />
-                <link rel="canonical" href="https://mycafile.in/gst-software-india" />
+                <link rel="canonical" href="https://www.mycafile.in/gst-software-india" />
                 
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="GST Software for CA Firms India | My CA File" />
                 <meta property="og:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
-                <meta property="og:url" content="https://mycafile.in/gst-software-india" />
-                <meta property="og:image" content="https://mycafile.in/og-gst.png" />
+                <meta property="og:url" content="https://www.mycafile.in/gst-software-india" />
+                <meta property="og:image" content="https://www.mycafile.in/og-gst.png" />
                 
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content="GST Software for CA Firms India | My CA File" />
                 <meta name="twitter:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
-                <meta name="twitter:image" content="https://mycafile.in/og-gst.png" />
+                <meta name="twitter:image" content="https://www.mycafile.in/og-gst.png" />
 
                 {/* Breadcrumb Schema */}
                 <script type="application/ld+json">
@@ -64,13 +64,13 @@ export const GSTSoftwarePage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://mycafile.in"
+                                "item": "https://www.mycafile.in"
                             },
                             {
                                 "@type": "ListItem",
                                 "position": 2,
                                 "name": "GST Software",
-                                "item": "https://mycafile.in/gst-software-india"
+                                "item": "https://www.mycafile.in/gst-software-india"
                             }
                         ]
                     }

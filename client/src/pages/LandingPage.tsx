@@ -244,18 +244,18 @@ export const LandingPage = () => {
         <title>My CA File - Best CA Office Management Software in India</title>
         <meta name="description" content="Manage your Indian CA practice with ease. My CA File is the #1 practice management software for Chartered Accountants. Track GST, ITR, Audit tasks, and secure client documents in one powerful portal. Try it free!" />
         <meta name="keywords" content="CA firm software India, best CA practice management tool, ITR GST software for CA, chartered accountant office management system, CA client portal India" />
-        <link rel="canonical" href="https://mycafile.in/" />
+        <link rel="canonical" href="https://www.mycafile.in/" />
         
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://mycafile.in/" />
+        <meta property="og:url" content="https://www.mycafile.in/" />
         <meta property="og:title" content="My CA File - Best CA Office Management Software in India" />
         <meta property="og:description" content="Streamline your CA practice with secure, automated workflows. Manage GST, ITR, team tasks, and client documents in one portal." />
-        <meta property="og:image" content="https://mycafile.in/og-home.png" />
+        <meta property="og:image" content="https://www.mycafile.in/og-home.png" />
         
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="My CA File - Best CA Office Management Software in India" />
         <meta name="twitter:description" content="Streamline your CA practice with secure, automated workflows." />
-        <meta name="twitter:image" content="https://mycafile.in/og-home.png" />
+        <meta name="twitter:image" content="https://www.mycafile.in/og-home.png" />
         <meta name="robots" content="index, follow" />
 
         {/* Structured Data: FAQPage */}
@@ -305,7 +305,7 @@ export const LandingPage = () => {
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://mycafile.in"
+                "item": "https://www.mycafile.in"
               }
             ]
           }

@@ -152,7 +152,7 @@ export const ClientDashboard: React.FC = () => {
         <Container maxWidth="xl" sx={{ py: 4 }}>
             <Helmet>
                 <title>Client Dashboard | MyCAFile - CA Office Portal</title>
-                <link rel="canonical" href="https://mycafile.in/client/dashboard" />
+                <link rel="canonical" href="https://www.mycafile.in/client/dashboard" />
                 <meta name="description" content="Access your MyCAFile client portal. View financial calendars, track filings, and manage documents securely." />
             </Helmet>
 
