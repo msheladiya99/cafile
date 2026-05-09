@@ -141,7 +141,7 @@ export const Login: React.FC = () => {
             <Helmet>
                 <title>Login | My CA File - CA Office Management Portal</title>
                 <meta name="robots" content="noindex, nofollow" />
-                <link rel="canonical" href="https://mycafile.in/login" />
+                <link rel="canonical" href="https://www.mycafile.in/login" />
                 <meta name="description" content="Login to your My CA File workspace. Secure access for CA firms, staff, and clients." />
             </Helmet>
 

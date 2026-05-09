@@ -7,7 +7,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://mycafile.in/</loc>
+    <loc>https://www.mycafile.in/</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -15,21 +15,21 @@
 
   <!-- Main SEO Pages -->
   <url>
-    <loc>https://mycafile.in/gst-software-india</loc>
+    <loc>https://www.mycafile.in/gst-software-india</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/itr-filing-software</loc>
+    <loc>https://www.mycafile.in/itr-filing-software</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/ca-practice-management</loc>
+    <loc>https://www.mycafile.in/ca-practice-management</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
@@ -37,14 +37,14 @@
 
   <!-- Conversion Pages -->
   <url>
-    <loc>https://mycafile.in/pricing</loc>
+    <loc>https://www.mycafile.in/pricing</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/contact</loc>
+    <loc>https://www.mycafile.in/contact</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
@@ -52,21 +52,21 @@
 
   <!-- Company Pages -->
   <url>
-    <loc>https://mycafile.in/about</loc>
+    <loc>https://www.mycafile.in/about</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/careers</loc>
+    <loc>https://www.mycafile.in/careers</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/press</loc>
+    <loc>https://www.mycafile.in/press</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
@@ -74,14 +74,14 @@
 
   <!-- Legal Pages -->
   <url>
-    <loc>https://mycafile.in/privacy-policy</loc>
+    <loc>https://www.mycafile.in/privacy-policy</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.30</priority>
   </url>
 
   <url>
-    <loc>https://mycafile.in/terms-of-service</loc>
+    <loc>https://www.mycafile.in/terms-of-service</loc>
     <lastmod>2026-05-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.30</priority>

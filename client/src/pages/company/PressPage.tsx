@@ -50,14 +50,14 @@ const PressPage: React.FC = () => {
             <Helmet>
                 <title>Press & Media | My CA File - CA SaaS Startup India</title>
                 <meta name="description" content="My CA File press room. Read our latest news, download brand assets, and get in touch with the media team. India's leading CA practice management SaaS." />
-                <link rel="canonical" href="https://mycafile.in/press" />
+                <link rel="canonical" href="https://www.mycafile.in/press" />
 
                 <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Press & Media | My CA File News" />
                 <meta property="og:description" content="Official press releases and media assets for My CA File. Stay updated with our growth and product launches." />
-                <meta property="og:url" content="https://mycafile.in/press" />
-                <meta property="og:image" content="https://mycafile.in/og-press.png" />
+                <meta property="og:url" content="https://www.mycafile.in/press" />
+                <meta property="og:image" content="https://www.mycafile.in/og-press.png" />
 
                 {/* Structured Data: BreadcrumbList */}
                 <script type="application/ld+json">
@@ -70,13 +70,13 @@ const PressPage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://mycafile.in"
+                                "item": "https://www.mycafile.in"
                             },
                             {
                                 "@type": "ListItem",
                                 "position": 2,
                                 "name": "Press",
-                                "item": "https://mycafile.in/press"
+                                "item": "https://www.mycafile.in/press"
                             }
                         ]
                     }

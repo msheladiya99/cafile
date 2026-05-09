@@ -124,18 +124,18 @@ export const PricingPage = () => {
                 <title>Pricing Plans for CA Office Management Software | My CA File</title>
                 <meta name="description" content="Affordable pricing for the best CA practice management software in India. Free trial available for small firms. Scale up to Enterprise and Cloud plans for large firms." />
                 <meta name="keywords" content="CA software price, practice management software cost, My CA File plans, CA office software India pricing" />
-                <link rel="canonical" href="https://mycafile.in/pricing" />
+                <link rel="canonical" href="https://www.mycafile.in/pricing" />
 
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="Pricing Plans for CA Office Management Software | My CA File" />
                 <meta property="og:description" content="Transparent, scaling pricing for Indian CA firms. Start for free and grow your practice with automation." />
-                <meta property="og:url" content="https://mycafile.in/pricing" />
-                <meta property="og:image" content="https://mycafile.in/og-pricing.png" />
+                <meta property="og:url" content="https://www.mycafile.in/pricing" />
+                <meta property="og:image" content="https://www.mycafile.in/og-pricing.png" />
                 
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content="My CA File Pricing | Affordable CA Software" />
                 <meta name="twitter:description" content="Best value practice management software for CA firms in India." />
-                <meta name="twitter:image" content="https://mycafile.in/og-pricing.png" />
+                <meta name="twitter:image" content="https://www.mycafile.in/og-pricing.png" />
 
                 {/* Structured Data: Product & Offers */}
                 <script type="application/ld+json">
@@ -156,7 +156,7 @@ export const PricingPage = () => {
                                 "price": "0",
                                 "priceCurrency": "INR",
                                 "availability": "https://schema.org/InStock",
-                                "url": "https://mycafile.in/pricing"
+                                "url": "https://www.mycafile.in/pricing"
                             },
                             {
                                 "@type": "Offer",
@@ -164,7 +164,7 @@ export const PricingPage = () => {
                                 "price": "4999",
                                 "priceCurrency": "INR",
                                 "availability": "https://schema.org/InStock",
-                                "url": "https://mycafile.in/pricing"
+                                "url": "https://www.mycafile.in/pricing"
                             },
                             {
                                 "@type": "Offer",
@@ -172,7 +172,7 @@ export const PricingPage = () => {
                                 "price": "6999",
                                 "priceCurrency": "INR",
                                 "availability": "https://schema.org/InStock",
-                                "url": "https://mycafile.in/pricing"
+                                "url": "https://www.mycafile.in/pricing"
                             },
                             {
                                 "@type": "Offer",
@@ -180,7 +180,7 @@ export const PricingPage = () => {
                                 "price": "9999",
                                 "priceCurrency": "INR",
                                 "availability": "https://schema.org/InStock",
-                                "url": "https://mycafile.in/pricing"
+                                "url": "https://www.mycafile.in/pricing"
                             }
                         ]
                     }
@@ -198,13 +198,13 @@ export const PricingPage = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://mycafile.in"
+                                "item": "https://www.mycafile.in"
                             },
                             {
                                 "@type": "ListItem",
                                 "position": 2,
                                 "name": "Pricing",
-                                "item": "https://mycafile.in/pricing"
+                                "item": "https://www.mycafile.in/pricing"
                             }
                         ]
                     }

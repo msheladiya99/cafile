@@ -13,7 +13,7 @@ const TermsOfServicePage: React.FC = () => {
             <Helmet>
                 <title>Terms of Service | My CA File - CA Practice Management SaaS</title>
                 <meta name="description" content="Read the official terms and conditions for using My CA File software. Information on subscription plans, data ownership, and acceptable use." />
-                <link rel="canonical" href="https://mycafile.in/terms-of-service" />
+                <link rel="canonical" href="https://www.mycafile.in/terms-of-service" />
                 <meta name="robots" content="index, follow" />
             </Helmet>
 
