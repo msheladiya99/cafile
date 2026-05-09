@@ -12,7 +12,12 @@ import {
 } from '@mui/icons-material';
 
 const team = [
-    { name: 'Meet Sheladiya', role: 'Founder & CEO', bio: 'Built My CA File after seeing CA firms waste hours on spreadsheets and WhatsApp groups.', avatar: 'M' },
+    {
+        name: 'Meet Sheladiya',
+        role: 'Founder & CEO, My CA File (MyCAFile)',
+        bio: 'Founder and CEO of My CA File. Built the platform after seeing Indian CA firms lose hours to spreadsheets, WhatsApp, and disconnected tools.',
+        avatar: 'M',
+    },
     { name: 'Engineering Team', role: 'Core Platform', bio: 'Our full-stack team ensures the platform is fast, secure, and always improving.', avatar: 'E' },
     { name: 'Customer Success', role: 'Support Team', bio: 'Dedicated to helping CA firms onboard and get maximum value from the platform.', avatar: 'C' },
 ];
@@ -28,14 +33,16 @@ const AboutPage: React.FC = () => {
     return (
         <Box sx={{ bgcolor: '#fff', minHeight: '100vh' }}>
             <Helmet>
-                <title>About Us | My CA File - CA Practice Management Software</title>
-                <meta name="description" content="Learn about My CA File — the leading CA office management software built for Chartered Accountants in India. Our mission, team, and story." />
+                <title>Meet Sheladiya — Founder &amp; CEO of My CA File (MyCAFile)</title>
+                <meta name="description" content="Meet Sheladiya is the Founder and CEO of My CA File (MyCAFile), CA office management software for Chartered Accountants in India. Learn our mission and story." />
                 <link rel="canonical" href="https://www.mycafile.in/about" />
                 
                 <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
-                <meta property="og:title" content="About My CA File | Our Mission & Story" />
-                <meta property="og:description" content="Modernizing CA practices across India with secure, automated practice management. Meet the team and learn our story." />
+                <meta property="og:title" content="Meet Sheladiya | Founder &amp; CEO, My CA File (MyCAFile)" />
+                <meta property="og:description" content="Meet Sheladiya is the Founder and CEO of My CA File — MyCAFile CA office software for Indian CA firms. Our story and team." />
+                <meta name="twitter:title" content="Meet Sheladiya | Founder &amp; CEO, My CA File" />
+                <meta name="twitter:description" content="Founder and CEO of My CA File (MyCAFile). CA office management for Chartered Accountants in India." />
                 <meta property="og:url" content="https://www.mycafile.in/about" />
                 <meta property="og:image" content="https://www.mycafile.in/og-about.png" />
 
@@ -62,6 +69,40 @@ const AboutPage: React.FC = () => {
                     }
                 `}
                 </script>
+                <script type="application/ld+json">
+                {JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@graph': [
+                        {
+                            '@type': 'Person',
+                            '@id': 'https://www.mycafile.in/#meet-sheladiya',
+                            name: 'Meet Sheladiya',
+                            givenName: 'Meet',
+                            familyName: 'Sheladiya',
+                            jobTitle: 'Founder & CEO of My CA File',
+                            description:
+                                'Meet Sheladiya is the Founder and CEO of My CA File (MyCAFile), CA office management and practice software for Chartered Accountants in India.',
+                            url: 'https://www.mycafile.in/about#meet-sheladiya',
+                            worksFor: {
+                                '@type': 'Organization',
+                                '@id': 'https://www.mycafile.in/#organization',
+                                name: 'My CA File',
+                                alternateName: ['MyCAFile', 'mycafile.in'],
+                            },
+                            mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://www.mycafile.in/about' },
+                        },
+                        {
+                            '@type': 'Organization',
+                            '@id': 'https://www.mycafile.in/#organization',
+                            name: 'My CA File',
+                            alternateName: 'MyCAFile',
+                            url: 'https://www.mycafile.in',
+                            foundingDate: '2023',
+                            founder: { '@id': 'https://www.mycafile.in/#meet-sheladiya' },
+                        },
+                    ],
+                })}
+                </script>
             </Helmet>
 
             <SiteNavbar />
@@ -79,7 +120,9 @@ const AboutPage: React.FC = () => {
                                 </span>{' '}across India
                             </Typography>
                             <Typography variant="h6" sx={{ color: '#64748b', lineHeight: 1.7, maxWidth: 680, mx: 'auto', fontWeight: 400 }}>
-                                My CA File was born from a simple frustration: India's Chartered Accountants are brilliant at their work, but buried under administrative chaos. We built the platform we wish had existed.
+                                My CA File was born from a simple frustration: India's Chartered Accountants are brilliant at their work, but buried under administrative chaos. Founded by{' '}
+                                <Box component="span" sx={{ color: '#1e293b', fontWeight: 700 }}>Meet Sheladiya</Box>
+                                , we built the platform we wish had existed.
                             </Typography>
                         </Box>
                     </motion.div>
@@ -142,11 +185,25 @@ const AboutPage: React.FC = () => {
 
             {/* Team */}
             <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
-                <Typography variant="h2" sx={{ fontWeight: 1000, color: '#0f172a', mb: 8, textAlign: 'center', letterSpacing: -1, fontSize: { xs: '1.75rem', md: '2.5rem' } }}>The Team Behind My CA File</Typography>
+                <Typography
+                    component="h2"
+                    variant="h2"
+                    sx={{ fontWeight: 1000, color: '#0f172a', mb: 2, textAlign: 'center', letterSpacing: -1, fontSize: { xs: '1.5rem', md: '2rem' } }}
+                >
+                    Meet Sheladiya — Founder &amp; CEO of My CA File
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#64748b', textAlign: 'center', maxWidth: 640, mx: 'auto', mb: 6, lineHeight: 1.75 }}>
+                    MyCAFile is led by Meet Sheladiya as Founder and Chief Executive Officer, building CA office management software for firms across India.
+                </Typography>
+                <Typography component="h3" variant="h2" sx={{ fontWeight: 1000, color: '#0f172a', mb: 8, textAlign: 'center', letterSpacing: -1, fontSize: { xs: '1.75rem', md: '2.5rem' } }}>The Team Behind My CA File</Typography>
                 <Grid container spacing={4} justifyContent="center">
                     {team.map((member, i) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                            <Card sx={{ p: 4, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', textAlign: 'center' }}>
+                            <Card
+                                id={member.name === 'Meet Sheladiya' ? 'meet-sheladiya' : undefined}
+                                component="article"
+                                sx={{ p: 4, borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: 'none', textAlign: 'center' }}
+                            >
                                 <Avatar alt={member.name} sx={{ width: 72, height: 72, mx: 'auto', mb: 2, background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', fontSize: '1.5rem', fontWeight: 800 }}>{member.avatar}</Avatar>
                                 <Typography variant="h6" fontWeight={800} color="#1e293b">{member.name}</Typography>
                                 <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 700, display: 'block', mb: 1.5 }}>{member.role}</Typography>

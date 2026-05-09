@@ -10,6 +10,16 @@
             ],
             "destination": "https://www.mycafile.in/$1",
             "permanent": true
+        },
+        {
+            "source": "/gst-management-software",
+            "destination": "/gst-software-india",
+            "permanent": true
+        },
+        {
+            "source": "/gst-management-software/",
+            "destination": "/gst-software-india",
+            "permanent": true
         }
     ],
     "rewrites": [
@@ -38,11 +48,11 @@
             "destination": "/index.html"
         },
         {
-            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management)",
+            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management|ca-office-management-software|ca-billing-software)",
             "destination": "/index.html"
         },
         {
-            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management)/",
+            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management|ca-office-management-software|ca-billing-software)/",
             "destination": "/index.html"
         }
     ]
