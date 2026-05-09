@@ -81,6 +81,8 @@ const StaffMyTasks = lazy(() => import('./pages/admin/StaffMyTasks').then(module
 const GSTSoftwarePage = lazy(() => import('./pages/seo/GSTSoftwarePage'));
 const ITRSoftwarePage = lazy(() => import('./pages/seo/ITRSoftwarePage'));
 const CAPracticeManagementPage = lazy(() => import('./pages/seo/CAPracticeManagementPage'));
+const CAOfficeManagementPage = lazy(() => import('./pages/seo/CAOfficeManagementPage'));
+const CABillingSoftwarePage = lazy(() => import('./pages/seo/CABillingSoftwarePage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // Super Admin & Company Pages
@@ -362,6 +364,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/gst-software-india" element={<GSTSoftwarePage />} />
         <Route path="/itr-filing-software" element={<ITRSoftwarePage />} />
         <Route path="/ca-practice-management" element={<CAPracticeManagementPage />} />
+        <Route path="/ca-office-management-software" element={<CAOfficeManagementPage />} />
+        <Route path="/ca-billing-software" element={<CABillingSoftwarePage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/careers" element={<CareersPage />} />

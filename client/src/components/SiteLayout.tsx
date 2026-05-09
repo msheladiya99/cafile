@@ -68,9 +68,11 @@ export const SiteFooter: React.FC = () => {
                     <Grid size={{ xs: 6, md: 2 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 1000, mb: 3 }}>Solutions</Typography>
                         <Stack spacing={2}>
+                            <Typography variant="body2" onClick={() => navigate('/ca-office-management-software')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>CA Office Management</Typography>
+                            <Typography variant="body2" onClick={() => navigate('/ca-practice-management')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Practice Management</Typography>
+                            <Typography variant="body2" onClick={() => navigate('/ca-billing-software')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Billing Software</Typography>
                             <Typography variant="body2" onClick={() => navigate('/gst-software-india')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>GST Software</Typography>
                             <Typography variant="body2" onClick={() => navigate('/itr-filing-software')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>ITR Software</Typography>
-                            <Typography variant="body2" onClick={() => navigate('/ca-practice-management')} sx={{ color: '#64748b', cursor: 'pointer', '&:hover': { color: '#6366f1' } }}>Practice Management</Typography>
                         </Stack>
                     </Grid>
 

@@ -37,20 +37,20 @@ export const GSTSoftwarePage: React.FC = () => {
     return (
         <Box sx={{ bgcolor: '#fff', minHeight: '100vh' }}>
             <Helmet>
-                <title>GST Software for CA Firms India | My CA File</title>
-                <meta name="description" content="Best GST practice management software for Chartered Accountants in India. Track GSTR-1, GSTR-3B, GSTR-9 deadlines, manage 1000+ clients, and automate workflows. Try free." />
+                <title>GST Management Software for CA Firms &amp; Tax Consultants | My CA File</title>
+                <meta name="description" content="GST management software for Indian CA firms: track GSTR-1, GSTR-3B, and GSTR-9 deadlines, coordinate clients and tasks, and automate your GST workflow. Start a free trial." />
                 <meta name="keywords" content="GST software India, GST management software for CA, GST return tracking, GSTR-1 tracker, CA GST software, GST compliance tool India" />
                 <link rel="canonical" href="https://www.mycafile.in/gst-software-india" />
                 
                 <meta property="og:type" content="website" />
-                <meta property="og:title" content="GST Software for CA Firms India | My CA File" />
-                <meta property="og:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
+                <meta property="og:title" content="GST Management Software for CA Firms | My CA File" />
+                <meta property="og:description" content="Manage GST compliance for all your clients—deadlines, tasks, and portal in one CA practice platform." />
                 <meta property="og:url" content="https://www.mycafile.in/gst-software-india" />
                 <meta property="og:image" content="https://www.mycafile.in/og-gst.png" />
                 
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="GST Software for CA Firms India | My CA File" />
-                <meta name="twitter:description" content="Best GST practice management software for Chartered Accountants. Track returns, manage deadlines, and automate workflows." />
+                <meta name="twitter:title" content="GST Management Software for CA Firms | My CA File" />
+                <meta name="twitter:description" content="Track GST returns and deadlines for every client—built for Indian CA firms." />
                 <meta name="twitter:image" content="https://www.mycafile.in/og-gst.png" />
 
                 {/* Breadcrumb Schema */}

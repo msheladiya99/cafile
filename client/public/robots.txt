@@ -10,10 +10,8 @@ Disallow: /superadmin/
 Disallow: /super_admin/
 Disallow: /client/
 Disallow: /dashboard/
-Disallow: /login
 Disallow: /api/
 Disallow: /cdn-cgi/
 
-# Sitemap
-Sitemap: https://mycafile.in/sitemap.xml
+# Sitemap (canonical host)
 Sitemap: https://www.mycafile.in/sitemap.xml

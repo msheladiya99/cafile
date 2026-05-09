@@ -35,6 +35,20 @@
     <priority>0.95</priority>
   </url>
 
+  <url>
+    <loc>https://www.mycafile.in/ca-office-management-software</loc>
+    <lastmod>2026-05-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <url>
+    <loc>https://www.mycafile.in/ca-billing-software</loc>
+    <lastmod>2026-05-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
   <!-- Conversion Pages -->
   <url>
     <loc>https://www.mycafile.in/pricing</loc>
