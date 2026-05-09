@@ -23,11 +23,12 @@
       content="CA office management software, chartered accountant software, CA client management system, CA practice management India, GST ITR tracking software"
     />
     <meta name="robots" content="index, follow" />
-    <!-- This will be handled dynamically by react-helmet-async -->
+    <link rel="canonical" href="https://www.mycafile.in/" />
+    <!-- Page-level canonical/meta are refined by react-helmet-async on each route -->
 
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://mycafile.in/" />
+    <meta property="og:url" content="https://www.mycafile.in/" />
     <meta
       property="og:title"
       content="My CA File - CA Office Management Software"
@@ -36,12 +37,12 @@
       property="og:description"
       content="Streamline your CA practice. Manage clients, staff, and compliance tasks efficiently with My CA File."
     />
-    <meta property="og:image" content="https://mycafile.in/og-image.png" />
+    <meta property="og:image" content="https://www.mycafile.in/og-image.png" />
     <meta property="og:site_name" content="My CA File" />
 
     <!-- Twitter Card Meta Tags -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://mycafile.in" />
+    <meta property="twitter:url" content="https://www.mycafile.in/" />
     <meta
       property="twitter:title"
       content="My CA File - CA Office Management Software"
@@ -50,7 +51,7 @@
       property="twitter:description"
       content="The ultimate practice management tool for Indian Chartered Accountants."
     />
-    <meta property="twitter:image" content="https://mycafile.in/og-image.png" />
+    <meta property="twitter:image" content="https://www.mycafile.in/og-image.png" />
 
     <!-- Favicon & Manifest -->
     <link rel="icon" type="image/webp" href="/faviconca.webp" />
@@ -78,7 +79,7 @@
           "alternateName": "MyCAFile",
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web",
-          "url": "https://mycafile.in",
+          "url": "https://www.mycafile.in",
           "description": "Premium CA Office Management Software built for Indian Chartered Accountants. Manage ITR, GST, Audits, and document workflows seamlessly.",
           "offers": {
             "@type": "Offer",
@@ -96,8 +97,8 @@
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "My CA File",
-          "url": "https://mycafile.in",
-          "logo": "https://mycafile.in/faviconca.webp",
+          "url": "https://www.mycafile.in",
+          "logo": "https://www.mycafile.in/faviconca.webp",
           "description": "Leading provider of practice management solutions for Chartered Accountants in India.",
           "address": {
             "@type": "PostalAddress",
@@ -114,41 +115,67 @@
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "My CA File",
-          "alternateName": "MyCAFile-Portal",
-          "url": "https://mycafile.in",
+          "alternateName": ["MyCAFile", "MyCAFile-Portal", "mycafile"],
+          "url": "https://www.mycafile.in",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://mycafile.in/search?q={search_term_string}",
+            "target": "https://www.mycafile.in/search?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         },
         {
           "@context": "https://schema.org",
           "@type": "ItemList",
+          "name": "My CA File — main pages",
+          "description": "Important entry points for CA firms exploring My CA File.",
           "itemListElement": [
             {
               "@type": "SiteNavigationElement",
               "position": 1,
-              "name": "Solutions",
-              "url": "https://mycafile.in/#solutions"
+              "name": "Home",
+              "url": "https://www.mycafile.in/"
             },
             {
               "@type": "SiteNavigationElement",
               "position": 2,
-              "name": "Features",
-              "url": "https://mycafile.in/#features"
+              "name": "CA Practice Management",
+              "url": "https://www.mycafile.in/ca-practice-management"
             },
             {
               "@type": "SiteNavigationElement",
               "position": 3,
-              "name": "Pricing",
-              "url": "https://mycafile.in/#pricing"
+              "name": "Pricing Plans",
+              "url": "https://www.mycafile.in/pricing"
             },
             {
               "@type": "SiteNavigationElement",
               "position": 4,
+              "name": "GST Software for CA Firms",
+              "url": "https://www.mycafile.in/gst-software-india"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 5,
+              "name": "ITR Filing Software",
+              "url": "https://www.mycafile.in/itr-filing-software"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 6,
+              "name": "Contact & Demo",
+              "url": "https://www.mycafile.in/contact"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 7,
+              "name": "About",
+              "url": "https://www.mycafile.in/about"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 8,
               "name": "Login",
-              "url": "https://mycafile.in/login"
+              "url": "https://www.mycafile.in/login"
             }
           ]
         }

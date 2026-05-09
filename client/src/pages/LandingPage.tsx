@@ -345,7 +345,7 @@ export const LandingPage = () => {
         .lp-pricing-btn-white { width: 100%; border: none; border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: #fff; color: #7c3aed; transition: opacity 0.2s; }
         .lp-pricing-btn-white:hover { opacity: 0.9; }
         nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-bottom: none; }
-        .lp-footer-link { color: #9ca3af; font-size: 14px; background: none; border: none; cursor: pointer; padding: 2px 0; transition: color 0.2s; text-align: inherit; width: 100%; display: block; }
+        .lp-footer-link { color: #9ca3af; font-size: 14px; background: none; border: none; cursor: pointer; padding: 2px 0; transition: color 0.2s; text-align: inherit; width: 100%; display: block; text-decoration: none; }
         .lp-footer-link:hover { color: #7c3aed; }
         @media (max-width: 768px) {
           .lp-grid-3 { grid-template-columns: 1fr !important; }
@@ -372,17 +372,17 @@ export const LandingPage = () => {
       {/* ── NAV ─────────────────────────────────────────── */}
       <nav>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 22, color: '#7c3aed', letterSpacing: '-0.5px' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 22, color: '#7c3aed', letterSpacing: '-0.5px', textDecoration: 'none' }} aria-label="My CA File home">
             <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             </div>
             MyCAFile
-          </div>
+          </a>
           <div className="lp-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <button className="lp-nav-link" style={{ position: 'relative', zIndex: 105 }} onClick={() => scrollTo('features')}>Features</button>
+            <a href="/ca-practice-management" className="lp-nav-link" style={{ textDecoration: 'none', position: 'relative', zIndex: 105 }}>Features</a>
             <button className="lp-nav-link" style={{ position: 'relative', zIndex: 105 }} onClick={() => scrollTo('pricing')}>Our Services</button>
             <a href="/pricing" className="lp-nav-link" style={{ textDecoration: 'none', position: 'relative', zIndex: 105 }}>Pricing</a>
-            <button className="lp-nav-link" onClick={() => scrollTo('faq')}>FAQ</button>
+            <a href="/#faq" className="lp-nav-link" style={{ textDecoration: 'none' }}>FAQ</a>
             <a href="/superadmin" style={{ background: 'none', border: '1.5px solid #d1d5db', borderRadius: 50, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151', textDecoration: 'none', transition: 'border-color 0.2s, color 0.2s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#7c3aed'; (e.currentTarget as HTMLAnchorElement).style.color = '#7c3aed'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLAnchorElement).style.color = '#374151'; }}
@@ -894,16 +894,18 @@ export const LandingPage = () => {
             </div>
             <div>
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Product</h4>
-              {[
-                { label: 'Features', action: () => scrollTo('features') },
-                { label: 'Pricing', action: () => window.location.href = '/pricing' },
-                { label: 'FAQ', action: () => scrollTo('faq') },
-                { label: 'Login', action: () => window.location.href = '/login' },
-              ].map(l => (
-                <div key={l.label} style={{ marginBottom: 10 }}>
-                  <button className="lp-footer-link" onClick={l.action}>{l.label}</button>
-                </div>
-              ))}
+              <div style={{ marginBottom: 10 }}>
+                <a href="/ca-practice-management" className="lp-footer-link">Features</a>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <a href="/pricing" className="lp-footer-link">Pricing</a>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <a href="/#faq" className="lp-footer-link">FAQ</a>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <a href="/login" className="lp-footer-link">Login</a>
+              </div>
             </div>
             <div>
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Company</h4>
@@ -914,7 +916,7 @@ export const LandingPage = () => {
                 { label: 'Press', href: '/press' },
               ].map(l => (
                 <div key={l.label} style={{ marginBottom: 10 }}>
-                  <button className="lp-footer-link" onClick={() => window.location.href = l.href}>{l.label}</button>
+                  <a href={l.href} className="lp-footer-link">{l.label}</a>
                 </div>
               ))}
             </div>

@@ -42,6 +42,15 @@ const brandAssets = [
     { label: 'Product Screenshots Pack', format: 'ZIP · 8.4 MB' },
 ];
 
+const pressBreadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.mycafile.in' },
+        { '@type': 'ListItem', position: 2, name: 'Press', item: 'https://www.mycafile.in/press' },
+    ],
+};
+
 const PressPage: React.FC = () => {
     const navigate = useNavigate();
 
@@ -59,29 +68,7 @@ const PressPage: React.FC = () => {
                 <meta property="og:url" content="https://www.mycafile.in/press" />
                 <meta property="og:image" content="https://www.mycafile.in/og-press.png" />
 
-                {/* Structured Data: BreadcrumbList */}
-                <script type="application/ld+json">
-                {`
-                    {
-                        "@context": "https://schema.org",
-                        "@type": "BreadcrumbList",
-                        "itemListElement": [
-                            {
-                                "@type": "ListItem",
-                                "position": 1,
-                                "name": "Home",
-                                "item": "https://www.mycafile.in"
-                            },
-                            {
-                                "@type": "ListItem",
-                                "position": 2,
-                                "name": "Press",
-                                "item": "https://www.mycafile.in/press"
-                            }
-                        ]
-                    }
-                `}
-                </script>
+                <script type="application/ld+json">{JSON.stringify(pressBreadcrumbLd)}</script>
             </Helmet>
 
             <SiteNavbar />
