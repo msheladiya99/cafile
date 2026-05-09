@@ -112,6 +112,92 @@ export const PricingPage = () => {
 
     const filteredPlans = defaultPlans.filter(p => p.withCloud === withCloud);
 
+    const digitalOfferShipping = {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+            '@type': 'MonetaryAmount',
+            value: '0',
+            currency: 'INR',
+        },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+        deliveryTime: {
+            '@type': 'ShippingDeliveryTime',
+            handlingTime: {
+                '@type': 'QuantitativeValue',
+                minValue: 0,
+                maxValue: 1,
+                unitCode: 'DAY',
+            },
+            transitTime: {
+                '@type': 'QuantitativeValue',
+                minValue: 0,
+                maxValue: 0,
+                unitCode: 'DAY',
+            },
+        },
+    };
+    const digitalReturnPolicy = {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 30,
+        returnPolicyUrl: 'https://www.mycafile.in/terms-of-service',
+    };
+    const pricingOffer = (name: string, price: string) => ({
+        '@type': 'Offer' as const,
+        name,
+        price,
+        priceCurrency: 'INR',
+        availability: 'https://schema.org/InStock',
+        url: 'https://www.mycafile.in/pricing',
+        // Google merchant docs expect shippingDetails as an array of OfferShippingDetails
+        shippingDetails: [{ ...digitalOfferShipping }],
+        hasMerchantReturnPolicy: { ...digitalReturnPolicy },
+    });
+
+    const pricingProductLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: 'My CA File Practice Management Software',
+        description:
+            'Premium CA Office Management Software for Indian Chartered Accountants. Manage ITR, GST, and team workflows.',
+        // Favicon first — must resolve with HTTP 200 for rich results; og image is secondary
+        image: [
+            {
+                '@type': 'ImageObject',
+                url: 'https://www.mycafile.in/faviconca.webp',
+            },
+            'https://www.mycafile.in/og-pricing.png',
+        ],
+        brand: { '@type': 'Brand', name: 'My CA File' },
+        offers: [
+            pricingOffer('Starter Plan', '0'),
+            pricingOffer('Professional Plan', '4999'),
+            pricingOffer('Enterprise Plan', '6999'),
+            pricingOffer('Pro Cloud Plan', '6499'),
+            pricingOffer('Enterprise Cloud Plan', '9999'),
+        ],
+    };
+
+    const pricingBreadcrumbLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://www.mycafile.in',
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Pricing',
+                item: 'https://www.mycafile.in/pricing',
+            },
+        ],
+    };
+
     const handleSubscribe = (planName: string) => {
         alert(`Redirecting to subscribe for ${planName} plan...`);
     };
@@ -137,79 +223,8 @@ export const PricingPage = () => {
                 <meta name="twitter:description" content="Best value practice management software for CA firms in India." />
                 <meta name="twitter:image" content="https://www.mycafile.in/og-pricing.png" />
 
-                {/* Structured Data: Product & Offers */}
-                <script type="application/ld+json">
-                {`
-                    {
-                        "@context": "https://schema.org",
-                        "@type": "Product",
-                        "name": "My CA File Practice Management Software",
-                        "description": "Premium CA Office Management Software for Indian Chartered Accountants. Manage ITR, GST, and team workflows.",
-                        "brand": {
-                            "@type": "Brand",
-                            "name": "My CA File"
-                        },
-                        "offers": [
-                            {
-                                "@type": "Offer",
-                                "name": "Starter Plan",
-                                "price": "0",
-                                "priceCurrency": "INR",
-                                "availability": "https://schema.org/InStock",
-                                "url": "https://www.mycafile.in/pricing"
-                            },
-                            {
-                                "@type": "Offer",
-                                "name": "Professional Plan",
-                                "price": "4999",
-                                "priceCurrency": "INR",
-                                "availability": "https://schema.org/InStock",
-                                "url": "https://www.mycafile.in/pricing"
-                            },
-                            {
-                                "@type": "Offer",
-                                "name": "Enterprise Plan",
-                                "price": "6999",
-                                "priceCurrency": "INR",
-                                "availability": "https://schema.org/InStock",
-                                "url": "https://www.mycafile.in/pricing"
-                            },
-                            {
-                                "@type": "Offer",
-                                "name": "Enterprise Cloud Plan",
-                                "price": "9999",
-                                "priceCurrency": "INR",
-                                "availability": "https://schema.org/InStock",
-                                "url": "https://www.mycafile.in/pricing"
-                            }
-                        ]
-                    }
-                `}
-                </script>
-
-                {/* Structured Data: BreadcrumbList */}
-                <script type="application/ld+json">
-                {`
-                    {
-                        "@context": "https://schema.org",
-                        "@type": "BreadcrumbList",
-                        "itemListElement": [
-                            {
-                                "@type": "ListItem",
-                                "position": 1,
-                                "name": "Home",
-                                "item": "https://www.mycafile.in"
-                            },
-                            {
-                                "@type": "ListItem",
-                                "position": 2,
-                                "name": "Pricing",
-                                "item": "https://www.mycafile.in/pricing"
-                            }
-                        ]
-                    }
-                `}
-                </script>
+                <script type="application/ld+json">{JSON.stringify(pricingProductLd)}</script>
+                <script type="application/ld+json">{JSON.stringify(pricingBreadcrumbLd)}</script>
             </Helmet>
             <SiteNavbar />
             
