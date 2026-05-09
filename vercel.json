@@ -40,6 +40,10 @@
         {
             "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management)",
             "destination": "/index.html"
+        },
+        {
+            "source": "/(pricing|about|careers|contact|press|privacy-policy|terms-of-service|gst-software-india|itr-filing-software|ca-practice-management)/",
+            "destination": "/index.html"
         }
     ]
 }
