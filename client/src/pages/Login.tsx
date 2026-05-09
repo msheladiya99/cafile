@@ -140,7 +140,7 @@ export const Login: React.FC = () => {
         <Box sx={{ display: 'flex', minHeight: '100vh', width: '100vw' }}>
             <Helmet>
                 <title>Login | My CA File - CA Office Management Portal</title>
-                <meta name="robots" content="noindex, nofollow" />
+                <meta name="robots" content="index, follow" />
                 <link rel="canonical" href="https://www.mycafile.in/login" />
                 <meta name="description" content="Login to your My CA File workspace. Secure access for CA firms, staff, and clients." />
             </Helmet>

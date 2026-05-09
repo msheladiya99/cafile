@@ -66,7 +66,7 @@ const ContactPage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://www.mycafile.in"
+                                "item": "https://www.mycafile.in/"
                             },
                             {
                                 "@type": "ListItem",

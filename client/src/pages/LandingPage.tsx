@@ -305,7 +305,7 @@ export const LandingPage = () => {
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://www.mycafile.in"
+                "item": "https://www.mycafile.in/"
               }
             ]
           }

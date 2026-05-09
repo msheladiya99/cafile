@@ -41,7 +41,8 @@ export const ITRSoftwarePage: React.FC = () => {
                 <meta name="description" content="Manage ITR filing for 1000+ clients with My CA File. Track ITR status, automate reminders, collect documents, and assign tasks to your team. Best ITR management software for CA firms in India." />
                 <meta name="keywords" content="ITR filing software India, income tax return management software, ITR tracker for CA, CA ITR software, best ITR software for chartered accountants" />
                 <link rel="canonical" href="https://www.mycafile.in/itr-filing-software" />
-                
+                <meta name="robots" content="index, follow" />
+
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="ITR Filing Software for CA Firms India | My CA File" />
                 <meta property="og:description" content="Manage ITR filing for 1000+ clients. Automate deadlines, collect documents, and assign team tasks." />
@@ -64,7 +65,7 @@ export const ITRSoftwarePage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://www.mycafile.in"
+                                "item": "https://www.mycafile.in/"
                             },
                             {
                                 "@type": "ListItem",
@@ -75,6 +76,22 @@ export const ITRSoftwarePage: React.FC = () => {
                         ]
                     }
                 `}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'WebPage',
+                        '@id': 'https://www.mycafile.in/itr-filing-software#webpage',
+                        url: 'https://www.mycafile.in/itr-filing-software',
+                        name: 'ITR Filing Software for CA Firms India | My CA File',
+                        description:
+                            'Manage ITR filing for clients with My CA File — track status, automate reminders, collect documents, and assign tasks for Indian CA firms.',
+                        isPartOf: {
+                            '@type': 'WebSite',
+                            name: 'My CA File',
+                            url: 'https://www.mycafile.in/',
+                        },
+                    })}
                 </script>
             </Helmet>
 

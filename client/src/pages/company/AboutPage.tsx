@@ -57,7 +57,7 @@ const AboutPage: React.FC = () => {
                                 "@type": "ListItem",
                                 "position": 1,
                                 "name": "Home",
-                                "item": "https://www.mycafile.in"
+                                "item": "https://www.mycafile.in/"
                             },
                             {
                                 "@type": "ListItem",
@@ -96,7 +96,7 @@ const AboutPage: React.FC = () => {
                             '@id': 'https://www.mycafile.in/#organization',
                             name: 'My CA File',
                             alternateName: 'MyCAFile',
-                            url: 'https://www.mycafile.in',
+                            url: 'https://www.mycafile.in/',
                             foundingDate: '2023',
                             founder: { '@id': 'https://www.mycafile.in/#meet-sheladiya' },
                         },
