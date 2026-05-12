@@ -44,6 +44,7 @@ import expenseRoutes from './routes/expense';
 import expenseSettlementRoutes from './routes/expenseSettlement';
 import taxNoticeRoutes from './routes/taxNotice';
 import caAssistantRoutes from './routes/caAssistant';
+import tdsRoutes from './routes/tds';
 import { startDSCCronJob } from './utils/dscCron';
 import { startReminderCronJob } from './utils/reminderCron';
 import { slackErrorHandler } from './middleware/slackErrorHandler';
@@ -149,6 +150,7 @@ app.use('/api/expense', expenseRoutes);
 app.use('/api/expense-settlement', expenseSettlementRoutes);
 app.use('/api/tax-notice', taxNoticeRoutes);
 app.use('/api/assistant', caAssistantRoutes);
+app.use('/api/tds', tdsRoutes);
 
 
 

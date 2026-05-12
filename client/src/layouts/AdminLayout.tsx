@@ -184,6 +184,7 @@ export const AdminLayout: React.FC = () => {
             ]
         },
         { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view', shortcut: 'Alt+M' },
+        { text: 'TDS Management', icon: <BankIcon />, path: '/admin/tds', perm: 'tds.view' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view', shortcut: 'Alt+B' },
         {
             text: 'Files & Documents',
