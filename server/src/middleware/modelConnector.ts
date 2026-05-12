@@ -29,6 +29,8 @@ import ReminderRule from '../models/ReminderRule';
 import MessageTemplate from '../models/MessageTemplate';
 import NotificationLog from '../models/NotificationLog';
 import ClientAction from '../models/ClientAction';
+import { TDSEntry } from '../models/TDSEntry';
+import { TDSReturn } from '../models/TDSReturn';
 
 
 /**
@@ -67,6 +69,8 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         MessageTemplate: getTenantModel(req, 'MessageTemplate', MessageTemplate),
         NotificationLog: getTenantModel(req, 'NotificationLog', NotificationLog),
         ClientAction: getTenantModel(req, 'ClientAction', ClientAction),
+        TDSEntry: getTenantModel(req, 'TDSEntry', TDSEntry),
+        TDSReturn: getTenantModel(req, 'TDSReturn', TDSReturn),
     };
 
 

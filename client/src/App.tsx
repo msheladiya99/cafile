@@ -74,6 +74,7 @@ const BankStatementHistory = lazy(() => import('./pages/admin/BankStatementHisto
 const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement').then(module => ({ default: module.ExpenseManagement })));
 const NoticeReplyGenerator = lazy(() => import('./pages/admin/notices/NoticeReplyGenerator'));
 const CAAssistant = lazy(() => import('./pages/admin/assistant/CAAssistant'));
+const TDSManagement = lazy(() => import('./pages/admin/TDSManagement'));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -174,6 +175,9 @@ const liveQueryDefaults = {
   ['subscription-dashboard'],
   ['dsc'],
   ['dsc-dashboard'],
+  ['tds-dashboard'],
+  ['tds-entries'],
+  ['tds-returns'],
   ['loginLogs'],
   ['form108'],
   ['freeEmployees'],
@@ -350,6 +354,7 @@ const AppRoutes: React.FC = () => {
           <Route path="expenses" element={<ExpenseManagement />} />
           <Route path="notice-reply" element={<NoticeReplyGenerator />} />
           <Route path="assistant" element={<CAAssistant />} />
+          <Route path="tds" element={<TDSManagement />} />
         </Route>
 
         {/* Client Routes */}
