@@ -6,11 +6,8 @@ import {
     Grid,
     Chip,
     Stack,
-    IconButton,
     LinearProgress,
     alpha,
-    useTheme,
-    useMediaQuery,
     Divider,
     Skeleton,
     Tabs,
@@ -18,7 +15,6 @@ import {
 } from '@mui/material';
 import {
     Assignment as TaskIcon,
-    History as HistoryIcon,
     PriorityHigh as PriorityIcon,
     CheckCircle as DoneIcon,
     Pending as PendingIcon,
@@ -46,8 +42,6 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 export const MyTasks: React.FC = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [activeTab, setActiveTab] = useState(0);
 
     const { data: tasks, isLoading: loadingTasks } = useQuery({
@@ -100,7 +94,7 @@ export const MyTasks: React.FC = () => {
                     { label: 'Overdue', value: stats.overdue, color: '#ef4444', icon: <OverdueIcon /> },
                     { label: 'Completed', value: stats.completed, color: '#10b981', icon: <DoneIcon /> },
                 ].map((stat, idx) => (
-                    <Grid item xs={12} sm={4} key={idx}>
+                    <Grid size={{ xs: 12, sm: 4 }} key={idx}>
                         <Paper
                             elevation={0}
                             sx={{
@@ -212,7 +206,7 @@ export const MyTasks: React.FC = () => {
                                         }}
                                     >
                                         <Grid container spacing={2} alignItems="center">
-                                            <Grid item xs={12} md={6}>
+                                            <Grid size={{ xs: 12, md: 6 }}>
                                                 <Box display="flex" gap={2}>
                                                     <Box sx={{ pt: 0.5 }}>
                                                         <Box 
@@ -237,7 +231,7 @@ export const MyTasks: React.FC = () => {
                                                             <Chip 
                                                                 label={statusConfig.label} 
                                                                 size="small" 
-                                                                icon={statusConfig.icon as any}
+                                                                icon={statusConfig.icon as React.ReactElement}
                                                                 sx={{ 
                                                                     bgcolor: alpha(statusConfig.color, 0.1), 
                                                                     color: statusConfig.color,
@@ -268,7 +262,7 @@ export const MyTasks: React.FC = () => {
                                                 </Box>
                                             </Grid>
 
-                                            <Grid item xs={12} md={4}>
+                                            <Grid size={{ xs: 12, md: 4 }}>
                                                 <Box sx={{ px: { md: 4 } }}>
                                                     <Box display="flex" justifyContent="space-between" mb={1}>
                                                         <Typography variant="caption" fontWeight="700" color="text.secondary">
@@ -294,7 +288,7 @@ export const MyTasks: React.FC = () => {
                                                 </Box>
                                             </Grid>
 
-                                            <Grid item xs={12} md={2}>
+                                            <Grid size={{ xs: 12, md: 2 }}>
                                                 <Box textAlign={{ md: 'right' }}>
                                                     <Typography variant="caption" color="text.disabled" fontWeight="700" sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                         Target Date
