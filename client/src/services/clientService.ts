@@ -6,6 +6,23 @@ export interface FileStats {
     count: number;
 }
 
+export interface ClientTask {
+    _id: string;
+    title: string;
+    description: string;
+    category: string;
+    status: 'PENDING' | 'IN_PROCESS' | 'PENDING_FOR_APPROVAL' | 'APPROVED' | 'DONE' | 'CANCELLED' | 'ON_HOLD' | 'PENDING_FROM_CLIENT' | 'PENDING_FROM_DEPARTMENT' | 'REJECTED';
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    targetDate: string;
+    progressPercentage: number;
+    year?: string;
+    isOverdue: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export type TaskSummary = Record<string, number>;
+
 export const clientService = {
     getReminders: async (): Promise<Reminder[]> => {
         const response = await api.get('/reminders');
@@ -31,14 +48,10 @@ export const clientService = {
             responseType: 'blob',
         });
 
-        // Get content type from response headers
         const contentType = response.headers['content-type'] || 'application/octet-stream';
-
-        // Create blob with correct content type
         const blob = new Blob([response.data], { type: contentType });
         const url = window.URL.createObjectURL(blob);
 
-        // Create download link
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', fileName);
@@ -52,4 +65,14 @@ export const clientService = {
         const response = await api.get('/client/stats');
         return response.data;
     },
+
+    getTasks: async (): Promise<ClientTask[]> => {
+        const response = await api.get('/client/tasks');
+        return response.data;
+    },
+
+    getTaskSummary: async (): Promise<TaskSummary> => {
+        const response = await api.get('/client/task-summary');
+        return response.data;
+    }
 };

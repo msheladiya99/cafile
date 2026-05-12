@@ -116,4 +116,53 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
     }
 });
 
+// Get client's tasks
+router.get('/tasks', async (req: AuthRequest, res: Response) => {
+    try {
+        const { Task } = (req as any).models;
+        const tasks = await Task.find({ 
+            clientId: req.user!.clientId,
+            firmId: (req as any).firmId
+        })
+        .sort({ targetDate: 1, priority: -1 })
+        .lean();
+
+        res.json(tasks);
+    } catch (error) {
+        console.error('Get client tasks error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get task summary for dashboard
+router.get('/task-summary', async (req: AuthRequest, res: Response) => {
+    try {
+        const { Task } = (req as any).models;
+        const summary = await Task.aggregate([
+            { 
+                $match: { 
+                    clientId: new mongoose.Types.ObjectId(req.user!.clientId),
+                    firmId: new mongoose.Types.ObjectId((req as any).firmId)
+                } 
+            },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const formattedSummary = summary.reduce((acc: any, curr: any) => {
+            acc[curr._id] = curr.count;
+            return acc;
+        }, {});
+
+        res.json(formattedSummary);
+    } catch (error) {
+        console.error('Get task summary error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;

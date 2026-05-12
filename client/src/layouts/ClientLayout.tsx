@@ -25,6 +25,7 @@ import {
     Receipt as ReceiptIcon,
     Menu as MenuIcon,
     AccountBalance,
+    Assignment as TaskIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import AccountMenu from '../components/common/AccountMenu';
@@ -79,6 +80,7 @@ export const ClientLayout: React.FC = () => {
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/client/dashboard' },
+        { text: 'My Tasks', icon: <TaskIcon />, path: '/client/tasks' },
         { text: 'My Documents', icon: <FolderIcon />, path: '/client/files' },
         { text: 'My Invoices', icon: <ReceiptIcon />, path: '/client/invoices' },
 
