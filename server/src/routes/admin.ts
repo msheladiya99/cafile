@@ -1641,4 +1641,128 @@ router.get('/sub-master', authenticate, async (req: AuthRequest, res: Response) 
     }
 });
 
+// ===================== OFFICE REGISTER (Document Return Log) =====================
+
+// Get all office register entries for this firm
+router.get('/office-register', async (req: AuthRequest, res: Response) => {
+    try {
+        const { OfficeRegister } = (req as any).models;
+        const firmId = req.firmId || req.user?.firmId;
+        const { clientId, search, startDate, endDate } = req.query;
+
+        const filter: any = { firmId };
+        if (clientId) filter.clientId = clientId;
+        if (startDate || endDate) {
+            filter.returnDate = {};
+            if (startDate) filter.returnDate.$gte = new Date(startDate as string);
+            if (endDate) filter.returnDate.$lte = new Date(endDate as string);
+        }
+
+        const entries = await OfficeRegister.find(filter)
+            .populate('clientId', 'name email panNumber phone physicalFileNumber')
+            .populate('createdBy', 'name username')
+            .sort({ returnDate: -1, createdAt: -1 })
+            .lean();
+
+        // Text search filter (after populate)
+        let result = entries;
+        if (search) {
+            const q = (search as string).toLowerCase();
+            result = entries.filter((e: any) =>
+                e.clientId?.name?.toLowerCase().includes(q) ||
+                e.documentType?.toLowerCase().includes(q) ||
+                e.description?.toLowerCase().includes(q) ||
+                e.receivedByName?.toLowerCase().includes(q) ||
+                e.remarks?.toLowerCase().includes(q)
+            );
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Get office register error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Create office register entry
+router.post('/office-register', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { OfficeRegister } = (req as any).models;
+        const firmId = req.firmId || req.user?.firmId;
+        const { clientId, documentType, description, receivedByName, returnDate, remarks } = req.body;
+
+        if (!clientId || !documentType || !description || !receivedByName) {
+            res.status(400).json({ message: 'clientId, documentType, description and receivedByName are required' });
+            return;
+        }
+
+        const entry = new OfficeRegister({
+            firmId,
+            clientId,
+            documentType,
+            description,
+            receivedByName,
+            returnDate: returnDate ? new Date(returnDate) : new Date(),
+            remarks,
+            createdBy: req.user?.userId
+        });
+        await entry.save();
+
+        const populated = await entry.populate('clientId', 'name email panNumber phone physicalFileNumber');
+        res.status(201).json(populated);
+    } catch (error) {
+        console.error('Create office register entry error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update office register entry
+router.patch('/office-register/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { OfficeRegister } = (req as any).models;
+        const firmId = req.firmId || req.user?.firmId;
+        const { id } = req.params;
+        const updates = req.body;
+        delete updates.firmId;
+        delete updates._id;
+        delete updates.createdBy;
+        if (updates.returnDate) updates.returnDate = new Date(updates.returnDate);
+
+        const entry = await OfficeRegister.findOneAndUpdate(
+            { _id: id, firmId },
+            { $set: updates },
+            { new: true, runValidators: true }
+        ).populate('clientId', 'name email panNumber phone physicalFileNumber');
+
+        if (!entry) {
+            res.status(404).json({ message: 'Entry not found' });
+            return;
+        }
+        res.json(entry);
+    } catch (error) {
+        console.error('Update office register entry error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete office register entry
+router.delete('/office-register/:id', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { OfficeRegister } = (req as any).models;
+        const firmId = req.firmId || req.user?.firmId;
+        const { id } = req.params;
+
+        const entry = await OfficeRegister.findOneAndDelete({ _id: id, firmId });
+        if (!entry) {
+            res.status(404).json({ message: 'Entry not found' });
+            return;
+        }
+        res.json({ message: 'Entry deleted successfully' });
+    } catch (error) {
+        console.error('Delete office register entry error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;
+

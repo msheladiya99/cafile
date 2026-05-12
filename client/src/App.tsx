@@ -75,6 +75,7 @@ const ExpenseManagement = lazy(() => import('./pages/admin/ExpenseManagement').t
 const NoticeReplyGenerator = lazy(() => import('./pages/admin/notices/NoticeReplyGenerator'));
 const CAAssistant = lazy(() => import('./pages/admin/assistant/CAAssistant'));
 const TDSManagement = lazy(() => import('./pages/admin/TDSManagement'));
+const OfficeRegisterPage = lazy(() => import('./pages/admin/OfficeRegister').then(m => ({ default: m.OfficeRegister })));
 
 // Main Entry Pages
 const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
@@ -355,6 +356,7 @@ const AppRoutes: React.FC = () => {
           <Route path="notice-reply" element={<NoticeReplyGenerator />} />
           <Route path="assistant" element={<CAAssistant />} />
           <Route path="tds" element={<TDSManagement />} />
+          <Route path="office-register" element={<OfficeRegisterPage />} />
         </Route>
 
         {/* Client Routes */}
