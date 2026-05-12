@@ -67,6 +67,7 @@ const StaffPermissions = lazy(() => import('./pages/admin/employee/StaffPermissi
 const ClientInvoices = lazy(() => import('./pages/client/Invoices').then(module => ({ default: module.ClientInvoices })));
 const ProfileSettings = lazy(() => import('./pages/client/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
 const MyFiles = lazy(() => import('./pages/client/MyFiles').then(module => ({ default: module.MyFiles })));
+const MyTasks = lazy(() => import('./pages/client/MyTasks').then(module => ({ default: module.MyTasks })));
 const DSCManagement = lazy(() => import('./pages/admin/DSCManagement').then(module => ({ default: module.DSCManagement })));
 const EmailSettings = lazy(() => import('./pages/admin/settings/EmailSettings').then(module => ({ default: module.EmailSettings })));
 const BankStatementTool = lazy(() => import('./pages/admin/BankStatementTool').then(module => ({ default: module.BankStatementTool })));
@@ -366,6 +367,7 @@ const AppRoutes: React.FC = () => {
           <Route path="invoices" element={<ClientInvoices />} />
           <Route path="profile" element={<ProfileSettings />} />
           <Route path="files" element={<MyFiles />} />
+          <Route path="tasks" element={<MyTasks />} />
         </Route>
 
         <Route path="/gst-software-india" element={<GSTSoftwarePage />} />

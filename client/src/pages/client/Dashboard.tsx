@@ -10,7 +10,8 @@ import {
     Add as AddIcon,
     Delete as DeleteIcon,
     CheckCircle as CheckCircleIcon,
-    RadioButtonUnchecked as UncheckedIcon
+    RadioButtonUnchecked as UncheckedIcon,
+    Assignment as TaskIcon,
 } from '@mui/icons-material';
 import { clientService } from '../../services/clientService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -490,7 +491,7 @@ export const ClientDashboard: React.FC = () => {
 
                         <Box sx={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
                             gap: { xs: 2, md: 2 }
                         }}>
                             <Box
@@ -563,6 +564,43 @@ export const ClientDashboard: React.FC = () => {
                                 <Box>
                                     <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
                                         My Invoices
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            <Box
+                                onClick={() => navigate('/client/tasks')}
+                                sx={{
+                                    p: { xs: 2, md: 2 },
+                                    borderRadius: 2.5,
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-start',
+                                    gap: 1,
+                                    boxShadow: '0 4px 15px rgba(245, 87, 108, 0.3)',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 8px 25px rgba(245, 87, 108, 0.4)',
+                                    },
+                                }}
+                            >
+                                <Box sx={{
+                                    p: 1,
+                                    borderRadius: 2,
+                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <TaskIcon sx={{ fontSize: { xs: 24, md: 24 } }} />
+                                </Box>
+                                <Box>
+                                    <Typography variant="body2" fontWeight="700" sx={{ mb: 0.5 }}>
+                                        My Tasks
                                     </Typography>
                                 </Box>
                             </Box>
