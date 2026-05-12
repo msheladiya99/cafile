@@ -194,7 +194,8 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
                         userEmail: admin.email,
                         userName: admin.name,
                         username: admin.email,
-                        newPassword: newPassword
+                        newPassword: newPassword,
+                        firmId: (req as any).firmId
                     }).catch(err => console.error('Background email error:', err));
                 }
 
@@ -248,7 +249,8 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
                     userEmail,
                     userName,
                     username: user.username,
-                    newPassword: newPassword
+                    newPassword: newPassword,
+                    firmId: (req as any).firmId
                 }).catch(err => console.error('Background email error:', err));
             }
         } catch (emailError) {

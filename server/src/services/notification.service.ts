@@ -1,6 +1,7 @@
 import { sendEmail as sendFirmAwareEmail } from './emailService';
 import { renderReminderTemplate } from './messageTemplate.service';
 import https from 'https';
+import { Firm } from '../models/Firm';
 
 type Channel = 'WHATSAPP' | 'EMAIL' | 'SMS';
 
@@ -93,11 +94,14 @@ export async function sendReminderNotifications(params: SendReminderNotification
     const { NotificationLog, MessageTemplate, reminder, client, rule, firmId, tone = 'NORMAL' } = params;
     const channels: Channel[] = rule?.channels?.length ? rule.channels : ['EMAIL', 'WHATSAPP'];
     const dueDate = formatDate(reminder.dueDate);
+    const firm = await Firm.findById(firmId).lean();
+    const firmName = firm?.smtpFromName || firm?.firmName || process.env.FIRM_NAME || 'CA Office Portal';
+
     const variables = {
         ClientName: client.name,
         DueDate: dueDate,
         ComplianceType: reminder.reminderType,
-        FirmName: process.env.FIRM_NAME || 'CA Office Portal',
+        FirmName: firmName,
         DaysRemaining: Math.max(0, Math.ceil((new Date(reminder.dueDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000))),
     };
 

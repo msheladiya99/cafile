@@ -115,21 +115,52 @@ const BankStatementHistory: React.FC = () => {
 
             {/* Header */}
             <Box sx={{
-                background: 'linear-gradient(135deg, #1e1b4b 0%, #4f46e5 50%, #7c3aed 100%)',
-                borderRadius: 3, p: 3, mb: 3, color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2,
+                mb: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2,
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ width: 52, height: 52, borderRadius: 2, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <AccountBalance sx={{ fontSize: 30 }} />
+                    <Box sx={{ 
+                        width: 52, 
+                        height: 52, 
+                        borderRadius: 3, 
+                        bgcolor: '#fff', 
+                        border: '1px solid #e0e0e0',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        color: '#1e1b4b'
+                    }}>
+                        <AccountBalance sx={{ fontSize: 28 }} />
                     </Box>
                     <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 800 }}>Statement History</Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.8 }}>All past bank statement uploads for your firm</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 800, color: '#202124', letterSpacing: '-0.5px' }}>
+                            Statement History
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#5f6368', fontWeight: 500 }}>
+                            Manage and track all past bank statement uploads
+                        </Typography>
                     </Box>
                 </Box>
-                <Button startIcon={<Refresh />} onClick={load} variant="outlined"
-                    sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)', '&:hover': { borderColor: '#fff', background: 'rgba(255,255,255,0.1)' } }}>
+                <Button 
+                    startIcon={<Refresh />} 
+                    onClick={load} 
+                    variant="outlined"
+                    sx={{ 
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        color: '#3c4043',
+                        borderColor: '#dadce0',
+                        '&:hover': {
+                            bgcolor: '#f1f3f4',
+                            borderColor: '#dadce0'
+                        }
+                    }}
+                >
                     Refresh
                 </Button>
             </Box>

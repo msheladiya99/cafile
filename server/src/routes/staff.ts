@@ -237,6 +237,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
                 password: finalPassword,
                 role: actualRole,
                 portalUrl: firmPortalUrl,
+                firmId: req.firmId
             }).catch(err => console.error('Failed to send employee welcome email:', err));
         }
 
@@ -338,6 +339,7 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
                 username: user.username,
                 newPassword,
                 portalUrl: firmPortalUrl,
+                firmId: req.firmId
             }).catch(err => console.error('Failed to send employee password reset email:', err));
         }
 

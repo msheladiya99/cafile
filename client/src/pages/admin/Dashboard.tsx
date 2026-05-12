@@ -291,7 +291,7 @@ export const AdminDashboard: React.FC = () => {
     const pieColors = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626'];
 
     return (
-        <Box sx={{ px: { xs: 1, md: 2 }, pb: 5 }}>
+        <Box sx={{ pb: 5 }}>
             <Helmet>
                 <title>Command Center | MyCAFile</title>
                 <meta name="description" content="Modern CA practice dashboard for compliance, billing, client activity and team workload." />

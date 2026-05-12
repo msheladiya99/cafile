@@ -190,7 +190,8 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             clientEmail: client.email,
             clientName: client.name,
             username,
-            password
+            password,
+            firmId
         }).catch(err => console.error('Failed to send welcome email:', err));
 
         res.status(201).json({
@@ -303,10 +304,11 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
 
                     // 4. Send Email (Background)
                     sendWelcomeEmail({
-                        clientEmail: client.email,
-                        clientName: client.name,
+                        clientEmail: clientData.email,
+                        clientName: clientData.name,
                         username,
-                        password
+                        password,
+                        firmId: firmId as string
                     }).catch(err => console.error('Email send error:', err));
 
                     currentClientsCount++;
@@ -867,7 +869,8 @@ router.post('/upload-file', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), upload.
             clientName: client.name,
             fileName: fileName || req.file.originalname,
             category,
-            year
+            year,
+            firmId: req.firmId
         }).catch(err => console.error('Failed to send email notification:', err));
 
         res.status(201).json(file);
@@ -1107,7 +1110,8 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
             userEmail: client.email,
             userName: client.name,
             username: user.username,
-            newPassword: newPassword
+            newPassword: newPassword,
+            firmId: req.firmId
         });
 
         res.json({

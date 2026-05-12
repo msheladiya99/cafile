@@ -65,7 +65,7 @@ export const MyTasks: React.FC = () => {
     }, { active: 0, completed: 0, overdue: 0 }) || { active: 0, completed: 0, overdue: 0 };
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: 'auto' }}>
+        <Box sx={{ pt: 1, pb: 4 }}>
             {/* Header Section */}
             <Box mb={4} display="flex" justifyContent="space-between" alignItems="flex-end">
                 <Box>
