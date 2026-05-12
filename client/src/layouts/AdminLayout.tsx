@@ -27,6 +27,7 @@ import {
     KeyboardArrowUp as UpIcon,
     NotificationsActive as RemindersIcon,
     Keyboard as KeyboardIcon,
+    ReceiptLong as TDSFormIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { Calculator } from '../components/common/Calculator';
@@ -184,7 +185,7 @@ export const AdminLayout: React.FC = () => {
             ]
         },
         { text: 'DSC Management', icon: <GppGoodIcon />, path: '/admin/dsc', perm: 'dsc.view', shortcut: 'Alt+M' },
-        { text: 'TDS Management', icon: <BankIcon />, path: '/admin/tds', perm: 'tds.view' },
+        { text: 'TDS Management', icon: <TDSFormIcon />, path: '/admin/tds', perm: 'tds.view' },
         { text: 'Billing', icon: <ReceiptIcon />, path: '/admin/billing', perm: 'billing.view', shortcut: 'Alt+B' },
         {
             text: 'Files & Documents',
@@ -194,8 +195,10 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Upload Files', path: '/admin/upload', perm: 'files.upload', shortcut: 'Alt+U' },
                 { text: 'Manage Files', path: '/admin/files', perm: 'files.view', shortcut: 'Alt+O' },
                 { text: 'File Register', path: '/admin/fileregister', perm: 'files.register' },
+                { text: 'Document Return Register', path: '/admin/office-register', perm: 'files.register' },
             ]
         },
+
         { text: 'Reminders', icon: <RemindersIcon />, path: '/admin/reminders', perm: 'reminders.view', shortcut: 'Alt+N' },
         ...(isAdmin ? [{ text: 'Email Configuration', icon: <EmailIcon />, path: '/admin/email-settings', shortcut: 'Alt+Z' }] : []),
         {

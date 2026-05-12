@@ -199,4 +199,43 @@ export const adminService = {
         const response = await api.get('/admin/dashboard');
         return response.data;
     },
+
+    // Office Register
+    getOfficeRegisterEntries: async (params?: { clientId?: string; search?: string; startDate?: string; endDate?: string }): Promise<any[]> => {
+        const query = new URLSearchParams();
+        if (params?.clientId) query.append('clientId', params.clientId);
+        if (params?.search) query.append('search', params.search);
+        if (params?.startDate) query.append('startDate', params.startDate);
+        if (params?.endDate) query.append('endDate', params.endDate);
+        const response = await api.get(`/admin/office-register?${query.toString()}`);
+        return response.data;
+    },
+
+    createOfficeRegisterEntry: async (data: {
+        clientId: string;
+        documentType: string;
+        description: string;
+        receivedByName: string;
+        returnDate: string;
+        remarks?: string;
+    }): Promise<any> => {
+        const response = await api.post('/admin/office-register', data);
+        return response.data;
+    },
+
+    updateOfficeRegisterEntry: async (id: string, data: Partial<{
+        documentType: string;
+        description: string;
+        receivedByName: string;
+        returnDate: string;
+        remarks: string;
+    }>): Promise<any> => {
+        const response = await api.patch(`/admin/office-register/${id}`, data);
+        return response.data;
+    },
+
+    deleteOfficeRegisterEntry: async (id: string): Promise<void> => {
+        await api.delete(`/admin/office-register/${id}`);
+    },
 };
+

@@ -31,6 +31,7 @@ import NotificationLog from '../models/NotificationLog';
 import ClientAction from '../models/ClientAction';
 import { TDSEntry } from '../models/TDSEntry';
 import { TDSReturn } from '../models/TDSReturn';
+import { OfficeRegister } from '../models/OfficeRegister';
 
 
 /**
@@ -71,6 +72,7 @@ export const modelConnector = (req: any, res: Response, next: NextFunction) => {
         ClientAction: getTenantModel(req, 'ClientAction', ClientAction),
         TDSEntry: getTenantModel(req, 'TDSEntry', TDSEntry),
         TDSReturn: getTenantModel(req, 'TDSReturn', TDSReturn),
+        OfficeRegister: getTenantModel(req, 'OfficeRegister', OfficeRegister),
     };
 
 
