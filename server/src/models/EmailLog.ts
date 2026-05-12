@@ -5,7 +5,7 @@ export interface IEmailLog extends Document {
     to: string;
     subject: string;
     status: 'success' | 'failed' | 'fallback';
-    provider: 'smtp' | 'resend';
+    provider: 'smtp' | 'resend' | 'firm_smtp' | 'system_smtp';
     errorMessage?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -33,7 +33,7 @@ const emailLogSchema = new Schema<IEmailLog>(
         },
         provider: {
             type: String,
-            enum: ['smtp', 'resend'],
+            enum: ['smtp', 'resend', 'firm_smtp', 'system_smtp'],
             required: true
         },
         errorMessage: {

@@ -4,7 +4,7 @@ import { Firm } from '../models/Firm';
 import { EmailLog } from '../models/EmailLog';
 import { decrypt } from '../utils/encryption';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_default');
+// const resend = new Resend(process.env.RESEND_API_KEY || 're_default');
 
 // Email configuration
 const createTransporter = () => {
@@ -394,67 +394,72 @@ interface SendEmailParams {
 }
 
 export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) => {
-    let usedProvider: 'smtp' | 'resend' = 'resend';
+    let usedProvider: 'firm_smtp' | 'system_smtp' = 'system_smtp';
     let status: 'success' | 'failed' | 'fallback' = 'failed';
     let errorMessage = '';
 
     try {
+        let firm = null;
         if (firmId) {
-            const firm = await Firm.findById(firmId);
-            if (firm && firm.smtpEnabled && firm.smtpHost && firm.smtpUser) {
-                try {
-                    const decryptedPass = decrypt(firm.smtpPass || '') || firm.smtpPass;
-                    const transporter = nodemailer.createTransport({
-                        host: firm.smtpHost,
-                        port: firm.smtpPort,
-                        secure: firm.smtpSecure,
-                        auth: { user: firm.smtpUser, pass: decryptedPass },
-                        tls: { rejectUnauthorized: false }
-                    });
+            firm = await Firm.findById(firmId).lean();
+        }
 
-                    const displayFromName = firm.smtpFromName || firm.firmName || 'CA Office Portal';
+        // 1. Try Firm Specific SMTP
+        if (firm && firm.smtpEnabled && firm.smtpHost && firm.smtpUser) {
+            try {
+                const decryptedPass = decrypt(firm.smtpPass || '') || firm.smtpPass;
+                const transporter = nodemailer.createTransport({
+                    host: firm.smtpHost,
+                    port: firm.smtpPort,
+                    secure: firm.smtpSecure,
+                    auth: { user: firm.smtpUser, pass: decryptedPass },
+                    tls: { rejectUnauthorized: false },
+                    connectionTimeout: 10000,
+                    greetingTimeout: 10000,
+                    socketTimeout: 10000
+                });
 
-                    await transporter.sendMail({
-                        from: `"${displayFromName}" <${firm.smtpUser}>`,
-                        to,
-                        subject,
-                        html
-                    });
+                const displayFromName = firm.smtpFromName || firm.firmName || 'CA Office Portal';
 
-                    status = 'success';
-                    usedProvider = 'smtp';
+                await transporter.sendMail({
+                    from: `"${displayFromName}" <${firm.smtpUser}>`,
+                    to,
+                    subject,
+                    html
+                });
 
-                    await logEmail(firmId, to, subject, status, usedProvider);
-                    return { success: true, provider: usedProvider };
-                } catch (smtpError: any) {
-                    console.error('[SMTP Error] Falling back to Resend:', smtpError);
-                    status = 'fallback';
-                    errorMessage = smtpError.message;
-                    usedProvider = 'resend';
-                }
+                status = 'success';
+                usedProvider = 'firm_smtp';
+
+                await logEmail(firmId, to, subject, status, usedProvider);
+                return { success: true, provider: usedProvider };
+            } catch (smtpError: any) {
+                console.error('[Firm SMTP Error] Falling back to System SMTP:', smtpError.message);
+                status = 'fallback';
+                errorMessage = smtpError.message;
             }
         }
 
-        // Fallback or Default: Resend API
-        let displayFromName = 'CA Office Portal';
-        if (firmId) {
-            const firm = await Firm.findById(firmId).lean();
-            if (firm) {
-                displayFromName = firm.smtpFromName || firm.firmName || displayFromName;
-            }
+        // 2. Fallback or Default: System SMTP (createTransporter)
+        const systemTransporter = createTransporter();
+        if (systemTransporter) {
+            const displayFromName = firm ? (firm.smtpFromName || firm.firmName || 'CA Office Portal') : 'CA Office Portal';
+            
+            await systemTransporter.sendMail({
+                from: `"${displayFromName}" <${process.env.EMAIL_USER}>`,
+                to,
+                subject,
+                html
+            });
+
+            status = status === 'fallback' ? 'fallback' : 'success';
+            usedProvider = 'system_smtp';
+
+            await logEmail(firmId, to, subject, status, usedProvider, errorMessage);
+            return { success: true, provider: usedProvider, status };
+        } else {
+            throw new Error('No email provider available (Firm SMTP failed and System SMTP not configured)');
         }
-
-        await resend.emails.send({
-            from: `"${displayFromName}" <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
-            to,
-            subject,
-            html
-        });
-
-        status = status === 'fallback' ? 'fallback' : 'success';
-        
-        await logEmail(firmId, to, subject, status, 'resend', errorMessage);
-        return { success: true, provider: 'resend', status };
 
     } catch (error: any) {
         status = 'failed';
