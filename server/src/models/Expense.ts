@@ -47,6 +47,7 @@ export interface IExpense extends Document {
     
     yearWise: string;
     monthWise: string;
+    financialYear: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -107,19 +108,28 @@ const expenseSchema = new Schema<IExpense>({
     multiFirmId: { type: Schema.Types.ObjectId, ref: 'MultiFirm', index: true },
     
     yearWise: { type: String },
-    monthWise: { type: String }
+    monthWise: { type: String },
+    financialYear: { type: String, index: true }
 }, {
     timestamps: true
 });
 
-// Calculate yearWise and monthWise before saving if not provided
+// Calculate yearWise, monthWise and financialYear before saving if not provided
 expenseSchema.pre('save', async function (this: IExpense) {
     if (this.date) {
         const d = new Date(this.date);
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const month = d.getMonth() + 1; // 1-12
+        
         this.yearWise = `${year}`;
-        this.monthWise = `${year}-${month}`;
+        this.monthWise = `${year}-${String(month).padStart(2, '0')}`;
+        
+        // Calculate Financial Year (Apr-Mar)
+        if (month < 4) {
+            this.financialYear = `${year - 1}-${String(year).slice(-2)}`;
+        } else {
+            this.financialYear = `${year}-${String(year + 1).slice(-2)}`;
+        }
     }
 });
 

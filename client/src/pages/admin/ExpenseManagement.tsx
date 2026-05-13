@@ -254,11 +254,14 @@ export const ExpenseManagement: React.FC = () => {
     const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
     if (fullName) return fullName;
     if (u.name) return u.name;
-    if (u.username && u.username.includes('@')) {
-      const part = u.username.split('@')[0];
-      return part.charAt(0).toUpperCase() + part.slice(1);
+    if (u.username) {
+      if (u.username.includes('@')) {
+        const part = u.username.split('@')[0];
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      }
+      return u.username;
     }
-    return u.username || '—';
+    return '—';
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -286,7 +289,7 @@ export const ExpenseManagement: React.FC = () => {
   };
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from(new Array(5), (_, index) => currentYear - index);
+  const years = Array.from(new Array(8), (_, index) => (currentYear + 1) - index);
 
   const filteredExpenses = expenses.filter(exp => 
     exp.expenseId?.toLowerCase().includes(search.toLowerCase()) ||
@@ -858,11 +861,10 @@ export const ExpenseManagement: React.FC = () => {
                         </Row>
                         <Row label="Paid By *">
                             <Select value={formData.paidBy} onChange={e => setFormData({...formData, paidBy: e.target.value})} fullWidth {...selSx}>
-                                {users.map((u) => {
-                                    const displayName = (u.firstName && u.lastName) ? `${u.firstName} ${u.lastName}` : (u.username);
-                                    return <MenuItem key={u._id} value={u._id}>{displayName} ({u.role})</MenuItem>;
-                                })}
-                                {users.length === 0 && <MenuItem value={user?._id}>{(user?.firstName && user?.lastName) ? `${user.firstName} ${user.lastName}` : (user?.username)} ({user?.role})</MenuItem>}
+                                {users.map((u) => (
+                                    <MenuItem key={u._id} value={u._id}>{resolveName(u)} ({u.role})</MenuItem>
+                                ))}
+                                {users.length === 0 && <MenuItem value={user?._id}>{resolveName(user)} ({user?.role})</MenuItem>}
                             </Select>
                         </Row>
                         <Row label="Reimbursement">

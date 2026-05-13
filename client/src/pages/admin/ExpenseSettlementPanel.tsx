@@ -64,12 +64,41 @@ const statusColor = (s: string) =>
   s === 'SETTLED' ? 'success' : s === 'PARTIAL' ? 'warning' : 'default';
 
 function generateFinancialYears() {
-  const current = new Date().getFullYear();
-  return Array.from({ length: 6 }, (_, i) => {
-    const yr = current - i;
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  // If we are in Jan-Mar, the current FY actually started last year
+  const currentFYStart = month < 4 ? year - 1 : year;
+  
+  // Show 1 future year and 6 past years for flexibility
+  return Array.from({ length: 8 }, (_, i) => {
+    const yr = (currentFYStart + 1) - i;
     return `${yr}-${String(yr + 1).slice(-2)}`;
   });
 }
+
+interface User {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  username?: string;
+}
+
+const getUserName = (u: User | null | undefined) => {
+  if (!u) return '';
+  const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+  if (fullName) return fullName;
+  if (u.name) return u.name;
+  if (u.username) {
+    if (u.username.includes('@')) {
+      const part = u.username.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return u.username;
+  }
+  return '';
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export const ExpenseSettlementPanel: React.FC = () => {
@@ -83,7 +112,7 @@ export const ExpenseSettlementPanel: React.FC = () => {
   // Create form
   const [createYear, setCreateYear] = useState(generateFinancialYears()[0]);
   const [partners, setPartners] = useState<PartnerForm[]>([
-    { userId: user?._id || '', name: user ? `${user.firstName} ${user.lastName}` : '', sharePercent: 50, amountPaid: 0 },
+    { userId: user?._id || '', name: getUserName(user), sharePercent: 50, amountPaid: 0 },
     { userId: '', name: '', sharePercent: 50, amountPaid: 0 }
   ]);
   const [notes, setNotes] = useState('');
@@ -98,6 +127,17 @@ export const ExpenseSettlementPanel: React.FC = () => {
   useEffect(() => {
     fetchSettlements();
   }, []);
+
+  useEffect(() => {
+    if (user && partners[0].name === '') {
+      setPartners(prev => {
+        const updated = [...prev];
+        updated[0].userId = user._id;
+        updated[0].name = getUserName(user);
+        return updated;
+      });
+    }
+  }, [user, partners]);
 
   const fetchSettlements = async () => {
     try {
@@ -122,12 +162,17 @@ export const ExpenseSettlementPanel: React.FC = () => {
   const totalSharePercent = partners.reduce((s, p) => s + Number(p.sharePercent || 0), 0);
 
   const handlePartnerChange = (idx: number, field: keyof PartnerForm, val: string | number) => {
-    const updated = [...partners];
-    (updated[idx] as Record<string, string | number>)[field] = val;
-    setPartners(updated);
+    setPartners(prev => prev.map((p, i) => i === idx ? { ...p, [field]: val } : p));
   };
 
   const handleCreate = async () => {
+    // Check for missing names
+    const missingNames = partners.some(p => !p.name || p.name.trim() === '');
+    if (missingNames) {
+      toast.error('Please provide names for all partners');
+      return;
+    }
+
     if (Math.abs(totalSharePercent - 100) > 0.01) {
       toast.error(`Shares must total 100%. Currently: ${totalSharePercent}%`);
       return;
@@ -350,6 +395,11 @@ export const ExpenseSettlementPanel: React.FC = () => {
                 Apr {createYear.split('-')[0]} – Mar 20{createYear.split('-')[1]}
               </Typography>
             </Stack>
+            {settlements.some(s => s.year === createYear) && (
+              <Alert severity="warning" sx={{ mt: 2, borderRadius: '8px' }}>
+                A settlement for FY {createYear} already exists. Please delete it first if you want to recreate it with new expenses.
+              </Alert>
+            )}
           </Paper>
 
           {/* Preview */}
@@ -392,6 +442,8 @@ export const ExpenseSettlementPanel: React.FC = () => {
               <Box key={idx} sx={{ display: 'flex', gap: 1.5, mb: 1.5, alignItems: 'center' }}>
                 <TextField
                   label="Partner Name"
+                  required
+                  error={!p.name && totalSharePercent === 100} // slight hint if they finished shares but forgot names
                   value={p.name}
                   onChange={e => handlePartnerChange(idx, 'name', e.target.value)}
                   {...sxStyle}
@@ -465,7 +517,7 @@ export const ExpenseSettlementPanel: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleCreate}
-            disabled={Math.abs(totalSharePercent - 100) > 0.01}
+            disabled={Math.abs(totalSharePercent - 100) > 0.01 || settlements.some(s => s.year === createYear)}
             sx={{ bgcolor: '#101828', px: 6, borderRadius: '10px', fontWeight: 800, textTransform: 'none', '&:hover': { bgcolor: '#1f2937' } }}
           >
             Create Settlement

@@ -21,6 +21,12 @@ router.post('/', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN']), async (re
             return res.status(400).json({ message: `Partner shares must sum to 100%. Currently: ${totalShares}%` });
         }
 
+        // Check if settlement for this year already exists
+        const existingSettlement = await ExpenseSettlement.findOne({ firmId: req.firmId, year });
+        if (existingSettlement) {
+            return res.status(400).json({ message: `A settlement for FY ${year} already exists. Please delete it first to recreate with new expenses.` });
+        }
+
         // Derive calendar year range from financial year (e.g., 2024-25 → Apr 2024 – Mar 2025)
         const [startYr] = year.split('-');
         const startYear = parseInt(startYr);
@@ -28,10 +34,14 @@ router.post('/', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN']), async (re
         const endDate = new Date(`${startYear + 1}-03-31T23:59:59`);
 
         // Sum all APPROVED expenses for this financial year
+        // Use financialYear field primarily, fallback to date range for older entries
         const approvedExpenses = await Expense.find({
             firmId: req.firmId,
             status: 'APPROVED',
-            date: { $gte: startDate, $lte: endDate }
+            $or: [
+                { financialYear: year },
+                { date: { $gte: startDate, $lte: endDate } }
+            ]
         }).lean();
 
         const totalExpense = approvedExpenses.reduce((sum: number, e: any) => sum + (e.totalAmount || e.amount || 0), 0);
@@ -78,6 +88,9 @@ router.post('/', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN']), async (re
         return res.status(201).json(settlement);
     } catch (error: any) {
         console.error('Settlement create error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: Object.values(error.errors).map((e: any) => e.message).join(', ') });
+        }
         res.status(500).json({ message: error.message || 'Internal server error' });
     }
 });
@@ -118,7 +131,10 @@ router.get('/preview', authenticate, async (req: AuthRequest, res: Response) => 
         const approvedExpenses = await Expense.find({
             firmId: req.firmId,
             status: 'APPROVED',
-            date: { $gte: startDate, $lte: endDate }
+            $or: [
+                { financialYear: year },
+                { date: { $gte: startDate, $lte: endDate } }
+            ]
         }).lean();
 
         const totalExpense = approvedExpenses.reduce((sum: number, e: any) => sum + (e.totalAmount || e.amount || 0), 0);
@@ -155,7 +171,11 @@ router.patch('/:id/settle', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN'])
         // Update partner payments if provided
         if (partners && Array.isArray(partners)) {
             partners.forEach((p: any) => {
-                const existing = settlement.partners.find((sp: any) => sp.userId.toString() === p.userId);
+                const existing = settlement.partners.find((sp: any) => {
+                    const pid = p.userId?.toString();
+                    if (sp.userId && pid && pid !== '') return sp.userId.toString() === pid;
+                    return sp.name === p.name;
+                });
                 if (existing) {
                     existing.amountPaid = Number(p.amountPaid);
                     existing.balance = parseFloat((existing.shareAmount - existing.amountPaid).toFixed(2));
@@ -175,7 +195,10 @@ router.patch('/:id/settle', authenticate, requireRoles(['ADMIN', 'SUPER_ADMIN'])
         return res.status(200).json(settlement);
     } catch (error: any) {
         console.error('Settlement update error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: Object.values(error.errors).map((e: any) => e.message).join(', ') });
+        }
+        res.status(500).json({ message: error.message || 'Internal server error' });
     }
 });
 
