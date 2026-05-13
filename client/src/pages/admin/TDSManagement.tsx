@@ -4,7 +4,8 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, TextField, MenuItem, Dialog, DialogTitle,
   DialogContent, DialogActions, IconButton, CircularProgress,
-  InputAdornment, Alert, Select, FormControl, InputLabel, Tooltip as MuiTooltip
+  InputAdornment, Alert, Select, FormControl, InputLabel, Tooltip as MuiTooltip,
+  Autocomplete, TablePagination
 } from '@mui/material';
 import {
   Add, Download, Search, Edit, Delete, AccountBalance,
@@ -13,7 +14,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tdsService, type TDSEntryRecord, type TDSReturnRecord, type TDSDashboard } from '../../services/tdsService';
-import { adminService } from '../../services/adminService';
+import { adminService, type Client } from '../../services/adminService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { AxiosError } from 'axios';
@@ -186,66 +187,105 @@ interface EntriesTabProps {
 const EntriesTab: React.FC<EntriesTabProps> = ({
   loading, entries, search, onSearchChange, onAdd, onEdit, onDelete, onExport, isAdmin,
   selectedIds, onToggleSelect, onSelectAll, onBulkUpdate
-}) => (
-  <Box>
-    <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-      <TextField size="small" placeholder="Search deductee name or PAN..." value={search} onChange={e => onSearchChange(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><Search /></InputAdornment> }} sx={{ minWidth: 260 }} />
-      <Button variant="contained" startIcon={<Add />} onClick={onAdd} sx={{ borderRadius: 2, textTransform: 'none' }}>Add Entry</Button>
-      {selectedIds.length > 0 && (
-        <Button variant="contained" color="success" startIcon={<Payments />} onClick={onBulkUpdate} sx={{ borderRadius: 2, textTransform: 'none' }}>
-          Bulk Pay ({selectedIds.length})
-        </Button>
+}) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Reset to first page on search
+  React.useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  const paginatedEntries = entries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <TextField size="small" placeholder="Search deductee name or PAN..." value={search} onChange={e => onSearchChange(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><Search /></InputAdornment> }} sx={{ minWidth: 260 }} />
+        <Button variant="contained" startIcon={<Add />} onClick={onAdd} sx={{ borderRadius: 2, textTransform: 'none' }}>Add Entry</Button>
+        {selectedIds.length > 0 && (
+          <Button variant="contained" color="success" startIcon={<Payments />} onClick={onBulkUpdate} sx={{ borderRadius: 2, textTransform: 'none' }}>
+            Bulk Pay ({selectedIds.length})
+          </Button>
+        )}
+        <Button variant="outlined" startIcon={<Download />} onClick={onExport} sx={{ borderRadius: 2, textTransform: 'none', ml: 'auto' }}>Export CSV</Button>
+      </Box>
+      {loading ? <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box> : entries.length === 0 ? <Alert severity="info" sx={{ borderRadius: 2 }}>No TDS entries found.</Alert> : (
+        <Paper sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <TableContainer>
+            <Table size="small">
+              <TableHead><TableRow sx={{ bgcolor: '#f8fafc' }}>
+                <TableCell padding="checkbox">
+                  <input type="checkbox" checked={entries.length > 0 && selectedIds.length === entries.length} onChange={(e) => onSelectAll(e.target.checked ? entries.map(x => x._id) : [])} />
+                </TableCell>
+                {['Deductee', 'PAN', 'Section', 'Gross Amt', 'TDS Rate', 'TDS Amt', 'Total Tax', 'Date', 'Challan', 'Quarter', 'Actions'].map(h => <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.75rem' }}>{h}</TableCell>)}
+              </TableRow></TableHead>
+              <TableBody>{paginatedEntries.map((e: TDSEntryRecord) => (
+                <TableRow key={e._id} hover selected={selectedIds.includes(e._id)}>
+                  <TableCell padding="checkbox">
+                    <input type="checkbox" checked={selectedIds.includes(e._id)} onChange={() => onToggleSelect(e._id)} />
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.deducteeName}</TableCell>
+                  <TableCell><code style={{ fontSize: '0.75rem' }}>{e.deducteePAN}</code></TableCell>
+                  <TableCell><Chip label={`${e.section}`} size="small" variant="outlined" /></TableCell>
+                  <TableCell>{fmt(e.grossAmount)}</TableCell>
+                  <TableCell>{e.tdsRate}%</TableCell>
+                  <TableCell>{fmt(e.tdsAmount)}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{fmt(e.totalTax)}</TableCell>
+                  <TableCell>{e.deductionDate ? new Date(e.deductionDate).toLocaleDateString('en-IN') : 'N/A'}</TableCell>
+                  <TableCell><Chip label={e.challanStatus} size="small" color={statusColor[e.challanStatus] || 'default'} /></TableCell>
+                  <TableCell>{e.quarter}</TableCell>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => onEdit(e)}><Edit fontSize="small" /></IconButton>
+                    {isAdmin && <IconButton size="small" color="error" onClick={() => { if (confirm('Delete this entry?')) onDelete(e._id); }}><Delete fontSize="small" /></IconButton>}
+                  </TableCell>
+                </TableRow>
+              ))}</TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[10, 25, 50]}
+            component="div"
+            count={entries.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+          />
+        </Paper>
       )}
-      <Button variant="outlined" startIcon={<Download />} onClick={onExport} sx={{ borderRadius: 2, textTransform: 'none', ml: 'auto' }}>Export CSV</Button>
     </Box>
-    {loading ? <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box> : entries.length === 0 ? <Alert severity="info" sx={{ borderRadius: 2 }}>No TDS entries found.</Alert> : (
-      <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-        <Table size="small">
-          <TableHead><TableRow sx={{ bgcolor: '#f8fafc' }}>
-            <TableCell padding="checkbox">
-              <input type="checkbox" checked={entries.length > 0 && selectedIds.length === entries.length} onChange={(e) => onSelectAll(e.target.checked ? entries.map(x => x._id) : [])} />
-            </TableCell>
-            {['Deductee', 'PAN', 'Section', 'Gross Amt', 'TDS Rate', 'TDS Amt', 'Total Tax', 'Date', 'Challan', 'Quarter', 'Actions'].map(h => <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.75rem' }}>{h}</TableCell>)}
-          </TableRow></TableHead>
-          <TableBody>{entries.map((e: TDSEntryRecord) => (
-            <TableRow key={e._id} hover selected={selectedIds.includes(e._id)}>
-              <TableCell padding="checkbox">
-                <input type="checkbox" checked={selectedIds.includes(e._id)} onChange={() => onToggleSelect(e._id)} />
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.deducteeName}</TableCell>
-              <TableCell><code style={{ fontSize: '0.75rem' }}>{e.deducteePAN}</code></TableCell>
-              <TableCell><Chip label={`${e.section}`} size="small" variant="outlined" /></TableCell>
-              <TableCell>{fmt(e.grossAmount)}</TableCell>
-              <TableCell>{e.tdsRate}%</TableCell>
-              <TableCell>{fmt(e.tdsAmount)}</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>{fmt(e.totalTax)}</TableCell>
-              <TableCell>{e.deductionDate ? new Date(e.deductionDate).toLocaleDateString('en-IN') : 'N/A'}</TableCell>
-              <TableCell><Chip label={e.challanStatus} size="small" color={statusColor[e.challanStatus] || 'default'} /></TableCell>
-              <TableCell>{e.quarter}</TableCell>
-              <TableCell>
-                <IconButton size="small" onClick={() => onEdit(e)}><Edit fontSize="small" /></IconButton>
-                {isAdmin && <IconButton size="small" color="error" onClick={() => { if (confirm('Delete this entry?')) onDelete(e._id); }}><Delete fontSize="small" /></IconButton>}
-              </TableCell>
-            </TableRow>
-          ))}</TableBody>
-        </Table>
-      </TableContainer>
-    )}
-  </Box>
-);
+  );
+};
 
 // ── Compliance Matrix Tab ──
 interface MatrixTabProps {
-  clients: Array<{ _id: string; name: string }>;
+  clients: Client[];
   returns: TDSReturnRecord[];
   entries: TDSEntryRecord[];
 }
 
 const ComplianceMatrix: React.FC<MatrixTabProps> = ({ clients, returns, entries }) => {
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
   
-  const filteredClients = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredClients = clients.filter(c => 
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.panNumber?.toLowerCase().includes(search.toLowerCase()) ||
+    c.clientCode?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Reset to first page on search
+  React.useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  const paginatedClients = filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box>
@@ -254,83 +294,104 @@ const ComplianceMatrix: React.FC<MatrixTabProps> = ({ clients, returns, entries 
           <strong>Compliance Matrix:</strong> Track Challan Payments (C) and Return Filing (R) status.
         </Alert>
         <TextField 
-          size="small" placeholder="Filter clients..." value={search} 
+          size="small" placeholder="Search by name, PAN or Code..." value={search} 
           onChange={e => setSearch(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><Search /></InputAdornment> }}
           sx={{ width: 300 }}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ bgcolor: '#f1f5f9' }}>
-              <TableCell sx={{ fontWeight: 800, width: 250 }}>Client Name</TableCell>
-              {quarters.map(q => (
-                <TableCell key={q} align="center" sx={{ fontWeight: 800 }}>{q}</TableCell>
-              ))}
-              <TableCell align="center" sx={{ fontWeight: 800 }}>Score</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredClients.map(client => {
-              const clientReturns = returns.filter(r => 
-                (typeof r.clientId === 'object' ? r.clientId?._id : r.clientId) === client._id
-              );
-              const clientEntries = entries.filter(e => 
-                (typeof e.clientId === 'object' ? e.clientId?._id : e.clientId) === client._id
-              );
+      <Paper sx={{ borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#f1f5f9' }}>
+                <TableCell sx={{ fontWeight: 800, width: 250 }}>Client Name</TableCell>
+                {quarters.map(q => (
+                  <TableCell key={q} align="center" sx={{ fontWeight: 800 }}>{q}</TableCell>
+                ))}
+                <TableCell align="center" sx={{ fontWeight: 800 }}>Score</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedClients.map(client => {
+                const clientReturns = returns.filter(r => 
+                  (typeof r.clientId === 'object' ? r.clientId?._id : r.clientId) === client._id
+                );
+                const clientEntries = entries.filter(e => 
+                  (typeof e.clientId === 'object' ? e.clientId?._id : e.clientId) === client._id
+                );
 
-              return (
-                <TableRow key={client._id} hover>
-                  <TableCell sx={{ fontWeight: 600 }}>{client.name}</TableCell>
-                  {quarters.map(q => {
-                    const ret = clientReturns.find(r => r.quarter === q);
-                    const qEntries = clientEntries.filter(e => e.quarter === q);
-                    const allChallansPaid = qEntries.length > 0 && qEntries.every(e => e.challanStatus === 'paid');
-                    const hasEntries = qEntries.length > 0;
+                return (
+                  <TableRow key={client._id} hover>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {client.name}
+                      {(client.clientCode || client.panNumber) && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                          {client.clientCode}{client.clientCode && client.panNumber ? ' | ' : ''}{client.panNumber}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    {quarters.map(q => {
+                      const ret = clientReturns.find(r => r.quarter === q);
+                      const qEntries = clientEntries.filter(e => e.quarter === q);
+                      const allChallansPaid = qEntries.length > 0 && qEntries.every(e => e.challanStatus === 'paid');
+                      const hasEntries = qEntries.length > 0;
 
-                    return (
-                      <TableCell key={q} align="center">
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5 }}>
-                          <MuiTooltip title={`Challans: ${hasEntries ? (allChallansPaid ? 'Paid' : 'Pending') : 'No Entries'}`}>
-                            <Box sx={{ 
-                              width: 28, height: 28, borderRadius: '50%',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '0.75rem', fontWeight: 900,
-                              bgcolor: !hasEntries ? '#f8fafc' : (allChallansPaid ? '#10b981' : '#f59e0b'),
-                              color: !hasEntries ? '#cbd5e1' : '#fff',
-                              border: !hasEntries ? '1px dashed #cbd5e1' : 'none',
-                              boxShadow: hasEntries ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                              cursor: 'default'
-                            }}>C</Box>
-                          </MuiTooltip>
-                          <MuiTooltip title={`Return: ${ret ? ret.status.replace('_', ' ').toUpperCase() : 'Not Tracked'}`}>
-                            <Box sx={{ 
-                              width: 28, height: 28, borderRadius: '50%',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '0.75rem', fontWeight: 900,
-                              bgcolor: !ret ? '#f8fafc' : (ret.status === 'filed' ? '#6366f1' : '#ef4444'),
-                              color: !ret ? '#cbd5e1' : '#fff',
-                              border: !ret ? '1px dashed #cbd5e1' : 'none',
-                              boxShadow: ret ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                              cursor: 'default'
-                            }}>R</Box>
-                          </MuiTooltip>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight={700} color="primary">
-                      {Math.floor((client.name.length % 10) + 90)}%
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                      return (
+                        <TableCell key={q} align="center">
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5 }}>
+                            <MuiTooltip title={`Challans: ${hasEntries ? (allChallansPaid ? 'Paid' : 'Pending') : 'No Entries'}`}>
+                              <Box sx={{ 
+                                width: 28, height: 28, borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '0.75rem', fontWeight: 900,
+                                bgcolor: !hasEntries ? '#f8fafc' : (allChallansPaid ? '#10b981' : '#f59e0b'),
+                                color: !hasEntries ? '#cbd5e1' : '#fff',
+                                border: !hasEntries ? '1px dashed #cbd5e1' : 'none',
+                                boxShadow: hasEntries ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                                cursor: 'default'
+                              }}>C</Box>
+                            </MuiTooltip>
+                            <MuiTooltip title={`Return: ${ret ? ret.status.replace('_', ' ').toUpperCase() : 'Not Tracked'}`}>
+                              <Box sx={{ 
+                                width: 28, height: 28, borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '0.75rem', fontWeight: 900,
+                                bgcolor: !ret ? '#f8fafc' : (ret.status === 'filed' ? '#6366f1' : '#ef4444'),
+                                color: !ret ? '#cbd5e1' : '#fff',
+                                border: !ret ? '1px dashed #cbd5e1' : 'none',
+                                boxShadow: ret ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                                cursor: 'default'
+                              }}>R</Box>
+                            </MuiTooltip>
+                          </Box>
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell align="center">
+                      <Typography variant="body2" fontWeight={700} color="primary">
+                        {Math.floor((client.name.length % 10) + 90)}%
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50]}
+          component="div"
+          count={filteredClients.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+        />
+      </Paper>
     </Box>
   );
 };
@@ -346,50 +407,71 @@ interface ReturnsTabProps {
   fy: string;
 }
 
-const ReturnsTab: React.FC<ReturnsTabProps> = ({ loading, returns, onAdd, onEdit, onDelete, isAdmin, fy }) => (
-  <Box>
-    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-      <Button variant="contained" startIcon={<Add />} onClick={onAdd} sx={{ borderRadius: 2, textTransform: 'none' }}>Add Return</Button>
-    </Box>
-    {loading ? <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box> : returns.length === 0 ? <Alert severity="info" sx={{ borderRadius: 2 }}>No TDS returns tracked for FY {fy}.</Alert> : (
-      <Grid container spacing={2}>
-        {returns.map((r: TDSReturnRecord) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={r._id}>
-            <Card sx={{ borderRadius: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: r.isOverdue ? '2px solid #ef4444' : '1px solid #e2e8f0' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Chip label={r.formType} color="primary" size="small" sx={{ fontWeight: 700 }} />
-                  <Chip label={r.status.replace('_', ' ').toUpperCase()} size="small" color={statusColor[r.status] || 'default'} />
-                </Box>
-                <Typography variant="subtitle2" fontWeight={700}>{r.quarter} • FY {r.financialYear}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {typeof r.clientId === 'object' && r.clientId ? r.clientId.name : 'N/A'}
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                  <Typography variant="caption">TDS: {fmt(r.totalTDSAmount)}</Typography>
-                  <Typography variant="caption">Due: {r.dueDate ? new Date(r.dueDate).toLocaleDateString('en-IN') : 'N/A'}</Typography>
-                </Box>
-                {r.acknowledgementNo && <Typography variant="caption" color="text.secondary">Ack: {r.acknowledgementNo}</Typography>}
-                {r.isOverdue && <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: '0.7rem' }}>OVERDUE</Alert>}
-                <Box sx={{ mt: 1, display: 'flex', gap: 0.5 }}>
-                  <IconButton size="small" onClick={() => onEdit(r)}><Edit fontSize="small" /></IconButton>
-                  {isAdmin && <IconButton size="small" color="error" onClick={() => { if (confirm('Delete?')) onDelete(r._id); }}><Delete fontSize="small" /></IconButton>}
-                </Box>
-              </CardContent>
-            </Card>
+const ReturnsTab: React.FC<ReturnsTabProps> = ({ loading, returns, onAdd, onEdit, onDelete, isAdmin, fy }) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(6); // Default 6 as it's a grid (2 rows of 3)
+
+  const paginatedReturns = returns.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button variant="contained" startIcon={<Add />} onClick={onAdd} sx={{ borderRadius: 2, textTransform: 'none' }}>Add Return</Button>
+      </Box>
+      {loading ? <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box> : returns.length === 0 ? <Alert severity="info" sx={{ borderRadius: 2 }}>No TDS returns tracked for FY {fy}.</Alert> : (
+        <Box>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {paginatedReturns.map((r: TDSReturnRecord) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={r._id}>
+                <Card sx={{ borderRadius: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: r.isOverdue ? '2px solid #ef4444' : '1px solid #e2e8f0' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Chip label={r.formType} color="primary" size="small" sx={{ fontWeight: 700 }} />
+                      <Chip label={r.status.replace('_', ' ').toUpperCase()} size="small" color={statusColor[r.status] || 'default'} />
+                    </Box>
+                    <Typography variant="subtitle2" fontWeight={700}>{r.quarter} • FY {r.financialYear}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {typeof r.clientId === 'object' && r.clientId ? r.clientId.name : 'N/A'}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                      <Typography variant="caption">TDS: {fmt(r.totalTDSAmount)}</Typography>
+                      <Typography variant="caption">Due: {r.dueDate ? new Date(r.dueDate).toLocaleDateString('en-IN') : 'N/A'}</Typography>
+                    </Box>
+                    {r.acknowledgementNo && <Typography variant="caption" color="text.secondary">Ack: {r.acknowledgementNo}</Typography>}
+                    {r.isOverdue && <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: '0.7rem' }}>OVERDUE</Alert>}
+                    <Box sx={{ mt: 1, display: 'flex', gap: 0.5 }}>
+                      <IconButton size="small" onClick={() => onEdit(r)}><Edit fontSize="small" /></IconButton>
+                      {isAdmin && <IconButton size="small" color="error" onClick={() => { if (confirm('Delete?')) onDelete(r._id); }}><Delete fontSize="small" /></IconButton>}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
-    )}
-  </Box>
-);
+          <TablePagination
+            rowsPerPageOptions={[6, 12, 24]}
+            component="div"
+            count={returns.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+          />
+        </Box>
+      )}
+    </Box>
+  );
+};
 
 // ── Entry Form Dialog ──
 interface EntryFormDialogProps {
   open: boolean;
   onClose: () => void;
   editEntry: TDSEntryRecord | null;
-  clients: Array<{ _id: string; name: string; panNumber?: string }>;
+  clients: Client[];
   onSave: (data: Partial<TDSEntryRecord>) => void;
   isSaving: boolean;
 }
@@ -414,11 +496,14 @@ const EntryFormDialog: React.FC<EntryFormDialogProps> = ({ open, onClose, editEn
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle sx={{ fontWeight: 700 }}>{editEntry ? 'Edit' : 'Add'} TDS Entry</DialogTitle>
       <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-        <FormControl size="small" fullWidth><InputLabel>Client (Deductor)</InputLabel>
-          <Select value={form.clientId || ''} label="Client (Deductor)" onChange={e => upd('clientId', e.target.value)}>
-            {clients.map((c) => <MenuItem key={c._id} value={c._id}>{c.name} {c.panNumber ? `(${c.panNumber})` : ''}</MenuItem>)}
-          </Select>
-        </FormControl>
+        <Autocomplete
+          options={clients}
+          getOptionLabel={(c) => `${c.name}${c.clientCode ? ` (${c.clientCode})` : ''}${c.panNumber ? ` (${c.panNumber})` : ''}`}
+          value={clients.find(c => c._id === form.clientId) || null}
+          onChange={(_, v) => upd('clientId', v?._id || '')}
+          renderInput={(params) => <TextField {...params} label="Client (Deductor)" size="small" required />}
+          isOptionEqualToValue={(o, v) => o._id === v._id}
+        />
         <TextField size="small" label="Deductee Name" value={form.deducteeName} onChange={e => upd('deducteeName', e.target.value)} required />
         <TextField size="small" label="Deductee PAN" value={form.deducteePAN} onChange={e => upd('deducteePAN', e.target.value.toUpperCase())} required inputProps={{ maxLength: 10 }} />
         <FormControl size="small"><InputLabel>Section</InputLabel>
@@ -460,7 +545,7 @@ interface ReturnFormDialogProps {
   open: boolean;
   onClose: () => void;
   editReturn: TDSReturnRecord | null;
-  clients: Array<{ _id: string; name: string }>;
+  clients: Client[];
   onSave: (data: Partial<TDSReturnRecord>) => void;
   isSaving: boolean;
 }
@@ -479,11 +564,14 @@ const ReturnFormDialog: React.FC<ReturnFormDialogProps> = ({ open, onClose, edit
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle sx={{ fontWeight: 700 }}>{editReturn ? 'Edit' : 'Track'} TDS Return</DialogTitle>
       <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-        <FormControl size="small" fullWidth><InputLabel>Client</InputLabel>
-          <Select value={form.clientId || ''} label="Client" onChange={e => upd('clientId', e.target.value)}>
-            {clients.map((c) => <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>)}
-          </Select>
-        </FormControl>
+        <Autocomplete
+          options={clients}
+          getOptionLabel={(c) => `${c.name}${c.clientCode ? ` (${c.clientCode})` : ''}${c.panNumber ? ` (${c.panNumber})` : ''}`}
+          value={clients.find(c => c._id === form.clientId) || null}
+          onChange={(_, v) => upd('clientId', v?._id || '')}
+          renderInput={(params) => <TextField {...params} label="Client" size="small" required />}
+          isOptionEqualToValue={(o, v) => o._id === v._id}
+        />
         <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl size="small" fullWidth><InputLabel>Form Type</InputLabel>
             <Select value={form.formType} label="Form Type" onChange={e => upd('formType', e.target.value)}>
