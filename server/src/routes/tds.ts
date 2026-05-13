@@ -161,7 +161,7 @@ router.get('/dashboard', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req
 router.get('/entries', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const TDSEntry = (req as any).models.TDSEntry;
-        const { fy, quarter, clientId, section, challanStatus, search, formType } = req.query;
+        const { fy, quarter, clientId, section, challanStatus, search, formType, page, limit } = req.query;
 
         const filter: Record<string, unknown> = { firmId: req.firmId };
         if (fy)            filter.financialYear = fy;
@@ -178,13 +178,22 @@ router.get('/entries', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: 
             ];
         }
 
-        const entries = await TDSEntry.find(filter)
-            .populate('clientId', 'name email panNumber')
-            .populate('createdBy', 'name email')
-            .sort({ deductionDate: -1 })
-            .lean();
+        const pageNum = parseInt(page as string) || 0;
+        const limitNum = parseInt(limit as string) || 1000; // Default large limit if not provided
+        const skip = pageNum * limitNum;
 
-        res.json(entries);
+        const [entries, total] = await Promise.all([
+            TDSEntry.find(filter)
+                .populate('clientId', 'name email panNumber')
+                .populate('createdBy', 'name email')
+                .sort({ deductionDate: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            TDSEntry.countDocuments(filter)
+        ]);
+
+        res.json({ entries, total });
     } catch (error) {
         console.error('Get TDS entries error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -340,6 +349,33 @@ router.delete('/entries/:id', requireRoles(['ADMIN']), async (req: AuthRequest, 
     }
 });
 
+// ─── PATCH /api/tds/entries/bulk — bulk update ─────────────────────────────
+router.patch('/entries/bulk', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const TDSEntry = (req as any).models.TDSEntry;
+        const { ids, updates } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'ids array is required' });
+        }
+
+        const cleanUpdates = { ...updates };
+        if (cleanUpdates.challanDate)   cleanUpdates.challanDate   = new Date(cleanUpdates.challanDate);
+        if (cleanUpdates.deductionDate) cleanUpdates.deductionDate = new Date(cleanUpdates.deductionDate);
+        if (cleanUpdates.paymentDate)   cleanUpdates.paymentDate   = new Date(cleanUpdates.paymentDate);
+
+        await TDSEntry.updateMany(
+            { _id: { $in: ids }, firmId: req.firmId },
+            { $set: cleanUpdates }
+        );
+
+        res.json({ message: `Successfully updated ${ids.length} entries` });
+    } catch (error) {
+        console.error('Bulk update TDS entries error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  TDS RETURNS — CRUD
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -348,7 +384,7 @@ router.delete('/entries/:id', requireRoles(['ADMIN']), async (req: AuthRequest, 
 router.get('/returns', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const TDSReturn = (req as any).models.TDSReturn;
-        const { fy, quarter, clientId, status, formType } = req.query;
+        const { fy, quarter, clientId, status, formType, page, limit } = req.query;
 
         const filter: Record<string, unknown> = { firmId: req.firmId };
         if (fy)       filter.financialYear = fy;
@@ -357,11 +393,20 @@ router.get('/returns', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: 
         if (status)   filter.status = status;
         if (formType) filter.formType = formType;
 
-        const returns = await TDSReturn.find(filter)
-            .populate('clientId', 'name email panNumber')
-            .populate('createdBy', 'name email')
-            .sort({ dueDate: -1 })
-            .lean();
+        const pageNum = parseInt(page as string) || 0;
+        const limitNum = parseInt(limit as string) || 1000;
+        const skip = pageNum * limitNum;
+
+        const [returns, total] = await Promise.all([
+            TDSReturn.find(filter)
+                .populate('clientId', 'name email panNumber')
+                .populate('createdBy', 'name email')
+                .sort({ dueDate: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            TDSReturn.countDocuments(filter)
+        ]);
 
         // Update overdue status
         const now = new Date();
@@ -371,7 +416,7 @@ router.get('/returns', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: 
             }
         }
 
-        res.json(returns);
+        res.json({ returns, total });
     } catch (error) {
         console.error('Get TDS returns error:', error);
         res.status(500).json({ message: 'Server error' });

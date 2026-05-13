@@ -182,21 +182,24 @@ interface EntriesTabProps {
   onToggleSelect: (id: string) => void;
   onSelectAll: (ids: string[]) => void;
   onBulkUpdate: () => void;
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange: (newPage: number) => void;
+  onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
 const EntriesTab: React.FC<EntriesTabProps> = ({
   loading, entries, search, onSearchChange, onAdd, onEdit, onDelete, onExport, isAdmin,
-  selectedIds, onToggleSelect, onSelectAll, onBulkUpdate
+  selectedIds, onToggleSelect, onSelectAll, onBulkUpdate,
+  page, rowsPerPage, total, onPageChange, onRowsPerPageChange
 }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
   // Reset to first page on search
   React.useEffect(() => {
-    setPage(0);
-  }, [search]);
+    onPageChange(0);
+  }, [search, onPageChange]);
 
-  const paginatedEntries = entries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paginatedEntries = entries; // Already paginated by server
 
   return (
     <Box>
@@ -244,15 +247,14 @@ const EntriesTab: React.FC<EntriesTabProps> = ({
             </Table>
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[10, 25, 50]}
+            rowsPerPageOptions={[10, 25, 50, 100]}
             component="div"
-            count={entries.length}
+            count={total}
             rowsPerPage={rowsPerPage}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => onPageChange(newPage)}
             onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
+              onRowsPerPageChange(parseInt(e.target.value, 10));
             }}
           />
         </Paper>
@@ -405,13 +407,18 @@ interface ReturnsTabProps {
   onDelete: (id: string) => void;
   isAdmin: boolean;
   fy: string;
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange: (newPage: number) => void;
+  onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
-const ReturnsTab: React.FC<ReturnsTabProps> = ({ loading, returns, onAdd, onEdit, onDelete, isAdmin, fy }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(6); // Default 6 as it's a grid (2 rows of 3)
-
-  const paginatedReturns = returns.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+const ReturnsTab: React.FC<ReturnsTabProps> = ({ 
+  loading, returns, onAdd, onEdit, onDelete, isAdmin, fy,
+  page, rowsPerPage, total, onPageChange, onRowsPerPageChange
+}) => {
+  const paginatedReturns = returns; // Already paginated by server
 
   return (
     <Box>
@@ -451,13 +458,12 @@ const ReturnsTab: React.FC<ReturnsTabProps> = ({ loading, returns, onAdd, onEdit
           <TablePagination
             rowsPerPageOptions={[6, 12, 24]}
             component="div"
-            count={returns.length}
+            count={total}
             rowsPerPage={rowsPerPage}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => onPageChange(newPage)}
             onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
+              onRowsPerPageChange(parseInt(e.target.value, 10));
             }}
           />
         </Box>
@@ -646,9 +652,51 @@ export const TDSManagement: React.FC = () => {
   const { isAdmin } = useAuth();
   const qc = useQueryClient();
 
+  const [entriesPage, setEntriesPage] = useState(0);
+  const [entriesRowsPerPage, setEntriesRowsPerPage] = useState(10);
+  const [returnsPage, setReturnsPage] = useState(0);
+  const [returnsRowsPerPage, setReturnsRowsPerPage] = useState(6);
+
   const { data: dashboard, isLoading: dashLoading } = useQuery({ queryKey: ['tds-dashboard', fy], queryFn: () => tdsService.getDashboard(fy), retry: 1 });
-  const { data: entries = [], isLoading: entriesLoading } = useQuery({ queryKey: ['tds-entries', fy, search], queryFn: () => tdsService.getEntries({ fy, search: search || undefined }), retry: 1 });
-  const { data: returns = [], isLoading: returnsLoading } = useQuery({ queryKey: ['tds-returns', fy], queryFn: () => tdsService.getReturns({ fy }), retry: 1 });
+  const { data: entriesData, isLoading: entriesLoading } = useQuery({ 
+    queryKey: ['tds-entries', fy, search, entriesPage, entriesRowsPerPage], 
+    queryFn: () => tdsService.getEntries({ 
+      fy, 
+      search: search || undefined, 
+      page: entriesPage, 
+      limit: entriesRowsPerPage 
+    }), 
+    retry: 1 
+  });
+  const entries = entriesData?.entries || [];
+  const entriesTotal = entriesData?.total || 0;
+
+  const { data: returnsData, isLoading: returnsLoading } = useQuery({ 
+    queryKey: ['tds-returns', fy, returnsPage, returnsRowsPerPage], 
+    queryFn: () => tdsService.getReturns({ 
+      fy, 
+      page: returnsPage, 
+      limit: returnsRowsPerPage 
+    }), 
+    retry: 1 
+  });
+  const returns = returnsData?.returns || [];
+  const returnsTotal = returnsData?.total || 0;
+
+  // Full data for Compliance Matrix (bypass pagination)
+  const { data: matrixEntries = [] } = useQuery({
+    queryKey: ['tds-entries-matrix', fy],
+    queryFn: () => tdsService.getEntries({ fy, limit: 5000 }),
+    select: (data) => data.entries,
+    enabled: tab === 1
+  });
+  const { data: matrixReturns = [] } = useQuery({
+    queryKey: ['tds-returns-matrix', fy],
+    queryFn: () => tdsService.getReturns({ fy, limit: 5000 }),
+    select: (data) => data.returns,
+    enabled: tab === 1
+  });
+  
   const { data: clients = [] } = useQuery({ queryKey: ['clients'], queryFn: adminService.getClients, retry: 1 });
 
   const invalidate = () => { qc.invalidateQueries({ queryKey: ['tds-dashboard'] }); qc.invalidateQueries({ queryKey: ['tds-entries'] }); qc.invalidateQueries({ queryKey: ['tds-returns'] }); };
@@ -656,16 +704,13 @@ export const TDSManagement: React.FC = () => {
   const createEntryMut = useMutation({ mutationFn: (d: Partial<TDSEntryRecord>) => editEntry ? tdsService.updateEntry(editEntry._id, d) : tdsService.createEntry(d), onSuccess: () => { toast.success(editEntry ? 'Entry updated' : 'Entry created'); invalidate(); setEntryDialog(false); setEditEntry(null); }, onError: (e: unknown) => { const err = e as AxiosError<{message: string}>; toast.error(err.response?.data?.message || 'Error'); } });
   const deleteEntryMut = useMutation({ mutationFn: tdsService.deleteEntry, onSuccess: () => { toast.success('Entry deleted'); invalidate(); }, onError: () => toast.error('Delete failed') });
   const bulkPayMut = useMutation({ 
-    mutationFn: async (data: { ids: string[], challanNo: string, bsrCode: string, challanDate: string }) => {
-      for (const id of data.ids) {
-        await tdsService.updateEntry(id, { 
-          challanNo: data.challanNo, 
-          bsrCode: data.bsrCode, 
-          challanDate: data.challanDate,
-          challanStatus: 'paid' 
-        });
-      }
-    },
+    mutationFn: (data: { ids: string[], challanNo: string, bsrCode: string, challanDate: string }) => 
+      tdsService.bulkUpdateEntries(data.ids, { 
+        challanNo: data.challanNo, 
+        bsrCode: data.bsrCode, 
+        challanDate: data.challanDate,
+        challanStatus: 'paid' 
+      }),
     onSuccess: () => { toast.success('Entries updated'); invalidate(); setBulkPayDialog(false); setSelectedEntries([]); },
     onError: () => toast.error('Bulk update failed')
   });
@@ -704,7 +749,7 @@ export const TDSManagement: React.FC = () => {
       </Box>
 
       {tab === 0 && <DashboardTab loading={dashLoading} dashboard={dashboard} />}
-      {tab === 1 && <ComplianceMatrix clients={clients} returns={returns} entries={entries} />}
+      {tab === 1 && <ComplianceMatrix clients={clients} returns={matrixReturns} entries={matrixEntries} />}
       {tab === 2 && (
         <EntriesTab 
           loading={entriesLoading} entries={entries} search={search} onSearchChange={setSearch} 
@@ -716,9 +761,27 @@ export const TDSManagement: React.FC = () => {
           onToggleSelect={(id) => setSelectedEntries(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])}
           onSelectAll={setSelectedEntries}
           onBulkUpdate={() => setBulkPayDialog(true)}
+          page={entriesPage}
+          rowsPerPage={entriesRowsPerPage}
+          total={entriesTotal}
+          onPageChange={setEntriesPage}
+          onRowsPerPageChange={(v) => { setEntriesRowsPerPage(v); setEntriesPage(0); }}
         />
       )}
-      {tab === 3 && <ReturnsTab loading={returnsLoading} returns={returns} onAdd={() => { setEditReturn(null); setReturnDialog(true); }} onEdit={(r: TDSReturnRecord) => { setEditReturn(r); setReturnDialog(true); }} onDelete={(id: string) => deleteReturnMut.mutate(id)} isAdmin={isAdmin} fy={fy} />}
+      {tab === 3 && (
+        <ReturnsTab 
+          loading={returnsLoading} returns={returns} 
+          onAdd={() => { setEditReturn(null); setReturnDialog(true); }} 
+          onEdit={(r: TDSReturnRecord) => { setEditReturn(r); setReturnDialog(true); }} 
+          onDelete={(id: string) => deleteReturnMut.mutate(id)} 
+          isAdmin={isAdmin} fy={fy} 
+          page={returnsPage}
+          rowsPerPage={returnsRowsPerPage}
+          total={returnsTotal}
+          onPageChange={setReturnsPage}
+          onRowsPerPageChange={(v) => { setReturnsRowsPerPage(v); setReturnsPage(0); }}
+        />
+      )}
 
       {bulkPayDialog && (
         <BulkPayDialog 

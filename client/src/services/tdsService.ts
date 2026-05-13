@@ -89,6 +89,11 @@ export interface TDSDashboard {
     recentEntries: TDSEntryRecord[];
 }
 
+export interface PaginatedResponse<T> {
+    entries: T[];
+    total: number;
+}
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export const tdsService = {
@@ -103,7 +108,8 @@ export const tdsService = {
     getEntries: async (params?: {
         fy?: string; quarter?: string; clientId?: string;
         section?: string; challanStatus?: string; search?: string; formType?: string;
-    }): Promise<TDSEntryRecord[]> => {
+        page?: number; limit?: number;
+    }): Promise<PaginatedResponse<TDSEntryRecord>> => {
         const query = new URLSearchParams();
         if (params?.fy)            query.append('fy', params.fy);
         if (params?.quarter)       query.append('quarter', params.quarter);
@@ -112,7 +118,10 @@ export const tdsService = {
         if (params?.challanStatus) query.append('challanStatus', params.challanStatus);
         if (params?.search)        query.append('search', params.search);
         if (params?.formType)      query.append('formType', params.formType);
-        const response = await api.get<TDSEntryRecord[]>(`/tds/entries?${query.toString()}`);
+        if (params?.page !== undefined)  query.append('page', params.page.toString());
+        if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+        
+        const response = await api.get<PaginatedResponse<TDSEntryRecord>>(`/tds/entries?${query.toString()}`);
         return response.data;
     },
 
@@ -129,19 +138,26 @@ export const tdsService = {
     deleteEntry: async (id: string): Promise<void> => {
         await api.delete(`/tds/entries/${id}`);
     },
+    bulkUpdateEntries: async (ids: string[], updates: Partial<TDSEntryRecord>): Promise<void> => {
+        await api.patch('/tds/entries/bulk', { ids, updates });
+    },
 
     // Returns
     getReturns: async (params?: {
         fy?: string; quarter?: string; clientId?: string;
         status?: string; formType?: string;
-    }): Promise<TDSReturnRecord[]> => {
+        page?: number; limit?: number;
+    }): Promise<{ returns: TDSReturnRecord[]; total: number }> => {
         const query = new URLSearchParams();
         if (params?.fy)       query.append('fy', params.fy);
         if (params?.quarter)  query.append('quarter', params.quarter);
         if (params?.clientId) query.append('clientId', params.clientId);
         if (params?.status)   query.append('status', params.status);
         if (params?.formType) query.append('formType', params.formType);
-        const response = await api.get<TDSReturnRecord[]>(`/tds/returns?${query.toString()}`);
+        if (params?.page !== undefined)  query.append('page', params.page.toString());
+        if (params?.limit !== undefined) query.append('limit', params.limit.toString());
+        
+        const response = await api.get<{ returns: TDSReturnRecord[]; total: number }>(`/tds/returns?${query.toString()}`);
         return response.data;
     },
 
