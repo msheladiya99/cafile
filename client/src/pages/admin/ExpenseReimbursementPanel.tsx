@@ -5,7 +5,7 @@ import {
   Alert, Divider, Chip, Dialog, DialogTitle,
   DialogContent, DialogActions, Table, TableHead,
   TableRow, TableCell, TableBody, TableContainer,
-  IconButton, CircularProgress, Select, MenuItem, InputLabel, FormControl
+  CircularProgress, Select, MenuItem, InputLabel, FormControl
 } from '@mui/material';
 import {
   AccountBalanceWallet as ReimburseIcon,
@@ -41,10 +41,34 @@ interface Expense {
   reimbursedAt?: string;
 }
 
+interface User {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  username?: string;
+  role?: string;
+}
+
+const getUserName = (u: User | null | undefined) => {
+  if (!u) return '';
+  const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+  if (fullName) return fullName;
+  if (u.name) return u.name;
+  if (u.username) {
+    if (u.username.includes('@')) {
+      const part = u.username.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return u.username;
+  }
+  return '';
+};
+
 export const ExpenseReimbursementPanel: React.FC = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Dialog States
@@ -89,7 +113,7 @@ export const ExpenseReimbursementPanel: React.FC = () => {
                                       .slice(0, 10); // Show last 10
 
   // Group by Staff for 'PENDING'
-  const staffClaims: Record<string, { staff: any, totalAmount: number, expenses: Expense[] }> = {};
+  const staffClaims: Record<string, { staff: { _id: string, firstName: string, lastName: string }, totalAmount: number, expenses: Expense[] }> = {};
   pendingReimbursements.forEach(exp => {
     if (!exp.paidBy) return;
     const staffId = exp.paidBy._id;
@@ -117,7 +141,7 @@ export const ExpenseReimbursementPanel: React.FC = () => {
       setTransferConfirmStaffId(null);
       setSelectedStaff(null);
       fetchExpenses();
-    } catch (err) {
+    } catch {
       toast.error('Failed to reimburse claims');
     }
   };
@@ -159,13 +183,13 @@ export const ExpenseReimbursementPanel: React.FC = () => {
       ) : (
         <Grid container spacing={3}>
           {claimEntries.map(claim => (
-            <Grid item xs={12} md={6} lg={4} key={claim.staff._id}>
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={claim.staff._id}>
               <Paper sx={{ borderRadius: '16px', border: '1px solid #e2e8f0', p: 3, position: 'relative', overflow: 'hidden' }}>
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', bgcolor: '#f59e0b' }} />
                 
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
                   <Box pl={2}>
-                    <Typography variant="h6" fontWeight={800}>{claim.staff.firstName} {claim.staff.lastName}</Typography>
+                    <Typography variant="h6" fontWeight={800}>{getUserName(claim.staff)}</Typography>
                     <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase' }}>
                       {claim.expenses.length} Pending Bills
                     </Typography>
@@ -271,7 +295,7 @@ export const ExpenseReimbursementPanel: React.FC = () => {
           <Box sx={{ mb: 3 }}>
              <PayIcon color="success" sx={{ fontSize: 48, mb: 1 }} />
              <Typography variant="body1" fontWeight={700}>
-               Are you sure you want to clear the claims for {transferConfirmStaffId && staffClaims[transferConfirmStaffId]?.staff.firstName}?
+                Are you sure you want to clear the claims for {transferConfirmStaffId && getUserName(staffClaims[transferConfirmStaffId]?.staff)}?
              </Typography>
              <Typography variant="h5" fontWeight={900} color="success.main" sx={{ my: 1 }}>
                ₹{transferConfirmStaffId && staffClaims[transferConfirmStaffId]?.totalAmount.toLocaleString()}
@@ -280,17 +304,17 @@ export const ExpenseReimbursementPanel: React.FC = () => {
           
           <FormControl fullWidth size="small" sx={{ textAlign: 'left' }}>
             <InputLabel id="admin-select-label">Select Transferring Admin</InputLabel>
-            <Select
-              labelId="admin-select-label"
-              label="Select Transferring Admin"
-              value={transferAdminId}
-              onChange={(e) => setTransferAdminId(e.target.value)}
-              sx={{ borderRadius: '8px' }}
-            >
-              {users.filter(u => u.role === 'ADMIN' || u.role === 'MANAGER').map((u: any) => (
-                <MenuItem key={u._id} value={u._id}>{u.firstName} {u.lastName} ({u.role})</MenuItem>
-              ))}
-            </Select>
+              <Select
+                labelId="admin-select-label"
+                label="Select Transferring Admin"
+                value={transferAdminId}
+                onChange={(e) => setTransferAdminId(e.target.value as string)}
+                sx={{ borderRadius: '8px' }}
+              >
+                {users.filter(u => u.role === 'ADMIN' || u.role === 'MANAGER').map((u) => (
+                  <MenuItem key={u._id} value={u._id}>{getUserName(u)} ({u.role})</MenuItem>
+                ))}
+              </Select>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
               The system will record this transfer was completed by the selected administrator.
             </Typography>
@@ -330,12 +354,12 @@ export const ExpenseReimbursementPanel: React.FC = () => {
                 {pastReimbursements.map(exp => (
                   <TableRow key={exp._id}>
                     <TableCell>{exp.reimbursedAt ? format(new Date(exp.reimbursedAt), 'dd MMM yyyy, hh:mm a') : '-'}</TableCell>
-                    <TableCell><Typography variant="body2" fontWeight={800}>{exp.paidBy?.firstName} {exp.paidBy?.lastName}</Typography></TableCell>
+                    <TableCell><Typography variant="body2" fontWeight={800}>{getUserName(exp.paidBy)}</Typography></TableCell>
                     <TableCell><Typography variant="caption">{exp.category} ({exp.expenseId})</Typography></TableCell>
                     <TableCell align="right"><Typography variant="body2" color="success.main" fontWeight={800}>₹{exp.totalAmount.toLocaleString()}</Typography></TableCell>
                     <TableCell>
                       {exp.reimbursedBy ? (
-                        <Chip size="small" label={`${exp.reimbursedBy.firstName} ${exp.reimbursedBy.lastName}`} sx={{ bgcolor: '#ede9fe', color: '#5b21b6', fontWeight: 600, fontSize: '0.7rem' }} />
+                        <Chip size="small" label={getUserName(exp.reimbursedBy)} sx={{ bgcolor: '#ede9fe', color: '#5b21b6', fontWeight: 600, fontSize: '0.7rem' }} />
                       ) : (
                         <Typography variant="caption" color="text.secondary">System / Unknown</Typography>
                       )}
