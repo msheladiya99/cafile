@@ -602,6 +602,10 @@ interface SendEmailParams {
     firmId?: string;
 }
 
+// Simple circuit breaker for failing SMTP configs
+const failedSmtpFirms = new Map<string, number>();
+const SMTP_FAILURE_TTL = 10 * 60 * 1000; // 10 minutes
+
 export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) => {
     let usedProvider: 'smtp' | 'resend' = 'resend';
     let status: 'success' | 'failed' | 'fallback' = 'failed';
@@ -609,8 +613,12 @@ export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) 
 
     try {
         if (firmId) {
+            // Check if this firm's SMTP is in "failed" state (circuit breaker)
+            const lastFailure = failedSmtpFirms.get(firmId);
+            const isCircuitOpen = lastFailure && (Date.now() - lastFailure < SMTP_FAILURE_TTL);
+
             const firm = await Firm.findById(firmId);
-            if (firm && firm.smtpEnabled && firm.smtpHost && firm.smtpUser) {
+            if (firm && firm.smtpEnabled && firm.smtpHost && firm.smtpUser && !isCircuitOpen) {
                 try {
                     const decryptedPass = decrypt(firm.smtpPass || '') || firm.smtpPass;
                     const transporter = nodemailer.createTransport({
@@ -618,7 +626,10 @@ export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) 
                         port: firm.smtpPort,
                         secure: firm.smtpSecure,
                         auth: { user: firm.smtpUser, pass: decryptedPass },
-                        tls: { rejectUnauthorized: false }
+                        tls: { rejectUnauthorized: false },
+                        connectionTimeout: 5000, // 5 seconds
+                        greetingTimeout: 5000,   // 5 seconds
+                        socketTimeout: 10000,    // 10 seconds
                     });
 
                     const displayFromName = firm.smtpFromName || firm.firmName || 'CA Office Portal';
@@ -632,15 +643,26 @@ export const sendEmail = async ({ to, subject, html, firmId }: SendEmailParams) 
 
                     status = 'success';
                     usedProvider = 'smtp';
+                    failedSmtpFirms.delete(firmId); // Success! Clear failure if any
 
                     await logEmail(firmId, to, subject, status, usedProvider);
                     return { success: true, provider: usedProvider };
                 } catch (smtpError: any) {
-                    console.error('[SMTP Error] Falling back to Resend:', smtpError);
+                    // Log as warning and provide concise error message
+                    console.warn(`[SMTP Warning] Firm ${firmId} SMTP failed (${smtpError.code || smtpError.message}). Circuit opened for 10m. Falling back to Resend.`);
+                    
+                    // Open the circuit for this firm
+                    failedSmtpFirms.set(firmId, Date.now());
+                    
                     status = 'fallback';
                     errorMessage = smtpError.message;
                     usedProvider = 'resend';
                 }
+            } else if (isCircuitOpen) {
+                // Circuit is open, skip SMTP attempt
+                status = 'fallback';
+                errorMessage = 'SMTP skipped due to recent failures (Circuit Open)';
+                usedProvider = 'resend';
             }
         }
 
