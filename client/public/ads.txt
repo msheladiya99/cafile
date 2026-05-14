@@ -1,0 +1,2 @@
+# My CA File does not authorize any programmatic advertising sellers.
+contact=support@mycafile.in

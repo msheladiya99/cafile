@@ -106,6 +106,7 @@ const ContactPage = lazy(() => import('./pages/company/ContactPage'));
 const PressPage = lazy(() => import('./pages/company/PressPage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/company/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('./pages/company/TermsOfServicePage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 
 const LoadingScreen = () => (
@@ -113,7 +114,7 @@ const LoadingScreen = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', animation: 'loader-fade-in 0.8s ease-out' }}>
       <div style={{ position: 'relative' }}>
         <div style={{ width: '80px', height: '80px', background: '#ffffff', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 40px rgba(102, 126, 234, 0.15)', border: '1px solid rgba(102, 126, 234, 0.1)', position: 'relative', zIndex: 2 }}>
-          <img src="/faviconca.webp" alt="My CA File Logo" style={{ width: '54px', height: '54px', objectFit: 'contain' }} />
+          <img src="/faviconca.webp" width="54" height="54" alt="My CA File Logo" style={{ width: '54px', height: '54px', objectFit: 'contain' }} />
         </div>
         <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))', borderRadius: '24px', zIndex: 1, animation: 'loader-glow 3s infinite alternate' }}></div>
       </div>
@@ -384,7 +385,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
 
         <Route path="/" element={isAuthenticated ? <Navigate to={getHomePath()} replace /> : (isSuperAdminDomain() ? <LandingPage /> : <Navigate to="/login" replace />)} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense >
   );
