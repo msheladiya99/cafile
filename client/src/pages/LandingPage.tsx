@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { ObfuscatedEmail } from '../components/ObfuscatedEmail';
 
 // ─── Icons (inline SVGs) ────────────────────────────────────────────────────
 
@@ -241,21 +242,21 @@ export const LandingPage = () => {
   return (
     <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", color: '#111827', background: '#fff', overflowX: 'hidden' }}>
       <Helmet>
-        <title>My CA File - Best CA Office Management Software in India</title>
-        <meta name="description" content="Manage your Indian CA practice with ease. My CA File is the #1 practice management software for Chartered Accountants. Track GST, ITR, Audit tasks, and secure client documents in one powerful portal. Try it free!" />
+        <title>MyCAFile - CA Office Software for Firms, Clients & Documents</title>
+        <meta name="description" content="MyCAFile helps CA firms manage clients, client documents, GST, ITR, audit tasks, billing, reminders, and staff workflows in one secure CA office management system." />
         <meta name="keywords" content="CA firm software India, best CA practice management tool, ITR GST software for CA, chartered accountant office management system, CA client portal India" />
         <link rel="canonical" href="https://www.mycafile.in/" />
         
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.mycafile.in/" />
-        <meta property="og:title" content="My CA File - Best CA Office Management Software in India" />
+        <meta property="og:title" content="MyCAFile - CA Office Software for Firms, Clients & Documents" />
         <meta property="og:description" content="Streamline your CA practice with secure, automated workflows. Manage GST, ITR, team tasks, and client documents in one portal." />
-        <meta property="og:image" content="https://www.mycafile.in/og-home.png" />
+        <meta property="og:image" content="https://www.mycafile.in/og-image.png" />
         
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="My CA File - Best CA Office Management Software in India" />
+        <meta name="twitter:title" content="MyCAFile - CA Office Software for Firms, Clients & Documents" />
         <meta name="twitter:description" content="Streamline your CA practice with secure, automated workflows." />
-        <meta name="twitter:image" content="https://www.mycafile.in/og-home.png" />
+        <meta name="twitter:image" content="https://www.mycafile.in/og-image.png" />
         <meta name="robots" content="index, follow" />
 
         {/* Structured Data: FAQPage */}
@@ -374,7 +375,7 @@ export const LandingPage = () => {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 22, color: '#7c3aed', letterSpacing: '-0.5px', textDecoration: 'none' }} aria-label="My CA File home">
             <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+              <img src="/faviconca.webp" width="36" height="36" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             </div>
             MyCAFile
           </a>
@@ -430,7 +431,7 @@ export const LandingPage = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(124,58,237,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src="/faviconca.webp" style={{ width: 32, height: 32, objectFit: 'contain' }} alt="MyCAFile" />
+              <img src="/faviconca.webp" width="32" height="32" style={{ width: 32, height: 32, objectFit: 'contain' }} alt="MyCAFile" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontWeight: 800, fontSize: 17, color: '#111827', letterSpacing: '-0.3px' }}>MyCAFile</span>
@@ -515,8 +516,8 @@ export const LandingPage = () => {
 
           {/* Heading */}
           <h1 style={{ fontSize: 'clamp(38px, 6vw, 72px)', fontWeight: 900, lineHeight: 1.08, color: '#111827', marginBottom: 28, letterSpacing: '-0.5px' }}>
-            Manage Clients, Docs &<br />
-            GST in{' '}
+            MyCAFile for CA Firms:<br />
+            Manage Clients, Documents & GST in{' '}
             <span className="lp-gradient-text">One System</span>
           </h1>
 
@@ -886,7 +887,7 @@ export const LandingPage = () => {
             <div>
               <div className="lp-footer-logo-box" style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 16 }}>
                 <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="/faviconca.webp" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                  <img src="/faviconca.webp" width="36" height="36" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                 </div>
                 MyCAFile
               </div>
@@ -923,7 +924,8 @@ export const LandingPage = () => {
             <div className="lp-footer-contact">
               <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Contact</h4>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14, color: '#9ca3af' }}>
-                <MailIcon size={18} /><span style={{ fontSize: 14 }}>support@mycafile.in</span>
+                <MailIcon size={18} />
+                <ObfuscatedEmail user="support" label="Email support" style={{ fontSize: 14 }} />
               </div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: '#9ca3af' }}>
                 <PhoneIcon size={18} /><span style={{ fontSize: 14 }}>+91 9537994439</span>

@@ -82,7 +82,7 @@ const PrivacyPolicyPage: React.FC = () => {
                     <Box>
                         <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b', mb: 3 }}>5. Contact Us</Typography>
                         <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.8, fontSize: '1.05rem' }}>
-                            If you have any questions regarding this Privacy Policy, you may contact us at privacy@mycafile.in.
+                            If you have any questions regarding this Privacy Policy, please use the contact page and our privacy team will respond.
                         </Typography>
                     </Box>
                 </Stack>

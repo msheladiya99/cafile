@@ -17,7 +17,7 @@ export const SiteNavbar: React.FC = () => {
                 aria-label="My CA File - Go to homepage"
             >
                 <Box sx={{ p: 0.5, display: 'flex', alignItems: 'center' }}>
-                    <img src="/faviconca.webp" alt="MyCAFile - Best CA Software India" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                    <img src="/faviconca.webp" width="32" height="32" alt="MyCAFile - Best CA Software India" style={{ width: 32, height: 32, objectFit: 'contain' }} />
                 </Box>
                 <Typography variant="h6" fontWeight={900} color="#1e1b4b" sx={{ letterSpacing: -1 }}>My CA File</Typography>
             </Stack>
@@ -51,7 +51,7 @@ export const SiteFooter: React.FC = () => {
                             aria-label="My CA File homepage"
                         >
                             <Box sx={{ p: 0.5, display: 'flex', alignItems: 'center' }}>
-                                <img src="/faviconca.webp" alt="MyCAFile Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+                                <img src="/faviconca.webp" width="28" height="28" alt="MyCAFile Logo" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                             </Box>
                             <Typography variant="h6" fontWeight={900} color="#1e1b4b" sx={{ letterSpacing: -1 }}>My CA File</Typography>
                         </Stack>

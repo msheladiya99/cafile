@@ -23,8 +23,7 @@
       content="CA office management software, chartered accountant software, CA client management system, CA practice management India, GST ITR tracking software"
     />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://www.mycafile.in/" />
-    <!-- Page-level canonical/meta are refined by react-helmet-async on each route -->
+    <!-- Canonical URLs are emitted per route by react-helmet-async. -->
 
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website" />
@@ -62,12 +61,7 @@
     <!-- Performance Optimizations -->
     <link rel="preconnect" href="https://api.mycafile.in" crossorigin />
     <link rel="dns-prefetch" href="https://api.mycafile.in" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preload" href="/faviconca.webp" as="image" type="image/webp" />
 
     <!-- Structured Data for SEO (JSON-LD) -->
     <script type="application/ld+json">
@@ -223,7 +217,7 @@
         <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; animation: loader-fade-in 0.8s ease-out;">
           <div style="position: relative;">
             <div style="width: 80px; height: 80px; background: #ffffff; border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15); border: 1px solid rgba(102, 126, 234, 0.1); position: relative; z-index: 2;">
-              <img src="/faviconca.webp" alt="My CA File Logo" style="width: 54px; height: 54px; object-fit: contain;">
+              <img src="/faviconca.webp" width="54" height="54" alt="My CA File Logo" style="width: 54px; height: 54px; object-fit: contain;">
             </div>
             <div style="position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-radius: 24px; z-index: 1; animation: loader-glow 3s infinite alternate;"></div>
           </div>

@@ -82,7 +82,7 @@ const TermsOfServicePage: React.FC = () => {
                     <Box>
                         <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b', mb: 3 }}>5. Contact Us</Typography>
                         <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.8, fontSize: '1.05rem' }}>
-                            If you have any questions regarding these Terms, you may contact us at support@mycafile.in.
+                            If you have any questions regarding these Terms, please use the contact page and our support team will respond.
                         </Typography>
                     </Box>
                 </Stack>

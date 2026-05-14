@@ -4,6 +4,7 @@ import Grid from '@mui/material/Grid';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { SiteNavbar, SiteFooter } from '../../components/SiteLayout';
+import { ObfuscatedEmail } from '../../components/ObfuscatedEmail';
 import {
     Email as EmailIcon,
     Phone as PhoneIcon,
@@ -112,7 +113,9 @@ const ContactPage: React.FC = () => {
                                     </Box>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight={800} color="#1e293b">Email Us</Typography>
-                                        <Typography variant="body2" color="#6366f1" sx={{ fontWeight: 600 }}>support@mycafile.in</Typography>
+                                        <Typography variant="body2" color="#6366f1" sx={{ fontWeight: 600 }}>
+                                            <ObfuscatedEmail user="support" label="Email support" />
+                                        </Typography>
                                     </Box>
                                 </Stack>
                             </Card>

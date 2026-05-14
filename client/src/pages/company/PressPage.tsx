@@ -4,6 +4,7 @@ import Grid from '@mui/material/Grid';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { SiteNavbar, SiteFooter } from '../../components/SiteLayout';
+import { ObfuscatedEmail } from '../../components/ObfuscatedEmail';
 import { Download as DownloadIcon, OpenInNew as LinkIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -191,9 +192,9 @@ const PressPage: React.FC = () => {
                             sx={{ px: 5, py: 1.5, borderRadius: '12px', fontWeight: 800, textTransform: 'none', bgcolor: 'white', color: '#6366f1', '&:hover': { bgcolor: '#f5f3ff' } }}>
                             Contact Media Team
                         </Button>
-                        <Button variant="outlined"
+                        <Button variant="outlined" component="span"
                             sx={{ px: 5, py: 1.5, borderRadius: '12px', fontWeight: 800, textTransform: 'none', borderColor: 'rgba(255,255,255,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                            press@mycafile.in
+                            <ObfuscatedEmail user="press" label="Media contact" />
                         </Button>
                     </Stack>
                 </Card>
