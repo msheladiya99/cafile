@@ -45,7 +45,7 @@ function Nav() {
         </nav>
         <div className="calm-nav-actions">
           <a href="/login" className="calm-nav-login">Login</a>
-          <a href="#pricing" className="calm-nav-cta">
+          <a href="/contact" className="calm-nav-cta">
             Start free trial
             <ArrowUpRight size={16} />
           </a>
@@ -76,7 +76,7 @@ function Hero() {
             stop chasing you and you can do the work that actually matters.
           </p>
           <div className="calm-hero-actions">
-            <a href="#pricing" className="calm-button calm-button-dark">
+            <a href="/contact" className="calm-button calm-button-dark">
               Begin 14-day trial <ArrowUpRight size={16} />
             </a>
             <a href="#workflow" className="calm-text-link">
@@ -85,10 +85,10 @@ function Hero() {
           </div>
           <div className="calm-social-proof">
             <div className="calm-avatars" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
+              <img src="/avatars/avatar1.png" alt="" />
+              <img src="/avatars/avatar2.png" alt="" />
+              <img src="/avatars/avatar3.png" alt="" />
+              <img src="/avatars/avatar4.png" alt="" />
             </div>
             <div>
               <div className="calm-stars">
@@ -366,7 +366,7 @@ function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <button type="button" onClick={() => { window.location.href = plan.name.includes('Enterprise') ? '/contact' : '/login'; }}>
+                <button type="button" onClick={() => { window.location.href = '/contact'; }}>
                   {plan.cta}
                 </button>
               </article>
@@ -422,7 +422,7 @@ function CTA() {
           Ready for a <em>calmer</em> filing season?
         </h2>
         <p>Join 2,400+ firms already running a quieter, more focused practice with MyCAFile.</p>
-        <a href="#pricing" className="calm-button calm-button-dark">
+        <a href="/contact" className="calm-button calm-button-dark">
           Begin your free trial <ArrowUpRight size={16} />
         </a>
       </Container>
@@ -597,11 +597,8 @@ const calmLandingCss = `
 .calm-text-link:hover { text-decoration: underline; }
 .calm-social-proof { margin-top: 3rem; display: flex; align-items: center; gap: 1.5rem; }
 .calm-avatars { display: flex; }
-.calm-avatars span { width: 2rem; height: 2rem; border-radius: 999px; border: 2px solid var(--calm-bg); margin-left: -.45rem; }
-.calm-avatars span:first-child { margin-left: 0; background: var(--calm-accent); }
-.calm-avatars span:nth-child(2) { background: var(--calm-primary); }
-.calm-avatars span:nth-child(3) { background: var(--calm-warning); }
-.calm-avatars span:nth-child(4) { background: var(--calm-fg); }
+.calm-avatars img { width: 3rem; height: 3rem; border-radius: 999px; border: 2.5px solid var(--calm-bg); margin-left: -.85rem; object-fit: cover; background: var(--calm-primary-soft); }
+.calm-avatars img:first-child { margin-left: 0; }
 .calm-stars { display: flex; gap: .125rem; color: var(--calm-warning); }
 .calm-social-proof p { margin-top: .25rem; color: var(--calm-muted); font-size: .76rem; }
 .calm-hero-panel-wrap { position: relative; min-height: 30.5rem; display: grid; align-items: start; padding-top: .1rem; }
