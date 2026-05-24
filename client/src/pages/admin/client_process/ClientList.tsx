@@ -309,7 +309,7 @@ export const ClientList: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Client Name" inputId="filter-client">
+                            <FilterRow label="Firm Name" inputId="filter-client">
                                 <Select
                                     id="filter-client"
                                     fullWidth
@@ -488,6 +488,14 @@ export const ClientList: React.FC = () => {
                                             <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
 
                                             <Stack spacing={1} sx={{ mb: 2 }}>
+                                                {client.proprietorName && (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography variant="caption" color="text.secondary">Proprietor Name</Typography>
+                                                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                                            {client.proprietorName}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                     <Typography variant="caption" color="text.secondary">Group Name</Typography>
                                                     <Typography variant="caption" sx={{ fontWeight: 600 }}>
@@ -545,7 +553,8 @@ export const ClientList: React.FC = () => {
                                                 onChange={handleSelectAllClick}
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Firm Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Proprietor Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
@@ -555,11 +564,11 @@ export const ClientList: React.FC = () => {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
                                         </TableRow>
                                     ) : filteredClients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', py: 4 }}>
+                                            <TableCell colSpan={7} align="center" sx={{ color: 'text.secondary', py: 4 }}>
                                                 No clients found.
                                             </TableCell>
                                         </TableRow>
@@ -592,6 +601,7 @@ export const ClientList: React.FC = () => {
                                                         </Typography>
                                                     )}
                                                 </TableCell>
+                                                <TableCell>{client.proprietorName || '-'}</TableCell>
                                                 <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
                                                 <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
                                                 <TableCell>

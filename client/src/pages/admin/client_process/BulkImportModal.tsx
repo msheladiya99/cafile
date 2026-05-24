@@ -26,7 +26,8 @@ interface BulkImportModalProps {
 }
 
 const EXCEL_FIELDS = [
-    'Client Name*', 'Email*', 'Mobile Number*', 'PAN Number', 'GST Number', 'Aadhar Number',
+    'Firm Name*', 'Email*', 'Mobile Number*', 'PAN Number', 'GST Number', 'Aadhar Number',
+    'Proprietor Name',
     'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Sub Master',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
     'Incorporation Date From', 'Incorporation Date To', 'Licence No', 'Licence Authority', 'TRN No',
@@ -90,7 +91,8 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                     };
 
                     return {
-                        name: row['Client Name*'],
+                        name: (row['Firm Name*'] || row['Client Name*']) as string,
+                        proprietorName: row['Proprietor Name'] ? String(row['Proprietor Name']) : undefined,
                         email: row['Email*'],
                         phone: row['Mobile Number*'] ? String(row['Mobile Number*']) : undefined,
                         panNumber: row['PAN Number'] ? String(row['PAN Number']) : undefined,
@@ -231,7 +233,8 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Firm Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Proprietor Name</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>PAN</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Group</TableCell>
@@ -244,6 +247,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                                         return (
                                             <TableRow key={index} sx={{ bgcolor: isError ? '#ffebee' : 'inherit' }}>
                                                 <TableCell>{row.name as string}</TableCell>
+                                                <TableCell>{(row.proprietorName as string) || '-'}</TableCell>
                                                 <TableCell>{row.email as string}</TableCell>
                                                 <TableCell>{(row.panNumber as string) || '-'}</TableCell>
                                                 <TableCell>{(row._rawGroupName as string) || '-'}</TableCell>

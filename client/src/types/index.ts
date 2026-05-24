@@ -1,6 +1,7 @@
 export interface Client {
     _id: string;
     name: string;
+    proprietorName?: string;
     email: string;
     username?: string;
     phone: string;
@@ -72,6 +73,7 @@ export interface ClientGroup {
 
 export interface CreateClientData {
     name: string;
+    proprietorName?: string;
     email: string;
     phone: string;
     panNumber?: string;
