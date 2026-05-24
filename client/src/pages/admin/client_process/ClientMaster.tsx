@@ -732,12 +732,12 @@ export const ClientMaster: React.FC = () => {
     });
 
     const handleSaveClient = () => {
-        if (!formData.name || !formData.groupName || !formData.itStatus || !formData.masterType) {
-            showSnackbar('Please complete the required Basic Form fields', 'error');
+        if (!formData.name) {
+            showSnackbar('Please enter Firm Name', 'error');
             return;
         }
-        if (!formData.address || !formData.country || !formData.state || !formData.city || !formData.phone || !formData.email) {
-            showSnackbar('Please complete the required Primary Contact forms', 'error');
+        if (!formData.phone || !formData.email) {
+            showSnackbar('Mobile Number and Email are required', 'error');
             return;
         }
 
@@ -827,7 +827,7 @@ export const ClientMaster: React.FC = () => {
                                 <FormRow label="Client Code">
                                     <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Group Name" required>
+                                <FormRow label="Group Name">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -845,7 +845,7 @@ export const ClientMaster: React.FC = () => {
                                         ))}
                                     </Select>
                                 </FormRow>
-                                <FormRow label="IT Status" required>
+                                <FormRow label="IT Status">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -863,7 +863,7 @@ export const ClientMaster: React.FC = () => {
                                         ))}
                                     </Select>
                                 </FormRow>
-                                <FormRow label="Master Type" required>
+                                <FormRow label="Master Type">
                                     <Autocomplete
                                         fullWidth
                                         size="small"
@@ -913,10 +913,10 @@ export const ClientMaster: React.FC = () => {
                             </Section>
 
                             <Section title="Primary Contact Detail" icon={<ContactPhoneIcon />}>
-                                <FormRow label="Address" required>
+                                <FormRow label="Address">
                                     <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Country" required>
+                                <FormRow label="Country">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -930,7 +930,7 @@ export const ClientMaster: React.FC = () => {
                                         <MenuItem value="India">India</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="State" required>
+                                <FormRow label="State">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -947,7 +947,7 @@ export const ClientMaster: React.FC = () => {
                                         <MenuItem value="Rajasthan">Rajasthan</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="City" required>
+                                <FormRow label="City">
                                     <Select
                                         fullWidth
                                         size="small"
