@@ -37,4 +37,9 @@ export const clientGroupService = {
         const response = await api.post('/admin/bulk-create-client-groups', data);
         return response.data;
     },
+
+    bulkDeleteGroups: async (groupIds: string[]): Promise<{ message: string }> => {
+        const response = await api.post('/admin/client-groups/bulk-delete', { groupIds });
+        return response.data;
+    },
 };

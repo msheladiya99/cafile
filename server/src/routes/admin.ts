@@ -1530,6 +1530,45 @@ router.delete('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGE
     }
 });
 
+// Bulk Delete client groups (Admin and Manager only)
+router.post('/client-groups/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { ClientGroup, Client } = (req as any).models;
+        const { groupIds } = req.body;
+
+        if (!Array.isArray(groupIds) || groupIds.length === 0) {
+            res.status(400).json({ message: 'No groups selected' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+
+        // Check if any of these groups are used by any clients
+        const clientsWithGroups = await Client.find({ groupName: { $in: groupIds }, firmId }).select('groupName');
+        const usedGroupIds = new Set(clientsWithGroups.map((c: any) => c.groupName?.toString()).filter(Boolean));
+
+        const deletableGroupIds = groupIds.filter(id => !usedGroupIds.has(id.toString()));
+
+        if (deletableGroupIds.length === 0) {
+            res.status(400).json({ message: 'Cannot delete selected groups: all of them have clients assigned.' });
+            return;
+        }
+
+        await ClientGroup.deleteMany({ _id: { $in: deletableGroupIds }, firmId });
+
+        if (usedGroupIds.size > 0) {
+            res.json({
+                message: `Successfully deleted ${deletableGroupIds.length} groups. ${usedGroupIds.size} group(s) were skipped because they have active clients assigned.`
+            });
+        } else {
+            res.json({ message: `Successfully deleted all ${deletableGroupIds.length} selected groups.` });
+        }
+    } catch (error) {
+        console.error('Bulk delete client groups error:', error);
+        res.status(500).json({ message: 'Server error during bulk group deletion' });
+    }
+});
+
 // Update Client Group (Admin, Manager, and Staff)
 router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {

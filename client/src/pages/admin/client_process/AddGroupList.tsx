@@ -20,6 +20,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
+    Checkbox,
 } from '@mui/material';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
@@ -48,6 +49,8 @@ export const AddGroupList: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+    const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
@@ -113,6 +116,51 @@ export const AddGroupList: React.FC = () => {
             closeConfirm();
         }
     });
+
+    const bulkDeleteMutation = useMutation({
+        mutationFn: clientGroupService.bulkDeleteGroups,
+        onSuccess: (data) => {
+            showSnackbar(data.message || 'Selected groups deleted successfully', 'success');
+            queryClient.invalidateQueries({ queryKey: ['clientGroups'] });
+            setSelectedGroups([]);
+            setConfirmBulkDelete(false);
+        },
+        onError: (error: any) => {
+            showSnackbar(error.response?.data?.message || 'Failed to delete selected groups', 'error');
+            setConfirmBulkDelete(false);
+        }
+    });
+
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const currentIds = groups.map((g) => g._id).filter((id): id is string => !!id);
+            setSelectedGroups(currentIds);
+            return;
+        }
+        setSelectedGroups([]);
+    };
+
+    const handleSelectClick = (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const selectedIndex = selectedGroups.indexOf(id);
+        let newSelected: string[] = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selectedGroups, id);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selectedGroups.slice(1));
+        } else if (selectedIndex === selectedGroups.length - 1) {
+            newSelected = newSelected.concat(selectedGroups.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selectedGroups.slice(0, selectedIndex),
+                selectedGroups.slice(selectedIndex + 1),
+            );
+        }
+
+        setSelectedGroups(newSelected);
+    };
+
+    const isSelected = (id: string) => selectedGroups.indexOf(id) !== -1;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -185,6 +233,19 @@ export const AddGroupList: React.FC = () => {
                 title="Client Groups"
                 actions={
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {selectedGroups.length > 0 && (
+                            <Button
+                                variant="contained"
+                                size="small"
+                                color="error"
+                                onClick={() => setConfirmBulkDelete(true)}
+                                disabled={bulkDeleteMutation.isPending}
+                                startIcon={<DeleteIcon />}
+                                sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, boxShadow: 'none', fontSize: '0.85rem' }}
+                            >
+                                Delete Selected ({selectedGroups.length})
+                            </Button>
+                        )}
                         <CommonButton onClick={() => setIsImportModalOpen(true)} size="small" sx={{ bgcolor: '#0f766e', '&:hover': { bgcolor: '#0d9488' } }}>
                             Import Groups
                         </CommonButton>
@@ -292,6 +353,14 @@ export const AddGroupList: React.FC = () => {
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow sx={{ bgcolor: '#f1f5f9' }}>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    indeterminate={selectedGroups.length > 0 && selectedGroups.length < groups.length}
+                                                    checked={groups.length > 0 && selectedGroups.length === groups.length}
+                                                    onChange={handleSelectAllClick}
+                                                />
+                                            </TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>Email</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Mobile</TableCell>
@@ -302,17 +371,28 @@ export const AddGroupList: React.FC = () => {
                                     <TableBody>
                                         {isLoading ? (
                                             <TableRow>
-                                                <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                                                     <CircularProgress size={24} />
                                                 </TableCell>
                                             </TableRow>
                                         ) : groups.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={4} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
+                                                <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
                                             </TableRow>
                                         ) : (
-                                            groups.map((g, i) => (
-                                                <TableRow key={i} hover>
+                                            groups.map((g) => (
+                                                <TableRow 
+                                                    key={g._id} 
+                                                    sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}
+                                                    selected={isSelected(g._id!)}
+                                                >
+                                                    <TableCell padding="checkbox">
+                                                        <Checkbox
+                                                            color="primary"
+                                                            checked={isSelected(g._id!)}
+                                                            onChange={(e) => handleSelectClick(e, g._id!)}
+                                                        />
+                                                    </TableCell>
                                                     <TableCell sx={{ fontWeight: 500 }}>{g.groupName}</TableCell>
                                                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, color: 'text.secondary' }}>{g.email}</TableCell>
                                                     <TableCell sx={{ color: 'text.secondary' }}>{g.mobileNumber}</TableCell>
@@ -383,6 +463,27 @@ export const AddGroupList: React.FC = () => {
                     <Button onClick={closeConfirm} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
                     <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ fontWeight: 600, boxShadow: 'none' }} disabled={deleteGroupMutation.isPending}>
                         {deleteGroupMutation.isPending ? 'Deleting...' : 'Confirm'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={confirmBulkDelete}
+                onClose={() => setConfirmBulkDelete(false)}
+                PaperProps={{
+                    sx: { borderRadius: '12px', minWidth: { xs: 300, sm: 400 } }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Selected Groups</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete the {selectedGroups.length} selected group(s)? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={() => setConfirmBulkDelete(false)} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
+                    <Button onClick={() => bulkDeleteMutation.mutate(selectedGroups)} variant="contained" color="error" sx={{ fontWeight: 600, boxShadow: 'none' }} disabled={bulkDeleteMutation.isPending}>
+                        {bulkDeleteMutation.isPending ? 'Deleting...' : 'Confirm'}
                     </Button>
                 </DialogActions>
             </Dialog>
