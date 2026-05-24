@@ -21,6 +21,7 @@ import {
     DialogContentText,
     DialogActions,
     Checkbox,
+    TablePagination,
 } from '@mui/material';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
@@ -51,6 +52,8 @@ export const AddGroupList: React.FC = () => {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
@@ -109,6 +112,7 @@ export const AddGroupList: React.FC = () => {
             showSnackbar('Group deleted successfully', 'success');
             queryClient.invalidateQueries({ queryKey: ['clientGroups'] });
             closeConfirm();
+            setPage(0);
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
@@ -124,6 +128,7 @@ export const AddGroupList: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['clientGroups'] });
             setSelectedGroups([]);
             setConfirmBulkDelete(false);
+            setPage(0);
         },
         onError: (error: any) => {
             showSnackbar(error.response?.data?.message || 'Failed to delete selected groups', 'error');
@@ -133,8 +138,11 @@ export const AddGroupList: React.FC = () => {
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
-            const currentIds = groups.map((g) => g._id).filter((id): id is string => !!id);
-            setSelectedGroups(currentIds);
+            const currentViewIds = groups
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((g) => g._id)
+                .filter((id): id is string => !!id);
+            setSelectedGroups(currentViewIds);
             return;
         }
         setSelectedGroups([]);
@@ -176,7 +184,7 @@ export const AddGroupList: React.FC = () => {
             showSnackbar('Please fill all required fields', 'error');
             return;
         }
-        
+
         if (isEditing && editingId) {
             updateGroupMutation.mutate({ id: editingId, data: formData });
         } else {
@@ -278,16 +286,16 @@ export const AddGroupList: React.FC = () => {
                                 />
                             </FormRow>
 
-                             <FormRow label="Group Person Name">
-                                 <TextField
-                                     name="groupPersonName"
-                                     value={formData.groupPersonName}
-                                     onChange={handleInputChange}
-                                     fullWidth
-                                     size="small"
-                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                 />
-                             </FormRow>
+                            <FormRow label="Group Person Name">
+                                <TextField
+                                    name="groupPersonName"
+                                    value={formData.groupPersonName}
+                                    onChange={handleInputChange}
+                                    fullWidth
+                                    size="small"
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                />
+                            </FormRow>
 
                             <FormRow label="Address">
                                 <TextField
@@ -356,8 +364,14 @@ export const AddGroupList: React.FC = () => {
                                             <TableCell padding="checkbox">
                                                 <Checkbox
                                                     color="primary"
-                                                    indeterminate={selectedGroups.length > 0 && selectedGroups.length < groups.length}
-                                                    checked={groups.length > 0 && selectedGroups.length === groups.length}
+                                                    indeterminate={
+                                                        selectedGroups.length > 0 &&
+                                                        selectedGroups.length < groups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                                                    }
+                                                    checked={
+                                                        groups.length > 0 &&
+                                                        selectedGroups.length === groups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                                                    }
                                                     onChange={handleSelectAllClick}
                                                 />
                                             </TableCell>
@@ -380,55 +394,71 @@ export const AddGroupList: React.FC = () => {
                                                 <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
                                             </TableRow>
                                         ) : (
-                                            groups.map((g) => (
-                                                <TableRow 
-                                                    key={g._id} 
-                                                    sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}
-                                                    selected={isSelected(g._id!)}
-                                                >
-                                                    <TableCell padding="checkbox">
-                                                        <Checkbox
-                                                            color="primary"
-                                                            checked={isSelected(g._id!)}
-                                                            onChange={(e) => handleSelectClick(e, g._id!)}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell sx={{ fontWeight: 500 }}>{g.groupName}</TableCell>
-                                                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, color: 'text.secondary' }}>{g.email}</TableCell>
-                                                    <TableCell sx={{ color: 'text.secondary' }}>{g.mobileNumber}</TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: g.status ? 'success.main' : 'error.main', mr: 1 }} />
-                                                            <Typography variant="caption" sx={{ color: g.status ? 'success.main' : 'error.main', fontWeight: 600 }}>
-                                                                {g.status ? 'Active' : 'Inactive'}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                sx={{ color: 'primary.main' }}
-                                                                onClick={() => handleEditClick(g)}
-                                                            >
-                                                                <EditIcon fontSize="small" />
-                                                            </IconButton>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                color="error"
-                                                                onClick={() => handleDeleteClick(g._id!, g.groupName)}
-                                                                disabled={deleteGroupMutation.isPending}
-                                                            >
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </Box>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
+                                            groups
+                                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                                .map((g) => (
+                                                    <TableRow
+                                                        key={g._id}
+                                                        sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' } }}
+                                                        selected={isSelected(g._id!)}
+                                                    >
+                                                        <TableCell padding="checkbox">
+                                                            <Checkbox
+                                                                color="primary"
+                                                                checked={isSelected(g._id!)}
+                                                                onChange={(e) => handleSelectClick(e, g._id!)}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell sx={{ fontWeight: 500 }}>{g.groupName}</TableCell>
+                                                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, color: 'text.secondary' }}>{g.email}</TableCell>
+                                                        <TableCell sx={{ color: 'text.secondary' }}>{g.mobileNumber}</TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: g.status ? 'success.main' : 'error.main', mr: 1 }} />
+                                                                <Typography variant="caption" sx={{ color: g.status ? 'success.main' : 'error.main', fontWeight: 600 }}>
+                                                                    {g.status ? 'Active' : 'Inactive'}
+                                                                </Typography>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell align="right">
+                                                            <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    sx={{ color: 'primary.main' }}
+                                                                    onClick={() => handleEditClick(g)}
+                                                                >
+                                                                    <EditIcon fontSize="small" />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={() => handleDeleteClick(g._id!, g.groupName)}
+                                                                    disabled={deleteGroupMutation.isPending}
+                                                                >
+                                                                    <DeleteIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
                                         )}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
+                            {groups.length > 0 && (
+                                <TablePagination
+                                    rowsPerPageOptions={[5, 10, 20, 30, 40, 50]}
+                                    component="div"
+                                    count={groups.length}
+                                    rowsPerPage={rowsPerPage}
+                                    page={page}
+                                    onPageChange={(_, newPage) => setPage(newPage)}
+                                    onRowsPerPageChange={(e) => {
+                                        setRowsPerPage(parseInt(e.target.value, 5));
+                                        setPage(0);
+                                    }}
+                                />
+                            )}
                         </Section>
                     </Box>
 
