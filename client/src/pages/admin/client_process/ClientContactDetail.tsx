@@ -54,7 +54,7 @@ export const ClientContactDetail: React.FC = () => {
     const [filterSearchType, setFilterSearchType] = React.useState('name');
     const [filterSearchText, setFilterSearchText] = React.useState('');
 
-    const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership Firm', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
 
     // Pagination State
     const [page, setPage] = React.useState(0);

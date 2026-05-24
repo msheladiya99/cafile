@@ -107,7 +107,7 @@ export const ClientList: React.FC = () => {
 
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
-    const subMasterOptions = ['Individual', 'HUF', 'Partnership Firm', 'LLP', 'Company', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership Firm', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
 
     // Reset page and selection when filters change to avoid empty views
     React.useEffect(() => {

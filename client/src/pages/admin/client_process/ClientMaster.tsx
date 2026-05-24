@@ -889,7 +889,7 @@ export const ClientMaster: React.FC = () => {
                                         fullWidth
                                         size="small"
                                         options={[
-                                            'Individual', 'HUF', 'Partnership', 'Company', 'LLP', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
+                                            'Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
                                         ]}
                                         value={formData.subMaster || null}
                                         onChange={(_, newValue) => {
