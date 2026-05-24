@@ -233,6 +233,7 @@ export const ClientMaster: React.FC = () => {
     // Form State
     const [formData, setFormData] = useState<CreateClientData>({
         name: '',
+        proprietorName: '',
         clientCode: '',
         groupName: '',
         itStatus: '',
@@ -364,6 +365,7 @@ export const ClientMaster: React.FC = () => {
         if (clientToEdit) {
             setFormData({
                 name: clientToEdit.name || '',
+                proprietorName: clientToEdit.proprietorName || '',
                 clientCode: clientToEdit.clientCode || '',
                 groupName: (typeof clientToEdit.groupName === 'object' && clientToEdit.groupName !== null ? clientToEdit.groupName._id : clientToEdit.groupName) || '',
                 itStatus: (typeof clientToEdit.itStatus === 'object' && clientToEdit.itStatus !== null ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
@@ -409,6 +411,7 @@ export const ClientMaster: React.FC = () => {
             // Reset to blank form when NO id is present
             setFormData({
                 name: '',
+                proprietorName: '',
                 clientCode: '',
                 groupName: '',
                 itStatus: '',
@@ -815,8 +818,11 @@ export const ClientMaster: React.FC = () => {
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
-                                <FormRow label="Client Name" required>
+                                <FormRow label="Firm Name" required>
                                     <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Proprietor Name">
+                                    <TextField name="proprietorName" value={formData.proprietorName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Client Code">
                                     <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />

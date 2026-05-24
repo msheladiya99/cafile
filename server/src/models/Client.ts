@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IClient extends Document {
     name: string;
+    proprietorName?: string;
     email: string;
     phone: string;
     createdAt: Date;
@@ -95,6 +96,10 @@ const clientSchema = new Schema<IClient>({
     name: {
         type: String,
         required: true,
+        trim: true
+    },
+    proprietorName: {
+        type: String,
         trim: true
     },
     email: {

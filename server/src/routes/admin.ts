@@ -93,7 +93,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             trnNo, description, supportEmployee, status, financialYear,
             altAddress, altPhoneM, altPhoneL, altFax,
             extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7,
-            multipleContacts, legalDocuments
+            multipleContacts, legalDocuments, proprietorName
         } = req.body;
 
         if (!name || !email || !phone) {
@@ -157,7 +157,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             trnNo, description, supportEmployee: supportEmployee || undefined, status, financialYear,
             altAddress, altPhoneM, altPhoneL, altFax,
             extraField1, extraField2, extraField3, extraField4, extraField5, extraField6, extraField7,
-            multipleContacts, legalDocuments
+            multipleContacts, legalDocuments, proprietorName
         });
         await client.save();
  
