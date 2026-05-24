@@ -26,7 +26,7 @@ interface BulkImportModalProps {
 }
 
 const EXCEL_FIELDS = [
-    'Firm Name*', 'Email*', 'Mobile Number*', 'PAN Number', 'GST Number', 'Aadhar Number',
+    'Firm Name', 'Email', 'Mobile Number', 'PAN Number', 'GST Number', 'Aadhar Number',
     'Proprietor Name',
     'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Constitution',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
@@ -91,10 +91,10 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                     };
 
                     return {
-                        name: (row['Firm Name*'] || row['Client Name*']) as string,
+                        name: (row['Firm Name'] || row['Firm Name*'] || row['Client Name'] || row['Client Name*']) as string,
                         proprietorName: row['Proprietor Name'] ? String(row['Proprietor Name']) : undefined,
-                        email: row['Email*'],
-                        phone: row['Mobile Number*'] ? String(row['Mobile Number*']) : undefined,
+                        email: (row['Email'] || row['Email*']) as string,
+                        phone: (row['Mobile Number'] || row['Mobile Number*']) ? String(row['Mobile Number'] || row['Mobile Number*']) : undefined,
                         panNumber: row['PAN Number'] ? String(row['PAN Number']) : undefined,
                         gstNumber: row['GST Number'] ? String(row['GST Number']) : undefined,
                         aadharNumber: row['Aadhar Number'] ? String(row['Aadhar Number']) : undefined,
@@ -243,7 +243,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                                 </TableHead>
                                 <TableBody>
                                     {previewData.slice(0, 50).map((row, index) => {
-                                        const isError = !row.name || !row.email || !row.phone;
+                                        const isError = !row.name;
                                         return (
                                             <TableRow key={index} sx={{ bgcolor: isError ? '#ffebee' : 'inherit' }}>
                                                 <TableCell>{row.name as string}</TableCell>

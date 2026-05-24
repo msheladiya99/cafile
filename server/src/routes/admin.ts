@@ -74,8 +74,8 @@ const generatePassword = (): string => {
 };
 
 // Generate username from name
-const generateUsername = (name: string): string => {
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+const generateUsername = (name?: string): string => {
+    const cleanName = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'client';
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `${cleanName}${randomNum}`;
 };
@@ -96,19 +96,18 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             multipleContacts, legalDocuments, proprietorName
         } = req.body;
 
-        if (!name || !email || !phone) {
-            res.status(400).json({ message: 'Name, email, and phone are required' });
-            return;
-        }
+
 
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context required' });
 
         // Check if client already exists IN THIS FIRM
-        const existingClient = await Client.findOne({ email, firmId });
-        if (existingClient) {
-            res.status(400).json({ message: 'Client with this email already exists in your firm' });
-            return;
+        if (email) {
+            const existingClient = await Client.findOne({ email, firmId });
+            if (existingClient) {
+                res.status(400).json({ message: 'Client with this email already exists in your firm' });
+                return;
+            }
         }
 
         // Check if custom username is already taken (Usernames must be globally unique for login)
@@ -165,7 +164,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         const { enqueueDriveFolderCreation } = await import('../queues/drive.queue');
         enqueueDriveFolderCreation({
             clientId: client._id as string,
-            clientName: client.name,
+            clientName: client.name || 'Unnamed Client',
             panNumber: client.panNumber,
             firmId: firmId as string
         }).catch(err => console.error('Failed to enqueue drive creation:', err));
@@ -186,12 +185,14 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         await user.save();
 
         // Send welcome email (async, don't wait for it)
-        sendWelcomeEmail({
-            clientEmail: client.email,
-            clientName: client.name,
-            username,
-            password
-        }).catch(err => console.error('Failed to send welcome email:', err));
+        if (client.email) {
+            sendWelcomeEmail({
+                clientEmail: client.email,
+                clientName: client.name || 'Client',
+                username,
+                password
+            }).catch(err => console.error('Failed to send welcome email:', err));
+        }
 
         res.status(201).json({
             client,
@@ -251,11 +252,7 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                         return;
                     }
 
-                    if (!clientData.name || !clientData.email || !clientData.phone) {
-                        results.failed++;
-                        results.errors.push(`Row ${rowIndex}: Name, email, and phone are required`);
-                        return;
-                    }
+
 
                     // Check for existing client in this batch/firm
                     const existingClient = await Client.findOne({ email: clientData.email, firmId });
@@ -296,18 +293,20 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                     // 3. Enqueue Drive Task (Background)
                     enqueueDriveFolderCreation({
                         clientId: client._id as string,
-                        clientName: client.name,
+                        clientName: client.name || 'Unnamed Client',
                         panNumber: client.panNumber,
                         firmId: firmId as string
                     }).catch(err => console.error('Drive enqueue error:', err));
 
                     // 4. Send Email (Background)
-                    sendWelcomeEmail({
-                        clientEmail: client.email,
-                        clientName: client.name,
-                        username,
-                        password
-                    }).catch(err => console.error('Email send error:', err));
+                    if (client.email) {
+                        sendWelcomeEmail({
+                            clientEmail: client.email,
+                            clientName: client.name || 'Client',
+                            username,
+                            password
+                        }).catch(err => console.error('Email send error:', err));
+                    }
 
                     currentClientsCount++;
                     results.successful++;

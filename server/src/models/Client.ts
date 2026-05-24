@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IClient extends Document {
-    name: string;
+    name?: string;
     proprietorName?: string;
     email: string;
     phone: string;
@@ -95,7 +95,6 @@ const clientSchema = new Schema<IClient>({
     },
     name: {
         type: String,
-        required: true,
         trim: true
     },
     proprietorName: {
@@ -104,13 +103,11 @@ const clientSchema = new Schema<IClient>({
     },
     email: {
         type: String,
-        required: true,
         trim: true,
         lowercase: true
     },
     phone: {
         type: String,
-        required: true,
         trim: true
     },
     createdAt: {
@@ -230,7 +227,7 @@ const clientSchema = new Schema<IClient>({
 }, { timestamps: true });
 
 // Index for faster queries
-clientSchema.index({ firmId: 1, email: 1 }, { unique: true });
+clientSchema.index({ firmId: 1, email: 1 });
 clientSchema.index({ firmId: 1, name: 1 });
 clientSchema.index({ firmId: 1, gstNumber: 1 });
 clientSchema.index({ firmId: 1, clientType: 1, status: 1 });
