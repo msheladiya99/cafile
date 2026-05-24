@@ -341,7 +341,11 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                     results.successful++;
                 } catch (err: any) {
                     results.failed++;
-                    results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    if (err.code === 11000 || err.message?.includes('E11000')) {
+                        results.errors.push(`Row ${rowIndex}: Client with email, username or client code already exists`);
+                    } else {
+                        results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    }
                 }
             }));
         }
@@ -1473,7 +1477,11 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                     results.successful++;
                 } catch (err: any) {
                     results.failed++;
-                    results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    if (err.code === 11000 || err.message?.includes('E11000')) {
+                        results.errors.push(`Row ${rowIndex}: Group with name "${groupData.groupName}" already exists`);
+                    } else {
+                        results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    }
                 }
             }));
         }

@@ -454,7 +454,7 @@ export const AddGroupList: React.FC = () => {
                                     page={page}
                                     onPageChange={(_, newPage) => setPage(newPage)}
                                     onRowsPerPageChange={(e) => {
-                                        setRowsPerPage(parseInt(e.target.value, 5));
+                                        setRowsPerPage(parseInt(e.target.value, 10));
                                         setPage(0);
                                     }}
                                 />
