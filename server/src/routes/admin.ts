@@ -96,6 +96,11 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             multipleContacts, legalDocuments, proprietorName
         } = req.body;
 
+        if (!name || !String(name).trim()) {
+            res.status(400).json({ message: 'Firm Name is required' });
+            return;
+        }
+
         let cleanedEmail = email;
         if (cleanedEmail && typeof cleanedEmail === 'string') {
             cleanedEmail = cleanedEmail.trim().toLowerCase();
@@ -252,6 +257,12 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
             await Promise.all(batch.map(async (clientData, index) => {
                 const rowIndex = i + index + 1;
                 try {
+                    if (!clientData.name || !String(clientData.name).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Firm Name is required`);
+                        return;
+                    }
+
                     if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
                         results.failed++;
                         results.errors.push(`Row ${rowIndex}: Client limit reached`);
@@ -330,7 +341,11 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                     results.successful++;
                 } catch (err: any) {
                     results.failed++;
-                    results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    if (err.code === 11000 || err.message?.includes('E11000')) {
+                        results.errors.push(`Row ${rowIndex}: Client with email, username or client code already exists`);
+                    } else {
+                        results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    }
                 }
             }));
         }
@@ -1353,11 +1368,11 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
 router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { ClientGroup } = (req as any).models;
-        const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
+        const { groupName, address, description, status, email, mobileNumber, groupPersonName } = req.body;
 
 
-        if (!groupName || !email || !mobileNumber) {
-            res.status(400).json({ message: 'Group Name, Email, and Mobile Number are required.' });
+        if (!groupName || !mobileNumber) {
+            res.status(400).json({ message: 'Group Name and Mobile Number are required.' });
             return;
         }
 
@@ -1377,7 +1392,7 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
             status,
             email,
             mobileNumber,
-            gstin,
+            groupPersonName,
             firmId
         });
         await newGroup.save();
@@ -1386,6 +1401,95 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
     } catch (error) {
         console.error('Create client group error:', error);
         res.status(500).json({ message: 'Server error during client group creation', error: error instanceof Error ? error.message : String(error) });
+    }
+});
+
+// Bulk create client groups (Admin, Manager, and Staff)
+router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { ClientGroup } = (req as any).models;
+        const { groups } = req.body;
+
+        if (!Array.isArray(groups) || groups.length === 0) {
+            res.status(400).json({ message: 'No groups provided' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            res.status(400).json({ message: 'Firm context required' });
+            return;
+        }
+
+        const results = {
+            successful: 0,
+            failed: 0,
+            errors: [] as string[]
+        };
+
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < groups.length; i += BATCH_SIZE) {
+            const batch = groups.slice(i, i + BATCH_SIZE);
+
+            await Promise.all(batch.map(async (groupData, index) => {
+                const rowIndex = i + index + 1;
+                try {
+                    const { groupName, address, description, status, email, mobileNumber, groupPersonName } = groupData;
+
+                    if (!groupName || !String(groupName).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Group Name is required`);
+                        return;
+                    }
+                    if (!mobileNumber || !String(mobileNumber).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Phone / Mobile is required`);
+                        return;
+                    }
+                    const cleanGroupName = String(groupName).trim();
+                    const cleanEmail = email && String(email).trim() ? String(email).trim().toLowerCase() : undefined;
+                    const cleanMobileNumber = String(mobileNumber).trim();
+
+                    // Check duplicate name (case-insensitive) for this firm
+                    const existingGroup = await ClientGroup.findOne({
+                        groupName: { $regex: new RegExp(`^${cleanGroupName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') },
+                        firmId
+                    });
+
+                    if (existingGroup) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Group with name "${cleanGroupName}" already exists`);
+                        return;
+                    }
+
+                    const newGroup = new ClientGroup({
+                        groupName: cleanGroupName,
+                        address: address ? String(address).trim() : undefined,
+                        description: description ? String(description).trim() : undefined,
+                        status: typeof status === 'boolean' ? status : true,
+                        email: cleanEmail,
+                        mobileNumber: cleanMobileNumber,
+                        groupPersonName: groupPersonName ? String(groupPersonName).trim() : undefined,
+                        firmId
+                    });
+
+                    await newGroup.save();
+                    results.successful++;
+                } catch (err: any) {
+                    results.failed++;
+                    if (err.code === 11000 || err.message?.includes('E11000')) {
+                        results.errors.push(`Row ${rowIndex}: Group with name "${groupData.groupName}" already exists`);
+                    } else {
+                        results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    }
+                }
+            }));
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Bulk create client groups error:', error);
+        res.status(500).json({ message: 'Server error during bulk group import' });
     }
 });
 
@@ -1431,6 +1535,45 @@ router.delete('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGE
     } catch (error) {
         console.error('Delete client group error:', error);
         res.status(500).json({ message: 'Server error during client group deletion' });
+    }
+});
+
+// Bulk Delete client groups (Admin and Manager only)
+router.post('/client-groups/bulk-delete', authenticate, requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { ClientGroup, Client } = (req as any).models;
+        const { groupIds } = req.body;
+
+        if (!Array.isArray(groupIds) || groupIds.length === 0) {
+            res.status(400).json({ message: 'No groups selected' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+
+        // Check if any of these groups are used by any clients
+        const clientsWithGroups = await Client.find({ groupName: { $in: groupIds }, firmId }).select('groupName');
+        const usedGroupIds = new Set(clientsWithGroups.map((c: any) => c.groupName?.toString()).filter(Boolean));
+
+        const deletableGroupIds = groupIds.filter(id => !usedGroupIds.has(id.toString()));
+
+        if (deletableGroupIds.length === 0) {
+            res.status(400).json({ message: 'Cannot delete selected groups: all of them have clients assigned.' });
+            return;
+        }
+
+        await ClientGroup.deleteMany({ _id: { $in: deletableGroupIds }, firmId });
+
+        if (usedGroupIds.size > 0) {
+            res.json({
+                message: `Successfully deleted ${deletableGroupIds.length} groups. ${usedGroupIds.size} group(s) were skipped because they have active clients assigned.`
+            });
+        } else {
+            res.json({ message: `Successfully deleted all ${deletableGroupIds.length} selected groups.` });
+        }
+    } catch (error) {
+        console.error('Bulk delete client groups error:', error);
+        res.status(500).json({ message: 'Server error during bulk group deletion' });
     }
 });
 

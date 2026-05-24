@@ -43,7 +43,6 @@ import { clientGroupService } from '../../../services/clientGroupService';
 import { masterService } from '../../../services/masterService';
 import type { Client } from '../../../types';
 import type { ClientGroup } from '../../../services/clientGroupService';
-import type { ITStatus } from '../../../services/masterService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
 import toast from 'react-hot-toast';
 
@@ -64,10 +63,23 @@ export const ClientList: React.FC = () => {
         queryFn: clientGroupService.getGroups
     });
 
-    const { data: itStatuses = [] } = useQuery<ITStatus[]>({
-        queryKey: ['itStatus'],
-        queryFn: masterService.getITStatuses
+    const { data: subMasters = [] } = useQuery<any[]>({
+        queryKey: ['subMaster'],
+        queryFn: masterService.getSubMasters
     });
+
+    const subMasterMap = React.useMemo(() => {
+        return subMasters.reduce((acc, sm) => {
+            acc[sm._id] = sm.name;
+            return acc;
+        }, {} as Record<string, string>);
+    }, [subMasters]);
+
+    const getConstitutionName = (subMasterVal: any) => {
+        if (!subMasterVal) return '-';
+        if (typeof subMasterVal === 'object') return subMasterVal.name || '-';
+        return subMasterMap[subMasterVal] || subMasterVal;
+    };
 
     // Filter States
     const [filterGroup, setFilterGroup] = React.useState('');
@@ -75,7 +87,6 @@ export const ClientList: React.FC = () => {
     const [filterSearchType, setFilterSearchType] = React.useState('name');
     const [filterSearchText, setFilterSearchText] = React.useState('');
     const [filterMasterType, setFilterMasterType] = React.useState('');
-    const [filterItStatus, setFilterItStatus] = React.useState('');
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
     const [filterStatus, setFilterStatus] = React.useState('all');
     const [filterFYear, setFilterFYear] = React.useState('');
@@ -113,7 +124,7 @@ export const ClientList: React.FC = () => {
     React.useEffect(() => {
         setPage(0);
         setSelectedClients([]);
-    }, [filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
+    }, [filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
@@ -138,7 +149,6 @@ export const ClientList: React.FC = () => {
 
             // Other Dropdowns
             if (filterMasterType && client.masterType !== filterMasterType) return false;
-            if (filterItStatus && typeof client.itStatus === 'object' && client.itStatus?._id !== filterItStatus) return false;
 
             const clientSubMasterStr = typeof client.subMaster === 'object' ? client.subMaster?.name : client.subMaster;
             if (filterSubMaster && clientSubMasterStr !== filterSubMaster) return false;
@@ -152,7 +162,7 @@ export const ClientList: React.FC = () => {
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterItStatus, filterSubMaster, filterStatus, filterFYear]);
+    }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
@@ -313,7 +323,7 @@ export const ClientList: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Firm Name" inputId="filter-client">
+                            <FilterRow label="Client / Firm Name" inputId="filter-client">
                                 <Select
                                     id="filter-client"
                                     fullWidth
@@ -376,23 +386,6 @@ export const ClientList: React.FC = () => {
 
                         {/* Right Column */}
                         <Box sx={{ flex: 1 }}>
-                            <FilterRow label="IT Status" inputId="filter-it-status">
-                                <Select
-                                    id="filter-it-status"
-                                    fullWidth
-                                    size="small"
-                                    displayEmpty
-                                    value={filterItStatus}
-                                    onChange={(e) => setFilterItStatus(e.target.value)}
-                                    sx={{ borderRadius: '8px', color: filterItStatus ? 'inherit' : 'text.secondary' }}
-                                    inputProps={{ 'aria-label': 'IT Status' }}
-                                >
-                                    <MenuItem value="">Choose a IT Status...</MenuItem>
-                                    {itStatuses.map(status => (
-                                        <MenuItem key={status._id} value={status._id}>{status.name}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FilterRow>
                             <FilterRow label="Constitution" inputId="filter-sub-master">
                                 <Select
                                     id="filter-sub-master"
@@ -506,12 +499,6 @@ export const ClientList: React.FC = () => {
                                                         {(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}
                                                     </Typography>
                                                 </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography variant="caption" color="text.secondary">IT Status</Typography>
-                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                                        {(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}
-                                                    </Typography>
-                                                </Box>
                                             </Stack>
 
                                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: '#f8fafc', m: -2, mt: 0, p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -557,10 +544,10 @@ export const ClientList: React.FC = () => {
                                                 onChange={handleSelectAllClick}
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Firm Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client / Firm Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Proprietor Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Constitution</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 600, color: 'text.secondary' }}>Actions</TableCell>
                                     </TableRow>
@@ -606,8 +593,8 @@ export const ClientList: React.FC = () => {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>{client.proprietorName || '-'}</TableCell>
+                                                <TableCell>{getConstitutionName(client.subMaster)}</TableCell>
                                                 <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
-                                                <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
                                                 <TableCell>
                                                     <Box sx={{
                                                         display: 'inline-flex',

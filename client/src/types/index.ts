@@ -20,7 +20,6 @@ export interface Client {
     clientCode?: string;
     profileImageUrl?: string;
     groupName?: { _id: string; groupName: string } | string;
-    itStatus?: { _id: string; name: string } | string;
     status?: boolean;
     masterType?: string;
     subMaster?: { _id: string; name: string } | string;
@@ -87,7 +86,6 @@ export interface CreateClientData {
     clientCode?: string;
     profileImageUrl?: string;
     groupName?: string;
-    itStatus?: string;
     masterType?: string;
     subMaster?: string;
     birthDate?: string;

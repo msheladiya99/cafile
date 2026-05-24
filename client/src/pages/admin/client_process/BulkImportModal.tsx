@@ -12,13 +12,12 @@ import * as XLSX from 'xlsx';
 import { adminService } from '../../../services/adminService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
-import type { ITStatus, SubMaster } from '../../../services/masterService';
+import type { SubMaster } from '../../../services/masterService';
 import type { User } from '../../../types';
 
 interface BulkImportModalProps {
     open: boolean;
     onClose: () => void;
-    itStatuses: ITStatus[];
     groups: ClientGroup[];
     subMasters: SubMaster[];
     staffList: User[];
@@ -28,7 +27,7 @@ interface BulkImportModalProps {
 const EXCEL_FIELDS = [
     'Firm Name', 'Email', 'Mobile Number', 'Mobile Number 2', 'PAN Number', 'GST Number', 'Aadhar Number',
     'Proprietor Name',
-    'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Constitution',
+    'Custom Username', 'Client Code', 'Group Name', 'Master Type', 'Constitution',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
     'Incorporation Date From', 'Incorporation Date To', 'Licence No', 'Licence Authority', 'TRN No',
     'Description', 'Support Employee (Username)', 'Status (Active/Inactive)', 'Financial Year',
@@ -37,7 +36,7 @@ const EXCEL_FIELDS = [
 ];
 
 export const BulkImportModal: React.FC<BulkImportModalProps> = ({
-    open, onClose, itStatuses, groups, subMasters, staffList, showSnackbar
+    open, onClose, groups, subMasters, staffList, showSnackbar
 }) => {
     const queryClient = useQueryClient();
     const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
@@ -67,14 +66,29 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                 const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
 
                 const mappedData = data.map((row) => {
+                    const getVal = (possibleKeys: string[]) => {
+                        const rowKeys = Object.keys(row);
+                        const cleanPossible = possibleKeys.map(k => k.trim().toLowerCase());
+                        const foundKey = rowKeys.find(rk => {
+                            const cleanRk = rk.trim().toLowerCase().replace(/\*$/, '');
+                            return cleanPossible.includes(cleanRk);
+                        });
+                        return foundKey !== undefined ? row[foundKey] : undefined;
+                    };
+
                     const findId = <T extends { _id?: string }>(list: T[], val: unknown, keyName: keyof T) => {
-                        if (typeof val !== 'string' || !val) return undefined;
-                        const found = list.find(item => String(item[keyName] || '').toLowerCase() === val.toLowerCase());
+                        if (!val) return undefined;
+                        const valStr = String(val).trim().toLowerCase();
+                        if (!valStr) return undefined;
+                        const found = list.find(item => String(item[keyName] || '').toLowerCase().trim() === valStr);
                         return found ? found._id : undefined;
                     };
+
                     const findUserByUsername = (val: unknown) => {
-                        if (typeof val !== 'string' || !val) return undefined;
-                        const found = staffList.find(u => u.username?.toLowerCase() === val.toLowerCase());
+                        if (!val) return undefined;
+                        const valStr = String(val).trim().toLowerCase();
+                        if (!valStr) return undefined;
+                        const found = staffList.find(u => u.username?.toLowerCase().trim() === valStr);
                         return found ? found._id : undefined;
                     };
 
@@ -90,59 +104,65 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         return true;
                     };
 
+                    const groupNameInput = getVal(['group name', 'group']);
+                    const subMasterInput = getVal(['constitution', 'sub master', 'submaster']);
+                    const supportEmployeeInput = getVal(['support employee (username)', 'support employee', 'employee']);
+
+                    const emailInput = getVal(['email']);
+                    const phoneInput = getVal(['mobile number', 'mobile', 'phone']);
+                    const phone2Input = getVal(['mobile number 2', 'mobile 2', 'phone 2']);
+
                     return {
-                        name: (row['Firm Name'] || row['Firm Name*'] || row['Client Name'] || row['Client Name*']) as string,
-                        proprietorName: row['Proprietor Name'] ? String(row['Proprietor Name']) : undefined,
+                        name: getVal(['firm name', 'client name']) as string,
+                        proprietorName: getVal(['proprietor name']) ? String(getVal(['proprietor name'])) : undefined,
                         email: (() => {
-                            const val = row['Email'] || row['Email*'];
-                            if (!val) return undefined;
-                            const trimmed = String(val).trim();
+                            if (!emailInput) return undefined;
+                            const trimmed = String(emailInput).trim();
                             return trimmed === '' ? undefined : trimmed;
                         })(),
-                        phone: (row['Mobile Number'] || row['Mobile Number*']) ? String(row['Mobile Number'] || row['Mobile Number*']) : undefined,
-                        phone2: (row['Mobile Number 2'] || row['Mobile Number 2*']) ? String(row['Mobile Number 2'] || row['Mobile Number 2*']) : undefined,
-                        panNumber: row['PAN Number'] ? String(row['PAN Number']) : undefined,
-                        gstNumber: row['GST Number'] ? String(row['GST Number']) : undefined,
-                        aadharNumber: row['Aadhar Number'] ? String(row['Aadhar Number']) : undefined,
-                        username: row['Custom Username'],
-                        clientCode: row['Client Code'],
-                        masterType: row['Master Type'] || 'Client',
-                        financialYear: row['Financial Year'] || 'april-march',
-                        address: row['Address'],
-                        country: row['Country'],
-                        state: row['State'],
-                        city: row['City'],
-                        postalCode: row['Pincode'],
-                        currency: row['Currency'],
-                        licenceNo: row['Licence No'],
-                        licenceAuthority: row['Licence Authority'],
-                        trnNo: row['TRN No'],
-                        description: row['Description'],
-                        status: parseStatus(row['Status (Active/Inactive)']),
-                        birthDate: formatDate(row['Date of Birth']),
-                        incorporationDateFrom: formatDate(row['Incorporation Date From']),
-                        incorporationDateTo: formatDate(row['Incorporation Date To']),
-                        altAddress: row['Alt Address'],
-                        altPhoneM: row['Alt Phone M'],
-                        altPhoneL: row['Alt Phone L'],
-                        altFax: row['Alt Fax'],
-                        extraField1: row['Extra Field 1'],
-                        extraField2: row['Extra Field 2'],
-                        extraField3: row['Extra Field 3'],
-                        extraField4: row['Extra Field 4'],
-                        extraField5: row['Extra Field 5'],
-                        extraField6: row['Extra Field 6'],
-                        extraField7: row['Extra Field 7'],
+                        phone: phoneInput ? String(phoneInput) : undefined,
+                        phone2: phone2Input ? String(phone2Input) : undefined,
+                        panNumber: getVal(['pan number', 'pan']) ? String(getVal(['pan number', 'pan'])) : undefined,
+                        gstNumber: getVal(['gst number', 'gstin', 'gst']) ? String(getVal(['gst number', 'gstin', 'gst'])) : undefined,
+                        aadharNumber: getVal(['aadhar number', 'aadhar']) ? String(getVal(['aadhar number', 'aadhar'])) : undefined,
+                        username: getVal(['custom username', 'username']),
+                        clientCode: getVal(['client code', 'clientcode', 'code']),
+                        masterType: getVal(['master type']) || 'Client',
+                        financialYear: getVal(['financial year', 'f year']) || 'april-march',
+                        address: getVal(['address']),
+                        country: getVal(['country']),
+                        state: getVal(['state']),
+                        city: getVal(['city']),
+                        postalCode: getVal(['pincode', 'postal code', 'postalcode', 'zip']),
+                        currency: getVal(['currency']),
+                        licenceNo: getVal(['licence no', 'licence number']),
+                        licenceAuthority: getVal(['licence authority']),
+                        trnNo: getVal(['trn no', 'trn number', 'trn']),
+                        description: getVal(['description']),
+                        status: parseStatus(getVal(['status', 'status (active/inactive)'])),
+                        birthDate: formatDate(getVal(['date of birth', 'dob', 'birth date'])),
+                        incorporationDateFrom: formatDate(getVal(['incorporation date from', 'incorporation date'])),
+                        incorporationDateTo: formatDate(getVal(['incorporation date to'])),
+                        altAddress: getVal(['alt address', 'alternative address']),
+                        altPhoneM: getVal(['alt phone m', 'alternate phone m']),
+                        altPhoneL: getVal(['alt phone l', 'alternate phone l']),
+                        altFax: getVal(['alt fax', 'alternate fax']),
+                        extraField1: getVal(['extra field 1']),
+                        extraField2: getVal(['extra field 2']),
+                        extraField3: getVal(['extra field 3']),
+                        extraField4: getVal(['extra field 4']),
+                        extraField5: getVal(['extra field 5']),
+                        extraField6: getVal(['extra field 6']),
+                        extraField7: getVal(['extra field 7']),
 
                         // Relationships mapping
-                        groupName: findId(groups, row['Group Name'], 'groupName'),
-                        itStatus: findId(itStatuses, row['IT Status'], 'name'),
-                        subMaster: findId(subMasters, row['Constitution'] || row['Sub Master'], 'name'),
-                        supportEmployee: findUserByUsername(row['Support Employee (Username)']),
+                        groupName: findId(groups, groupNameInput, 'groupName'),
+                        subMaster: findId(subMasters, subMasterInput, 'name') || (subMasterInput ? String(subMasterInput) : undefined),
+                        supportEmployee: findUserByUsername(supportEmployeeInput),
 
                         // Raw values for table view
-                        _rawGroupName: row['Group Name'],
-                        _rawItStatus: row['IT Status']
+                        _rawGroupName: groupNameInput,
+                        _rawSubMaster: subMasterInput
                     };
                 });
 
@@ -179,8 +199,21 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
     const handleConfirmImport = () => {
         if (previewData.length === 0) return;
+        const validClients = previewData.filter(c => c.name && String(c.name).trim());
+        if (validClients.length === 0) {
+            showSnackbar('No valid clients to import (Firm Name is required)', 'error');
+            return;
+        }
+
+        const invalidCount = previewData.length - validClients.length;
+        if (invalidCount > 0) {
+            if (!window.confirm(`${invalidCount} row(s) are missing a Firm Name and will be skipped. Do you want to proceed with importing the remaining ${validClients.length} client(s)?`)) {
+                return;
+            }
+        }
+
         setImportResults(null);
-        bulkImportMutation.mutate({ clients: previewData });
+        bulkImportMutation.mutate({ clients: validClients });
     };
 
     const handleReset = () => {
@@ -214,7 +247,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         <Typography variant="body1" sx={{ mb: 2 }}>
                             Successfully imported <b>{importResults.successful}</b> clients. Failed to import <b>{importResults.failed}</b> clients.
                         </Typography>
-                        
+
                         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>Failure Reasons:</Typography>
                         <Box sx={{ maxHeight: 200, overflowY: 'auto', bgcolor: '#fff', p: 2, borderRadius: '8px', border: '1px solid #fecaca' }}>
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -223,7 +256,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                                 ))}
                             </ul>
                         </Box>
-                        
+
                         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
                             <Button variant="contained" color="error" onClick={handleReset} sx={{ textTransform: 'none', borderRadius: '12px', fontWeight: 600 }}>
                                 Upload Fixed File
@@ -241,6 +274,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Firm Name</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Proprietor Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Constitution</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>PAN</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Group</TableCell>
@@ -254,6 +288,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                                             <TableRow key={index} sx={{ bgcolor: isError ? '#ffebee' : 'inherit' }}>
                                                 <TableCell>{row.name as string}</TableCell>
                                                 <TableCell>{(row.proprietorName as string) || '-'}</TableCell>
+                                                <TableCell>{(row._rawSubMaster as string) || '-'}</TableCell>
                                                 <TableCell>{row.email as string}</TableCell>
                                                 <TableCell>{(row.panNumber as string) || '-'}</TableCell>
                                                 <TableCell>{(row._rawGroupName as string) || '-'}</TableCell>
@@ -277,13 +312,13 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
             <DialogActions sx={{ p: 3, bgcolor: '#fbfbfb', borderTop: '1px solid #e0e0e0' }}>
                 <Button onClick={onClose} sx={{ color: 'text.secondary', fontWeight: 600 }}>Close</Button>
                 {!importResults && (
-                    <Button 
-                        variant="contained" 
-                        onClick={handleConfirmImport} 
-                        disabled={previewData.length === 0 || bulkImportMutation.isPending}
+                    <Button
+                        variant="contained"
+                        onClick={handleConfirmImport}
+                        disabled={previewData.filter(c => c.name && String(c.name).trim()).length === 0 || bulkImportMutation.isPending}
                         sx={{ px: 4, borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
                     >
-                        {bulkImportMutation.isPending ? 'Importing...' : `Import ${previewData.length} Clients`}
+                        {bulkImportMutation.isPending ? 'Importing...' : `Import ${previewData.filter(c => c.name && String(c.name).trim()).length} Clients`}
                     </Button>
                 )}
             </DialogActions>
