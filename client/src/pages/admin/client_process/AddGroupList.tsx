@@ -42,7 +42,7 @@ export const AddGroupList: React.FC = () => {
         status: true,
         email: '',
         mobileNumber: '',
-        gstin: ''
+        groupPersonName: ''
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -144,7 +144,7 @@ export const AddGroupList: React.FC = () => {
             status: group.status,
             email: group.email,
             mobileNumber: group.mobileNumber,
-            gstin: group.gstin || ''
+            groupPersonName: group.groupPersonName || ''
         });
         setIsEditing(true);
         setEditingId(group._id || null);
@@ -158,7 +158,7 @@ export const AddGroupList: React.FC = () => {
             status: true,
             email: '',
             mobileNumber: '',
-            gstin: ''
+            groupPersonName: ''
         });
         setIsEditing(false);
         setEditingId(null);
@@ -217,6 +217,17 @@ export const AddGroupList: React.FC = () => {
                                 />
                             </FormRow>
 
+                             <FormRow label="Group Person Name">
+                                 <TextField
+                                     name="groupPersonName"
+                                     value={formData.groupPersonName}
+                                     onChange={handleInputChange}
+                                     fullWidth
+                                     size="small"
+                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                 />
+                             </FormRow>
+
                             <FormRow label="Address">
                                 <TextField
                                     name="address"
@@ -245,17 +256,6 @@ export const AddGroupList: React.FC = () => {
                                 <TextField
                                     name="email"
                                     value={formData.email}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
-
-                            <FormRow label="GSTIN">
-                                <TextField
-                                    name="gstin"
-                                    value={formData.gstin}
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"

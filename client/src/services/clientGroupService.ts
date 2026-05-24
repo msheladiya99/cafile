@@ -8,7 +8,7 @@ export interface ClientGroup {
     status: boolean;
     email: string;
     mobileNumber: string;
-    gstin?: string;
+    groupPersonName?: string;
     firmId?: string;
 }
 

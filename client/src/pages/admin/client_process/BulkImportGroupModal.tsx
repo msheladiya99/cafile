@@ -19,7 +19,7 @@ interface BulkImportGroupModalProps {
 }
 
 const EXCEL_FIELDS = [
-    'Group Name', 'Address', 'Phone / Mobile', 'Email Address', 'GSTIN', 'Description', 'Status (Active/Inactive)'
+    'Group Name', 'Address', 'Phone / Mobile', 'Email Address', 'Group Person Name', 'Description', 'Status (Active/Inactive)'
 ];
 
 export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
@@ -80,7 +80,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                         address: getVal(['address']),
                         mobileNumber: mobile ? String(mobile).trim() : '',
                         email: email ? String(email).trim() : '',
-                        gstin: getVal(['gstin', 'gst number', 'gst']),
+                        groupPersonName: getVal(['group person name', 'person name', 'person']),
                         description: getVal(['description', 'desc']),
                         status: parseStatus(getVal(['status', 'status (active/inactive)'])),
                     };
@@ -111,9 +111,11 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
             setPreviewData([]);
             setFileName('');
         },
-        onError: (err: unknown) => {
-            const error = err as { response?: { data?: { message?: string } } };
-            showSnackbar(error.response?.data?.message || 'Failed to perform bulk import', 'error');
+        onError: (err: any) => {
+            const reqUrl = err?.config?.url || '';
+            const reqBaseUrl = err?.config?.baseURL || '';
+            const fullUrl = reqBaseUrl ? `${reqBaseUrl}${reqUrl}` : reqUrl;
+            showSnackbar(`${err.response?.data?.message || 'Failed to perform bulk import'} (Requested URL: ${fullUrl})`, 'error');
         }
     });
 
@@ -206,7 +208,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                                         <TableCell sx={{ fontWeight: 'bold' }}>Group Name</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Phone / Mobile</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Email Address</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>GSTIN</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Group Person Name</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                                     </TableRow>
@@ -219,7 +221,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                                                 <TableCell>{(row.groupName as string) || <Typography variant="caption" color="error">Missing Group Name</Typography>}</TableCell>
                                                 <TableCell>{(row.mobileNumber as string) || <Typography variant="caption" color="error">Missing Phone / Mobile</Typography>}</TableCell>
                                                 <TableCell>{(row.email as string) || '-'}</TableCell>
-                                                <TableCell>{(row.gstin as string) || '-'}</TableCell>
+                                                <TableCell>{(row.groupPersonName as string) || '-'}</TableCell>
                                                 <TableCell>{(row.address as string) || '-'}</TableCell>
                                                 <TableCell>
                                                     {isError ? <Chip size="small" label="Missing Required" color="error" /> : <Chip size="small" label="Ready" color="success" />}

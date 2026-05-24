@@ -1364,7 +1364,7 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
 router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
     try {
         const { ClientGroup } = (req as any).models;
-        const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
+        const { groupName, address, description, status, email, mobileNumber, groupPersonName } = req.body;
 
 
         if (!groupName || !mobileNumber) {
@@ -1388,7 +1388,7 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
             status,
             email,
             mobileNumber,
-            gstin,
+            groupPersonName,
             firmId
         });
         await newGroup.save();
@@ -1430,7 +1430,7 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
             await Promise.all(batch.map(async (groupData, index) => {
                 const rowIndex = i + index + 1;
                 try {
-                    const { groupName, address, description, status, email, mobileNumber, gstin } = groupData;
+                    const { groupName, address, description, status, email, mobileNumber, groupPersonName } = groupData;
 
                     if (!groupName || !String(groupName).trim()) {
                         results.failed++;
@@ -1465,7 +1465,7 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                         status: typeof status === 'boolean' ? status : true,
                         email: cleanEmail,
                         mobileNumber: cleanMobileNumber,
-                        gstin: gstin ? String(gstin).trim().toUpperCase() : undefined,
+                        groupPersonName: groupPersonName ? String(groupPersonName).trim() : undefined,
                         firmId
                     });
 

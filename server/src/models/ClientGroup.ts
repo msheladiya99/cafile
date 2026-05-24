@@ -7,7 +7,7 @@ export interface IClientGroup extends Document {
     status: boolean;
     email: string;
     mobileNumber: string;
-    gstin?: string;
+    groupPersonName?: string;
     createdAt: Date;
     updatedAt: Date;
     firmId: mongoose.Types.ObjectId;
@@ -48,10 +48,9 @@ const clientGroupSchema = new Schema<IClientGroup>(
             required: [true, 'Mobile Number is required'],
             trim: true,
         },
-        gstin: {
+        groupPersonName: {
             type: String,
             trim: true,
-            uppercase: true,
         },
     },
     {
