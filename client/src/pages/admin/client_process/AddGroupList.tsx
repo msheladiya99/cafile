@@ -148,7 +148,7 @@ export const AddGroupList: React.FC = () => {
         setSelectedGroups([]);
     };
 
-    const handleSelectClick = (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    const handleSelectClick = (_event: React.ChangeEvent<HTMLInputElement>, id: string) => {
         const selectedIndex = selectedGroups.indexOf(id);
         let newSelected: string[] = [];
 
