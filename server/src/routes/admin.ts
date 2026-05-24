@@ -96,6 +96,11 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             multipleContacts, legalDocuments, proprietorName
         } = req.body;
 
+        if (!name || !String(name).trim()) {
+            res.status(400).json({ message: 'Firm Name is required' });
+            return;
+        }
+
         let cleanedEmail = email;
         if (cleanedEmail && typeof cleanedEmail === 'string') {
             cleanedEmail = cleanedEmail.trim().toLowerCase();
@@ -252,6 +257,12 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
             await Promise.all(batch.map(async (clientData, index) => {
                 const rowIndex = i + index + 1;
                 try {
+                    if (!clientData.name || !String(clientData.name).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Firm Name is required`);
+                        return;
+                    }
+
                     if (clientLimit > 0 && clientLimit < 99999 && currentClientsCount >= clientLimit) {
                         results.failed++;
                         results.errors.push(`Row ${rowIndex}: Client limit reached`);

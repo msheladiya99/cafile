@@ -12,13 +12,12 @@ import * as XLSX from 'xlsx';
 import { adminService } from '../../../services/adminService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
-import type { ITStatus, SubMaster } from '../../../services/masterService';
+import type { SubMaster } from '../../../services/masterService';
 import type { User } from '../../../types';
 
 interface BulkImportModalProps {
     open: boolean;
     onClose: () => void;
-    itStatuses: ITStatus[];
     groups: ClientGroup[];
     subMasters: SubMaster[];
     staffList: User[];
@@ -28,7 +27,7 @@ interface BulkImportModalProps {
 const EXCEL_FIELDS = [
     'Firm Name', 'Email', 'Mobile Number', 'Mobile Number 2', 'PAN Number', 'GST Number', 'Aadhar Number',
     'Proprietor Name',
-    'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Constitution',
+    'Custom Username', 'Client Code', 'Group Name', 'Master Type', 'Constitution',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
     'Incorporation Date From', 'Incorporation Date To', 'Licence No', 'Licence Authority', 'TRN No',
     'Description', 'Support Employee (Username)', 'Status (Active/Inactive)', 'Financial Year',
@@ -37,7 +36,7 @@ const EXCEL_FIELDS = [
 ];
 
 export const BulkImportModal: React.FC<BulkImportModalProps> = ({
-    open, onClose, itStatuses, groups, subMasters, staffList, showSnackbar
+    open, onClose, groups, subMasters, staffList, showSnackbar
 }) => {
     const queryClient = useQueryClient();
     const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
@@ -106,7 +105,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                     };
 
                     const groupNameInput = getVal(['group name', 'group']);
-                    const itStatusInput = getVal(['it status', 'itstatus']);
                     const subMasterInput = getVal(['constitution', 'sub master', 'submaster']);
                     const supportEmployeeInput = getVal(['support employee (username)', 'support employee', 'employee']);
 
@@ -159,13 +157,11 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
                         // Relationships mapping
                         groupName: findId(groups, groupNameInput, 'groupName'),
-                        itStatus: findId(itStatuses, itStatusInput, 'name'),
                         subMaster: findId(subMasters, subMasterInput, 'name') || (subMasterInput ? String(subMasterInput) : undefined),
                         supportEmployee: findUserByUsername(supportEmployeeInput),
 
                         // Raw values for table view
                         _rawGroupName: groupNameInput,
-                        _rawItStatus: itStatusInput,
                         _rawSubMaster: subMasterInput
                     };
                 });
@@ -203,8 +199,21 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
     const handleConfirmImport = () => {
         if (previewData.length === 0) return;
+        const validClients = previewData.filter(c => c.name && String(c.name).trim());
+        if (validClients.length === 0) {
+            showSnackbar('No valid clients to import (Firm Name is required)', 'error');
+            return;
+        }
+
+        const invalidCount = previewData.length - validClients.length;
+        if (invalidCount > 0) {
+            if (!window.confirm(`${invalidCount} row(s) are missing a Firm Name and will be skipped. Do you want to proceed with importing the remaining ${validClients.length} client(s)?`)) {
+                return;
+            }
+        }
+
         setImportResults(null);
-        bulkImportMutation.mutate({ clients: previewData });
+        bulkImportMutation.mutate({ clients: validClients });
     };
 
     const handleReset = () => {
@@ -306,10 +315,10 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                     <Button
                         variant="contained"
                         onClick={handleConfirmImport}
-                        disabled={previewData.length === 0 || bulkImportMutation.isPending}
+                        disabled={previewData.filter(c => c.name && String(c.name).trim()).length === 0 || bulkImportMutation.isPending}
                         sx={{ px: 4, borderRadius: '12px', bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
                     >
-                        {bulkImportMutation.isPending ? 'Importing...' : `Import ${previewData.length} Clients`}
+                        {bulkImportMutation.isPending ? 'Importing...' : `Import ${previewData.filter(c => c.name && String(c.name).trim()).length} Clients`}
                     </Button>
                 )}
             </DialogActions>

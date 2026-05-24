@@ -36,7 +36,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
-import { masterService, type ITStatus, type SubMaster } from '../../../services/masterService';
+import { masterService, type SubMaster } from '../../../services/masterService';
 import { adminService } from '../../../services/adminService';
 import { API_URL } from '../../../services/api';
 import type { CreateClientData, User, CreateClientResponse } from '../../../types';
@@ -223,7 +223,6 @@ export const ClientMaster: React.FC = () => {
     };
 
     const [tabValue, setTabValue] = useState(0);
-    const [itStatusModalOpen, setItStatusModalOpen] = useState(false);
     const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
     const [bulkImportOpen, setBulkImportOpen] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -236,7 +235,6 @@ export const ClientMaster: React.FC = () => {
         proprietorName: '',
         clientCode: '',
         groupName: '',
-        itStatus: '',
         masterType: '',
         subMaster: '',
         birthDate: '',
@@ -369,7 +367,6 @@ export const ClientMaster: React.FC = () => {
                 proprietorName: clientToEdit.proprietorName || '',
                 clientCode: clientToEdit.clientCode || '',
                 groupName: (typeof clientToEdit.groupName === 'object' && clientToEdit.groupName !== null ? clientToEdit.groupName._id : clientToEdit.groupName) || '',
-                itStatus: (typeof clientToEdit.itStatus === 'object' && clientToEdit.itStatus !== null ? clientToEdit.itStatus._id : clientToEdit.itStatus) || '',
                 masterType: clientToEdit.masterType || '',
                 subMaster: (typeof clientToEdit.subMaster === 'object' && clientToEdit.subMaster !== null ? clientToEdit.subMaster._id : clientToEdit.subMaster) || '',
                 birthDate: clientToEdit.birthDate ? clientToEdit.birthDate.split('T')[0] : '',
@@ -416,7 +413,6 @@ export const ClientMaster: React.FC = () => {
                 proprietorName: '',
                 clientCode: '',
                 groupName: '',
-                itStatus: '',
                 masterType: '',
                 subMaster: '',
                 birthDate: '',
@@ -587,10 +583,6 @@ export const ClientMaster: React.FC = () => {
         queryKey: ['clientGroups'],
         queryFn: clientGroupService.getGroups
     });
-    const { data: itStatuses = [] } = useQuery<ITStatus[]>({
-        queryKey: ['itStatus'],
-        queryFn: masterService.getITStatuses
-    });
     const { data: subMasters = [] } = useQuery<SubMaster[]>({
         queryKey: ['subMaster'],
         queryFn: masterService.getSubMasters
@@ -598,31 +590,6 @@ export const ClientMaster: React.FC = () => {
     const { data: staffList = [] } = useQuery<User[]>({
         queryKey: ['staffUsers'],
         queryFn: adminService.getStaffUsers
-    });
-
-    // Mutations for IT Status
-    const itStatusMutation = useMutation({
-        mutationFn: ({ data, id }: { data: ITStatus; id?: string }) => 
-            id ? masterService.updateITStatus(id, data) : masterService.createITStatus(data),
-        onSuccess: (_, variables) => {
-            showSnackbar(`IT Status ${variables.id ? 'updated' : 'created'} successfully`, 'success');
-            queryClient.invalidateQueries({ queryKey: ['itStatus'] });
-            setItStatusModalOpen(false);
-        },
-        onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to save IT Status', 'error');
-        }
-    });
-
-    const deleteItStatusMutation = useMutation({
-        mutationFn: masterService.deleteITStatus,
-        onSuccess: () => {
-            showSnackbar('IT Status deleted successfully', 'success');
-            queryClient.invalidateQueries({ queryKey: ['itStatus'] });
-        },
-        onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to delete IT Status', 'error');
-        }
     });
 
     // Mutations for Constitution
@@ -735,6 +702,10 @@ export const ClientMaster: React.FC = () => {
     });
 
     const handleSaveClient = () => {
+        if (!formData.name || !formData.name.trim()) {
+            showSnackbar('Firm Name is required', 'error');
+            return;
+        }
 
         if (id) {
             updateClientMutation.mutate(formData);
@@ -756,10 +727,6 @@ export const ClientMaster: React.FC = () => {
                         <CommonButton variant="contained" size="small" onClick={() => setBulkImportOpen(true)} 
                             sx={{ boxShadow: 'none' }}>
                             Import Excel
-                        </CommonButton>
-                        <CommonButton variant="contained" size="small" onClick={() => setItStatusModalOpen(true)} 
-                            sx={{ boxShadow: 'none' }}>
-                            Add IT Status
                         </CommonButton>
                         <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')}
                             sx={{ boxShadow: 'none' }}>
@@ -813,7 +780,7 @@ export const ClientMaster: React.FC = () => {
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
-                                <FormRow label="Firm Name">
+                                <FormRow label="Firm Name" required>
                                     <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Proprietor Name">
@@ -836,24 +803,6 @@ export const ClientMaster: React.FC = () => {
                                         {groups.map((group) => (
                                             <MenuItem key={group._id} value={group._id}>
                                                 {group.groupName}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormRow>
-                                <FormRow label="IT Status">
-                                    <Select
-                                        fullWidth
-                                        size="small"
-                                        displayEmpty
-                                        name="itStatus"
-                                        value={formData.itStatus || ''}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, itStatus: e.target.value as string }))}
-                                        sx={{ borderRadius: '8px', color: formData.itStatus ? 'text.primary' : 'text.secondary' }}
-                                    >
-                                        <MenuItem value="" disabled>Choose a IT Status...</MenuItem>
-                                        {itStatuses.map((it) => (
-                                            <MenuItem key={it._id} value={it._id as string}>
-                                                {it.name}
                                             </MenuItem>
                                         ))}
                                     </Select>
@@ -1417,17 +1366,6 @@ export const ClientMaster: React.FC = () => {
 
             {/* Modals */}
             <MasterModal
-                open={itStatusModalOpen}
-                onClose={() => setItStatusModalOpen(false)}
-                title="IT Status"
-                itemName="It Status"
-                onSave={(data, id) => itStatusMutation.mutate({ data, id })}
-                onDelete={(id) => deleteItStatusMutation.mutate(id)}
-                isSaving={itStatusMutation.isPending}
-                dataList={itStatuses}
-                showSnackbar={showSnackbar}
-            />
-            <MasterModal
                 open={subMasterModalOpen}
                 onClose={() => setSubMasterModalOpen(false)}
                 title="Constitution"
@@ -1441,7 +1379,6 @@ export const ClientMaster: React.FC = () => {
             <BulkImportModal
                 open={bulkImportOpen}
                 onClose={() => setBulkImportOpen(false)}
-                itStatuses={itStatuses}
                 groups={groups}
                 subMasters={subMasters}
                 staffList={staffList}

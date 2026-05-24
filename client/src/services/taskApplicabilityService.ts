@@ -14,7 +14,6 @@ export const taskApplicabilityService = {
         startDate: string;
         infinite: boolean;
         department?: string;
-        itStatus?: string;
         subMaster?: string;
         assignedTo?: string[];
     }): Promise<{ message: string; count: number; errors?: { id: string; error: string }[] }> => {

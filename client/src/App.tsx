@@ -211,7 +211,6 @@ const referenceQueryDefaults = {
   ['multiFirms'],
   ['firm'],
   ['settings'],
-  ['itStatus'],
   ['subMaster'],
   ['currencies'],
   ['taxDetails'],

@@ -60,7 +60,6 @@ export const TaskApplicability: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState('');
     const [groupName, setGroupName] = useState('');
     const [singleSaving, setSingleSaving] = useState(false);
-    const [itStatus, setITStatus] = useState('');
     const [subMaster, setSubMaster] = useState('');
     const [department, setDepartment] = useState('');
     const [infiniteApplicability, setInfiniteApplicability] = useState(true);
@@ -95,10 +94,7 @@ export const TaskApplicability: React.FC = () => {
         queryFn: clientGroupService.getGroups
     });
 
-    const { data: itStatuses = [] } = useQuery<{ _id: string; name: string }[]>({
-        queryKey: ['itStatus'],
-        queryFn: adminService.getITStatus
-    });
+
 
     const { data: subMasters = [] } = useQuery<{ _id: string; name: string }[]>({
         queryKey: ['subMasters'],
@@ -178,7 +174,6 @@ export const TaskApplicability: React.FC = () => {
                 infinite: infiniteApplicability,
                 department: department,
                 assignedTo,
-                itStatus,
                 subMaster
             });
         } else {
@@ -274,11 +269,7 @@ export const TaskApplicability: React.FC = () => {
                 const gId = typeof g === 'object' ? (g as { _id: string })?._id : g;
                 if (gId !== groupName) return false;
             }
-            if (itStatus) {
-                const it = client.itStatus;
-                const iId = typeof it === 'object' ? (it as { _id: string })?._id : it;
-                if (iId !== itStatus) return false;
-            }
+
             if (subMaster) {
                 const sm = client.subMaster;
                 const sId = typeof sm === 'object' ? (sm as { _id: string })?._id : sm;
@@ -298,7 +289,7 @@ export const TaskApplicability: React.FC = () => {
             });
             return !isAlreadyApplied;
         });
-    }, [clients, groupName, itStatus, subMaster, appliedTasks]);
+    }, [clients, groupName, subMaster, appliedTasks]);
 
     // ─── Filtered Tasks (Recurrence - Based On Client) ───
     const filteredTasks = useMemo(() => {
@@ -613,18 +604,7 @@ export const TaskApplicability: React.FC = () => {
                                         </Select>
                                     </Box>
                                 </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <Box display="flex" alignItems="center">
-                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>IT Status</Typography>
-                                        <Select size="small" fullWidth displayEmpty value={itStatus}
-                                            onChange={(e) => setITStatus(e.target.value)}>
-                                            <MenuItem value=""><span>All IT Statuses</span></MenuItem>
-                                            {itStatuses.map((s: { _id: string; name: string }) => (
-                                                <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </Box>
-                                </Grid>
+
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
                                         <Typography sx={{ width: 140, color: 'text.secondary' }}>Constitution</Typography>
