@@ -31,6 +31,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow as FormRow, CommonButton } from '../../../components/common/UIComponents';
+import { BulkImportGroupModal } from './BulkImportGroupModal';
 
 
 export const AddGroupList: React.FC = () => {
@@ -46,6 +47,7 @@ export const AddGroupList: React.FC = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
@@ -183,6 +185,9 @@ export const AddGroupList: React.FC = () => {
                 title="Client Groups"
                 actions={
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <CommonButton onClick={() => setIsImportModalOpen(true)} size="small" sx={{ bgcolor: '#0f766e', '&:hover': { bgcolor: '#0d9488' } }}>
+                            Import Groups
+                        </CommonButton>
                         <CommonButton onClick={handleSave} loading={createGroupMutation.isPending || updateGroupMutation.isPending} size="small">
                             {isEditing ? 'Update Group' : 'Save Group'}
                         </CommonButton>
@@ -381,6 +386,12 @@ export const AddGroupList: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <BulkImportGroupModal
+                open={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                showSnackbar={showSnackbar}
+            />
         </PageContainer>
     );
 };

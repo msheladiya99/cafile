@@ -32,4 +32,9 @@ export const clientGroupService = {
         const response = await api.patch(`/admin/client-groups/${id}`, data);
         return response.data;
     },
+
+    bulkCreateGroups: async (data: { groups: Partial<ClientGroup>[] }): Promise<{ successful: number; failed: number; errors: string[] }> => {
+        const response = await api.post('/admin/bulk-create-client-groups', data);
+        return response.data;
+    },
 };

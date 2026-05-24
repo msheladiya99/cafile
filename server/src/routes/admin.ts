@@ -1400,6 +1400,97 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
     }
 });
 
+// Bulk create client groups (Admin, Manager, and Staff)
+router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+    try {
+        const { ClientGroup } = (req as any).models;
+        const { groups } = req.body;
+
+        if (!Array.isArray(groups) || groups.length === 0) {
+            res.status(400).json({ message: 'No groups provided' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            res.status(400).json({ message: 'Firm context required' });
+            return;
+        }
+
+        const results = {
+            successful: 0,
+            failed: 0,
+            errors: [] as string[]
+        };
+
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < groups.length; i += BATCH_SIZE) {
+            const batch = groups.slice(i, i + BATCH_SIZE);
+
+            await Promise.all(batch.map(async (groupData, index) => {
+                const rowIndex = i + index + 1;
+                try {
+                    const { groupName, address, description, status, email, mobileNumber, gstin } = groupData;
+
+                    if (!groupName || !String(groupName).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Group Name is required`);
+                        return;
+                    }
+                    if (!email || !String(email).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Email Address is required`);
+                        return;
+                    }
+                    if (!mobileNumber || !String(mobileNumber).trim()) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Phone / Mobile is required`);
+                        return;
+                    }
+
+                    const cleanGroupName = String(groupName).trim();
+                    const cleanEmail = String(email).trim().toLowerCase();
+                    const cleanMobileNumber = String(mobileNumber).trim();
+
+                    // Check duplicate name (case-insensitive) for this firm
+                    const existingGroup = await ClientGroup.findOne({
+                        groupName: { $regex: new RegExp(`^${cleanGroupName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') },
+                        firmId
+                    });
+
+                    if (existingGroup) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Group with name "${cleanGroupName}" already exists`);
+                        return;
+                    }
+
+                    const newGroup = new ClientGroup({
+                        groupName: cleanGroupName,
+                        address: address ? String(address).trim() : undefined,
+                        description: description ? String(description).trim() : undefined,
+                        status: typeof status === 'boolean' ? status : true,
+                        email: cleanEmail,
+                        mobileNumber: cleanMobileNumber,
+                        gstin: gstin ? String(gstin).trim().toUpperCase() : undefined,
+                        firmId
+                    });
+
+                    await newGroup.save();
+                    results.successful++;
+                } catch (err: any) {
+                    results.failed++;
+                    results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                }
+            }));
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Bulk create client groups error:', error);
+        res.status(500).json({ message: 'Server error during bulk group import' });
+    }
+});
+
 // Get all Client Groups
 router.get('/client-groups', authenticate, async (req: AuthRequest, res: Response) => {
     try {
