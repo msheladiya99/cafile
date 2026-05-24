@@ -69,6 +69,24 @@ export const ClientList: React.FC = () => {
         queryFn: masterService.getITStatuses
     });
 
+    const { data: subMasters = [] } = useQuery<any[]>({
+        queryKey: ['subMaster'],
+        queryFn: masterService.getSubMasters
+    });
+
+    const subMasterMap = React.useMemo(() => {
+        return subMasters.reduce((acc, sm) => {
+            acc[sm._id] = sm.name;
+            return acc;
+        }, {} as Record<string, string>);
+    }, [subMasters]);
+
+    const getConstitutionName = (subMasterVal: any) => {
+        if (!subMasterVal) return '-';
+        if (typeof subMasterVal === 'object') return subMasterVal.name || '-';
+        return subMasterMap[subMasterVal] || subMasterVal;
+    };
+
     // Filter States
     const [filterGroup, setFilterGroup] = React.useState('');
     const [filterClient, setFilterClient] = React.useState('');
@@ -313,7 +331,7 @@ export const ClientList: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Firm Name" inputId="filter-client">
+                            <FilterRow label="Client / Firm Name" inputId="filter-client">
                                 <Select
                                     id="filter-client"
                                     fullWidth
@@ -557,8 +575,9 @@ export const ClientList: React.FC = () => {
                                                 onChange={handleSelectAllClick}
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Firm Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Client / Firm Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Proprietor Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Constitution</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>IT Status</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
@@ -568,11 +587,11 @@ export const ClientList: React.FC = () => {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
+                                            <TableCell colSpan={8} align="center" sx={{ py: 4 }}>Loading clients...</TableCell>
                                         </TableRow>
                                     ) : filteredClients.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ color: 'text.secondary', py: 4 }}>
+                                            <TableCell colSpan={8} align="center" sx={{ color: 'text.secondary', py: 4 }}>
                                                 No clients found.
                                             </TableCell>
                                         </TableRow>
@@ -606,6 +625,7 @@ export const ClientList: React.FC = () => {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>{client.proprietorName || '-'}</TableCell>
+                                                <TableCell>{getConstitutionName(client.subMaster)}</TableCell>
                                                 <TableCell>{(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}</TableCell>
                                                 <TableCell>{(typeof client.itStatus === 'object' && client.itStatus !== null) ? client.itStatus.name : (client.itStatus || '-')}</TableCell>
                                                 <TableCell>
