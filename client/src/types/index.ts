@@ -1,10 +1,10 @@
 export interface Client {
     _id: string;
-    name: string;
+    name?: string;
     proprietorName?: string;
-    email: string;
+    email?: string;
     username?: string;
-    phone: string;
+    phone?: string;
     createdAt: string;
     panNumber?: string;
     aadharNumber?: string;
@@ -72,10 +72,10 @@ export interface ClientGroup {
 }
 
 export interface CreateClientData {
-    name: string;
+    name?: string;
     proprietorName?: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string;
     panNumber?: string;
     fileNo?: string;
     tradeName?: string;

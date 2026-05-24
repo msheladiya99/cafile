@@ -732,14 +732,6 @@ export const ClientMaster: React.FC = () => {
     });
 
     const handleSaveClient = () => {
-        if (!formData.name) {
-            showSnackbar('Please enter Firm Name', 'error');
-            return;
-        }
-        if (!formData.phone || !formData.email) {
-            showSnackbar('Mobile Number and Email are required', 'error');
-            return;
-        }
 
         if (id) {
             updateClientMutation.mutate(formData);
@@ -818,7 +810,7 @@ export const ClientMaster: React.FC = () => {
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
-                                <FormRow label="Firm Name" required>
+                                <FormRow label="Firm Name">
                                     <TextField name="name" value={formData.name} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Proprietor Name">
@@ -967,10 +959,10 @@ export const ClientMaster: React.FC = () => {
                                 <FormRow label="Postal Code">
                                     <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Mobile Number" required helperText="Separate multiple Mobile with &quot;,&quot; (Comma).">
+                                <FormRow label="Mobile Number" helperText="Separate multiple Mobile with &quot;,&quot; (Comma).">
                                     <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Email" required helperText="Separate multiple Email with &quot;,&quot; (Comma).">
+                                <FormRow label="Email" helperText="Separate multiple Email with &quot;,&quot; (Comma).">
                                     <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
@@ -1099,7 +1091,7 @@ export const ClientMaster: React.FC = () => {
                             </Section>
 
                             <Section title="Financial Year" icon={<CalendarTodayIcon />}>
-                                <FormRow label="Year" required>
+                                <FormRow label="Year">
                                     <Select
                                         fullWidth
                                         size="small"
