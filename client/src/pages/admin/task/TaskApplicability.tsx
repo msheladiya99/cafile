@@ -627,10 +627,10 @@ export const TaskApplicability: React.FC = () => {
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <Box display="flex" alignItems="center">
-                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>Sub Master</Typography>
+                                        <Typography sx={{ width: 140, color: 'text.secondary' }}>Constitution</Typography>
                                         <Select size="small" fullWidth displayEmpty value={subMaster}
                                             onChange={(e) => setSubMaster(e.target.value)}>
-                                            <MenuItem value=""><span>All Sub Masters</span></MenuItem>
+                                            <MenuItem value=""><span>All Constitutions</span></MenuItem>
                                             {subMasters.map((s: { _id: string; name: string }) => (
                                                 <MenuItem key={s._id} value={s._id}>{s.name}</MenuItem>
                                             ))}

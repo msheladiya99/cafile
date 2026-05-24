@@ -622,28 +622,28 @@ export const ClientMaster: React.FC = () => {
         }
     });
 
-    // Mutations for Sub Master
+    // Mutations for Constitution
     const subMasterMutation = useMutation({
         mutationFn: ({ data, id }: { data: SubMaster; id?: string }) => 
             id ? masterService.updateSubMaster(id, data) : masterService.createSubMaster(data),
         onSuccess: (_, variables) => {
-            showSnackbar(`Sub Master ${variables.id ? 'updated' : 'created'} successfully`, 'success');
+            showSnackbar(`Constitution ${variables.id ? 'updated' : 'created'} successfully`, 'success');
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
             setSubMasterModalOpen(false);
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to save Sub Master', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to save Constitution', 'error');
         }
     });
 
     const deleteSubMasterMutation = useMutation({
         mutationFn: masterService.deleteSubMaster,
         onSuccess: () => {
-            showSnackbar('Sub Master deleted successfully', 'success');
+            showSnackbar('Constitution deleted successfully', 'success');
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to delete Sub Master', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to delete Constitution', 'error');
         }
     });
 
@@ -732,12 +732,12 @@ export const ClientMaster: React.FC = () => {
     });
 
     const handleSaveClient = () => {
-        if (!formData.name || !formData.groupName || !formData.itStatus || !formData.masterType) {
-            showSnackbar('Please complete the required Basic Form fields', 'error');
+        if (!formData.name) {
+            showSnackbar('Please enter Firm Name', 'error');
             return;
         }
-        if (!formData.address || !formData.country || !formData.state || !formData.city || !formData.phone || !formData.email) {
-            showSnackbar('Please complete the required Primary Contact forms', 'error');
+        if (!formData.phone || !formData.email) {
+            showSnackbar('Mobile Number and Email are required', 'error');
             return;
         }
 
@@ -827,7 +827,7 @@ export const ClientMaster: React.FC = () => {
                                 <FormRow label="Client Code">
                                     <TextField name="clientCode" value={formData.clientCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Group Name" required>
+                                <FormRow label="Group Name">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -845,7 +845,7 @@ export const ClientMaster: React.FC = () => {
                                         ))}
                                     </Select>
                                 </FormRow>
-                                <FormRow label="IT Status" required>
+                                <FormRow label="IT Status">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -863,7 +863,7 @@ export const ClientMaster: React.FC = () => {
                                         ))}
                                     </Select>
                                 </FormRow>
-                                <FormRow label="Master Type" required>
+                                <FormRow label="Master Type">
                                     <Autocomplete
                                         fullWidth
                                         size="small"
@@ -884,12 +884,12 @@ export const ClientMaster: React.FC = () => {
                                         )}
                                     />
                                 </FormRow>
-                                <FormRow label="Sub Master">
+                                <FormRow label="Constitution">
                                     <Autocomplete
                                         fullWidth
                                         size="small"
                                         options={[
-                                            'Individual', 'HUF', 'Partnership', 'Company', 'LLP', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
+                                            'Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'
                                         ]}
                                         value={formData.subMaster || null}
                                         onChange={(_, newValue) => {
@@ -898,7 +898,7 @@ export const ClientMaster: React.FC = () => {
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                placeholder="Choose a Sub Master..."
+                                                placeholder="Choose a Constitution..."
                                                 sx={{
                                                     '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                                                     '& input::placeholder': { color: 'text.secondary', opacity: 1 }
@@ -913,10 +913,10 @@ export const ClientMaster: React.FC = () => {
                             </Section>
 
                             <Section title="Primary Contact Detail" icon={<ContactPhoneIcon />}>
-                                <FormRow label="Address" required>
+                                <FormRow label="Address">
                                     <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Country" required>
+                                <FormRow label="Country">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -930,7 +930,7 @@ export const ClientMaster: React.FC = () => {
                                         <MenuItem value="India">India</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="State" required>
+                                <FormRow label="State">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -947,7 +947,7 @@ export const ClientMaster: React.FC = () => {
                                         <MenuItem value="Rajasthan">Rajasthan</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="City" required>
+                                <FormRow label="City">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -1432,8 +1432,8 @@ export const ClientMaster: React.FC = () => {
             <MasterModal
                 open={subMasterModalOpen}
                 onClose={() => setSubMasterModalOpen(false)}
-                title="Sub Master"
-                itemName="Sub Master"
+                title="Constitution"
+                itemName="Constitution"
                 onSave={(data, id) => subMasterMutation.mutate({ data, id })}
                 onDelete={(id) => deleteSubMasterMutation.mutate(id)}
                 isSaving={subMasterMutation.isPending}
