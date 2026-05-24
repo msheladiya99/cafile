@@ -389,7 +389,7 @@ export const ClientList: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Sub Master" inputId="filter-sub-master">
+                            <FilterRow label="Constitution" inputId="filter-sub-master">
                                 <Select
                                     id="filter-sub-master"
                                     fullWidth
@@ -398,9 +398,9 @@ export const ClientList: React.FC = () => {
                                     value={filterSubMaster}
                                     onChange={(e) => setFilterSubMaster(e.target.value)}
                                     sx={{ borderRadius: '8px', color: filterSubMaster ? 'inherit' : 'text.secondary' }}
-                                    inputProps={{ 'aria-label': 'Sub Master' }}
+                                    inputProps={{ 'aria-label': 'Constitution' }}
                                 >
-                                    <MenuItem value="">Choose a Sub Master...</MenuItem>
+                                    <MenuItem value="">Choose a Constitution...</MenuItem>
                                     {subMasterOptions.map(option => (
                                         <MenuItem key={option} value={option}>{option}</MenuItem>
                                     ))}

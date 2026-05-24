@@ -622,28 +622,28 @@ export const ClientMaster: React.FC = () => {
         }
     });
 
-    // Mutations for Sub Master
+    // Mutations for Constitution
     const subMasterMutation = useMutation({
         mutationFn: ({ data, id }: { data: SubMaster; id?: string }) => 
             id ? masterService.updateSubMaster(id, data) : masterService.createSubMaster(data),
         onSuccess: (_, variables) => {
-            showSnackbar(`Sub Master ${variables.id ? 'updated' : 'created'} successfully`, 'success');
+            showSnackbar(`Constitution ${variables.id ? 'updated' : 'created'} successfully`, 'success');
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
             setSubMasterModalOpen(false);
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to save Sub Master', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to save Constitution', 'error');
         }
     });
 
     const deleteSubMasterMutation = useMutation({
         mutationFn: masterService.deleteSubMaster,
         onSuccess: () => {
-            showSnackbar('Sub Master deleted successfully', 'success');
+            showSnackbar('Constitution deleted successfully', 'success');
             queryClient.invalidateQueries({ queryKey: ['subMaster'] });
         },
         onError: (err: AxiosError<{ message: string }>) => {
-            showSnackbar(err.response?.data?.message || 'Failed to delete Sub Master', 'error');
+            showSnackbar(err.response?.data?.message || 'Failed to delete Constitution', 'error');
         }
     });
 
@@ -884,7 +884,7 @@ export const ClientMaster: React.FC = () => {
                                         )}
                                     />
                                 </FormRow>
-                                <FormRow label="Sub Master">
+                                <FormRow label="Constitution">
                                     <Autocomplete
                                         fullWidth
                                         size="small"
@@ -898,7 +898,7 @@ export const ClientMaster: React.FC = () => {
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                placeholder="Choose a Sub Master..."
+                                                placeholder="Choose a Constitution..."
                                                 sx={{
                                                     '& .MuiOutlinedInput-root': { borderRadius: '8px' },
                                                     '& input::placeholder': { color: 'text.secondary', opacity: 1 }
@@ -1432,8 +1432,8 @@ export const ClientMaster: React.FC = () => {
             <MasterModal
                 open={subMasterModalOpen}
                 onClose={() => setSubMasterModalOpen(false)}
-                title="Sub Master"
-                itemName="Sub Master"
+                title="Constitution"
+                itemName="Constitution"
                 onSave={(data, id) => subMasterMutation.mutate({ data, id })}
                 onDelete={(id) => deleteSubMasterMutation.mutate(id)}
                 isSaving={subMasterMutation.isPending}

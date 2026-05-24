@@ -28,7 +28,7 @@ interface BulkImportModalProps {
 const EXCEL_FIELDS = [
     'Firm Name*', 'Email*', 'Mobile Number*', 'PAN Number', 'GST Number', 'Aadhar Number',
     'Proprietor Name',
-    'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Sub Master',
+    'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Constitution',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
     'Incorporation Date From', 'Incorporation Date To', 'Licence No', 'Licence Authority', 'TRN No',
     'Description', 'Support Employee (Username)', 'Status (Active/Inactive)', 'Financial Year',
@@ -131,7 +131,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         // Relationships mapping
                         groupName: findId(groups, row['Group Name'], 'groupName'),
                         itStatus: findId(itStatuses, row['IT Status'], 'name'),
-                        subMaster: findId(subMasters, row['Sub Master'], 'name'),
+                        subMaster: findId(subMasters, row['Constitution'] || row['Sub Master'], 'name'),
                         supportEmployee: findUserByUsername(row['Support Employee (Username)']),
 
                         // Raw values for table view
