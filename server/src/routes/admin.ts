@@ -86,7 +86,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         const { Client, User } = (req as any).models;
 
         const {
-            name, email, phone, panNumber, aadharNumber, gstNumber, username: customUsername,
+            name, email, phone, phone2, panNumber, aadharNumber, gstNumber, username: customUsername,
             clientCode, groupName, itStatus, masterType, subMaster, birthDate,
             address, country, state, city, postalCode, currency,
             incorporationDateFrom, incorporationDateTo, licenceNo, licenceAuthority,
@@ -145,7 +145,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         // Create client
         const client = new Client({
             firmId,
-            name, email, phone, panNumber, aadharNumber, gstNumber,
+            name, email, phone, phone2, panNumber, aadharNumber, gstNumber,
             clientCode, groupName: groupName || undefined, itStatus: itStatus || undefined,
             masterType, subMaster: subMaster || undefined,
             birthDate: birthDate || undefined,

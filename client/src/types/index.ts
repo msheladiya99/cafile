@@ -5,6 +5,7 @@ export interface Client {
     email?: string;
     username?: string;
     phone?: string;
+    phone2?: string;
     createdAt: string;
     panNumber?: string;
     aadharNumber?: string;
@@ -76,6 +77,7 @@ export interface CreateClientData {
     proprietorName?: string;
     email?: string;
     phone?: string;
+    phone2?: string;
     panNumber?: string;
     fileNo?: string;
     tradeName?: string;

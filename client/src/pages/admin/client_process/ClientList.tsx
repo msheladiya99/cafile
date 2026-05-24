@@ -126,9 +126,13 @@ export const ClientList: React.FC = () => {
             // Search Text Filter
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
-                if (filterSearchType === 'name' && !client.name.toLowerCase().includes(searchLower)) return false;
+                if (filterSearchType === 'name' && !client.name?.toLowerCase().includes(searchLower)) return false;
                 if (filterSearchType === 'email' && !client.email?.toLowerCase().includes(searchLower)) return false;
-                if (filterSearchType === 'phone' && !client.phone?.includes(filterSearchText)) return false;
+                if (filterSearchType === 'phone') {
+                    const matchPhone1 = client.phone?.includes(filterSearchText);
+                    const matchPhone2 = client.phone2?.includes(filterSearchText);
+                    if (!matchPhone1 && !matchPhone2) return false;
+                }
                 if (filterSearchType === 'clientCode' && !client.clientCode?.toLowerCase().includes(searchLower)) return false;
             }
 
@@ -529,7 +533,7 @@ export const ClientList: React.FC = () => {
                                                 <IconButton
                                                     size="small"
                                                     sx={{ color: '#ef4444', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
-                                                    onClick={() => handleDeleteClient(client._id, client.name)}
+                                                    onClick={() => handleDeleteClient(client._id, client.name || '')}
                                                     disabled={deleteClientMutation.isPending}
                                                 >
                                                     <DeleteIcon sx={{ fontSize: 18 }} />
@@ -642,7 +646,7 @@ export const ClientList: React.FC = () => {
                                                         size="small"
                                                         sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
                                                         aria-label="Delete client"
-                                                        onClick={() => handleDeleteClient(client._id, client.name)}
+                                                        onClick={() => handleDeleteClient(client._id, client.name || '')}
                                                         disabled={deleteClientMutation.isPending}
                                                     >
                                                         <DeleteIcon fontSize="small" />
