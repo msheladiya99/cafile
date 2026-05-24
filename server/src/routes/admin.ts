@@ -255,11 +255,13 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
 
 
                     // Check for existing client in this batch/firm
-                    const existingClient = await Client.findOne({ email: clientData.email, firmId });
-                    if (existingClient) {
-                        results.failed++;
-                        results.errors.push(`Row ${rowIndex}: Email ${clientData.email} already exists`);
-                        return;
+                    if (clientData.email) {
+                        const existingClient = await Client.findOne({ email: clientData.email, firmId });
+                        if (existingClient) {
+                            results.failed++;
+                            results.errors.push(`Row ${rowIndex}: Email ${clientData.email} already exists`);
+                            return;
+                        }
                     }
 
                     let username = clientData.username;

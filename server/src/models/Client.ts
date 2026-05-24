@@ -238,3 +238,9 @@ clientSchema.index({ firmId: 1, gstNumber: 1 });
 clientSchema.index({ firmId: 1, clientType: 1, status: 1 });
 
 export const Client = mongoose.model<IClient>('Client', clientSchema);
+
+// Drop old conflicting unique email index if it exists, since email is an optional field
+Client.collection.dropIndex('email_1')
+    .then(() => console.log('[Client] Dropped old unique email index successfully'))
+    .catch(() => { /* Index didn't exist or already dropped — safe to ignore */ });
+
