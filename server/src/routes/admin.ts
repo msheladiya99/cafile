@@ -96,14 +96,20 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
             multipleContacts, legalDocuments, proprietorName
         } = req.body;
 
-
+        let cleanedEmail = email;
+        if (cleanedEmail && typeof cleanedEmail === 'string') {
+            cleanedEmail = cleanedEmail.trim().toLowerCase();
+        }
+        if (cleanedEmail === '') {
+            cleanedEmail = undefined;
+        }
 
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context required' });
 
         // Check if client already exists IN THIS FIRM
-        if (email) {
-            const existingClient = await Client.findOne({ email, firmId });
+        if (cleanedEmail) {
+            const existingClient = await Client.findOne({ email: cleanedEmail, firmId });
             if (existingClient) {
                 res.status(400).json({ message: 'Client with this email already exists in your firm' });
                 return;
@@ -145,7 +151,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
         // Create client
         const client = new Client({
             firmId,
-            name, email, phone, phone2, panNumber, aadharNumber, gstNumber,
+            name, email: cleanedEmail, phone, phone2, panNumber, aadharNumber, gstNumber,
             clientCode, groupName: groupName || undefined, itStatus: itStatus || undefined,
             masterType, subMaster: subMaster || undefined,
             birthDate: birthDate || undefined,
@@ -253,6 +259,16 @@ router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (r
                     }
 
 
+
+                    let email = clientData.email;
+                    if (email && typeof email === 'string') {
+                        email = email.trim().toLowerCase();
+                    }
+                    if (!email) {
+                        delete clientData.email;
+                    } else {
+                        clientData.email = email;
+                    }
 
                     // Check for existing client in this batch/firm
                     if (clientData.email) {

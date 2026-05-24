@@ -93,7 +93,12 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                     return {
                         name: (row['Firm Name'] || row['Firm Name*'] || row['Client Name'] || row['Client Name*']) as string,
                         proprietorName: row['Proprietor Name'] ? String(row['Proprietor Name']) : undefined,
-                        email: (row['Email'] || row['Email*']) as string,
+                        email: (() => {
+                            const val = row['Email'] || row['Email*'];
+                            if (!val) return undefined;
+                            const trimmed = String(val).trim();
+                            return trimmed === '' ? undefined : trimmed;
+                        })(),
                         phone: (row['Mobile Number'] || row['Mobile Number*']) ? String(row['Mobile Number'] || row['Mobile Number*']) : undefined,
                         phone2: (row['Mobile Number 2'] || row['Mobile Number 2*']) ? String(row['Mobile Number 2'] || row['Mobile Number 2*']) : undefined,
                         panNumber: row['PAN Number'] ? String(row['PAN Number']) : undefined,
