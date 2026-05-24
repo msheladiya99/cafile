@@ -1367,8 +1367,8 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
         const { groupName, address, description, status, email, mobileNumber, gstin } = req.body;
 
 
-        if (!groupName || !email || !mobileNumber) {
-            res.status(400).json({ message: 'Group Name, Email, and Mobile Number are required.' });
+        if (!groupName || !mobileNumber) {
+            res.status(400).json({ message: 'Group Name and Mobile Number are required.' });
             return;
         }
 
@@ -1437,19 +1437,13 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                         results.errors.push(`Row ${rowIndex}: Group Name is required`);
                         return;
                     }
-                    if (!email || !String(email).trim()) {
-                        results.failed++;
-                        results.errors.push(`Row ${rowIndex}: Email Address is required`);
-                        return;
-                    }
                     if (!mobileNumber || !String(mobileNumber).trim()) {
                         results.failed++;
                         results.errors.push(`Row ${rowIndex}: Phone / Mobile is required`);
                         return;
                     }
-
                     const cleanGroupName = String(groupName).trim();
-                    const cleanEmail = String(email).trim().toLowerCase();
+                    const cleanEmail = email && String(email).trim() ? String(email).trim().toLowerCase() : undefined;
                     const cleanMobileNumber = String(mobileNumber).trim();
 
                     // Check duplicate name (case-insensitive) for this firm

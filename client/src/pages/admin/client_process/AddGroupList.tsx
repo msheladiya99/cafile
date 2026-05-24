@@ -124,7 +124,7 @@ export const AddGroupList: React.FC = () => {
     };
 
     const handleSave = () => {
-        if (!formData.groupName || !formData.email || !formData.mobileNumber) {
+        if (!formData.groupName || !formData.mobileNumber) {
             showSnackbar('Please fill all required fields', 'error');
             return;
         }
@@ -241,7 +241,7 @@ export const AddGroupList: React.FC = () => {
                                 />
                             </FormRow>
 
-                            <FormRow label="Email Address" required>
+                            <FormRow label="Email Address">
                                 <TextField
                                     name="email"
                                     value={formData.email}

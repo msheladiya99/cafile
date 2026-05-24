@@ -121,18 +121,17 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
         if (previewData.length === 0) return;
         const validGroups = previewData.filter(g => 
             g.groupName && String(g.groupName).trim() &&
-            g.mobileNumber && String(g.mobileNumber).trim() &&
-            g.email && String(g.email).trim()
+            g.mobileNumber && String(g.mobileNumber).trim()
         );
 
         if (validGroups.length === 0) {
-            showSnackbar('No valid groups to import (Group Name, Email, and Phone/Mobile are required)', 'error');
+            showSnackbar('No valid groups to import (Group Name and Phone/Mobile are required)', 'error');
             return;
         }
 
         const invalidCount = previewData.length - validGroups.length;
         if (invalidCount > 0) {
-            if (!window.confirm(`${invalidCount} row(s) are missing required fields (Group Name, Email, or Phone/Mobile) and will be skipped. Do you want to proceed with importing the remaining ${validGroups.length} group(s)?`)) {
+            if (!window.confirm(`${invalidCount} row(s) are missing required fields (Group Name or Phone/Mobile) and will be skipped. Do you want to proceed with importing the remaining ${validGroups.length} group(s)?`)) {
                 return;
             }
         }
@@ -150,8 +149,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
     const getValidGroupsCount = () => {
         return previewData.filter(g => 
             g.groupName && String(g.groupName).trim() &&
-            g.mobileNumber && String(g.mobileNumber).trim() &&
-            g.email && String(g.email).trim()
+            g.mobileNumber && String(g.mobileNumber).trim()
         ).length;
     };
 
@@ -215,12 +213,12 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                                 </TableHead>
                                 <TableBody>
                                     {previewData.slice(0, 50).map((row, index) => {
-                                        const isError = !row.groupName || !row.mobileNumber || !row.email;
+                                        const isError = !row.groupName || !row.mobileNumber;
                                         return (
                                             <TableRow key={index} sx={{ bgcolor: isError ? '#ffebee' : 'inherit' }}>
                                                 <TableCell>{(row.groupName as string) || <Typography variant="caption" color="error">Missing Group Name</Typography>}</TableCell>
                                                 <TableCell>{(row.mobileNumber as string) || <Typography variant="caption" color="error">Missing Phone / Mobile</Typography>}</TableCell>
-                                                <TableCell>{(row.email as string) || <Typography variant="caption" color="error">Missing Email</Typography>}</TableCell>
+                                                <TableCell>{(row.email as string) || '-'}</TableCell>
                                                 <TableCell>{(row.gstin as string) || '-'}</TableCell>
                                                 <TableCell>{(row.address as string) || '-'}</TableCell>
                                                 <TableCell>

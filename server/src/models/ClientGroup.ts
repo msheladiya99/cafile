@@ -40,7 +40,6 @@ const clientGroupSchema = new Schema<IClientGroup>(
         },
         email: {
             type: String,
-            required: [true, 'Email is required'],
             lowercase: true,
             trim: true,
         },
