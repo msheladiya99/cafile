@@ -246,6 +246,7 @@ export const ClientMaster: React.FC = () => {
         city: '',
         postalCode: '',
         phone: '', // Mapped to Mobile Number
+        phone2: '',
         email: '',
         currency: '',
         panNumber: '',
@@ -378,6 +379,7 @@ export const ClientMaster: React.FC = () => {
                 city: clientToEdit.city || '',
                 postalCode: clientToEdit.postalCode || '',
                 phone: clientToEdit.phone || '', // Mapped to Mobile Number
+                phone2: clientToEdit.phone2 || '',
                 email: clientToEdit.email || '',
                 currency: clientToEdit.currency || '',
                 panNumber: clientToEdit.panNumber || '',
@@ -424,6 +426,7 @@ export const ClientMaster: React.FC = () => {
                 city: '',
                 postalCode: '',
                 phone: '',
+                phone2: '',
                 email: '',
                 currency: '',
                 panNumber: '',
@@ -961,6 +964,9 @@ export const ClientMaster: React.FC = () => {
                                 </FormRow>
                                 <FormRow label="Mobile Number" helperText="Separate multiple Mobile with &quot;,&quot; (Comma).">
                                     <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Mobile Number 2">
+                                    <TextField name="phone2" value={formData.phone2 || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Email" helperText="Separate multiple Email with &quot;,&quot; (Comma).">
                                     <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />

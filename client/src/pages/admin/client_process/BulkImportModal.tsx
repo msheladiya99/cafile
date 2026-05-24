@@ -26,7 +26,7 @@ interface BulkImportModalProps {
 }
 
 const EXCEL_FIELDS = [
-    'Firm Name', 'Email', 'Mobile Number', 'PAN Number', 'GST Number', 'Aadhar Number',
+    'Firm Name', 'Email', 'Mobile Number', 'Mobile Number 2', 'PAN Number', 'GST Number', 'Aadhar Number',
     'Proprietor Name',
     'Custom Username', 'Client Code', 'Group Name', 'IT Status', 'Master Type', 'Constitution',
     'Date of Birth', 'Address', 'Country', 'State', 'City', 'Pincode', 'Currency',
@@ -95,6 +95,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
                         proprietorName: row['Proprietor Name'] ? String(row['Proprietor Name']) : undefined,
                         email: (row['Email'] || row['Email*']) as string,
                         phone: (row['Mobile Number'] || row['Mobile Number*']) ? String(row['Mobile Number'] || row['Mobile Number*']) : undefined,
+                        phone2: (row['Mobile Number 2'] || row['Mobile Number 2*']) ? String(row['Mobile Number 2'] || row['Mobile Number 2*']) : undefined,
                         panNumber: row['PAN Number'] ? String(row['PAN Number']) : undefined,
                         gstNumber: row['GST Number'] ? String(row['GST Number']) : undefined,
                         aadharNumber: row['Aadhar Number'] ? String(row['Aadhar Number']) : undefined,

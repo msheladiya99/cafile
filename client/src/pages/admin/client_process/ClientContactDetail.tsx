@@ -81,13 +81,13 @@ export const ClientContactDetail: React.FC = () => {
                 const searchLower = filterSearchText.toLowerCase();
                 
                 if (filterSearchType === 'name') {
-                    const primaryMatch = client.name.toLowerCase().includes(searchLower);
+                    const primaryMatch = client.name?.toLowerCase().includes(searchLower) || false;
                     const contactMatch = client.multipleContacts?.some(contact => 
                         contact.name.toLowerCase().includes(searchLower)
                     );
                     if (!primaryMatch && !contactMatch) return false;
                 } else if (filterSearchType === 'mobile') {
-                    const primaryMatch = client.phone?.includes(filterSearchText);
+                    const primaryMatch = client.phone?.includes(filterSearchText) || client.phone2?.includes(filterSearchText);
                     const contactMatch = client.multipleContacts?.some(contact => 
                         contact.mobile?.includes(filterSearchText)
                     );
@@ -229,7 +229,7 @@ export const ClientContactDetail: React.FC = () => {
                                     {
                                         name: client.name,
                                         designation: 'Primary',
-                                        mobile: client.phone,
+                                        mobile: client.phone2 ? `${client.phone}, ${client.phone2}` : client.phone,
                                         email: client.email,
                                         status: client.status,
                                         isPrimary: true
@@ -311,7 +311,7 @@ export const ClientContactDetail: React.FC = () => {
                                             {
                                                 name: client.name,
                                                 designation: 'Primary',
-                                                mobile: client.phone,
+                                                mobile: client.phone2 ? `${client.phone}, ${client.phone2}` : client.phone,
                                                 email: client.email,
                                                 status: client.status,
                                                 isPrimary: true

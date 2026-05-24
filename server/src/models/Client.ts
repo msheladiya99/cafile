@@ -5,6 +5,7 @@ export interface IClient extends Document {
     proprietorName?: string;
     email: string;
     phone: string;
+    phone2?: string;
     createdAt: Date;
     // Identifiers & Grouping
     clientCode?: string;
@@ -107,6 +108,10 @@ const clientSchema = new Schema<IClient>({
         lowercase: true
     },
     phone: {
+        type: String,
+        trim: true
+    },
+    phone2: {
         type: String,
         trim: true
     },
