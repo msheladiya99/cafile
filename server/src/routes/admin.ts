@@ -655,7 +655,7 @@ router.get('/clients', async (req: AuthRequest, res: Response) => {
         }));
 
 
-        res.set('Cache-Control', 'private, max-age=30'); // cache for 30s
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         res.json(clientsWithUsername);
     } catch (error) {
         console.error('Get clients error:', error);

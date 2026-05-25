@@ -76,4 +76,9 @@ export const staffService = {
         const response = await api.post(`/staff/${staffId}/profile-image`, formData);
         return response.data;
     },
+
+    bulkCreateStaff: async (data: { staff: Record<string, unknown>[] }): Promise<{ successful: number; failed: number; errors: string[] }> => {
+        const response = await api.post('/staff/bulk-create', data);
+        return response.data;
+    },
 };

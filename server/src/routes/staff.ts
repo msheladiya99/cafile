@@ -105,7 +105,8 @@ const generatePassword = (): string => {
 
 // Generate username from name
 const generateUsername = (name: string): string => {
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const baseName = name ? name.toString() : 'emp';
+    const cleanName = baseName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `${cleanName}${randomNum}`;
 };
@@ -128,11 +129,6 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
-        if (!firstName || !lastName || !email) {
-            res.status(400).json({ message: 'First Name, Last Name, and Email are required' });
-            return;
-        }
-
         const validStaffRoles = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'];
         const actualRole = role || 'STAFF';
         if (!validStaffRoles.includes(actualRole)) {
@@ -142,10 +138,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
         // Check availability
         const { User: UserModel } = (req as any).models;
-        const existingEmail = await UserModel.findOne({ email });
-        if (existingEmail) {
-            res.status(400).json({ message: 'Email already exists' });
-            return;
+        if (email) {
+            const existingEmail = await UserModel.findOne({ email });
+            if (existingEmail) {
+                res.status(400).json({ message: 'Email already exists' });
+                return;
+            }
         }
 
 
@@ -190,8 +188,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         }
 
         // Generate credentials if not provided
-        const name = `${firstName} ${lastName}`.trim();
-        const finalUsername = reqUsername || generateUsername(firstName);
+        const name = `${firstName || ''} ${lastName || ''}`.trim() || 'Employee';
+        const finalUsername = reqUsername || generateUsername(firstName || 'emp');
         const finalPassword = reqPassword || generatePassword();
         const passwordHash = await bcrypt.hash(finalPassword, 10);
 
@@ -511,6 +509,169 @@ router.post('/:id/profile-image', upload.single('profileImage'), async (req: Aut
     } catch (error: any) {
         console.error('Staff profile image upload error:', error);
         res.status(500).json({ message: 'Error uploading profile image', error: error.message });
+    }
+});
+
+// Bulk create staff members
+router.post('/bulk-create', async (req: AuthRequest, res: Response) => {
+    try {
+        const { User: UserModel } = (req as any).models;
+        const { staff } = req.body;
+
+        if (!Array.isArray(staff) || staff.length === 0) {
+            res.status(400).json({ message: 'No staff members provided' });
+            return;
+        }
+
+        const firmId = req.firmId || req.user?.firmId;
+        if (!firmId) {
+            res.status(400).json({ message: 'Firm context required' });
+            return;
+        }
+
+        const results = {
+            successful: 0,
+            failed: 0,
+            errors: [] as string[]
+        };
+
+        const firm = await Firm.findById(firmId);
+        if (!firm) {
+            res.status(404).json({ message: 'Firm not found' });
+            return;
+        }
+
+        const { Plan } = await import('../models/Plan');
+        const plan = await Plan.findOne({ name: firm.plan });
+        const staffLimit = plan ? plan.limits.staff : 5;
+        let currentStaffCount = await UserModel.countDocuments({
+            firmId,
+            role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
+        });
+
+        const baseDomain = process.env.APP_BASE_DOMAIN || 'mycafile.in';
+        const firmPortalUrl = firm?.subdomain
+            ? `https://${firm.subdomain}.${baseDomain}`
+            : (process.env.CLIENT_URL || 'http://localhost:5173');
+
+        // Process in batches of 50
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < staff.length; i += BATCH_SIZE) {
+            const batch = staff.slice(i, i + BATCH_SIZE);
+
+            await Promise.all(batch.map(async (staffData, index) => {
+                const rowIndex = i + index + 1;
+                try {
+                    const actualRole = staffData.role || 'STAFF';
+                    const validStaffRoles = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'];
+                    if (!validStaffRoles.includes(actualRole)) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Invalid staff role '${actualRole}'`);
+                        return;
+                    }
+
+                    if (staffLimit > 0 && staffLimit < 99999 && currentStaffCount >= staffLimit) {
+                        results.failed++;
+                        results.errors.push(`Row ${rowIndex}: Staff limit reached`);
+                        return;
+                    }
+
+                    if (actualRole === 'ADMIN') {
+                        const currentAdminsCount = await UserModel.countDocuments({
+                            firmId,
+                            role: 'ADMIN'
+                        });
+                        if (currentAdminsCount >= (firm.maxAdmins || 5)) {
+                            results.failed++;
+                            results.errors.push(`Row ${rowIndex}: Admin limit reached for your firm`);
+                            return;
+                        }
+                    }
+
+                    let email = staffData.email;
+                    if (email && typeof email === 'string') {
+                        email = email.trim().toLowerCase();
+                    }
+                    if (!email) {
+                        delete staffData.email;
+                    } else {
+                        staffData.email = email;
+                    }
+
+                    // Check duplicate email
+                    if (staffData.email) {
+                        const existingEmail = await UserModel.findOne({ email: staffData.email });
+                        if (existingEmail) {
+                            results.failed++;
+                            results.errors.push(`Row ${rowIndex}: Email ${staffData.email} already exists`);
+                            return;
+                        }
+                    }
+
+                    let username = staffData.username;
+                    if (username) {
+                        const existingUser = await UserModel.findOne({ username });
+                        if (existingUser) {
+                            results.failed++;
+                            results.errors.push(`Row ${rowIndex}: Username ${username} is already taken`);
+                            return;
+                        }
+                    } else {
+                        username = generateUsername(staffData.firstName || 'emp');
+                    }
+
+                    const firstName = staffData.firstName || '';
+                    const lastName = staffData.lastName || '';
+                    const name = `${firstName} ${lastName}`.trim() || 'Employee';
+
+                    const password = staffData.password || generatePassword();
+                    const passwordHash = await bcrypt.hash(password, 10);
+
+                    const cleanData = { ...staffData };
+                    delete cleanData.password;
+                    delete cleanData.username;
+
+                    const user = new UserModel({
+                        firmId,
+                        username,
+                        passwordHash,
+                        name,
+                        role: actualRole,
+                        status: cleanData.status !== undefined ? cleanData.status : true,
+                        ...cleanData
+                    });
+
+                    await user.save();
+
+                    // Send welcome email (Background)
+                    if (user.email) {
+                        sendEmployeeWelcomeEmail({
+                            employeeEmail: user.email,
+                            employeeName: user.name || 'Employee',
+                            username,
+                            password,
+                            role: actualRole,
+                            portalUrl: firmPortalUrl,
+                        }).catch(err => console.error('Email send error:', err));
+                    }
+
+                    currentStaffCount++;
+                    results.successful++;
+                } catch (err: any) {
+                    results.failed++;
+                    if (err.code === 11000 || err.message?.includes('E11000')) {
+                        results.errors.push(`Row ${rowIndex}: Employee with this username or email already exists`);
+                    } else {
+                        results.errors.push(`Row ${rowIndex}: ${err.message || 'Error'}`);
+                    }
+                }
+            }));
+        }
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Bulk create staff error:', error);
+        res.status(500).json({ message: 'Server error during bulk import' });
     }
 });
 

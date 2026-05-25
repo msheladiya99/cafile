@@ -25,6 +25,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { staffService } from '../../../services/staffService';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
+import { BulkImportEmployeeModal } from './BulkImportEmployeeModal';
 
 export const EmployeeList: React.FC = () => {
     const theme = useTheme();
@@ -74,20 +75,36 @@ export const EmployeeList: React.FC = () => {
         }
     };
 
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
+
+    const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'success') => {
+        setSnackbar({ open: true, message, severity: severity === 'info' ? 'success' : severity });
+    };
+
     return (
         <PageContainer>
             {/* Header Section */}
             <PageHeader
                 title="Employee List"
                 actions={
-                    <CommonButton
-                        variant="contained"
-                        size="small"
-                        onClick={() => navigate('/admin/employee/master')}
-                        sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
-                    >
-                        + Add New
-                    </CommonButton>
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                        <CommonButton
+                            variant="contained"
+                            size="small"
+                            onClick={() => setBulkImportOpen(true)}
+                            sx={{ bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
+                        >
+                            Import Excel
+                        </CommonButton>
+                        <CommonButton
+                            variant="contained"
+                            size="small"
+                            onClick={() => navigate('/admin/employee/master')}
+                            sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
+                        >
+                            + Add New
+                        </CommonButton>
+                    </Box>
                 }
             />
 
@@ -249,6 +266,12 @@ export const EmployeeList: React.FC = () => {
                     )}
                 </Section>
             </ContentContainer>
+
+            <BulkImportEmployeeModal
+                open={bulkImportOpen}
+                onClose={() => setBulkImportOpen(false)}
+                showSnackbar={showSnackbar}
+            />
 
             <Snackbar
                 open={snackbar.open}

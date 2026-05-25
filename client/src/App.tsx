@@ -192,6 +192,8 @@ const liveQueryDefaults = {
   ['sa-firm'],
   ['sa-addons'],
   ['superadmin_plans'],
+  ['clients'],
+  ['clientGroups'],
 ].forEach((queryKey) => {
   queryClient.setQueryDefaults(queryKey, liveQueryDefaults);
 });
@@ -201,8 +203,6 @@ const referenceQueryDefaults = {
 };
 
 [
-  ['clients'],
-  ['clientGroups'],
   ['staff'],
   ['staffUsers'],
   ['taskMasters'],
