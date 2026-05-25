@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { staffService } from '../../../services/staffService';
 import settingsService from '../../../services/settingsService';
+import { BulkImportEmployeeModal } from './BulkImportEmployeeModal';
 import {
     Box,
     Paper,
@@ -258,6 +259,7 @@ export const EmployeeMaster: React.FC = () => {
     ]);
     const [editingDesignationId, setEditingDesignationId] = useState<number | null>(null);
     const [openFieldMasterDialog, setOpenFieldMasterDialog] = useState(false);
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [extraFieldLabels, setExtraFieldLabels] = useState({
         field1: 'Field 1',
@@ -601,6 +603,9 @@ export const EmployeeMaster: React.FC = () => {
                 <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: { xs: 2.5, sm: 3 }, py: { xs: 2, sm: 2.5 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2 }}>
                     <Typography variant="h5" fontWeight="700" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, letterSpacing: '-0.01em' }}>{isEditMode ? 'Edit Employee' : 'Employee Master'}</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+                        <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => setBulkImportOpen(true)} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
+                            Import Excel
+                        </CommonButton>
                         <CommonButton variant="contained" size="small" fullWidth={isMobile} onClick={() => navigate('/admin/employee/master')} sx={{ py: 0.8, boxShadow: 'none', flex: { xs: 1, sm: 'none' }, minWidth: isTablet ? '100px' : 'fit-content' }}>
                             Add New
                         </CommonButton>
@@ -1696,6 +1701,12 @@ export const EmployeeMaster: React.FC = () => {
                     </Box>
                 </DialogContent>
             </Dialog>
+
+            <BulkImportEmployeeModal
+                open={bulkImportOpen}
+                onClose={() => setBulkImportOpen(false)}
+                showSnackbar={showSnackbar}
+            />
 
             <Snackbar
                 open={snackbar.open}
