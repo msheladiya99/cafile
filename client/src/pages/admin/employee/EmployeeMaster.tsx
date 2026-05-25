@@ -551,15 +551,6 @@ export const EmployeeMaster: React.FC = () => {
     };
 
     const handleSaveEmployee = async () => {
-        // Basic validation for the first tab
-        const requiredFields = ['firstName', 'lastName', 'address', 'country', 'state', 'city', 'email'];
-        const missingFields = requiredFields.filter(f => !formData[f as keyof typeof formData]);
-
-        if (missingFields.length > 0) {
-            showSnackbar('Please fill in all required fields marked with *', 'error');
-            return;
-        }
-
         if (formData.password && formData.password !== formData.confirmPassword) {
             showSnackbar('Passwords do not match!', 'error');
             return;
@@ -651,19 +642,19 @@ export const EmployeeMaster: React.FC = () => {
                         {/* LEFT COLUMN */}
                         <Box sx={{ flex: 15 }}>
                             <Section title="Basic Form" icon={<GridViewIcon />}>
-                                <FormRow label="First Name" required>
+                                <FormRow label="First Name">
                                     <TextField name="firstName" value={formData.firstName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Last Name" required>
+                                <FormRow label="Last Name">
                                     <TextField name="lastName" value={formData.lastName} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Employee ID / Code">
                                     <TextField name="employeeCode" value={formData.employeeCode} onChange={handleInputChange} placeholder="System ID will be used if blank" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Address" required>
+                                <FormRow label="Address">
                                     <TextField name="address" value={formData.address} onChange={handleInputChange} fullWidth multiline rows={3} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Country" required>
+                                <FormRow label="Country">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -677,7 +668,7 @@ export const EmployeeMaster: React.FC = () => {
                                         <MenuItem value="India">India</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="State" required>
+                                <FormRow label="State">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -692,7 +683,7 @@ export const EmployeeMaster: React.FC = () => {
                                         <MenuItem value="Maharashtra">Maharashtra</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="City" required>
+                                <FormRow label="City">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -707,25 +698,25 @@ export const EmployeeMaster: React.FC = () => {
                                         <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="Postal Code" required>
+                                <FormRow label="Postal Code">
                                     <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Mobile Number" required>
+                                <FormRow label="Mobile Number">
                                     <TextField name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Phone">
                                     <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Email" required helperText='Separate multiple Email with "," (Comma).'>
+                                <FormRow label="Email" helperText='Separate multiple Email with "," (Comma).'>
                                     <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Birth Date" required>
+                                <FormRow label="Birth Date">
                                     <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                             </Section>
 
                             <Section title="Joining Information" icon={<WorkIcon />}>
-                                <FormRow label="Designation" required>
+                                <FormRow label="Designation">
                                     <Select
                                         fullWidth
                                         size="small"
@@ -755,7 +746,7 @@ export const EmployeeMaster: React.FC = () => {
                                         <MenuItem value="Intern">Intern</MenuItem>
                                     </Select>
                                 </FormRow>
-                                <FormRow label="Joining Date" required>
+                                <FormRow label="Joining Date">
                                     <TextField name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
                                 <FormRow label="Monthly Salary">
@@ -843,10 +834,10 @@ export const EmployeeMaster: React.FC = () => {
                             </Section>
 
                             <Section title="Login Information" icon={<LoginIcon />}>
-                                <FormRow label="Username" required>
+                                <FormRow label="Username">
                                     <TextField name="username" value={formData.username} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Password" required>
+                                <FormRow label="Password">
                                     <TextField
                                         name="password"
                                         type={showPassword ? 'text' : 'password'}
@@ -872,7 +863,7 @@ export const EmployeeMaster: React.FC = () => {
                                         }}
                                     />
                                 </FormRow>
-                                <FormRow label="Confirm Password" required={!isEditMode}>
+                                <FormRow label="Confirm Password">
                                     <TextField
                                         name="confirmPassword"
                                         type={showPassword ? 'text' : 'password'}

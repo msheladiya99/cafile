@@ -105,7 +105,8 @@ const generatePassword = (): string => {
 
 // Generate username from name
 const generateUsername = (name: string): string => {
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const baseName = name ? name.toString() : 'emp';
+    const cleanName = baseName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `${cleanName}${randomNum}`;
 };
@@ -128,11 +129,6 @@ router.post('/', async (req: AuthRequest, res: Response) => {
             bankName, bankBranch, accountNo, accountHolderName, ifscCode, bankAddress
         } = req.body;
 
-        if (!firstName || !lastName || !email) {
-            res.status(400).json({ message: 'First Name, Last Name, and Email are required' });
-            return;
-        }
-
         const validStaffRoles = ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'];
         const actualRole = role || 'STAFF';
         if (!validStaffRoles.includes(actualRole)) {
@@ -142,10 +138,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
         // Check availability
         const { User: UserModel } = (req as any).models;
-        const existingEmail = await UserModel.findOne({ email });
-        if (existingEmail) {
-            res.status(400).json({ message: 'Email already exists' });
-            return;
+        if (email) {
+            const existingEmail = await UserModel.findOne({ email });
+            if (existingEmail) {
+                res.status(400).json({ message: 'Email already exists' });
+                return;
+            }
         }
 
 
@@ -190,8 +188,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         }
 
         // Generate credentials if not provided
-        const name = `${firstName} ${lastName}`.trim();
-        const finalUsername = reqUsername || generateUsername(firstName);
+        const name = `${firstName || ''} ${lastName || ''}`.trim() || 'Employee';
+        const finalUsername = reqUsername || generateUsername(firstName || 'emp');
         const finalPassword = reqPassword || generatePassword();
         const passwordHash = await bcrypt.hash(finalPassword, 10);
 
