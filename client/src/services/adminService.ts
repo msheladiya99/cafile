@@ -26,7 +26,7 @@ export const adminService = {
     },
 
     getClients: async (): Promise<Client[]> => {
-        const response = await api.get('/admin/clients');
+        const response = await api.get(`/admin/clients?t=${Date.now()}`);
         return response.data;
     },
 

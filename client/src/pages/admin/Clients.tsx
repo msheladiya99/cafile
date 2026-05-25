@@ -61,8 +61,8 @@ export const Clients: React.FC = () => {
     const [openCredentialsDialog, setOpenCredentialsDialog] = useState(false);
 
     const filteredClients = clients.filter((client: Client) =>
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (client.phone && client.phone.includes(searchQuery))
     );
     const [credentials, setCredentials] = useState<CreateClientResponse['credentials'] | null>(null);
@@ -100,13 +100,30 @@ export const Clients: React.FC = () => {
             return;
         }
 
+        // Cancel any outgoing refetches so they don't overwrite our optimistic update
+        await queryClient.cancelQueries({ queryKey: ['clients'] });
+
+        // Snapshot current cache value for reference/rollback
+        const previousClients = queryClient.getQueryData<Client[]>(['clients']);
+
+        // Update cache immediately to make the client disappear instantly
+        queryClient.setQueryData<Client[]>(['clients'], (oldClients) => {
+            return oldClients ? oldClients.filter(c => c._id !== clientId) : [];
+        });
+
         try {
             await adminService.deleteClient(clientId);
             setSuccess(`Client "${clientName}" deleted successfully`);
-            queryClient.invalidateQueries({ queryKey: ['clients'] });
         } catch (err: unknown) {
+            // Roll back cache to the original state
+            if (previousClients) {
+                queryClient.setQueryData(['clients'], previousClients);
+            }
             const error = err as AxiosError<{ message: string }>;
             setError(error.response?.data?.message || 'Failed to delete client');
+        } finally {
+            // Refetch in background to make sure we are completely synced
+            queryClient.invalidateQueries({ queryKey: ['clients'] });
         }
     };
 
@@ -251,9 +268,9 @@ export const Clients: React.FC = () => {
                                                             alignItems: 'center', justifyContent: 'center',
                                                             color: '#1a237e', fontWeight: 700
                                                         }}>
-                                                            {client.name.charAt(0).toUpperCase()}
+                                                            {(client.name || '').charAt(0).toUpperCase()}
                                                         </Box>
-                                                        <Typography fontWeight="700" color="#1e293b">{client.name}</Typography>
+                                                        <Typography fontWeight="700" color="#1e293b">{client.name || ''}</Typography>
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell>
@@ -314,9 +331,9 @@ export const Clients: React.FC = () => {
                                                     <Tooltip title="Delete Client">
                                                         <IconButton
                                                             size="small"
-                                                            onClick={() => handleDeleteClient(client._id, client.name)}
+                                                            onClick={() => handleDeleteClient(client._id, client.name || '')}
                                                             sx={{ color: '#d32f2f', bgcolor: '#ffebee' }}
-                                                            aria-label={`Delete client ${client.name}`}
+                                                            aria-label={`Delete client ${client.name || ''}`}
                                                         >
                                                             <DeleteIcon fontSize="small" />
                                                         </IconButton>
@@ -352,11 +369,11 @@ export const Clients: React.FC = () => {
                                                 alignItems: 'center', justifyContent: 'center',
                                                 color: '#1a237e', fontWeight: 800, fontSize: '1.2rem'
                                             }}>
-                                                {client.name.charAt(0).toUpperCase()}
+                                                {(client.name || '').charAt(0).toUpperCase()}
                                             </Box>
                                             <Box flex={1}>
                                                 <Typography variant="h6" fontWeight="700" color="#1e293b" lineHeight={1.2}>
-                                                    {client.name}
+                                                    {client.name || ''}
                                                 </Typography>
                                                 <Typography variant="caption" sx={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                                     <DateIcon sx={{ fontSize: 12 }} /> Reg: {format(parseISO(client.createdAt), 'dd MMM yyyy')}
@@ -417,7 +434,7 @@ export const Clients: React.FC = () => {
                                                 variant="outlined"
                                                 size="small"
                                                 color="error"
-                                                onClick={() => handleDeleteClient(client._id, client.name)}
+                                                onClick={() => handleDeleteClient(client._id, client.name || '')}
                                                 sx={{ borderRadius: '8px', py: 1, borderColor: '#fee2e2' }}
                                             >
                                                 Delete

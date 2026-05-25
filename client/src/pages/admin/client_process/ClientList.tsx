@@ -213,13 +213,35 @@ export const ClientList: React.FC = () => {
 
     const deleteClientMutation = useMutation({
         mutationFn: adminService.deleteClient,
+        onMutate: async (id) => {
+            // Cancel any outgoing refetches so they don't overwrite our optimistic update
+            await queryClient.cancelQueries({ queryKey: ['clients'] });
+
+            // Snapshot the previous value
+            const previousClients = queryClient.getQueryData<Client[]>(['clients']);
+
+            // Optimistically update the cache by filtering out the client
+            queryClient.setQueryData<Client[]>(['clients'], (oldClients) => {
+                return oldClients ? oldClients.filter(c => c._id !== id) : [];
+            });
+
+            // Return a context object with the snapshotted value
+            return { previousClients };
+        },
+        onError: (error: unknown, _id, context) => {
+            console.error('Error deleting client:', error);
+            // Roll back to the previous value if mutation fails
+            if (context?.previousClients) {
+                queryClient.setQueryData(['clients'], context.previousClients);
+            }
+            toast.error('Failed to delete client');
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['clients'] });
             toast.success('Client deleted successfully');
         },
-        onError: (error: unknown) => {
-            console.error('Error deleting client:', error);
-            toast.error('Failed to delete client');
+        onSettled: () => {
+            // Always refetch after error or success to keep server and client in sync
+            queryClient.invalidateQueries({ queryKey: ['clients'] });
         }
     });
 
@@ -237,14 +259,38 @@ export const ClientList: React.FC = () => {
 
     const bulkDeleteMutation = useMutation({
         mutationFn: adminService.bulkDeleteClients,
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['clients'] });
+        onMutate: async (variables) => {
+            // Cancel any outgoing refetches so they don't overwrite our optimistic update
+            await queryClient.cancelQueries({ queryKey: ['clients'] });
+
+            // Snapshot the previous value
+            const previousClients = queryClient.getQueryData<Client[]>(['clients']);
+
+            // Optimistically update the cache by filtering out the selected clients
+            queryClient.setQueryData<Client[]>(['clients'], (oldClients) => {
+                return oldClients ? oldClients.filter(c => !variables.includes(c._id)) : [];
+            });
+
+            // Reset selected checklist instantly so UI indicators clear immediately
             setSelectedClients([]);
+
+            // Return a context object with the snapshotted value
+            return { previousClients };
+        },
+        onError: (error: unknown, _variables, context) => {
+            console.error('Error during bulk deletion:', error);
+            // Roll back to the previous value if mutation fails
+            if (context?.previousClients) {
+                queryClient.setQueryData(['clients'], context.previousClients);
+            }
+            toast.error('Failed to delete selected clients');
+        },
+        onSuccess: (data) => {
             toast.success(data.message || 'Clients deleted successfully');
         },
-        onError: (error: unknown) => {
-            console.error('Error during bulk deletion:', error);
-            toast.error('Failed to delete selected clients');
+        onSettled: () => {
+            // Always refetch after error or success to keep server and client in sync
+            queryClient.invalidateQueries({ queryKey: ['clients'] });
         }
     });
 
