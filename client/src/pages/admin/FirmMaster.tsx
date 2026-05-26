@@ -578,7 +578,7 @@ const TaxDetailTab: React.FC<{
 };
 
 // ─── Partners Sub-component ───────────────────────────────────────────────────
-const PARTNER_BLANK = { name: '', designation: 'Partner', icaiMembershipNo: '', joiningDate: '', retirementDate: '', mobile: '', email: '', pan: '', dob: '', enrollDate: '', status: true, signatureImageUrl: '' };
+const PARTNER_BLANK = { name: '', designation: '', icaiMembershipNo: '', joiningDate: '', retirementDate: '', mobile: '', email: '', pan: '', dob: '', enrollDate: '', status: true, signatureImageUrl: '' };
 
 const PartnersTab: React.FC<{
     partners: import('../../services/firmService').IPartner[];

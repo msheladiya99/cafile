@@ -1398,7 +1398,22 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
         });
         await newGroup.save();
 
-        const populatedGroup = await ClientGroup.findById(newGroup._id).populate('groupOwnByFirm', 'firmName');
+        const populatedGroup = await ClientGroup.findById(newGroup._id).lean();
+        if (populatedGroup && populatedGroup.groupOwnByFirm) {
+            const { FirmMaster, MultiFirm } = (req as any).models;
+            const targetId = populatedGroup.groupOwnByFirm.toString();
+            const primaryFirm = await FirmMaster.findOne({ firmId }).lean();
+            if (primaryFirm && primaryFirm._id.toString() === targetId) {
+                populatedGroup.groupOwnByFirm = { _id: primaryFirm._id, firmName: primaryFirm.firmName };
+            } else {
+                const matchingFirm = await MultiFirm.findOne({ _id: populatedGroup.groupOwnByFirm, firmId }).lean();
+                if (matchingFirm) {
+                    populatedGroup.groupOwnByFirm = { _id: matchingFirm._id, firmName: matchingFirm.firmName };
+                } else {
+                    populatedGroup.groupOwnByFirm = null;
+                }
+            }
+        }
         res.status(201).json(populatedGroup);
     } catch (error) {
         console.error('Create client group error:', error);
@@ -1467,13 +1482,22 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                     let groupOwnByFirmId: mongoose.Types.ObjectId | undefined = undefined;
                     if (groupOwnByFirm && String(groupOwnByFirm).trim()) {
                         const cleanFirmName = String(groupOwnByFirm).trim();
-                        const { MultiFirm } = (req as any).models;
-                        const matchingFirm = await MultiFirm.findOne({
+                        const { MultiFirm, FirmMaster } = (req as any).models;
+                        // Search primary firm first
+                        const primaryMatching = await FirmMaster.findOne({
                             firmName: { $regex: new RegExp(`^${cleanFirmName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') },
                             firmId
                         });
-                        if (matchingFirm) {
-                            groupOwnByFirmId = matchingFirm._id;
+                        if (primaryMatching) {
+                            groupOwnByFirmId = primaryMatching._id;
+                        } else {
+                            const matchingFirm = await MultiFirm.findOne({
+                                firmName: { $regex: new RegExp(`^${cleanFirmName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') },
+                                firmId
+                            });
+                            if (matchingFirm) {
+                                groupOwnByFirmId = matchingFirm._id;
+                            }
                         }
                     }
 
@@ -1512,12 +1536,30 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
 // Get all Client Groups
 router.get('/client-groups', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { ClientGroup } = (req as any).models;
+        const { ClientGroup, FirmMaster, MultiFirm } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         const groups = await ClientGroup.find({ firmId })
-            .populate('groupOwnByFirm', 'firmName')
             .sort({ createdAt: -1 })
             .lean();
+
+        const primaryFirm = await FirmMaster.findOne({ firmId }).lean();
+        const branchFirms = await MultiFirm.find({ firmId }).lean();
+
+        for (const g of groups) {
+            if (g.groupOwnByFirm) {
+                const targetId = g.groupOwnByFirm.toString();
+                if (primaryFirm && primaryFirm._id.toString() === targetId) {
+                    g.groupOwnByFirm = { _id: primaryFirm._id, firmName: primaryFirm.firmName };
+                } else {
+                    const match = branchFirms.find((bf: any) => bf._id.toString() === targetId);
+                    if (match) {
+                        g.groupOwnByFirm = { _id: match._id, firmName: match.firmName };
+                    } else {
+                        g.groupOwnByFirm = null;
+                    }
+                }
+            }
+        }
         res.json(groups);
     } catch (error) {
         console.error('Get client groups error:', error);
@@ -1614,11 +1656,27 @@ router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER
             { _id: id, firmId },
             { $set: updates },
             { new: true, runValidators: true }
-        ).populate('groupOwnByFirm', 'firmName');
+        ).lean();
 
         if (!group) {
             res.status(404).json({ message: 'Group not found' });
             return;
+        }
+
+        if (group.groupOwnByFirm) {
+            const { FirmMaster, MultiFirm } = (req as any).models;
+            const targetId = group.groupOwnByFirm.toString();
+            const primaryFirm = await FirmMaster.findOne({ firmId }).lean();
+            if (primaryFirm && primaryFirm._id.toString() === targetId) {
+                group.groupOwnByFirm = { _id: primaryFirm._id, firmName: primaryFirm.firmName };
+            } else {
+                const matchingFirm = await MultiFirm.findOne({ _id: group.groupOwnByFirm, firmId }).lean();
+                if (matchingFirm) {
+                    group.groupOwnByFirm = { _id: matchingFirm._id, firmName: matchingFirm.firmName };
+                } else {
+                    group.groupOwnByFirm = null;
+                }
+            }
         }
 
         res.json(group);

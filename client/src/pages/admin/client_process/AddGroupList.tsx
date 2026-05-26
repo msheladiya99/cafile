@@ -34,6 +34,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { clientGroupService } from '../../../services/clientGroupService';
 import firmService from '../../../services/firmService';
+import type { FirmMasterData } from '../../../services/firmService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow as FormRow, CommonButton } from '../../../components/common/UIComponents';
 import { BulkImportGroupModal } from './BulkImportGroupModal';
 
@@ -86,6 +87,11 @@ export const AddGroupList: React.FC = () => {
     const { data: multiFirms = [] } = useQuery({
         queryKey: ['multiFirms'],
         queryFn: firmService.getMultiFirms
+    });
+
+    const { data: primaryFirm } = useQuery<FirmMasterData>({
+        queryKey: ['firm'],
+        queryFn: firmService.getFirm
     });
 
     const createGroupMutation = useMutation({
@@ -321,6 +327,11 @@ export const AddGroupList: React.FC = () => {
                                     <MenuItem value="">
                                         <em>None</em>
                                     </MenuItem>
+                                    {primaryFirm && primaryFirm._id && (
+                                        <MenuItem key={primaryFirm._id} value={primaryFirm._id}>
+                                            {primaryFirm.firmName}
+                                        </MenuItem>
+                                    )}
                                     {multiFirms.map((mf) => (
                                         <MenuItem key={mf._id} value={mf._id}>
                                             {mf.firmName}
