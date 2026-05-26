@@ -3,7 +3,7 @@ import {
     Box, Paper, Typography, TextField, Select, MenuItem,
     Tabs, Tab, IconButton, Avatar, Snackbar, Alert, CircularProgress,
     Switch, Tooltip, FormControlLabel, Divider, Modal, Fade, Backdrop,
-    Grid, RadioGroup,
+    Grid, RadioGroup, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
 import {
     Building2,
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
-import type { FirmMasterData } from '../../services/firmService';
+import type { FirmMasterData, IMultiFirmData } from '../../services/firmService';
 import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -724,17 +724,192 @@ export const FirmMasterPage: React.FC = () => {
     const [sigLoading, setSigLoading] = useState(false);
     const [snack, setSnack] = useState<{ open: boolean; msg: string; sev: 'success' | 'error' | 'info' }>({ open: false, msg: '', sev: 'success' });
 
+    // Multi-Firm States
+    const [selectedFirmId, setSelectedFirmId] = useState<string>('primary');
+    const [isCreateMode, setIsCreateMode] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [saving, setSaving] = useState(false);
+
     const toast = (msg: string, sev: 'success' | 'error' | 'info' = 'success') => setSnack({ open: true, msg, sev });
 
     const { data: firm, isLoading } = useQuery<FirmMasterData>({ queryKey: ['firm'], queryFn: firmService.getFirm });
 
-    useEffect(() => { if (firm) setForm({ ...BLANK, ...firm }); }, [firm]);
+    const { data: multiFirms = [], refetch: refetchMultiFirms } = useQuery<IMultiFirmData[]>({
+        queryKey: ['multiFirms'],
+        queryFn: firmService.getMultiFirms
+    });
+
+    useEffect(() => {
+        if (isCreateMode) return;
+        if (selectedFirmId === 'primary') {
+            if (firm) setForm({ ...BLANK, ...firm });
+        } else {
+            const currentMf = multiFirms.find(f => f._id === selectedFirmId);
+            if (currentMf) {
+                setForm({
+                    ...BLANK,
+                    ...currentMf,
+                    signatureImageUrl: currentMf.signImageUrl || '',
+                });
+            }
+        }
+    }, [firm, multiFirms, selectedFirmId, isCreateMode]);
 
     const saveMutation = useMutation({
         mutationFn: firmService.updateFirm,
         onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['firm'] }); toast('Firm details saved successfully!'); setFieldModal(false); },
         onError: () => toast('Failed to save. Please try again.', 'error'),
     });
+
+    const handleMainSave = async () => {
+        if (!form.firmName) {
+            toast('Firm Name is required', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            if (isCreateMode) {
+                const payload: Partial<IMultiFirmData> = {
+                    firmName: form.firmName,
+                    shortName: form.shortName,
+                    address: form.address,
+                    country: form.country,
+                    state: form.state,
+                    city: form.city,
+                    postalCode: form.postalCode,
+                    mobile: form.mobile,
+                    phoneL: form.phoneL,
+                    email: form.email,
+                    firmType: form.firmType,
+                    bankName: form.bankName,
+                    bankBranch: form.bankBranch,
+                    accountHolderName: form.accountHolderName,
+                    accountNumber: form.accountNumber,
+                    ifscCode: form.ifscCode,
+                    ibanNo: form.ibanNo,
+                    swiftCode: form.swiftCode,
+                    micrCode: form.micrCode,
+                    panNumber: form.panNumber,
+                    gstin: form.gstin,
+                    licenceNo: form.licenceNo,
+                    licenceAuthority: form.licenceAuthority,
+                    invoicePrefix: form.invoicePrefix,
+                    supportEmails: form.supportEmails,
+                    supportMobile: form.supportMobile,
+                    logoUrl: form.logoUrl,
+                    signImageUrl: form.signatureImageUrl,
+                    showLogo: form.showLogo,
+                    extraField1: form.extraField1,
+                    extraField2: form.extraField2,
+                    extraField3: form.extraField3,
+                    extraField4: form.extraField4,
+                    extraField5: form.extraField5,
+                    extraField6: form.extraField6,
+                    extraField7: form.extraField7,
+                };
+                const newFirm = await firmService.createMultiFirm(payload);
+                await refetchMultiFirms();
+                queryClient.invalidateQueries({ queryKey: ['multiFirms'] });
+                toast('New firm added successfully!', 'success');
+                setIsCreateMode(false);
+                if (newFirm && newFirm._id) {
+                    setSelectedFirmId(newFirm._id);
+                } else {
+                    setSelectedFirmId('primary');
+                }
+            } else if (selectedFirmId === 'primary') {
+                await saveMutation.mutateAsync(form);
+            } else {
+                const payload: Partial<IMultiFirmData> = {
+                    firmName: form.firmName,
+                    shortName: form.shortName,
+                    address: form.address,
+                    country: form.country,
+                    state: form.state,
+                    city: form.city,
+                    postalCode: form.postalCode,
+                    mobile: form.mobile,
+                    phoneL: form.phoneL,
+                    email: form.email,
+                    firmType: form.firmType,
+                    bankName: form.bankName,
+                    bankBranch: form.bankBranch,
+                    accountHolderName: form.accountHolderName,
+                    accountNumber: form.accountNumber,
+                    ifscCode: form.ifscCode,
+                    ibanNo: form.ibanNo,
+                    swiftCode: form.swiftCode,
+                    micrCode: form.micrCode,
+                    panNumber: form.panNumber,
+                    gstin: form.gstin,
+                    licenceNo: form.licenceNo,
+                    licenceAuthority: form.licenceAuthority,
+                    invoicePrefix: form.invoicePrefix,
+                    supportEmails: form.supportEmails,
+                    supportMobile: form.supportMobile,
+                    logoUrl: form.logoUrl,
+                    signImageUrl: form.signatureImageUrl,
+                    showLogo: form.showLogo,
+                    extraField1: form.extraField1,
+                    extraField2: form.extraField2,
+                    extraField3: form.extraField3,
+                    extraField4: form.extraField4,
+                    extraField5: form.extraField5,
+                    extraField6: form.extraField6,
+                    extraField7: form.extraField7,
+                };
+                await firmService.updateMultiFirm(selectedFirmId, payload);
+                await refetchMultiFirms();
+                queryClient.invalidateQueries({ queryKey: ['multiFirms'] });
+                toast('Firm details updated successfully!', 'success');
+            }
+        } catch (e: any) {
+            console.error('Error saving firm:', e);
+            toast(e.response?.data?.message || 'Failed to save firm details', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleMainCancel = () => {
+        if (isCreateMode) {
+            setIsCreateMode(false);
+            setSelectedFirmId('primary');
+        } else {
+            if (selectedFirmId === 'primary') {
+                if (firm) setForm({ ...BLANK, ...firm });
+            } else {
+                const currentMf = multiFirms.find(f => f._id === selectedFirmId);
+                if (currentMf) {
+                    setForm({
+                        ...BLANK,
+                        ...currentMf,
+                        signatureImageUrl: currentMf.signImageUrl || '',
+                    });
+                }
+            }
+        }
+        toast('Changes discarded', 'info');
+    };
+
+    const handleMainDelete = async () => {
+        if (selectedFirmId === 'primary' || isCreateMode) return;
+        setDeleting(true);
+        try {
+            await firmService.deleteMultiFirm(selectedFirmId);
+            await refetchMultiFirms();
+            queryClient.invalidateQueries({ queryKey: ['multiFirms'] });
+            setSelectedFirmId('primary');
+            toast('Firm deleted successfully!', 'success');
+        } catch (e: any) {
+            toast(e.response?.data?.message || 'Failed to delete firm', 'error');
+        } finally {
+            setDeleting(false);
+            setConfirmDeleteOpen(false);
+        }
+    };
 
     const f = (field: keyof FirmMasterData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm(p => ({ ...p, [field]: e.target.value }));
@@ -749,11 +924,53 @@ export const FirmMasterPage: React.FC = () => {
     const sel = (field: keyof FirmMasterData) => (e: { target: { value: unknown } }) =>
         setForm(p => ({ ...p, [field]: e.target.value }));
 
+    const handleLogo = async (file: File) => {
+        setLogoLoading(true);
+        try {
+            if (selectedFirmId === 'primary' && !isCreateMode) {
+                const r = await firmService.uploadLogo(file);
+                setForm(p => ({ ...p, logoUrl: r.logoUrl }));
+            } else {
+                const r = await firmService.uploadAsset(file);
+                setForm(p => ({ ...p, logoUrl: r.url }));
+            }
+            toast('Logo uploaded successfully!');
+        } catch {
+            toast('Logo upload failed', 'error');
+        } finally {
+            setLogoLoading(false);
+        }
+    };
 
-    const handleLogo = async (file: File) => { setLogoLoading(true); try { const r = await firmService.uploadLogo(file); setForm(p => ({ ...p, logoUrl: r.logoUrl })); toast('Logo uploaded!'); } catch { toast('Logo upload failed', 'error'); } finally { setLogoLoading(false); } };
-    const handleSig = async (file: File) => { setSigLoading(true); try { const r = await firmService.uploadSignature(file); setForm(p => ({ ...p, signatureImageUrl: r.stampImageUrl })); toast('Signature uploaded!'); } catch { toast('Signature upload failed', 'error'); } finally { setSigLoading(false); } };
+    const handleSig = async (file: File) => {
+        setSigLoading(true);
+        try {
+            if (selectedFirmId === 'primary' && !isCreateMode) {
+                const r = await firmService.uploadSignature(file);
+                setForm(p => ({ ...p, signatureImageUrl: r.stampImageUrl }));
+            } else {
+                const r = await firmService.uploadAsset(file);
+                setForm(p => ({ ...p, signatureImageUrl: r.url }));
+            }
+            toast('Signature uploaded successfully!');
+        } catch {
+            toast('Signature upload failed', 'error');
+        } finally {
+            setSigLoading(false);
+        }
+    };
 
     const handleAutoHours = (delta: number) => setForm(p => ({ ...p, autoCloseHours: Math.max(1, (p.autoCloseHours || 10) + delta) }));
+
+    const renderGlobalBanner = (title: string, detail: string) => (
+        <Box sx={{ p: 5, textAlign: 'center', bgcolor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, my: 2 }}>
+            <Building2 size={40} color="#6366f1" />
+            <Typography fontWeight={700} fontSize="0.95rem" color="#1e293b">{title}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 500 }}>
+                {detail}
+            </Typography>
+        </Box>
+    );
 
     if (isLoading) return (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', gap: 2, flexDirection: 'column' }}>
@@ -779,16 +996,99 @@ export const FirmMasterPage: React.FC = () => {
                     alignItems: { xs: 'flex-start', sm: 'center' },
                     gap: { xs: 1.5, sm: 0 }
                 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                         <Avatar sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, width: 36, height: 36 }}><Building2 size={16} /></Avatar>
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
+                        
+                        {!isCreateMode ? (
+                            <Select
+                                value={selectedFirmId}
+                                onChange={(e) => {
+                                    setSelectedFirmId(e.target.value as string);
+                                    setTab(0);
+                                }}
+                                size="small"
+                                sx={{
+                                    minWidth: 180,
+                                    borderRadius: '8px',
+                                    fontSize: '0.82rem',
+                                    height: 32,
+                                    bgcolor: '#fafafa',
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#e2e8f0',
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: '#cbd5e1',
+                                    },
+                                }}
+                            >
+                                <MenuItem value="primary" sx={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                                    Primary: {firm?.firmName || 'Loading...'}
+                                </MenuItem>
+                                {multiFirms.map((mf) => (
+                                    <MenuItem key={mf._id} value={mf._id} sx={{ fontSize: '0.82rem' }}>
+                                        Branch: {mf.firmName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        ) : (
+                            <Box sx={{ bgcolor: '#e0e7ff', color: '#4338ca', px: 1.5, py: 0.5, borderRadius: '16px', fontSize: '0.78rem', fontWeight: 700 }}>
+                                Adding New Firm
+                            </Box>
+                        )}
                     </Box>
                     <Box sx={{ 
                         display: 'flex', 
                         gap: 1, 
                         width: { xs: '100%', sm: 'auto' },
-                        flexWrap: 'wrap'
+                        flexWrap: 'wrap',
+                        alignItems: 'center'
                     }}>
+                        {!isCreateMode && (
+                            <CommonButton 
+                                variant="contained" 
+                                size="small" 
+                                startIcon={<Plus size={16} />}
+                                onClick={() => {
+                                    setIsCreateMode(true);
+                                    setTab(0);
+                                    setForm(BLANK);
+                                }}
+                                sx={{ 
+                                    bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, 
+                                    borderRadius: '8px', 
+                                    boxShadow: 'none', 
+                                    fontWeight: 700, 
+                                    fontSize: '0.82rem',
+                                    whiteSpace: 'nowrap',
+                                    flex: { xs: 1, sm: 'none' }
+                                }}
+                            >
+                                Add Firm
+                            </CommonButton>
+                        )}
+                        
+                        {selectedFirmId !== 'primary' && !isCreateMode && (
+                            <CommonButton 
+                                variant="contained" 
+                                size="small" 
+                                color="error"
+                                startIcon={<Trash2 size={16} />}
+                                onClick={() => setConfirmDeleteOpen(true)}
+                                sx={{ 
+                                    bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, 
+                                    borderRadius: '8px', 
+                                    boxShadow: 'none', 
+                                    fontWeight: 700, 
+                                    fontSize: '0.82rem',
+                                    whiteSpace: 'nowrap',
+                                    flex: { xs: 1, sm: 'none' }
+                                }}
+                            >
+                                Delete
+                            </CommonButton>
+                        )}
+
                         <CommonButton variant="contained" size="small"
                             onClick={() => setFieldModal(true)}
                             sx={{ 
@@ -802,9 +1102,9 @@ export const FirmMasterPage: React.FC = () => {
                             }}>
                             Field Master
                         </CommonButton>
-                        <CommonButton variant="contained" size="small" startIcon={saveMutation.isPending ? null : <Save size={16} />}
-                            onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
-                            loading={saveMutation.isPending}
+                        <CommonButton variant="contained" size="small" startIcon={saving || saveMutation.isPending ? null : <Save size={16} />}
+                            onClick={handleMainSave}
+                            loading={saving || saveMutation.isPending}
                             sx={{ 
                                 borderRadius: '8px', 
                                 boxShadow: 'none', 
@@ -815,7 +1115,7 @@ export const FirmMasterPage: React.FC = () => {
                             Save
                         </CommonButton>
                         <CommonButton variant="outlined" size="small"
-                            onClick={() => firm && setForm({ ...BLANK, ...firm })}
+                            onClick={handleMainCancel}
                             sx={{ 
                                 bgcolor: 'transparent', 
                                 color: '#6366f1', 
@@ -1133,24 +1433,165 @@ export const FirmMasterPage: React.FC = () => {
                             </Paper>
                         </Box>
                     </Box>
+
+                    {/* All Created Firms List Table */}
+                    <Paper sx={{ mt: 3, borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', width: '100%' }}>
+                        <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Building2 size={18} color="#6366f1" />
+                            <Typography fontWeight={700} fontSize="0.875rem">All Created Firms List</Typography>
+                        </Box>
+                        <Box sx={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                                <thead>
+                                    <tr style={{ background: '#f5f7fa', borderBottom: '2px solid #e8ecf0' }}>
+                                        {['#', 'Logo', 'Firm Name', 'Short Name', 'Type', 'Mobile', 'Email', 'GSTIN', 'Status', 'Action'].map(h => (
+                                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Primary Firm Row */}
+                                    {firm && (
+                                        <tr style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === 'primary' && !isCreateMode ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
+                                            <td style={{ padding: '10px 12px', color: '#64748b', fontWeight: 500 }}>1</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Avatar src={firm.logoUrl} sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#6366f1' }}>
+                                                    {firm.firmName.charAt(0).toUpperCase()}
+                                                </Avatar>
+                                            </td>
+                                            <td style={{ padding: '10px 12px', fontWeight: 700, color: '#1e293b' }}>
+                                                {firm.firmName}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{firm.shortName || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{firm.firmType || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{firm.mobile || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{firm.email || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{firm.gstin || '—'}</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, bgcolor: '#e0e7ff', color: '#4338ca' }}>
+                                                    Primary
+                                                </Box>
+                                            </td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setSelectedFirmId('primary');
+                                                            setIsCreateMode(false);
+                                                        }}
+                                                        sx={{ color: '#6366f1' }}
+                                                        title="Edit Primary Firm"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        disabled
+                                                        sx={{ color: '#cbd5e1' }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </IconButton>
+                                                </Box>
+                                            </td>
+                                        </tr>
+                                    )}
+
+                                    {/* Branch Firms Rows */}
+                                    {multiFirms.map((mf, index) => (
+                                        <tr key={mf._id} style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === mf._id && !isCreateMode ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
+                                            <td style={{ padding: '10px 12px', color: '#64748b', fontWeight: 500 }}>{index + 2}</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Avatar src={mf.logoUrl} sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#10b981' }}>
+                                                    {mf.firmName.charAt(0).toUpperCase()}
+                                                </Avatar>
+                                            </td>
+                                            <td style={{ padding: '10px 12px', fontWeight: 700, color: '#1e293b' }}>
+                                                {mf.firmName}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{mf.shortName || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{mf.firmType || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{mf.mobile || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{mf.email || '—'}</td>
+                                            <td style={{ padding: '10px 12px', color: '#475569' }}>{mf.gstin || '—'}</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, bgcolor: mf.status !== false ? '#e8f5e9' : '#ffebee', color: mf.status !== false ? '#2e7d32' : '#c62828' }}>
+                                                    {mf.status !== false ? 'Branch' : 'Inactive'}
+                                                </Box>
+                                            </td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setSelectedFirmId(mf._id!);
+                                                            setIsCreateMode(false);
+                                                        }}
+                                                        sx={{ color: '#6366f1' }}
+                                                        title="Edit Branch Firm"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => {
+                                                            setSelectedFirmId(mf._id!);
+                                                            setConfirmDeleteOpen(true);
+                                                        }}
+                                                        sx={{ color: '#ef4444' }}
+                                                        title="Delete Branch Firm"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </IconButton>
+                                                </Box>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    
+                                    {multiFirms.length === 0 && !firm && (
+                                        <tr>
+                                            <td colSpan={10} style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                                                No firms found.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </Box>
+                    </Paper>
                 </Paper>
             )}
 
             {/* ── TAB 1: Partners ── */}
             {tab === 1 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <PartnersTab
-                        partners={form.partners || []}
-                        onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
-                        toast={toast}
-                    />
+                    {selectedFirmId !== 'primary' ? (
+                        renderGlobalBanner(
+                            "Partners Global Management",
+                            `Partners are configured at the tenant level and managed globally under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
+                        )
+                    ) : (
+                        <PartnersTab
+                            partners={form.partners || []}
+                            onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
+                            toast={toast}
+                        />
+                    )}
                 </Paper>
             )}
 
             {/* ── TAB 2: Firm Documents ── */}
             {tab === 2 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <FirmDocumentsTab toast={toast} />
+                    {selectedFirmId !== 'primary' ? (
+                        renderGlobalBanner(
+                            "Firm Documents Global Management",
+                            `Firm documents are shared at the tenant level and managed globally under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
+                        )
+                    ) : (
+                        <FirmDocumentsTab toast={toast} />
+                    )}
                 </Paper>
             )}
 
@@ -1158,7 +1599,14 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 3: Tax Detail ── */}
             {tab === 3 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <TaxDetailTab toast={toast} />
+                    {selectedFirmId !== 'primary' ? (
+                        renderGlobalBanner(
+                            "Tax details Global Management",
+                            `Tax items are configured globally at the tenant level and managed under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
+                        )
+                    ) : (
+                        <TaxDetailTab toast={toast} />
+                    )}
                 </Paper>
             )}
 
@@ -1166,7 +1614,14 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 4: Currency ── */}
             {tab === 4 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <CurrencyTab toast={toast} />
+                    {selectedFirmId !== 'primary' ? (
+                        renderGlobalBanner(
+                            "Currencies Global Management",
+                            `Currencies are defined globally at the tenant level and managed under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
+                        )
+                    ) : (
+                        <CurrencyTab toast={toast} />
+                    )}
                 </Paper>
             )}
 
@@ -1545,6 +2000,30 @@ export const FirmMasterPage: React.FC = () => {
                     </Box>
                 </Fade>
             </Modal>
+
+            {/* Confirm Delete Multi-Firm Dialog */}
+            <Dialog
+                open={confirmDeleteOpen}
+                onClose={() => setConfirmDeleteOpen(false)}
+                PaperProps={{
+                    sx: { borderRadius: '12px', minWidth: { xs: 300, sm: 400 } }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Delete Branch Firm</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete the branch firm "{form.firmName}"? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <CommonButton onClick={() => setConfirmDeleteOpen(false)} variant="outlined" size="small" sx={{ borderRadius: '8px' }}>
+                        Cancel
+                    </CommonButton>
+                    <CommonButton onClick={handleMainDelete} variant="contained" color="error" size="small" loading={deleting} sx={{ borderRadius: '8px', bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' } }}>
+                        Confirm Delete
+                    </CommonButton>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
