@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
-import type { FirmMasterData, IMultiFirmData } from '../../services/firmService';
+import type { FirmMasterData, IMultiFirmData, IAdditionalBank } from '../../services/firmService';
 import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -148,6 +148,7 @@ const BLANK: FirmMasterData = {
     website: '', facebook: '', twitter: '', googlePlus: '', pmsAppUrl: '',
     extraField1: '', extraField2: '', extraField3: '', extraField4: '', extraField5: '', extraField6: '', extraField7: '',
     partners: [],
+    additionalBanks: [],
     showLogo: true,
 };
 
@@ -1062,6 +1063,138 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="Micr Code"><TextField value={form.micrCode || ''} onChange={f('micrCode')} fullWidth {...sx} /></Row>
                                 <Row label="PAN No*"><TextField value={form.panNumber || ''} onChange={f('panNumber')} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
                             </Paper>
+
+                            {(form.additionalBanks || []).map((bank, index) => (
+                                <Paper key={index} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                                        <SectionHead icon={<Building2 size={16} />} title={`Bank Detail ${index + 2}`} />
+                                        <IconButton 
+                                            size="small" 
+                                            color="error" 
+                                            onClick={() => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated.splice(index, 1);
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </IconButton>
+                                    </Box>
+                                    <Row label="Bank Name*">
+                                        <TextField 
+                                            value={bank.bankName || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], bankName: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Bank Branch*">
+                                        <TextField 
+                                            value={bank.bankBranch || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], bankBranch: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Account Holder Name*">
+                                        <TextField 
+                                            value={bank.accountHolderName || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], accountHolderName: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Bank A/C No*">
+                                        <TextField 
+                                            value={bank.accountNumber || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], accountNumber: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Bank IFS Code">
+                                        <TextField 
+                                            value={bank.ifscCode || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], ifscCode: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="IBAN No.">
+                                        <TextField 
+                                            value={bank.ibanNo || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], ibanNo: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Swift Code">
+                                        <TextField 
+                                            value={bank.swiftCode || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], swiftCode: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                    <Row label="Micr Code">
+                                        <TextField 
+                                            value={bank.micrCode || ''} 
+                                            onChange={(e) => {
+                                                const updated = [...(form.additionalBanks || [])];
+                                                updated[index] = { ...updated[index], micrCode: e.target.value };
+                                                setForm(p => ({ ...p, additionalBanks: updated }));
+                                            }} 
+                                            fullWidth 
+                                            {...sx} 
+                                        />
+                                    </Row>
+                                </Paper>
+                            ))}
+
+                            {(!form.additionalBanks || form.additionalBanks.length < 3) && (
+                                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+                                    <CommonButton 
+                                        variant="outlined" 
+                                        size="small" 
+                                        onClick={() => {
+                                            const updated = [...(form.additionalBanks || [])];
+                                            updated.push({ bankName: '', bankBranch: '', accountHolderName: '', accountNumber: '', ifscCode: '', ibanNo: '', swiftCode: '', micrCode: '' });
+                                            setForm(p => ({ ...p, additionalBanks: updated }));
+                                        }}
+                                        sx={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.8rem' }}
+                                    >
+                                        + Add Bank {form.additionalBanks ? form.additionalBanks.length + 2 : 2}
+                                    </CommonButton>
+                                </Box>
+                            )}
 
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Other Details" />

@@ -10,6 +10,18 @@ export interface IPartner {
     signatureImageUrl?: string;
 }
 
+export interface IAdditionalBank {
+    _id?: string;
+    bankName: string;
+    bankBranch?: string;
+    accountHolderName?: string;
+    accountNumber: string;
+    ifscCode?: string;
+    ibanNo?: string;
+    swiftCode?: string;
+    micrCode?: string;
+}
+
 export interface FirmMasterData {
     _id?: string;
     firmName: string;
@@ -23,6 +35,8 @@ export interface FirmMasterData {
     email?: string;
     phoneL?: string;
     firmType?: string;
+
+    // Bank Details
     bankName?: string;
     bankBranch?: string;
     accountHolderName?: string;
@@ -32,15 +46,25 @@ export interface FirmMasterData {
     swiftCode?: string;
     micrCode?: string;
     panNumber?: string;
+
+    // Other Details
     firmZone?: string;
     clientCodePrefix?: string;
     invoicePrefix?: string;
+
+    // Email IDs
     invoiceEmails?: string;
     supportEmails?: string;
     supportMobile?: string;
+
+    // Timer Settings
     autoCloseHours?: number;
+
+    // Firm Logo & Signature
     logoUrl?: string;
     signatureImageUrl?: string;
+
+    // Registration Details
     gstin?: string;
     membershipNo?: string;
     membershipDate?: string;
@@ -48,11 +72,15 @@ export interface FirmMasterData {
     frnDate?: string;
     licenceNo?: string;
     licenceAuthority?: string;
+
+    // Social Networking
     website?: string;
     facebook?: string;
     twitter?: string;
     googlePlus?: string;
     pmsAppUrl?: string;
+
+    // Extra Fields
     extraField1?: string;
     extraField2?: string;
     extraField3?: string;
@@ -60,7 +88,13 @@ export interface FirmMasterData {
     extraField5?: string;
     extraField6?: string;
     extraField7?: string;
+
+    // Partners
     partners?: IPartner[];
+
+    // Additional Banks
+    additionalBanks?: IAdditionalBank[];
+
     updatedAt?: string;
     invoiceTerms?: string;
     invoiceTemplate?: string;
