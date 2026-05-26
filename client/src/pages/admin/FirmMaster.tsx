@@ -632,7 +632,7 @@ const PartnersTab: React.FC<{
 
                         {/* Column 2: Membership & Milestones */}
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <Row label="ICAI Mem. No."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
+                            <Row label="ICAI Mem. NO."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
                             <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                             <Row label="Retirement Date"><TextField type="date" value={curr.retirementDate ? curr.retirementDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, retirementDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                             <Row label="Enroll Date"><TextField type="date" value={curr.enrollDate ? curr.enrollDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, enrollDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
@@ -640,7 +640,7 @@ const PartnersTab: React.FC<{
 
                         {/* Column 3: Identification & Signature */}
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <Row label="PAN"><TextField value={curr.pan || ''} onChange={(e) => setCurr(p => ({ ...p, pan: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                            <Row label="PAN NO."><TextField value={curr.pan || ''} onChange={(e) => setCurr(p => ({ ...p, pan: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
                             <Row label="DOB"><TextField type="date" value={curr.dob ? curr.dob.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, dob: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                             <Row label="Status">
                                 <FormControlLabel
@@ -1257,9 +1257,9 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="Bank Name*"><TextField value={form.bankName || ''} onChange={f('bankName')} fullWidth {...sx} /></Row>
                                 <Row label="Bank Branch*"><TextField value={form.bankBranch || ''} onChange={f('bankBranch')} fullWidth {...sx} /></Row>
                                 <Row label="Account Holder Name*"><TextField value={form.accountHolderName || ''} onChange={f('accountHolderName')} fullWidth {...sx} /></Row>
-                                <Row label="Bank A/C No*"><TextField value={form.accountNumber || ''} onChange={f('accountNumber')} fullWidth {...sx} /></Row>
+                                <Row label="Bank A/C NO.*"><TextField value={form.accountNumber || ''} onChange={f('accountNumber')} fullWidth {...sx} /></Row>
                                 <Row label="Bank IFS Code"><TextField value={form.ifscCode || ''} onChange={f('ifscCode')} fullWidth {...sx} /></Row>
-                                <Row label="IBAN No."><TextField value={form.ibanNo || ''} onChange={f('ibanNo')} fullWidth {...sx} /></Row>
+                                <Row label="IBAN NO."><TextField value={form.ibanNo || ''} onChange={f('ibanNo')} fullWidth {...sx} /></Row>
                                 <Row label="Swift Code"><TextField value={form.swiftCode || ''} onChange={f('swiftCode')} fullWidth {...sx} /></Row>
                                 <Row label="Micr Code"><TextField value={form.micrCode || ''} onChange={f('micrCode')} fullWidth {...sx} /></Row>
                             </Paper>
@@ -1316,7 +1316,7 @@ export const FirmMasterPage: React.FC = () => {
                                             {...sx} 
                                         />
                                     </Row>
-                                    <Row label="Bank A/C No*">
+                                    <Row label="Bank A/C NO.*">
                                         <TextField 
                                             value={bank.accountNumber || ''} 
                                             onChange={(e) => {
@@ -1340,7 +1340,7 @@ export const FirmMasterPage: React.FC = () => {
                                             {...sx} 
                                         />
                                     </Row>
-                                    <Row label="IBAN No.">
+                                    <Row label="IBAN NO.">
                                         <TextField 
                                             value={bank.ibanNo || ''} 
                                             onChange={(e) => {
@@ -1410,14 +1410,14 @@ export const FirmMasterPage: React.FC = () => {
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Invoice & Daily Report Email ID" />
                                 <Row label="Email*">
-                                    <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
+                                    <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} />
                                 </Row>
                             </Paper>
 
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Support Detail" />
                                 <Row label="Email*">
-                                    <TextField value={form.supportEmails || ''} onChange={f('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
+                                    <TextField value={form.supportEmails || ''} onChange={f('supportEmails')} fullWidth {...sx} />
                                 </Row>
                                 <Row label="Mobile Number*"><TextField value={form.supportMobile || ''} onChange={f('supportMobile')} fullWidth {...sx} /></Row>
                             </Paper>
@@ -1471,14 +1471,18 @@ export const FirmMasterPage: React.FC = () => {
 
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Registration Detail" />
-                                <Row label="GSTIN"><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
-                                <Row label="PAN"><TextField value={form.panNumber || ''} onChange={(e) => setForm(p => ({ ...p, panNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
-                                <Row label="TAN"><TextField value={form.tanNumber || ''} onChange={(e) => setForm(p => ({ ...p, tanNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
-                                <Row label="Membership No"><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
-                                <Row label="Membership Date"><TextField value={form.membershipDate ? form.membershipDate.split('T')[0] : ''} onChange={f('membershipDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
-                                <Row label="FRN No"><TextField value={form.frnNo || ''} onChange={f('frnNo')} fullWidth {...sx} /></Row>
+                                <Row label="GSTIN NO."><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
+                                <Row label="PAN NO."><TextField value={form.panNumber || ''} onChange={(e) => setForm(p => ({ ...p, panNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                                <Row label="TAN NO."><TextField value={form.tanNumber || ''} onChange={(e) => setForm(p => ({ ...p, tanNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                                {form.firmType === 'Proprietorship' && (
+                                    <>
+                                        <Row label="Membership NO."><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
+                                        <Row label="Membership Date"><TextField value={form.membershipDate ? form.membershipDate.split('T')[0] : ''} onChange={f('membershipDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                                    </>
+                                )}
+                                <Row label="FRN NO."><TextField value={form.frnNo || ''} onChange={f('frnNo')} fullWidth {...sx} /></Row>
                                 <Row label="FRN Date"><TextField value={form.frnDate ? form.frnDate.split('T')[0] : ''} onChange={f('frnDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
-                                <Row label="Licence No"><TextField value={form.licenceNo || ''} onChange={f('licenceNo')} fullWidth {...sx} /></Row>
+                                <Row label="Licence NO."><TextField value={form.licenceNo || ''} onChange={f('licenceNo')} fullWidth {...sx} /></Row>
                                 <Row label="Licence Authority"><TextField value={form.licenceAuthority || ''} onChange={f('licenceAuthority')} fullWidth {...sx} /></Row>
                             </Paper>
 
@@ -1695,8 +1699,7 @@ export const FirmMasterPage: React.FC = () => {
                             </Grid>
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <Row label="Invoice Email(s)">
-                                    <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx}
-                                        helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} />
+                                    <TextField value={form.invoiceEmails || ''} onChange={f('invoiceEmails')} fullWidth {...sx} />
                                 </Row>
                             </Grid>
                         </Grid>
