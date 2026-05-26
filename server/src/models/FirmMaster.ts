@@ -1,5 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IAdditionalBank {
+    bankName: string;
+    bankBranch?: string;
+    accountHolderName?: string;
+    accountNumber: string;
+    ifscCode?: string;
+    ibanNo?: string;
+    swiftCode?: string;
+    micrCode?: string;
+}
+
 export interface IPartner {
     name: string;
     designation: string;
@@ -79,6 +90,9 @@ export interface IFirmMaster extends Document {
     // Partners
     partners: IPartner[];
 
+    // Additional Banks
+    additionalBanks?: IAdditionalBank[];
+
     // New Fields
     invoiceTerms?: string;
     invoiceTemplate?: string; // e.g. 'template1', 'template2'
@@ -95,6 +109,17 @@ const PartnerSchema = new Schema<IPartner>({
     joiningDate: Date,
     signatureImageUrl: String,
     status: { type: Boolean, default: true },
+});
+
+const AdditionalBankSchema = new Schema<IAdditionalBank>({
+    bankName: { type: String, required: true },
+    bankBranch: String,
+    accountHolderName: String,
+    accountNumber: { type: String, required: true },
+    ifscCode: String,
+    ibanNo: String,
+    swiftCode: String,
+    micrCode: String,
 });
 
 const FirmMasterSchema = new Schema<IFirmMaster>(
@@ -167,6 +192,7 @@ const FirmMasterSchema = new Schema<IFirmMaster>(
         extraFieldLabels: { type: [String], default: ['', '', '', '', '', '', ''] },
         showLogo: { type: Boolean, default: true },
         partners: [PartnerSchema],
+        additionalBanks: { type: [AdditionalBankSchema], default: [] },
     },
     { timestamps: true }
 );
