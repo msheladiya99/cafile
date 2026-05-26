@@ -22,6 +22,7 @@ import {
     DialogActions,
     Checkbox,
     TablePagination,
+    MenuItem,
 } from '@mui/material';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
@@ -32,6 +33,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { clientGroupService } from '../../../services/clientGroupService';
+import firmService from '../../../services/firmService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow as FormRow, CommonButton } from '../../../components/common/UIComponents';
 import { BulkImportGroupModal } from './BulkImportGroupModal';
 
@@ -79,6 +81,11 @@ export const AddGroupList: React.FC = () => {
     const { data: groups = [], isLoading } = useQuery<ClientGroup[]>({
         queryKey: ['clientGroups'],
         queryFn: clientGroupService.getGroups
+    });
+
+    const { data: multiFirms = [] } = useQuery({
+        queryKey: ['multiFirms'],
+        queryFn: firmService.getMultiFirms
     });
 
     const createGroupMutation = useMutation({
@@ -202,7 +209,7 @@ export const AddGroupList: React.FC = () => {
             email: group.email,
             mobileNumber: group.mobileNumber,
             groupPersonName: group.groupPersonName || '',
-            groupOwnByFirm: group.groupOwnByFirm || ''
+            groupOwnByFirm: typeof group.groupOwnByFirm === 'object' && group.groupOwnByFirm ? group.groupOwnByFirm._id : (group.groupOwnByFirm || '')
         });
         setIsEditing(true);
         setEditingId(group._id || null);
@@ -302,13 +309,24 @@ export const AddGroupList: React.FC = () => {
 
                             <FormRow label="Group Own By Firm">
                                 <TextField
+                                    select
                                     name="groupOwnByFirm"
                                     value={formData.groupOwnByFirm}
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
+                                    SelectProps={{ native: false }}
                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {multiFirms.map((mf) => (
+                                        <MenuItem key={mf._id} value={mf._id}>
+                                            {mf.firmName}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
                             </FormRow>
 
                             <FormRow label="Address">
@@ -427,7 +445,11 @@ export const AddGroupList: React.FC = () => {
                                                         <TableCell sx={{ fontWeight: 500 }}>{g.groupName}</TableCell>
                                                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, color: 'text.secondary' }}>{g.email}</TableCell>
                                                         <TableCell sx={{ color: 'text.secondary' }}>{g.mobileNumber}</TableCell>
-                                                        <TableCell sx={{ color: 'text.secondary' }}>{g.groupOwnByFirm || '-'}</TableCell>
+                                                         <TableCell sx={{ color: 'text.secondary' }}>
+                                                             {typeof g.groupOwnByFirm === 'object' && g.groupOwnByFirm
+                                                                 ? g.groupOwnByFirm.firmName
+                                                                 : (g.groupOwnByFirm || '-')}
+                                                         </TableCell>
                                                         <TableCell>
                                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: g.status ? 'success.main' : 'error.main', mr: 1 }} />

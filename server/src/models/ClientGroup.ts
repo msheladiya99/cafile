@@ -8,7 +8,7 @@ export interface IClientGroup extends Document {
     email: string;
     mobileNumber: string;
     groupPersonName?: string;
-    groupOwnByFirm?: string;
+    groupOwnByFirm?: mongoose.Types.ObjectId | string;
     createdAt: Date;
     updatedAt: Date;
     firmId: mongoose.Types.ObjectId;
@@ -54,8 +54,9 @@ const clientGroupSchema = new Schema<IClientGroup>(
             trim: true,
         },
         groupOwnByFirm: {
-            type: String,
-            trim: true,
+            type: Schema.Types.ObjectId,
+            ref: 'MultiFirm',
+            required: false,
         },
     },
     {

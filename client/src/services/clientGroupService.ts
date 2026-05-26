@@ -9,7 +9,7 @@ export interface ClientGroup {
     email: string;
     mobileNumber: string;
     groupPersonName?: string;
-    groupOwnByFirm?: string;
+    groupOwnByFirm?: string | { _id: string; firmName: string };
     firmId?: string;
 }
 
