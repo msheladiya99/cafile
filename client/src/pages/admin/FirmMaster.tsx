@@ -1597,11 +1597,21 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 1: Partners ── */}
             {tab === 1 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <PartnersTab
-                        partners={form.partners || []}
-                        onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
-                        toast={toast}
-                    />
+                    {form.firmType === 'Proprietorship' ? (
+                        <Box sx={{ p: 5, textAlign: 'center', bgcolor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, my: 2 }}>
+                            <Building2 size={40} color="#6366f1" />
+                            <Typography fontWeight={700} fontSize="0.95rem" color="#1e293b">Partners Not Applicable</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 500 }}>
+                                A Proprietorship is a single-owner business entity. Therefore, adding partners is not applicable for this firm type. If you need to add partners, please change the Firm Type in the Firm Info tab.
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <PartnersTab
+                            partners={form.partners || []}
+                            onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
+                            toast={toast}
+                        />
+                    )}
                 </Paper>
             )}
 
