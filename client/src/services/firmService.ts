@@ -6,6 +6,12 @@ export interface IPartner {
     designation: string;
     icaiMembershipNo?: string;
     joiningDate?: string;
+    retirementDate?: string;
+    mobile?: string;
+    email?: string;
+    pan?: string;
+    dob?: string;
+    enrollDate?: string;
     status: boolean;
     signatureImageUrl?: string;
 }
@@ -72,6 +78,7 @@ export interface FirmMasterData {
     frnDate?: string;
     licenceNo?: string;
     licenceAuthority?: string;
+    tanNumber?: string;
 
     // Social Networking
     website?: string;
@@ -156,6 +163,7 @@ export interface IMultiFirmData {
     swiftCode?: string;
     micrCode?: string;
     panNumber?: string;
+    tanNumber?: string;
     gstin?: string;
     licenceNo?: string;
     licenceAuthority?: string;

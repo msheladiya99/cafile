@@ -16,6 +16,12 @@ export interface IPartner {
     designation: string;
     icaiMembershipNo?: string;
     joiningDate?: Date;
+    retirementDate?: Date;
+    mobile?: string;
+    email?: string;
+    pan?: string;
+    dob?: Date;
+    enrollDate?: Date;
     signatureImageUrl?: string;
     status: boolean;
 }
@@ -70,6 +76,7 @@ export interface IFirmMaster extends Document {
     frnDate?: Date;
     licenceNo?: string;
     licenceAuthority?: string;
+    tanNumber?: string;
 
     // Social Networking
     website?: string;
@@ -107,6 +114,12 @@ const PartnerSchema = new Schema<IPartner>({
     designation: { type: String, default: 'Partner' },
     icaiMembershipNo: String,
     joiningDate: Date,
+    retirementDate: Date,
+    mobile: String,
+    email: String,
+    pan: String,
+    dob: Date,
+    enrollDate: Date,
     signatureImageUrl: String,
     status: { type: Boolean, default: true },
 });
@@ -172,6 +185,7 @@ const FirmMasterSchema = new Schema<IFirmMaster>(
         frnDate: Date,
         licenceNo: String,
         licenceAuthority: String,
+        tanNumber: String,
 
         website: String,
         facebook: String,

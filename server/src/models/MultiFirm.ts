@@ -26,6 +26,7 @@ export interface IMultiFirm extends Document {
 
     // Other Detail
     panNumber?: string;
+    tanNumber?: string;
     gstin?: string;
     licenceNo?: string;
     licenceAuthority?: string;
@@ -87,6 +88,7 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
         swiftCode: String,
         micrCode: String,
         panNumber: String,
+        tanNumber: String,
         gstin: String,
         licenceNo: String,
         licenceAuthority: String,
@@ -113,6 +115,12 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
                     designation: { type: String, default: 'Partner' },
                     icaiMembershipNo: String,
                     joiningDate: Date,
+                    retirementDate: Date,
+                    mobile: String,
+                    email: String,
+                    pan: String,
+                    dob: Date,
+                    enrollDate: Date,
                     signatureImageUrl: String,
                     status: { type: Boolean, default: true },
                 })
