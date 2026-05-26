@@ -174,6 +174,11 @@ export interface IMultiFirmData {
     signImageUrl?: string;
     showLogo?: boolean;
     createdAt?: string;
+    partners?: IPartner[];
+    additionalBanks?: IAdditionalBank[];
+    invoiceTerms?: string;
+    invoiceTemplate?: string;
+    extraFieldLabels?: string[];
 }
 
 const firmService = {
@@ -211,16 +216,17 @@ const firmService = {
     },
 
     // Documents
-    getDocuments: async (): Promise<IFirmDocument[]> => {
-        const { data } = await api.get('/firm/documents');
+    getDocuments: async (branchFirmId?: string): Promise<IFirmDocument[]> => {
+        const { data } = await api.get('/firm/documents', { params: { branchFirmId } });
         return data;
     },
-    addDocument: async (payload: { documentName: string; documentNumber?: string; description?: string; file?: File }): Promise<IFirmDocument> => {
+    addDocument: async (payload: { documentName: string; documentNumber?: string; description?: string; file?: File; branchFirmId?: string }): Promise<IFirmDocument> => {
         const formData = new FormData();
         formData.append('documentName', payload.documentName);
         if (payload.documentNumber) formData.append('documentNumber', payload.documentNumber);
         if (payload.description) formData.append('description', payload.description);
         if (payload.file) formData.append('file', payload.file);
+        if (payload.branchFirmId) formData.append('branchFirmId', payload.branchFirmId);
         const { data } = await api.post('/firm/documents', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -258,15 +264,15 @@ const firmService = {
     },
 
     // Tax Detail
-    getTaxDetails: async (): Promise<ITaxDetailData[]> => {
-        const { data } = await api.get('/firm/tax');
+    getTaxDetails: async (branchFirmId?: string): Promise<ITaxDetailData[]> => {
+        const { data } = await api.get('/firm/tax', { params: { branchFirmId } });
         return data;
     },
-    createTaxDetail: async (payload: Partial<ITaxDetailData>): Promise<ITaxDetailData> => {
+    createTaxDetail: async (payload: Partial<ITaxDetailData> & { branchFirmId?: string }): Promise<ITaxDetailData> => {
         const { data } = await api.post('/firm/tax', payload);
         return data;
     },
-    updateTaxDetail: async (id: string, payload: Partial<ITaxDetailData>): Promise<ITaxDetailData> => {
+    updateTaxDetail: async (id: string, payload: Partial<ITaxDetailData> & { branchFirmId?: string }): Promise<ITaxDetailData> => {
         const { data } = await api.put(`/firm/tax/${id}`, payload);
         return data;
     },
@@ -275,15 +281,15 @@ const firmService = {
     },
 
     // Currency
-    getCurrencies: async (): Promise<ICurrencyData[]> => {
-        const { data } = await api.get('/firm/currency');
+    getCurrencies: async (branchFirmId?: string): Promise<ICurrencyData[]> => {
+        const { data } = await api.get('/firm/currency', { params: { branchFirmId } });
         return data;
     },
-    createCurrency: async (payload: Partial<ICurrencyData>): Promise<ICurrencyData> => {
+    createCurrency: async (payload: Partial<ICurrencyData> & { branchFirmId?: string }): Promise<ICurrencyData> => {
         const { data } = await api.post('/firm/currency', payload);
         return data;
     },
-    updateCurrency: async (id: string, payload: Partial<ICurrencyData>): Promise<ICurrencyData> => {
+    updateCurrency: async (id: string, payload: Partial<ICurrencyData> & { branchFirmId?: string }): Promise<ICurrencyData> => {
         const { data } = await api.put(`/firm/currency/${id}`, payload);
         return data;
     },

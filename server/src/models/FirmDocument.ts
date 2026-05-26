@@ -10,6 +10,7 @@ export interface IFirmDocument extends Document {
     fileSize?: number;
     uploadedAt?: Date;
     firmId: mongoose.Types.ObjectId;
+    branchFirmId?: string;
 }
 
 const FirmDocumentSchema = new Schema<IFirmDocument>(
@@ -20,6 +21,7 @@ const FirmDocumentSchema = new Schema<IFirmDocument>(
             required: true,
             index: true
         },
+        branchFirmId: { type: String, default: 'primary', index: true },
         documentName: { type: String, required: true },
         documentNumber: String,
         description: String,

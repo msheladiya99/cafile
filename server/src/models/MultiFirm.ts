@@ -50,6 +50,13 @@ export interface IMultiFirm extends Document {
     signImageUrl?: string;
     showLogo?: boolean;
     firmId: mongoose.Types.ObjectId;
+
+    // New separate fields for branch firms
+    partners?: any[];
+    additionalBanks?: any[];
+    invoiceTerms?: string;
+    invoiceTemplate?: string;
+    extraFieldLabels?: string[];
 }
 
 const MultiFirmSchema = new Schema<IMultiFirm>(
@@ -97,6 +104,39 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
         logoUrl: String,
         signImageUrl: String,
         showLogo: { type: Boolean, default: true },
+
+        // Separate fields
+        partners: {
+            type: [
+                new Schema({
+                    name: { type: String, required: true },
+                    designation: { type: String, default: 'Partner' },
+                    icaiMembershipNo: String,
+                    joiningDate: Date,
+                    signatureImageUrl: String,
+                    status: { type: Boolean, default: true },
+                })
+            ],
+            default: []
+        },
+        additionalBanks: {
+            type: [
+                new Schema({
+                    bankName: { type: String, required: true },
+                    bankBranch: String,
+                    accountHolderName: String,
+                    accountNumber: { type: String, required: true },
+                    ifscCode: String,
+                    ibanNo: String,
+                    swiftCode: String,
+                    micrCode: String,
+                })
+            ],
+            default: []
+        },
+        invoiceTerms: String,
+        invoiceTemplate: { type: String, default: 'template1' },
+        extraFieldLabels: { type: [String], default: ['', '', '', '', '', '', ''] },
     },
     { timestamps: true }
 );

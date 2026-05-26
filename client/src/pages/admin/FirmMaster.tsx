@@ -167,8 +167,11 @@ const DOC_TYPES = [
 ];
 
 // ─── Firm Documents Sub-component ─────────────────────────────────────────────
-interface FirmDocumentsTabProps { toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }
-const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
+interface FirmDocumentsTabProps { 
+    branchFirmId: string;
+    toast: (msg: string, sev?: 'success' | 'error' | 'info') => void;
+}
+const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ branchFirmId, toast }) => {
     const queryClient = useQueryClient();
     const [docName, setDocName] = useState('');
     const [docNumber, setDocNumber] = useState('');
@@ -178,13 +181,13 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
     const [saving, setSaving] = useState(false);
 
     const { data: docs = [], isLoading } = useQuery<import('../../services/firmService').IFirmDocument[]>({
-        queryKey: ['firmDocuments'],
-        queryFn: firmService.getDocuments,
+        queryKey: ['firmDocuments', branchFirmId],
+        queryFn: () => firmService.getDocuments(branchFirmId),
     });
 
     const deleteMutation = useMutation({
         mutationFn: firmService.deleteDocument,
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['firmDocuments'] }); toast('Document deleted'); },
+        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['firmDocuments', branchFirmId] }); toast('Document deleted'); },
         onError: () => toast('Delete failed', 'error'),
     });
 
@@ -192,8 +195,8 @@ const FirmDocumentsTab: React.FC<FirmDocumentsTabProps> = ({ toast }) => {
         if (!docName) { toast('Document Name is required', 'error'); return; }
         setSaving(true);
         try {
-            await firmService.addDocument({ documentName: docName, documentNumber: docNumber, description: docDesc, file: docFile || undefined });
-            queryClient.invalidateQueries({ queryKey: ['firmDocuments'] });
+            await firmService.addDocument({ documentName: docName, documentNumber: docNumber, description: docDesc, file: docFile || undefined, branchFirmId });
+            queryClient.invalidateQueries({ queryKey: ['firmDocuments', branchFirmId] });
             toast('Document saved successfully!');
             setDocName(''); setDocNumber(''); setDocDesc(''); setDocFile(null); setDocFileName('No file chosen');
         } catch { toast('Failed to save document', 'error'); }
@@ -354,19 +357,22 @@ const CURRENCIES = [
 ];
 const CURR_BLANK = { currencyCode: '', currencyName: '', rate: 1, isDefault: false, status: true };
 
-const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }> = ({ toast }) => {
+const CurrencyTab: React.FC<{ 
+    branchFirmId: string;
+    toast: (msg: string, sev?: 'success' | 'error' | 'info') => void;
+}> = ({ branchFirmId, toast }) => {
     const queryClient = useQueryClient();
     const [curr, setCurr] = useState(CURR_BLANK);
     const [editId, setEditId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
     const { data: currencies = [], isLoading } = useQuery<import('../../services/firmService').ICurrencyData[]>({
-        queryKey: ['currencies'], queryFn: firmService.getCurrencies,
+        queryKey: ['currencies', branchFirmId], queryFn: () => firmService.getCurrencies(branchFirmId),
     });
 
     const deleteMutation = useMutation({
         mutationFn: firmService.deleteCurrency,
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['currencies'] }); toast('Currency deleted'); },
+        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['currencies', branchFirmId] }); toast('Currency deleted'); },
         onError: () => toast('Delete failed', 'error'),
     });
 
@@ -379,9 +385,9 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
         if (!curr.currencyCode) { toast('Please choose a currency', 'error'); return; }
         setSaving(true);
         try {
-            if (editId) { await firmService.updateCurrency(editId, curr); toast('Currency updated!'); }
-            else { await firmService.createCurrency(curr); toast('Currency added!'); }
-            queryClient.invalidateQueries({ queryKey: ['currencies'] });
+            if (editId) { await firmService.updateCurrency(editId, { ...curr, branchFirmId }); toast('Currency updated!'); }
+            else { await firmService.createCurrency({ ...curr, branchFirmId }); toast('Currency added!'); }
+            queryClient.invalidateQueries({ queryKey: ['currencies', branchFirmId] });
             setCurr(CURR_BLANK); setEditId(null);
         } catch (e: unknown) {
             const msg = (e as { response?: { data?: { message?: string } } }).response?.data?.message;
@@ -473,19 +479,22 @@ const CurrencyTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | '
 // ─── Tax Detail Sub-component ─────────────────────────────────────────────────
 const TAX_BLANK: { name: string; percentageType: 'Percentage' | 'Fixed'; percentageValue: number; isDefault: boolean; status: boolean } = { name: '', percentageType: 'Percentage', percentageValue: 0, isDefault: false, status: true };
 
-const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }> = ({ toast }) => {
+const TaxDetailTab: React.FC<{ 
+    branchFirmId: string;
+    toast: (msg: string, sev?: 'success' | 'error' | 'info') => void;
+}> = ({ branchFirmId, toast }) => {
     const queryClient = useQueryClient();
     const [tax, setTax] = useState(TAX_BLANK);
     const [editId, setEditId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
     const { data: taxes = [], isLoading } = useQuery<import('../../services/firmService').ITaxDetailData[]>({
-        queryKey: ['taxDetails'], queryFn: firmService.getTaxDetails,
+        queryKey: ['taxDetails', branchFirmId], queryFn: () => firmService.getTaxDetails(branchFirmId),
     });
 
     const deleteMutation = useMutation({
         mutationFn: firmService.deleteTaxDetail,
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['taxDetails'] }); toast('Tax deleted'); },
+        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['taxDetails', branchFirmId] }); toast('Tax deleted'); },
         onError: () => toast('Delete failed', 'error'),
     });
 
@@ -493,9 +502,9 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
         if (!tax.name) { toast('Name is required', 'error'); return; }
         setSaving(true);
         try {
-            if (editId) { await firmService.updateTaxDetail(editId, tax); toast('Tax updated!'); }
-            else { await firmService.createTaxDetail(tax); toast('Tax added!'); }
-            queryClient.invalidateQueries({ queryKey: ['taxDetails'] });
+            if (editId) { await firmService.updateTaxDetail(editId, { ...tax, branchFirmId }); toast('Tax updated!'); }
+            else { await firmService.createTaxDetail({ ...tax, branchFirmId }); toast('Tax added!'); }
+            queryClient.invalidateQueries({ queryKey: ['taxDetails', branchFirmId] });
             setTax(TAX_BLANK); setEditId(null);
         } catch { toast('Save failed', 'error'); } finally { setSaving(false); }
     };
@@ -751,6 +760,11 @@ export const FirmMasterPage: React.FC = () => {
                     ...BLANK,
                     ...currentMf,
                     signatureImageUrl: currentMf.signImageUrl || '',
+                    partners: currentMf.partners || [],
+                    additionalBanks: currentMf.additionalBanks || [],
+                    invoiceTerms: currentMf.invoiceTerms || '',
+                    invoiceTemplate: currentMf.invoiceTemplate || 'template1',
+                    extraFieldLabels: currentMf.extraFieldLabels || ['', '', '', '', '', '', ''],
                 });
             }
         }
@@ -810,6 +824,11 @@ export const FirmMasterPage: React.FC = () => {
                     extraField5: form.extraField5,
                     extraField6: form.extraField6,
                     extraField7: form.extraField7,
+                    partners: form.partners,
+                    additionalBanks: form.additionalBanks,
+                    invoiceTerms: form.invoiceTerms,
+                    invoiceTemplate: form.invoiceTemplate,
+                    extraFieldLabels: form.extraFieldLabels,
                 };
                 const newFirm = await firmService.createMultiFirm(payload);
                 await refetchMultiFirms();
@@ -861,6 +880,11 @@ export const FirmMasterPage: React.FC = () => {
                     extraField5: form.extraField5,
                     extraField6: form.extraField6,
                     extraField7: form.extraField7,
+                    partners: form.partners,
+                    additionalBanks: form.additionalBanks,
+                    invoiceTerms: form.invoiceTerms,
+                    invoiceTemplate: form.invoiceTemplate,
+                    extraFieldLabels: form.extraFieldLabels,
                 };
                 await firmService.updateMultiFirm(selectedFirmId, payload);
                 await refetchMultiFirms();
@@ -1094,7 +1118,7 @@ export const FirmMasterPage: React.FC = () => {
                             </CommonButton>
                         )}
 
-                        {selectedFirmId === 'primary' && !isCreateMode && (
+                        {!isCreateMode && (
                             <CommonButton variant="contained" size="small"
                                 onClick={() => setFieldModal(true)}
                                 sx={{ 
@@ -1429,7 +1453,7 @@ export const FirmMasterPage: React.FC = () => {
                                     <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
                                 </Box>
                                 {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
-                                    <Row key={n} label={(firm?.extraFieldLabels && firm.extraFieldLabels[i]) || `Field ${n}`}>
+                                    <Row key={n} label={(form.extraFieldLabels && form.extraFieldLabels[i]) || (firm?.extraFieldLabels && firm.extraFieldLabels[i]) || `Field ${n}`}>
                                         <TextField value={(form as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={f(`extraField${n}` as keyof FirmMasterData)} fullWidth {...sx} />
                                     </Row>
                                 ))}
@@ -1573,32 +1597,18 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 1: Partners ── */}
             {tab === 1 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    {selectedFirmId !== 'primary' ? (
-                        renderGlobalBanner(
-                            "Partners Global Management",
-                            `Partners are configured at the tenant level and managed globally under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
-                        )
-                    ) : (
-                        <PartnersTab
-                            partners={form.partners || []}
-                            onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
-                            toast={toast}
-                        />
-                    )}
+                    <PartnersTab
+                        partners={form.partners || []}
+                        onUpdate={(p) => setForm(prev => ({ ...prev, partners: p }))}
+                        toast={toast}
+                    />
                 </Paper>
             )}
 
             {/* ── TAB 2: Firm Documents ── */}
             {tab === 2 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    {selectedFirmId !== 'primary' ? (
-                        renderGlobalBanner(
-                            "Firm Documents Global Management",
-                            `Firm documents are shared at the tenant level and managed globally under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
-                        )
-                    ) : (
-                        <FirmDocumentsTab toast={toast} />
-                    )}
+                    <FirmDocumentsTab branchFirmId={selectedFirmId} toast={toast} />
                 </Paper>
             )}
 
@@ -1606,14 +1616,7 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 3: Tax Detail ── */}
             {tab === 3 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    {selectedFirmId !== 'primary' ? (
-                        renderGlobalBanner(
-                            "Tax details Global Management",
-                            `Tax items are configured globally at the tenant level and managed under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
-                        )
-                    ) : (
-                        <TaxDetailTab toast={toast} />
-                    )}
+                    <TaxDetailTab branchFirmId={selectedFirmId} toast={toast} />
                 </Paper>
             )}
 
@@ -1621,14 +1624,7 @@ export const FirmMasterPage: React.FC = () => {
             {/* ── TAB 4: Currency ── */}
             {tab === 4 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    {selectedFirmId !== 'primary' ? (
-                        renderGlobalBanner(
-                            "Currencies Global Management",
-                            `Currencies are defined globally at the tenant level and managed under the Primary Firm (${firm?.firmName || 'Main Firm'}).`
-                        )
-                    ) : (
-                        <CurrencyTab toast={toast} />
-                    )}
+                    <CurrencyTab branchFirmId={selectedFirmId} toast={toast} />
                 </Paper>
             )}
 
@@ -1836,8 +1832,11 @@ export const FirmMasterPage: React.FC = () => {
                             <CommonButton onClick={() => setFieldModal(false)} variant="text">Cancel</CommonButton>
                             <CommonButton
                                 variant="contained"
-                                onClick={() => saveMutation.mutate(form)}
-                                loading={saveMutation.isPending}
+                                onClick={async () => {
+                                    await handleMainSave();
+                                    setFieldModal(false);
+                                }}
+                                loading={saving}
                                 sx={{ borderRadius: '8px', px: 3 }}
                             >
                                 Update Labels

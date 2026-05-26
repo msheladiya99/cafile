@@ -7,6 +7,7 @@ export interface ICurrency extends Document {
     isDefault: boolean;
     status: boolean;
     firmId: mongoose.Types.ObjectId;
+    branchFirmId?: string;
 }
 
 const CurrencySchema = new Schema<ICurrency>(
@@ -17,6 +18,7 @@ const CurrencySchema = new Schema<ICurrency>(
             required: true,
             index: true
         },
+        branchFirmId: { type: String, default: 'primary', index: true },
         currencyCode: { type: String, required: true, uppercase: true },
         currencyName: { type: String, required: true },
         rate: { type: Number, required: true, default: 1 },
@@ -26,6 +28,6 @@ const CurrencySchema = new Schema<ICurrency>(
     { timestamps: true }
 );
 
-CurrencySchema.index({ firmId: 1, currencyCode: 1 }, { unique: true });
+CurrencySchema.index({ firmId: 1, branchFirmId: 1, currencyCode: 1 }, { unique: true });
 
 export const Currency = mongoose.model<ICurrency>('Currency', CurrencySchema);
