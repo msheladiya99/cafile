@@ -69,6 +69,7 @@ export interface ClientGroup {
     _id: string;
     groupName: string;
     description?: string;
+    groupOwnByFirm?: string;
 }
 
 export interface CreateClientData {

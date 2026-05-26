@@ -19,7 +19,7 @@ interface BulkImportGroupModalProps {
 }
 
 const EXCEL_FIELDS = [
-    'Group Name', 'Address', 'Phone / Mobile', 'Email Address', 'Group Person Name', 'Description', 'Status (Active/Inactive)'
+    'Group Name', 'Address', 'Phone / Mobile', 'Email Address', 'Group Person Name', 'Description', 'Status (Active/Inactive)', 'Group Own By Firm'
 ];
 
 export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
@@ -74,6 +74,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                     const gName = getVal(['group name', 'group', 'groupname']);
                     const mobile = getVal(['phone / mobile', 'phone', 'mobile number', 'mobile', 'mobilenumber']);
                     const email = getVal(['email address', 'email', 'emailaddress']);
+                    const groupOwn = getVal(['group own by firm', 'own by firm', 'group own', 'groupownbyfirm']);
 
                     return {
                         groupName: gName ? String(gName).trim() : '',
@@ -83,6 +84,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                         groupPersonName: getVal(['group person name', 'person name', 'person']),
                         description: getVal(['description', 'desc']),
                         status: parseStatus(getVal(['status', 'status (active/inactive)'])),
+                        groupOwnByFirm: groupOwn ? String(groupOwn).trim() : '',
                     };
                 });
 
@@ -209,6 +211,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                                         <TableCell sx={{ fontWeight: 'bold' }}>Phone / Mobile</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Email Address</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Group Person Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Group Own By Firm</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                                     </TableRow>
@@ -222,6 +225,7 @@ export const BulkImportGroupModal: React.FC<BulkImportGroupModalProps> = ({
                                                 <TableCell>{(row.mobileNumber as string) || <Typography variant="caption" color="error">Missing Phone / Mobile</Typography>}</TableCell>
                                                 <TableCell>{(row.email as string) || '-'}</TableCell>
                                                 <TableCell>{(row.groupPersonName as string) || '-'}</TableCell>
+                                                <TableCell>{(row.groupOwnByFirm as string) || '-'}</TableCell>
                                                 <TableCell>{(row.address as string) || '-'}</TableCell>
                                                 <TableCell>
                                                     {isError ? <Chip size="small" label="Missing Required" color="error" /> : <Chip size="small" label="Ready" color="success" />}
