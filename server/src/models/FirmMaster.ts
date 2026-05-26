@@ -111,7 +111,7 @@ export interface IFirmMaster extends Document {
 
 const PartnerSchema = new Schema<IPartner>({
     name: { type: String, required: true },
-    designation: { type: String, default: 'Partner' },
+    designation: { type: String, default: '' },
     icaiMembershipNo: String,
     joiningDate: Date,
     retirementDate: Date,

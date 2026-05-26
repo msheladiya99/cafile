@@ -112,7 +112,7 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
             type: [
                 new Schema({
                     name: { type: String, required: true },
-                    designation: { type: String, default: 'Partner' },
+                    designation: { type: String, default: '' },
                     icaiMembershipNo: String,
                     joiningDate: Date,
                     retirementDate: Date,
