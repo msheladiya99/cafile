@@ -78,6 +78,7 @@ export interface FirmMasterData {
     frnDate?: string;
     licenceNo?: string;
     licenceAuthority?: string;
+    tanNumber?: string;
 
     // Social Networking
     website?: string;
@@ -162,6 +163,7 @@ export interface IMultiFirmData {
     swiftCode?: string;
     micrCode?: string;
     panNumber?: string;
+    tanNumber?: string;
     gstin?: string;
     licenceNo?: string;
     licenceAuthority?: string;

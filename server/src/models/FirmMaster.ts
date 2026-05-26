@@ -76,6 +76,7 @@ export interface IFirmMaster extends Document {
     frnDate?: Date;
     licenceNo?: string;
     licenceAuthority?: string;
+    tanNumber?: string;
 
     // Social Networking
     website?: string;
@@ -184,6 +185,7 @@ const FirmMasterSchema = new Schema<IFirmMaster>(
         frnDate: Date,
         licenceNo: String,
         licenceAuthority: String,
+        tanNumber: String,
 
         website: String,
         facebook: String,

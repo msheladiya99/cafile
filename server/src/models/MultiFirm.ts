@@ -26,6 +26,7 @@ export interface IMultiFirm extends Document {
 
     // Other Detail
     panNumber?: string;
+    tanNumber?: string;
     gstin?: string;
     licenceNo?: string;
     licenceAuthority?: string;
@@ -87,6 +88,7 @@ const MultiFirmSchema = new Schema<IMultiFirm>(
         swiftCode: String,
         micrCode: String,
         panNumber: String,
+        tanNumber: String,
         gstin: String,
         licenceNo: String,
         licenceAuthority: String,

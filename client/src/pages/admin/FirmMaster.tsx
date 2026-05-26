@@ -144,7 +144,7 @@ const BLANK: FirmMasterData = {
     invoiceEmails: '', supportEmails: '', supportMobile: '',
     autoCloseHours: 10,
     gstin: '', membershipNo: '', membershipDate: '', frnNo: '', frnDate: '',
-    licenceNo: '', licenceAuthority: '',
+    licenceNo: '', licenceAuthority: '', tanNumber: '',
     website: '', facebook: '', twitter: '', googlePlus: '', pmsAppUrl: '',
     extraField1: '', extraField2: '', extraField3: '', extraField4: '', extraField5: '', extraField6: '', extraField7: '',
     partners: [],
@@ -849,6 +849,7 @@ export const FirmMasterPage: React.FC = () => {
                     swiftCode: form.swiftCode,
                     micrCode: form.micrCode,
                     panNumber: form.panNumber,
+                    tanNumber: form.tanNumber,
                     gstin: form.gstin,
                     licenceNo: form.licenceNo,
                     licenceAuthority: form.licenceAuthority,
@@ -905,6 +906,7 @@ export const FirmMasterPage: React.FC = () => {
                     swiftCode: form.swiftCode,
                     micrCode: form.micrCode,
                     panNumber: form.panNumber,
+                    tanNumber: form.tanNumber,
                     gstin: form.gstin,
                     licenceNo: form.licenceNo,
                     licenceAuthority: form.licenceAuthority,
@@ -1260,7 +1262,6 @@ export const FirmMasterPage: React.FC = () => {
                                 <Row label="IBAN No."><TextField value={form.ibanNo || ''} onChange={f('ibanNo')} fullWidth {...sx} /></Row>
                                 <Row label="Swift Code"><TextField value={form.swiftCode || ''} onChange={f('swiftCode')} fullWidth {...sx} /></Row>
                                 <Row label="Micr Code"><TextField value={form.micrCode || ''} onChange={f('micrCode')} fullWidth {...sx} /></Row>
-                                <Row label="PAN No*"><TextField value={form.panNumber || ''} onChange={f('panNumber')} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
                             </Paper>
 
                             {(form.additionalBanks || []).map((bank, index) => (
@@ -1471,6 +1472,8 @@ export const FirmMasterPage: React.FC = () => {
                             <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
                                 <SectionHead title="Registration Detail" />
                                 <Row label="GSTIN"><TextField value={form.gstin || ''} onChange={f('gstin')} fullWidth {...sx} /></Row>
+                                <Row label="PAN"><TextField value={form.panNumber || ''} onChange={(e) => setForm(p => ({ ...p, panNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                                <Row label="TAN"><TextField value={form.tanNumber || ''} onChange={(e) => setForm(p => ({ ...p, tanNumber: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
                                 <Row label="Membership No"><TextField value={form.membershipNo || ''} onChange={f('membershipNo')} fullWidth {...sx} /></Row>
                                 <Row label="Membership Date"><TextField value={form.membershipDate ? form.membershipDate.split('T')[0] : ''} onChange={f('membershipDate')} type="date" fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                                 <Row label="FRN No"><TextField value={form.frnNo || ''} onChange={f('frnNo')} fullWidth {...sx} /></Row>
