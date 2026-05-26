@@ -717,7 +717,7 @@ const PartnersTab: React.FC<{
 export const FirmMasterPage: React.FC = () => {
     const queryClient = useQueryClient();
     const [tab, setTab] = useState(0);
-    const [form, setForm] = useState<FirmMasterData>(BLANK);
+    const [form, setForm] = useState<FirmMasterData>({ ...BLANK });
     const [fieldModal, setFieldModal] = useState(false);
     const [previewModal, setPreviewModal] = useState<{ open: boolean; template: string }>({ open: false, template: 'template1' });
     const [logoLoading, setLogoLoading] = useState(false);
@@ -741,7 +741,7 @@ export const FirmMasterPage: React.FC = () => {
     });
 
     useEffect(() => {
-        if (isCreateMode) return;
+        if (isCreateMode || selectedFirmId === 'new') return;
         if (selectedFirmId === 'primary') {
             if (firm) setForm({ ...BLANK, ...firm });
         } else {
@@ -770,7 +770,9 @@ export const FirmMasterPage: React.FC = () => {
 
         setSaving(true);
         try {
-            if (isCreateMode) {
+            const isCreating = isCreateMode || selectedFirmId === 'new' || !form._id;
+
+            if (isCreating) {
                 const payload: Partial<IMultiFirmData> = {
                     firmName: form.firmName,
                     shortName: form.shortName,
@@ -874,7 +876,7 @@ export const FirmMasterPage: React.FC = () => {
     };
 
     const handleMainCancel = () => {
-        if (isCreateMode) {
+        if (isCreateMode || selectedFirmId === 'new') {
             setIsCreateMode(false);
             setSelectedFirmId('primary');
         } else {
@@ -895,7 +897,7 @@ export const FirmMasterPage: React.FC = () => {
     };
 
     const handleMainDelete = async () => {
-        if (selectedFirmId === 'primary' || isCreateMode) return;
+        if (selectedFirmId === 'primary' || selectedFirmId === 'new' || isCreateMode) return;
         setDeleting(true);
         try {
             await firmService.deleteMultiFirm(selectedFirmId);
@@ -927,7 +929,8 @@ export const FirmMasterPage: React.FC = () => {
     const handleLogo = async (file: File) => {
         setLogoLoading(true);
         try {
-            if (selectedFirmId === 'primary' && !isCreateMode) {
+            const isCreating = isCreateMode || selectedFirmId === 'new' || !form._id;
+            if (selectedFirmId === 'primary' && !isCreating) {
                 const r = await firmService.uploadLogo(file);
                 setForm(p => ({ ...p, logoUrl: r.logoUrl }));
             } else {
@@ -945,7 +948,8 @@ export const FirmMasterPage: React.FC = () => {
     const handleSig = async (file: File) => {
         setSigLoading(true);
         try {
-            if (selectedFirmId === 'primary' && !isCreateMode) {
+            const isCreating = isCreateMode || selectedFirmId === 'new' || !form._id;
+            if (selectedFirmId === 'primary' && !isCreating) {
                 const r = await firmService.uploadSignature(file);
                 setForm(p => ({ ...p, signatureImageUrl: r.stampImageUrl }));
             } else {
@@ -1000,7 +1004,7 @@ export const FirmMasterPage: React.FC = () => {
                         <Avatar sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, width: 36, height: 36 }}><Building2 size={16} /></Avatar>
                         <Typography fontWeight={700} fontSize="1.05rem">Firm Master</Typography>
                         
-                        {!isCreateMode ? (
+                        {selectedFirmId !== 'new' && !isCreateMode ? (
                             <Select
                                 value={selectedFirmId}
                                 onChange={(e) => {
@@ -1044,15 +1048,16 @@ export const FirmMasterPage: React.FC = () => {
                         flexWrap: 'wrap',
                         alignItems: 'center'
                     }}>
-                        {!isCreateMode && (
+                        {!isCreateMode && selectedFirmId !== 'new' && (
                             <CommonButton 
                                 variant="contained" 
                                 size="small" 
                                 startIcon={<Plus size={16} />}
                                 onClick={() => {
+                                    setSelectedFirmId('new');
                                     setIsCreateMode(true);
                                     setTab(0);
-                                    setForm(BLANK);
+                                    setForm({ ...BLANK });
                                 }}
                                 sx={{ 
                                     bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, 
@@ -1089,19 +1094,21 @@ export const FirmMasterPage: React.FC = () => {
                             </CommonButton>
                         )}
 
-                        <CommonButton variant="contained" size="small"
-                            onClick={() => setFieldModal(true)}
-                            sx={{ 
-                                bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, 
-                                borderRadius: '8px', 
-                                boxShadow: 'none', 
-                                fontWeight: 700, 
-                                fontSize: '0.82rem',
-                                flex: { xs: 1, sm: 'none' },
-                                whiteSpace: 'nowrap'
-                            }}>
-                            Field Master
-                        </CommonButton>
+                        {selectedFirmId === 'primary' && !isCreateMode && (
+                            <CommonButton variant="contained" size="small"
+                                onClick={() => setFieldModal(true)}
+                                sx={{ 
+                                    bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, 
+                                    borderRadius: '8px', 
+                                    boxShadow: 'none', 
+                                    fontWeight: 700, 
+                                    fontSize: '0.82rem',
+                                    flex: { xs: 1, sm: 'none' },
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                Field Master
+                            </CommonButton>
+                        )}
                         <CommonButton variant="contained" size="small" startIcon={saving || saveMutation.isPending ? null : <Save size={16} />}
                             onClick={handleMainSave}
                             loading={saving || saveMutation.isPending}
@@ -1422,7 +1429,7 @@ export const FirmMasterPage: React.FC = () => {
                                     <Tooltip title="These fields can be used for custom firm data. Click 'Field Master' in the header to name these fields."><Info size={14} color="#aaa" style={{ cursor: 'pointer' }} /></Tooltip>
                                 </Box>
                                 {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
-                                    <Row key={n} label={(form.extraFieldLabels && form.extraFieldLabels[i]) || `Field ${n}`}>
+                                    <Row key={n} label={(firm?.extraFieldLabels && firm.extraFieldLabels[i]) || `Field ${n}`}>
                                         <TextField value={(form as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={f(`extraField${n}` as keyof FirmMasterData)} fullWidth {...sx} />
                                     </Row>
                                 ))}
@@ -1452,7 +1459,7 @@ export const FirmMasterPage: React.FC = () => {
                                 <tbody>
                                     {/* Primary Firm Row */}
                                     {firm && (
-                                        <tr style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === 'primary' && !isCreateMode ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
+                                        <tr style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === 'primary' && !isCreateMode && selectedFirmId !== 'new' ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
                                             <td style={{ padding: '10px 12px', color: '#64748b', fontWeight: 500 }}>1</td>
                                             <td style={{ padding: '10px 12px' }}>
                                                 <Avatar src={firm.logoUrl} sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#6366f1' }}>
@@ -1499,7 +1506,7 @@ export const FirmMasterPage: React.FC = () => {
 
                                     {/* Branch Firms Rows */}
                                     {multiFirms.map((mf, index) => (
-                                        <tr key={mf._id} style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === mf._id && !isCreateMode ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
+                                        <tr key={mf._id} style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: selectedFirmId === mf._id && !isCreateMode && selectedFirmId !== 'new' ? '#f0fdf4' : 'transparent', transition: 'background-color 0.2s' }}>
                                             <td style={{ padding: '10px 12px', color: '#64748b', fontWeight: 500 }}>{index + 2}</td>
                                             <td style={{ padding: '10px 12px' }}>
                                                 <Avatar src={mf.logoUrl} sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#10b981' }}>
@@ -1770,14 +1777,16 @@ export const FirmMasterPage: React.FC = () => {
             )}
 
             {/* Save / Cancel Footer (Only for tabs that modify firm-wide record) */}
-            {(tab === 0 || tab === 1 || tab === 6) && (
+            {(tab === 0 || tab === 1 || tab === 5) && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3, mb: 4 }}>
-                    <CommonButton variant="contained" size="small" onClick={() => { if (!form.firmName) { toast('Firm Name is required', 'error'); return; } saveMutation.mutate(form); }}
-                        loading={saveMutation.isPending}
+                    <CommonButton variant="contained" size="small"
+                        onClick={handleMainSave}
+                        loading={saving || saveMutation.isPending}
                         sx={{ boxShadow: 'none' }}>
                         Save
                     </CommonButton>
-                    <CommonButton variant="outlined" size="small" onClick={() => firm && setForm({ ...BLANK, ...firm })}
+                    <CommonButton variant="outlined" size="small"
+                        onClick={handleMainCancel}
                         sx={{ color: '#ef4444', borderColor: '#ef4444', '&:hover': { bgcolor: '#fff5f5', borderColor: '#dc2626' } }}>
                         Cancel
                     </CommonButton>
