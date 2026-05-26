@@ -16,6 +16,12 @@ export interface IPartner {
     designation: string;
     icaiMembershipNo?: string;
     joiningDate?: Date;
+    retirementDate?: Date;
+    mobile?: string;
+    email?: string;
+    pan?: string;
+    dob?: Date;
+    enrollDate?: Date;
     signatureImageUrl?: string;
     status: boolean;
 }
@@ -107,6 +113,12 @@ const PartnerSchema = new Schema<IPartner>({
     designation: { type: String, default: 'Partner' },
     icaiMembershipNo: String,
     joiningDate: Date,
+    retirementDate: Date,
+    mobile: String,
+    email: String,
+    pan: String,
+    dob: Date,
+    enrollDate: Date,
     signatureImageUrl: String,
     status: { type: Boolean, default: true },
 });

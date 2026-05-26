@@ -6,6 +6,12 @@ export interface IPartner {
     designation: string;
     icaiMembershipNo?: string;
     joiningDate?: string;
+    retirementDate?: string;
+    mobile?: string;
+    email?: string;
+    pan?: string;
+    dob?: string;
+    enrollDate?: string;
     status: boolean;
     signatureImageUrl?: string;
 }

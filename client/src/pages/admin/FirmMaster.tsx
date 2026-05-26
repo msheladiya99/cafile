@@ -578,7 +578,7 @@ const TaxDetailTab: React.FC<{
 };
 
 // ─── Partners Sub-component ───────────────────────────────────────────────────
-const PARTNER_BLANK = { name: '', designation: 'Partner', icaiMembershipNo: '', joiningDate: '', status: true, signatureImageUrl: '' };
+const PARTNER_BLANK = { name: '', designation: 'Partner', icaiMembershipNo: '', joiningDate: '', retirementDate: '', mobile: '', email: '', pan: '', dob: '', enrollDate: '', status: true, signatureImageUrl: '' };
 
 const PartnersTab: React.FC<{
     partners: import('../../services/firmService').IPartner[];
@@ -622,16 +622,33 @@ const PartnersTab: React.FC<{
                         </IconButton>
                     </Box>
                     <Grid container spacing={2}>
+                        {/* Column 1: Core Details */}
                         <Grid size={{ xs: 12, md: 4 }}>
                             <Row label="Full Name*"><TextField value={curr.name} onChange={(e) => setCurr(p => ({ ...p, name: e.target.value }))} fullWidth {...sx} /></Row>
                             <Row label="Designation*"><TextField value={curr.designation} onChange={(e) => setCurr(p => ({ ...p, designation: e.target.value }))} fullWidth {...sx} /></Row>
+                            <Row label="Mobile Number"><TextField value={curr.mobile || ''} onChange={(e) => setCurr(p => ({ ...p, mobile: e.target.value }))} fullWidth {...sx} /></Row>
+                            <Row label="Email ID"><TextField value={curr.email || ''} onChange={(e) => setCurr(p => ({ ...p, email: e.target.value }))} type="email" fullWidth {...sx} /></Row>
                         </Grid>
+
+                        {/* Column 2: Membership & Milestones */}
                         <Grid size={{ xs: 12, md: 4 }}>
                             <Row label="ICAI Mem. No."><TextField value={curr.icaiMembershipNo} onChange={(e) => setCurr(p => ({ ...p, icaiMembershipNo: e.target.value }))} fullWidth {...sx} /></Row>
                             <Row label="Joining Date"><TextField type="date" value={curr.joiningDate ? curr.joiningDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, joiningDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                            <Row label="Retirement Date"><TextField type="date" value={curr.retirementDate ? curr.retirementDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, retirementDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                            <Row label="Enroll Date"><TextField type="date" value={curr.enrollDate ? curr.enrollDate.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, enrollDate: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
                         </Grid>
+
+                        {/* Column 3: Identification & Signature */}
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: '8px', textAlign: 'center', bgcolor: '#fafafa', position: 'relative' }}>
+                            <Row label="PAN"><TextField value={curr.pan || ''} onChange={(e) => setCurr(p => ({ ...p, pan: e.target.value.toUpperCase() }))} fullWidth {...sx} inputProps={{ style: { textTransform: 'uppercase' } }} /></Row>
+                            <Row label="DOB"><TextField type="date" value={curr.dob ? curr.dob.split('T')[0] : ''} onChange={(e) => setCurr(p => ({ ...p, dob: e.target.value }))} fullWidth {...sx} InputLabelProps={{ shrink: true }} /></Row>
+                            <Row label="Status">
+                                <FormControlLabel
+                                    control={<Switch size="small" checked={curr.status !== false} onChange={(e) => setCurr(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#10b981' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#10b981' } }} />}
+                                    label={<Typography fontSize="0.8rem" fontWeight={600} color={curr.status !== false ? '#10b981' : '#ef4444'}>{curr.status !== false ? 'Active' : 'Inactive'}</Typography>}
+                                />
+                            </Row>
+                            <Box sx={{ border: '1px dashed #ccc', p: 1, borderRadius: '8px', textAlign: 'center', bgcolor: '#fafafa', position: 'relative', mt: 1 }}>
                                 <Typography variant="caption" display="block" color="text.secondary" mb={0.5}>Partner Signature</Typography>
                                 {uploading ? <CircularProgress size={20} /> : curr.signatureImageUrl ? (
                                     <Box component="img" src={curr.signatureImageUrl} alt={`Partner signature - ${curr.name}`} sx={{ height: 40, width: 'auto', mb: 0.5, objectFit: 'contain' }} />
@@ -679,16 +696,40 @@ const PartnersTab: React.FC<{
                 ) : (
                     <Box sx={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                            <thead><tr style={{ background: '#f5f7fa' }}>{['#', 'Name', 'Designation', 'Membership No', 'Signature', 'Action'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{h}</th>)}</tr></thead>
+                            <thead><tr style={{ background: '#f5f7fa' }}>{['#', 'Name', 'Designation', 'Contact Info', 'ICAI / PAN', 'Timeline Dates', 'Signature', 'Status', 'Action'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{h}</th>)}</tr></thead>
                             <tbody>
                                 {partners.map((p, idx) => (
                                     <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
                                         <td style={{ padding: '8px 12px', color: '#888' }}>{idx + 1}</td>
                                         <td style={{ padding: '8px 12px', fontWeight: 700 }}>{p.name}</td>
                                         <td style={{ padding: '8px 12px', color: '#555' }}>{p.designation}</td>
-                                        <td style={{ padding: '8px 12px', color: '#666' }}>{p.icaiMembershipNo || '—'}</td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <Box>
+                                                <Typography fontSize="0.8rem" fontWeight={600}>{p.mobile || '—'}</Typography>
+                                                <Typography fontSize="0.72rem" color="text.secondary">{p.email || '—'}</Typography>
+                                            </Box>
+                                        </td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <Box>
+                                                <Typography fontSize="0.8rem">ICAI: <strong>{p.icaiMembershipNo || '—'}</strong></Typography>
+                                                <Typography fontSize="0.72rem" color="text.secondary">PAN: <span style={{ textTransform: 'uppercase' }}>{p.pan || '—'}</span></Typography>
+                                            </Box>
+                                        </td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <Box sx={{ fontSize: '0.74rem', display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                                                <div>Join: <strong>{p.joiningDate ? new Date(p.joiningDate).toLocaleDateString('en-IN') : '—'}</strong></div>
+                                                {p.retirementDate && <div style={{ color: '#ef4444' }}>Retire: {new Date(p.retirementDate).toLocaleDateString('en-IN')}</div>}
+                                                {p.enrollDate && <div style={{ color: '#6366f1' }}>Enroll: {new Date(p.enrollDate).toLocaleDateString('en-IN')}</div>}
+                                                {p.dob && <div style={{ color: '#64748b' }}>DOB: {new Date(p.dob).toLocaleDateString('en-IN')}</div>}
+                                            </Box>
+                                        </td>
                                         <td style={{ padding: '8px 12px' }}>
                                             {p.signatureImageUrl ? <img src={p.signatureImageUrl} style={{ height: 24, objectFit: 'contain' }} alt="sign" /> : '—'}
+                                        </td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, bgcolor: p.status !== false ? '#e8f5e9' : '#ffebee', color: p.status !== false ? '#2e7d32' : '#c62828' }}>
+                                                {p.status !== false ? 'Active' : 'Inactive'}
+                                            </Box>
                                         </td>
                                         <td style={{ padding: '8px 12px' }}>
                                             <IconButton 

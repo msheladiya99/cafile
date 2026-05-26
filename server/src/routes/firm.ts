@@ -79,6 +79,9 @@ router.put('/', requireStaff, async (req: AuthRequest, res: Response) => {
         if (updates.partners) {
             updates.partners = updates.partners.map((p: any) => {
                 if (p.joiningDate === '') p.joiningDate = null;
+                if (p.retirementDate === '') p.retirementDate = null;
+                if (p.dob === '') p.dob = null;
+                if (p.enrollDate === '') p.enrollDate = null;
                 return p;
             });
         }
@@ -324,7 +327,18 @@ router.post('/multi', requireAdmin, async (req: AuthRequest, res: Response) => {
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context missing' });
 
-        const firm = await MultiFirm.create({ ...req.body, firmId });
+        const payload = { ...req.body };
+        if (payload.partners) {
+            payload.partners = payload.partners.map((p: any) => {
+                if (p.joiningDate === '') p.joiningDate = null;
+                if (p.retirementDate === '') p.retirementDate = null;
+                if (p.dob === '') p.dob = null;
+                if (p.enrollDate === '') p.enrollDate = null;
+                return p;
+            });
+        }
+
+        const firm = await MultiFirm.create({ ...payload, firmId });
         res.json(firm);
     } catch (error) {
         console.error('Create multi firm error:', error);
@@ -337,7 +351,19 @@ router.put('/multi/:id', requireAdmin, async (req: AuthRequest, res: Response) =
     try {
         const { MultiFirm } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
-        const firm = await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId }, req.body, { new: true });
+
+        const payload = { ...req.body };
+        if (payload.partners) {
+            payload.partners = payload.partners.map((p: any) => {
+                if (p.joiningDate === '') p.joiningDate = null;
+                if (p.retirementDate === '') p.retirementDate = null;
+                if (p.dob === '') p.dob = null;
+                if (p.enrollDate === '') p.enrollDate = null;
+                return p;
+            });
+        }
+
+        const firm = await MultiFirm.findOneAndUpdate({ _id: req.params.id, firmId }, payload, { new: true });
         if (!firm) { res.status(404).json({ message: 'Not found' }); return; }
         res.json(firm);
     } catch (error) {
