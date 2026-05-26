@@ -1393,12 +1393,13 @@ router.post('/client-groups', authenticate, requireRoles(['ADMIN', 'MANAGER', 'S
             email,
             mobileNumber,
             groupPersonName,
-            groupOwnByFirm,
+            groupOwnByFirm: groupOwnByFirm && mongoose.isValidObjectId(groupOwnByFirm) ? groupOwnByFirm : undefined,
             firmId
         });
         await newGroup.save();
 
-        res.status(201).json(newGroup);
+        const populatedGroup = await ClientGroup.findById(newGroup._id).populate('groupOwnByFirm', 'firmName');
+        res.status(201).json(populatedGroup);
     } catch (error) {
         console.error('Create client group error:', error);
         res.status(500).json({ message: 'Server error during client group creation', error: error instanceof Error ? error.message : String(error) });
@@ -1463,6 +1464,19 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                         return;
                     }
 
+                    let groupOwnByFirmId: mongoose.Types.ObjectId | undefined = undefined;
+                    if (groupOwnByFirm && String(groupOwnByFirm).trim()) {
+                        const cleanFirmName = String(groupOwnByFirm).trim();
+                        const { MultiFirm } = (req as any).models;
+                        const matchingFirm = await MultiFirm.findOne({
+                            firmName: { $regex: new RegExp(`^${cleanFirmName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') },
+                            firmId
+                        });
+                        if (matchingFirm) {
+                            groupOwnByFirmId = matchingFirm._id;
+                        }
+                    }
+
                     const newGroup = new ClientGroup({
                         groupName: cleanGroupName,
                         address: address ? String(address).trim() : undefined,
@@ -1471,7 +1485,7 @@ router.post('/bulk-create-client-groups', authenticate, requireRoles(['ADMIN', '
                         email: cleanEmail,
                         mobileNumber: cleanMobileNumber,
                         groupPersonName: groupPersonName ? String(groupPersonName).trim() : undefined,
-                        groupOwnByFirm: groupOwnByFirm ? String(groupOwnByFirm).trim() : undefined,
+                        groupOwnByFirm: groupOwnByFirmId,
                         firmId
                     });
 
@@ -1501,7 +1515,7 @@ router.get('/client-groups', authenticate, async (req: AuthRequest, res: Respons
         const { ClientGroup } = (req as any).models;
         const firmId = req.firmId || req.user?.firmId;
         const groups = await ClientGroup.find({ firmId })
-
+            .populate('groupOwnByFirm', 'firmName')
             .sort({ createdAt: -1 })
             .lean();
         res.json(groups);
@@ -1592,11 +1606,15 @@ router.patch('/client-groups/:id', authenticate, requireRoles(['ADMIN', 'MANAGER
         delete updates.firmId;
         delete updates._id;
 
+        if ('groupOwnByFirm' in updates) {
+            updates.groupOwnByFirm = updates.groupOwnByFirm && mongoose.isValidObjectId(updates.groupOwnByFirm) ? updates.groupOwnByFirm : null;
+        }
+
         const group = await ClientGroup.findOneAndUpdate(
             { _id: id, firmId },
             { $set: updates },
             { new: true, runValidators: true }
-        );
+        ).populate('groupOwnByFirm', 'firmName');
 
         if (!group) {
             res.status(404).json({ message: 'Group not found' });

@@ -69,7 +69,7 @@ export interface ClientGroup {
     _id: string;
     groupName: string;
     description?: string;
-    groupOwnByFirm?: string;
+    groupOwnByFirm?: string | { _id: string; firmName: string };
 }
 
 export interface CreateClientData {
