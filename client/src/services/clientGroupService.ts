@@ -9,6 +9,7 @@ export interface ClientGroup {
     email: string;
     mobileNumber: string;
     groupPersonName?: string;
+    groupOwnByFirm?: string;
     firmId?: string;
 }
 

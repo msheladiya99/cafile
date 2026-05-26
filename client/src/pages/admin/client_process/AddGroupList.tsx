@@ -44,7 +44,8 @@ export const AddGroupList: React.FC = () => {
         status: true,
         email: '',
         mobileNumber: '',
-        groupPersonName: ''
+        groupPersonName: '',
+        groupOwnByFirm: ''
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -200,7 +201,8 @@ export const AddGroupList: React.FC = () => {
             status: group.status,
             email: group.email,
             mobileNumber: group.mobileNumber,
-            groupPersonName: group.groupPersonName || ''
+            groupPersonName: group.groupPersonName || '',
+            groupOwnByFirm: group.groupOwnByFirm || ''
         });
         setIsEditing(true);
         setEditingId(group._id || null);
@@ -214,7 +216,8 @@ export const AddGroupList: React.FC = () => {
             status: true,
             email: '',
             mobileNumber: '',
-            groupPersonName: ''
+            groupPersonName: '',
+            groupOwnByFirm: ''
         });
         setIsEditing(false);
         setEditingId(null);
@@ -290,6 +293,17 @@ export const AddGroupList: React.FC = () => {
                                 <TextField
                                     name="groupPersonName"
                                     value={formData.groupPersonName}
+                                    onChange={handleInputChange}
+                                    fullWidth
+                                    size="small"
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                />
+                            </FormRow>
+
+                            <FormRow label="Group Own By Firm">
+                                <TextField
+                                    name="groupOwnByFirm"
+                                    value={formData.groupOwnByFirm}
                                     onChange={handleInputChange}
                                     fullWidth
                                     size="small"
@@ -378,6 +392,7 @@ export const AddGroupList: React.FC = () => {
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Name</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>Email</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Mobile</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Group Own By Firm</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
                                             <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
                                         </TableRow>
@@ -385,13 +400,13 @@ export const AddGroupList: React.FC = () => {
                                     <TableBody>
                                         {isLoading ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                                                     <CircularProgress size={24} />
                                                 </TableCell>
                                             </TableRow>
                                         ) : groups.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
+                                                <TableCell colSpan={7} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
                                             </TableRow>
                                         ) : (
                                             groups
@@ -412,6 +427,7 @@ export const AddGroupList: React.FC = () => {
                                                         <TableCell sx={{ fontWeight: 500 }}>{g.groupName}</TableCell>
                                                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' }, color: 'text.secondary' }}>{g.email}</TableCell>
                                                         <TableCell sx={{ color: 'text.secondary' }}>{g.mobileNumber}</TableCell>
+                                                        <TableCell sx={{ color: 'text.secondary' }}>{g.groupOwnByFirm || '-'}</TableCell>
                                                         <TableCell>
                                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: g.status ? 'success.main' : 'error.main', mr: 1 }} />
