@@ -7,6 +7,7 @@ export interface ITaxDetail extends Document {
     isDefault: boolean;
     status: boolean;
     firmId: mongoose.Types.ObjectId;
+    branchFirmId?: string;
 }
 
 const TaxDetailSchema = new Schema<ITaxDetail>(
@@ -17,6 +18,7 @@ const TaxDetailSchema = new Schema<ITaxDetail>(
             required: true,
             index: true
         },
+        branchFirmId: { type: String, default: 'primary', index: true },
         name: { type: String, required: true },
         percentageType: { type: String, enum: ['Percentage', 'Fixed'], default: 'Percentage' },
         percentageValue: { type: Number, default: 0 },
