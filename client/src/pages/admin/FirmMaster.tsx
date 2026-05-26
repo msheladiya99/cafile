@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import firmService from '../../services/firmService';
-import type { FirmMasterData, IMultiFirmData, IAdditionalBank } from '../../services/firmService';
+import type { FirmMasterData } from '../../services/firmService';
 import { CommonButton } from '../../components/common/UIComponents';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -568,179 +568,6 @@ const TaxDetailTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 
     );
 };
 
-// ─── Add Multi Firm Sub-component ─────────────────────────────────────────────────
-const MF_BLANK: IMultiFirmData = {
-    firmName: '', shortName: '', address: '', country: 'India', state: '', city: '', postalCode: '',
-    mobile: '', phoneL: '', email: '', firmType: '', bankName: '', bankBranch: '',
-    accountHolderName: '', accountNumber: '', ifscCode: '', ibanNo: '', swiftCode: '', micrCode: '',
-    panNumber: '', gstin: '', licenceNo: '', licenceAuthority: '', invoicePrefix: 'INV-', status: true,
-    extraField1: '', extraField2: '', extraField3: '', extraField4: '', extraField5: '', extraField6: '', extraField7: '',
-    supportEmails: '', supportMobile: '', showLogo: true,
-};
-
-const AddMultiFirmTab: React.FC<{ toast: (msg: string, sev?: 'success' | 'error' | 'info') => void }> = ({ toast }) => {
-    const queryClient = useQueryClient();
-    const [mf, setMf] = useState<IMultiFirmData>(MF_BLANK);
-    const [editId, setEditId] = useState<string | null>(null);
-    const [logoLoading, setLogoLoading] = useState(false);
-    const [signLoading, setSignLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    const { data: firms = [], isLoading } = useQuery<IMultiFirmData[]>({
-        queryKey: ['multiFirms'], queryFn: firmService.getMultiFirms,
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: firmService.deleteMultiFirm,
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['multiFirms'] }); toast('Firm deleted'); },
-        onError: () => toast('Delete failed', 'error'),
-    });
-
-    const mff = (field: keyof IMultiFirmData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-        setMf(p => ({ ...p, [field]: e.target.value }));
-    const mfsel = (field: keyof IMultiFirmData) => (e: { target: { value: unknown } }) =>
-        setMf(p => ({ ...p, [field]: e.target.value }));
-
-    const handleSave = async () => {
-        if (!mf.firmName) { toast('Firm Name is required', 'error'); return; }
-        setSaving(true);
-        try {
-            if (editId) { await firmService.updateMultiFirm(editId, mf); toast('Firm updated!'); }
-            else { await firmService.createMultiFirm(mf); toast('Firm added!'); }
-            queryClient.invalidateQueries({ queryKey: ['multiFirms'] });
-            setMf(MF_BLANK); setEditId(null);
-        } catch { toast('Save failed', 'error'); } finally { setSaving(false); }
-    };
-
-    const handleLogo = async (file: File) => {
-        if (!editId) { toast('Save the firm first before uploading logo', 'info'); return; }
-        setLogoLoading(true);
-        try { const r = await firmService.uploadMultiFirmLogo(editId, file); setMf(p => ({ ...p, logoUrl: r.logoUrl })); toast('Logo uploaded!'); }
-        catch { toast('Logo upload failed', 'error'); } finally { setLogoLoading(false); }
-    };
-    const handleSign = async (file: File) => {
-        if (!editId) { toast('Save the firm first before uploading sign', 'info'); return; }
-        setSignLoading(true);
-        try { const r = await firmService.uploadMultiFirmSign(editId, file); setMf(p => ({ ...p, signImageUrl: r.signImageUrl })); toast('Sign uploaded!'); }
-        catch { toast('Sign upload failed', 'error'); } finally { setSignLoading(false); }
-    };
-
-    return (
-        <Box>
-            <Paper sx={{ p: 2, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', lg: 'row' } }}>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <SectionHead icon={<Building2 size={16} />} title="Basic Form" />
-                            <Row label="Firm Name *"><TextField value={mf.firmName} onChange={mff('firmName')} fullWidth {...sx} /></Row>
-                            <Row label="Short Name *"><TextField value={mf.shortName || ''} onChange={mff('shortName')} fullWidth {...sx} /></Row>
-                            <Row label="Address *"><TextField value={mf.address || ''} onChange={mff('address')} fullWidth multiline rows={2} size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: '0.82rem' } }} /></Row>
-                            <Row label="Country *"><Select value={mf.country || ''} onChange={mfsel('country')} fullWidth displayEmpty {...selSx}>{COUNTRY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}</Select></Row>
-                            <Row label="State *"><Select value={mf.state || ''} onChange={mfsel('state')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a State...</em></MenuItem>{STATE_LIST.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.82rem' }}>{s}</MenuItem>)}</Select></Row>
-                            <Row label="City *"><Select value={mf.city || ''} onChange={mfsel('city')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a City...</em></MenuItem>{CITY_LIST.map(c => <MenuItem key={c} value={c} sx={{ fontSize: '0.82rem' }}>{c}</MenuItem>)}</Select></Row>
-                            <Row label="Postal Code"><TextField value={mf.postalCode || ''} onChange={mff('postalCode')} fullWidth {...sx} /></Row>
-                            <Row label="Mobile Number *"><TextField value={mf.mobile || ''} onChange={mff('mobile')} fullWidth {...sx} /></Row>
-                            <Row label="Phone(L)"><TextField value={mf.phoneL || ''} onChange={mff('phoneL')} fullWidth {...sx} /></Row>
-                            <Row label="Email *"><TextField value={mf.email || ''} onChange={mff('email')} type="email" fullWidth {...sx} /></Row>
-                            <Row label="Firm Type *"><Select value={mf.firmType || ''} onChange={mfsel('firmType')} fullWidth displayEmpty {...selSx}><MenuItem value="" disabled><em style={{ color: '#aaa', fontSize: '0.82rem' }}>Choose a Firm Type...</em></MenuItem>{FIRM_TYPES.map(t => <MenuItem key={t} value={t} sx={{ fontSize: '0.82rem' }}>{t}</MenuItem>)}</Select></Row>
-                        </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <SectionHead icon={<Building2 size={16} />} title="Bank Detail" />
-                            <Row label="Bank Name *"><TextField value={mf.bankName || ''} onChange={mff('bankName')} fullWidth {...sx} /></Row>
-                            <Row label="Bank Branch *"><TextField value={mf.bankBranch || ''} onChange={mff('bankBranch')} fullWidth {...sx} /></Row>
-                            <Row label="Account Holder Name *"><TextField value={mf.accountHolderName || ''} onChange={mff('accountHolderName')} fullWidth {...sx} /></Row>
-                            <Row label="Bank A/C No *"><TextField value={mf.accountNumber || ''} onChange={mff('accountNumber')} fullWidth {...sx} /></Row>
-                            <Row label="Bank IFS Code"><TextField value={mf.ifscCode || ''} onChange={mff('ifscCode')} fullWidth {...sx} /></Row>
-                            <Row label="IBAN No."><TextField value={mf.ibanNo || ''} onChange={mff('ibanNo')} fullWidth {...sx} /></Row>
-                            <Row label="SWIFT Code"><TextField value={mf.swiftCode || ''} onChange={mff('swiftCode')} fullWidth {...sx} /></Row>
-                            <Row label="MICR Code"><TextField value={mf.micrCode || ''} onChange={mff('micrCode')} fullWidth {...sx} /></Row>
-                        </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <SectionHead title="Support team detail" />
-                            <Row label="Email *"><TextField value={mf.supportEmails || ''} onChange={mff('supportEmails')} fullWidth {...sx} helperText={<span style={{ color: '#ef4444', fontSize: '0.72rem' }}><strong>NOTE!</strong> Separate multiple Email with "," (Comma)</span>} /></Row>
-                            <Row label="Mobile Number *"><TextField value={mf.supportMobile || ''} onChange={mff('supportMobile')} fullWidth {...sx} /></Row>
-                        </Paper>
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Firm Logo Display</Typography>
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={mf.showLogo !== false} onChange={(e) => setMf(p => ({ ...p, showLogo: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
-                                    label={<Typography fontSize="0.75rem" fontWeight={600} color={mf.showLogo !== false ? 'primary' : 'text.secondary'}>{mf.showLogo !== false ? 'ON' : 'OFF'}</Typography>}
-                                />
-                            </Box>
-                            <ImgBox label="Firm Logo" url={mf.logoUrl} onUpload={handleLogo} onRemove={() => setMf(p => ({ ...p, logoUrl: '' }))} loading={logoLoading} />
-                        </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <SectionHead title="Other Detail" />
-                            <Row label="PAN No"><TextField value={mf.panNumber || ''} onChange={mff('panNumber')} fullWidth {...sx} /></Row>
-                            <Row label="GSTIN"><TextField value={mf.gstin || ''} onChange={mff('gstin')} fullWidth {...sx} /></Row>
-                            <Row label="Licence No"><TextField value={mf.licenceNo || ''} onChange={mff('licenceNo')} fullWidth {...sx} /></Row>
-                            <Row label="Licence Authority"><TextField value={mf.licenceAuthority || ''} onChange={mff('licenceAuthority')} fullWidth {...sx} /></Row>
-                            <Row label="Invoice Prefix *"><TextField value={mf.invoicePrefix || ''} onChange={mff('invoicePrefix')} fullWidth {...sx} /></Row>
-                            <Row label="Status">
-                                <FormControlLabel
-                                    control={<Switch size="small" checked={mf.status ?? true} onChange={(e) => setMf(p => ({ ...p, status: e.target.checked }))} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#667eea' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } } }} />}
-                                    label={<Typography fontSize="0.8rem" fontWeight={600} color={mf.status ? 'primary' : 'text.secondary'}>{mf.status ? 'Active' : 'Inactive'}</Typography>}
-                                />
-                            </Row>
-                        </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f5f7fa', px: 1.5, py: 0.75, borderRadius: '8px', mb: 1.5, border: '1px solid #e8ecf0' }}>
-                                <Typography fontSize="0.82rem" fontWeight={700} color="#444">Extra Fields</Typography>
-                                <Tooltip title="Custom fields for this firm"><Info size={14} color="#aaa" /></Tooltip>
-                            </Box>
-                            {([1, 2, 3, 4, 5, 6, 7] as const).map(n => (
-                                <Row key={n} label={`Field ${n}`}><TextField value={(mf as unknown as Record<string, string>)[`extraField${n}`] || ''} onChange={mff(`extraField${n}` as keyof IMultiFirmData)} fullWidth {...sx} /></Row>
-                            ))}
-                        </Paper>
-                        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: '8px' }}><ImgBox label="Firm Sign" url={mf.signImageUrl} onUpload={handleSign} onRemove={() => setMf(p => ({ ...p, signImageUrl: '' }))} loading={signLoading} /></Paper>
-                    </Box>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 2 }}>
-                    <CommonButton variant="contained" size="small" onClick={handleSave} loading={saving}
-                        sx={{ boxShadow: 'none' }}>
-                        Save
-                    </CommonButton>
-                    <CommonButton variant="outlined" size="small" color="error" onClick={() => { setMf(MF_BLANK); setEditId(null); }}
-                        sx={{ borderRadius: '8px', px: 4 }}>Cancel</CommonButton>
-                </Box>
-            </Paper>
-            <Paper sx={{ borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Building2 size={16} /><Typography fontWeight={700} fontSize="0.875rem">Multi Firm List</Typography></Box>
-                    <CommonButton size="small" variant="contained" startIcon={<Plus size={18} />} onClick={() => { setMf(MF_BLANK); setEditId(null); }}
-                        sx={{ bgcolor: '#6366f1', color: 'white', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', fontSize: '0.78rem', boxShadow: 'none' }}>Add New</CommonButton>
-                </Box>
-                {isLoading ? (<Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>)
-                    : firms.length === 0 ? (<Box sx={{ p: 2, color: 'text.secondary', fontSize: '0.85rem' }}>Firm Not Found</Box>)
-                        : (<Box sx={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                                <thead><tr style={{ background: '#f5f7fa' }}>{['#', 'Firm Name', 'Type', 'City', 'Mobile', 'Status', 'Action'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{h}</th>)}</tr></thead>
-                                <tbody>{firms.map((firm, i) => (
-                                    <tr key={firm._id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                        <td style={{ padding: '8px 12px', color: '#888' }}>{i + 1}</td>
-                                        <td style={{ padding: '8px 12px', fontWeight: 600 }}>{firm.firmName}</td>
-                                        <td style={{ padding: '8px 12px', color: '#666' }}>{firm.firmType || '—'}</td>
-                                        <td style={{ padding: '8px 12px', color: '#666' }}>{firm.city || '—'}</td>
-                                        <td style={{ padding: '8px 12px', color: '#666' }}>{firm.mobile || '—'}</td>
-                                        <td style={{ padding: '8px 12px' }}><Box sx={{ display: 'inline-flex', px: 1, py: 0.25, borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, bgcolor: firm.status ? '#e8f5e9' : '#ffebee', color: firm.status ? '#2e7d32' : '#c62828' }}>{firm.status ? 'Active' : 'Inactive'}</Box></td>
-                                        <td style={{ padding: '8px 12px' }}>
-                                            <IconButton size="small" onClick={() => { setMf({ ...MF_BLANK, ...firm }); setEditId(firm._id || null); }} sx={{ color: '#667eea', mr: 0.5 }}>
-                                                <Pencil size={14} />
-                                            </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => firm._id && deleteMutation.mutate(firm._id)}><Trash2 size={16} /></IconButton>
-                                        </td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </Box>)}
-            </Paper>
-        </Box>
-    );
-};
-
 // ─── Partners Sub-component ───────────────────────────────────────────────────
 const PARTNER_BLANK = { name: '', designation: 'Partner', icaiMembershipNo: '', joiningDate: '', status: true, signatureImageUrl: '' };
 
@@ -935,7 +762,7 @@ export const FirmMasterPage: React.FC = () => {
         </Box>
     );
 
-    const tabs = ['Firm Info', 'Partners', 'Firm Documents', 'Add Multi Firm', 'Tax Detail', 'Currency', 'Invoice'];
+    const tabs = ['Firm Info', 'Partners', 'Firm Documents', 'Tax Detail', 'Currency', 'Invoice'];
 
     return (
         <Box sx={{ p: { xs: 1, sm: 2 }, overflowX: 'hidden' }}>
@@ -1328,28 +1155,24 @@ export const FirmMasterPage: React.FC = () => {
             )}
 
 
-            {/* ── TAB 3: Add Multi Firm ── */}
-            {tab === 3 && <AddMultiFirmTab toast={toast} />}
-
-
-            {/* ── TAB 4: Tax Detail ── */}
-            {tab === 4 && (
+            {/* ── TAB 3: Tax Detail ── */}
+            {tab === 3 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <TaxDetailTab toast={toast} />
                 </Paper>
             )}
 
 
-            {/* ── TAB 5: Currency ── */}
-            {tab === 5 && (
+            {/* ── TAB 4: Currency ── */}
+            {tab === 4 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <CurrencyTab toast={toast} />
                 </Paper>
             )}
 
 
-            {/* ── TAB 6: Invoice ── */}
-            {tab === 6 && (
+            {/* ── TAB 5: Invoice ── */}
+            {tab === 5 && (
                 <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                     <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '8px', maxWidth: 800 }}>
                         <SectionHead icon={<Receipt size={16} />} title="Invoice Settings" />
