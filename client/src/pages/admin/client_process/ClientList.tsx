@@ -84,7 +84,6 @@ export const ClientList: React.FC = () => {
     // Filter States
     const [filterGroup, setFilterGroup] = React.useState('');
     const [filterClient, setFilterClient] = React.useState('');
-    const [filterSearchType, setFilterSearchType] = React.useState('name');
     const [filterSearchText, setFilterSearchText] = React.useState('');
     const [filterMasterType, setFilterMasterType] = React.useState('');
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
@@ -118,33 +117,46 @@ export const ClientList: React.FC = () => {
 
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
-    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership Firm', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'];
 
     // Reset page and selection when filters change to avoid empty views
     React.useEffect(() => {
         setPage(0);
         setSelectedClients([]);
-    }, [filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+    }, [filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+
+    // Reset client filter when group changes
+    React.useEffect(() => {
+        setFilterClient('');
+    }, [filterGroup]);
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
         return clients.filter((client) => {
             // Group Filter
-            if (filterGroup && typeof client.groupName === 'object' && client.groupName?._id !== filterGroup) return false;
+            if (filterGroup) {
+                const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                    ? client.groupName._id
+                    : client.groupName;
+                if (clientGroupId !== filterGroup) return false;
+            }
             // Client Dropdown Filter (by _id)
             if (filterClient && client._id !== filterClient) return false;
 
-            // Search Text Filter
+            // Global Search Filter (searches name, code, email, phone, proprietor, username)
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
-                if (filterSearchType === 'name' && !client.name?.toLowerCase().includes(searchLower)) return false;
-                if (filterSearchType === 'email' && !client.email?.toLowerCase().includes(searchLower)) return false;
-                if (filterSearchType === 'phone') {
-                    const matchPhone1 = client.phone?.includes(filterSearchText);
-                    const matchPhone2 = client.phone2?.includes(filterSearchText);
-                    if (!matchPhone1 && !matchPhone2) return false;
+                const matchName = client.name?.toLowerCase().includes(searchLower) || false;
+                const matchEmail = client.email?.toLowerCase().includes(searchLower) || false;
+                const matchClientCode = client.clientCode?.toLowerCase().includes(searchLower) || false;
+                const matchPhone1 = client.phone?.includes(filterSearchText) || false;
+                const matchPhone2 = client.phone2?.includes(filterSearchText) || false;
+                const matchProprietor = client.proprietorName?.toLowerCase().includes(searchLower) || false;
+                const matchUsername = client.username?.toLowerCase().includes(searchLower) || false;
+                
+                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername) {
+                    return false;
                 }
-                if (filterSearchType === 'clientCode' && !client.clientCode?.toLowerCase().includes(searchLower)) return false;
             }
 
             // Other Dropdowns
@@ -162,7 +174,7 @@ export const ClientList: React.FC = () => {
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSearchType, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+    }, [clients, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
@@ -364,7 +376,7 @@ export const ClientList: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
-                                    {groups.map(group => (
+                                    {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
@@ -381,35 +393,31 @@ export const ClientList: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {clients.map(client => (
-                                        <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
-                                    ))}
+                                    {[...clients]
+                                        .filter(client => {
+                                            if (!filterGroup) return true;
+                                            const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                                                ? client.groupName._id
+                                                : client.groupName;
+                                            return clientGroupId === filterGroup;
+                                        })
+                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                        .map(client => (
+                                            <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
+                                        ))}
                                 </Select>
                             </FilterRow>
                             <FilterRow label="Search" inputId="filter-search-text">
-                                <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Select
-                                        size="small"
-                                        value={filterSearchType}
-                                        onChange={(e) => setFilterSearchType(e.target.value)}
-                                        sx={{ width: '150px', borderRadius: '8px' }}
-                                        inputProps={{ 'aria-label': 'Search Category' }}
-                                    >
-                                        <MenuItem value="name">By Name</MenuItem>
-                                        <MenuItem value="clientCode">By Client Code</MenuItem>
-                                        <MenuItem value="email">By Email</MenuItem>
-                                        <MenuItem value="phone">By Phone</MenuItem>
-                                    </Select>
-                                    <TextField
-                                        id="filter-search-text"
-                                        fullWidth
-                                        size="small"
-                                        value={filterSearchText}
-                                        onChange={(e) => setFilterSearchText(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                        inputProps={{ 'aria-label': 'Search Text' }}
-                                    />
-                                </Box>
+                                <TextField
+                                    id="filter-search-text"
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, code, email, phone, proprietor..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
                             </FilterRow>
                             <FilterRow label="Master Type" inputId="filter-master-type">
                                 <Select

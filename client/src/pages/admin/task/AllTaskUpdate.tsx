@@ -178,7 +178,7 @@ export const AllTaskUpdate: React.FC = () => {
                                 onChange={(e) => { setGroupName(e.target.value); setClient(''); }}
                                 sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">All Groups</MenuItem>
-                                {clientGroups.map((g: ClientGroup) => (
+                                {[...clientGroups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map((g: ClientGroup) => (
                                     <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                 ))}
                             </Select>
@@ -190,7 +190,7 @@ export const AllTaskUpdate: React.FC = () => {
                             <Select size="small" fullWidth displayEmpty value={client} onChange={(e) => setClient(e.target.value)}
                                 sx={{ borderRadius: '8px' }}>
                                 <MenuItem value="">Choose a Client...</MenuItem>
-                                {filteredClients.map((c: Client) => (
+                                {[...filteredClients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (
                                     <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                 ))}
                             </Select>

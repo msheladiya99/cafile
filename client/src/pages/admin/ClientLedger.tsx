@@ -40,37 +40,17 @@ import {
     FormatListBulleted as FormatListBulletedIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { billingService } from '../../services/billingService';
+import { billingService, type ClientLedger as IBillingClientLedger } from '../../services/billingService';
 import type { Client, User } from '../../types';
 import { adminService } from '../../services/adminService';
 import { clientGroupService, type ClientGroup } from '../../services/clientGroupService';
 import firmService, { type IMultiFirmData } from '../../services/firmService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../components/common/UIComponents';
 
-interface ClientLedgerRecord {
-    client: Client;
-    summary: {
-        totalBilled: number;
-        totalPaid: number;
-        totalDue: number;
-        totalOverdue: number;
-        totalInvoices: number;
-        paidInvoices: number;
-        pendingInvoices: number;
-        overdueInvoices: number;
-        paymentRate: number | string;
-        avgPaymentDays?: number | string;
+interface ClientLedgerRecord extends Omit<IBillingClientLedger, 'client'> {
+    client: IBillingClientLedger['client'] & {
+        logoUrl?: string;
     };
-    ledgerEntries: {
-        date: string;
-        type: string;
-        description: string;
-        debit: number;
-        credit: number;
-        balance: number;
-        status?: string;
-        dueDate?: string;
-    }[];
 }
 
 
@@ -94,6 +74,11 @@ export const ClientLedger: React.FC = () => {
     const [selectedMonth, setSelectedMonth] = useState<string>('');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+
+    // Reset client filter when group changes
+    React.useEffect(() => {
+        setSelectedClient('');
+    }, [selectedGroup]);
 
     const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
     const months = [
@@ -130,16 +115,19 @@ export const ClientLedger: React.FC = () => {
     // Fetch client ledger
     const { data: ledgerData, isLoading, error } = useQuery({
         queryKey: ['clientLedger', selectedClient, selectedStaff, startDate, endDate, selectedGroup, selectedFirm, selectedYear, selectedMonth],
-        queryFn: () => billingService.getClientLedger({
-            clientId: selectedClient || undefined,
-            staffId: selectedStaff || undefined,
-            startDate: startDate || undefined,
-            endDate: endDate || undefined,
-            groupId: selectedGroup || undefined,
-            firmId: selectedFirm || undefined,
-            year: selectedYear || undefined,
-            month: selectedMonth || undefined,
-        }),
+        queryFn: async () => {
+            const data = await billingService.getClientLedger({
+                clientId: selectedClient || undefined,
+                staffId: selectedStaff || undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                groupId: selectedGroup || undefined,
+                firmId: selectedFirm || undefined,
+                year: selectedYear || undefined,
+                month: selectedMonth || undefined,
+            });
+            return data as unknown as { clientLedgers: ClientLedgerRecord[]; overallSummary: Record<string, number>; generatedAt: string };
+        },
     });
 
     const handleExport = () => {
@@ -230,9 +218,18 @@ export const ClientLedger: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {clients.map(client => (
-                                        <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
-                                    ))}
+                                    {[...clients]
+                                        .filter(client => {
+                                            if (!selectedGroup) return true;
+                                            const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                                                ? client.groupName._id
+                                                : client.groupName;
+                                            return clientGroupId === selectedGroup;
+                                        })
+                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                        .map(client => (
+                                            <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
+                                        ))}
                                 </Select>
                             </FilterRow>
                             <FilterRow label="Group Name" inputId="group-select">
@@ -247,7 +244,7 @@ export const ClientLedger: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
-                                    {groups.map(group => (
+                                    {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
