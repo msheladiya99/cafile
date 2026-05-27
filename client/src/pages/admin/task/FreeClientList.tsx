@@ -28,6 +28,11 @@ export const FreeClientList: React.FC = () => {
     const [year, setYear] = useState('');
     const [status, setStatus] = useState('All Client');
 
+    // Reset client filter when group changes
+    React.useEffect(() => {
+        setClientName('');
+    }, [groupName]);
+
     const years = useMemo(() => {
         const currentYear = new Date().getFullYear();
         return Array.from({ length: 5 }, (_, i) => (currentYear - 2 + i).toString());
@@ -92,9 +97,18 @@ export const FreeClientList: React.FC = () => {
                             onChange={(e) => setClientName(e.target.value)}
                         >
                             <MenuItem value="">Choose a Client...</MenuItem>
-                            {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (
-                                <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
-                            ))}
+                            {[...clients]
+                                .filter(client => {
+                                    if (!groupName) return true;
+                                    const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                                        ? client.groupName._id
+                                        : client.groupName;
+                                    return clientGroupId === groupName;
+                                })
+                                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                .map((c: Client) => (
+                                    <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
+                                ))}
                         </Select>
                     </Box>
                 </Box>

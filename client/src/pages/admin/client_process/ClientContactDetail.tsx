@@ -51,7 +51,6 @@ export const ClientContactDetail: React.FC = () => {
     const [filterGroup, setFilterGroup] = React.useState('');
     const [filterClient, setFilterClient] = React.useState('');
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
-    const [filterSearchType, setFilterSearchType] = React.useState('name');
     const [filterSearchText, setFilterSearchText] = React.useState('');
 
     const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'];
@@ -63,47 +62,62 @@ export const ClientContactDetail: React.FC = () => {
     // Reset page when filters change
     React.useEffect(() => {
         setPage(0);
-    }, [filterGroup, filterClient, filterSubMaster, filterSearchType, filterSearchText]);
+    }, [filterGroup, filterClient, filterSubMaster, filterSearchText]);
+
+    // Reset client filter when group changes
+    React.useEffect(() => {
+        setFilterClient('');
+    }, [filterGroup]);
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
         return clients.filter((client) => {
             // Group Filter
-            if (filterGroup && typeof client.groupName === 'object' && client.groupName?._id !== filterGroup) return false;
+            if (filterGroup) {
+                const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                    ? client.groupName._id
+                    : client.groupName;
+                if (clientGroupId !== filterGroup) return false;
+            }
             // Client Dropdown Filter (by _id)
             if (filterClient && client._id !== filterClient) return false;
 
             // Sub Master Filter
             if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
 
-            // Search Text Filter
+            // Global Search Filter (searches name, code, email, phone, proprietor, username, and contact name, mobile, email)
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
                 
-                if (filterSearchType === 'name') {
-                    const primaryMatch = client.name?.toLowerCase().includes(searchLower) || false;
-                    const contactMatch = client.multipleContacts?.some(contact => 
-                        contact.name.toLowerCase().includes(searchLower)
-                    );
-                    if (!primaryMatch && !contactMatch) return false;
-                } else if (filterSearchType === 'mobile') {
-                    const primaryMatch = client.phone?.includes(filterSearchText) || client.phone2?.includes(filterSearchText);
-                    const contactMatch = client.multipleContacts?.some(contact => 
-                        contact.mobile?.includes(filterSearchText)
-                    );
-                    if (!primaryMatch && !contactMatch) return false;
-                } else if (filterSearchType === 'email') {
-                    const primaryMatch = client.email?.toLowerCase().includes(searchLower);
-                    const contactMatch = client.multipleContacts?.some(contact => 
-                        contact.email?.toLowerCase().includes(searchLower)
-                    );
-                    if (!primaryMatch && !contactMatch) return false;
+                // Primary client matches
+                const matchName = client.name?.toLowerCase().includes(searchLower) || false;
+                const matchEmail = client.email?.toLowerCase().includes(searchLower) || false;
+                const matchClientCode = client.clientCode?.toLowerCase().includes(searchLower) || false;
+                const matchPhone1 = client.phone?.includes(filterSearchText) || false;
+                const matchPhone2 = client.phone2?.includes(filterSearchText) || false;
+                const matchProprietor = client.proprietorName?.toLowerCase().includes(searchLower) || false;
+                const matchUsername = client.username?.toLowerCase().includes(searchLower) || false;
+
+                // Sub-contacts matches
+                const matchContactName = client.multipleContacts?.some(contact => 
+                    contact.name?.toLowerCase().includes(searchLower)
+                ) || false;
+                const matchContactMobile = client.multipleContacts?.some(contact => 
+                    contact.mobile?.includes(filterSearchText)
+                ) || false;
+                const matchContactEmail = client.multipleContacts?.some(contact => 
+                    contact.email?.toLowerCase().includes(searchLower)
+                ) || false;
+
+                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername &&
+                    !matchContactName && !matchContactMobile && !matchContactEmail) {
+                    return false;
                 }
             }
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSubMaster, filterSearchType, filterSearchText]);
+    }, [clients, filterGroup, filterClient, filterSubMaster, filterSearchText]);
 
     return (
         <PageContainer>
@@ -150,9 +164,18 @@ export const ClientContactDetail: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(client => (
-                                        <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
-                                    ))}
+                                    {[...clients]
+                                        .filter(client => {
+                                            if (!filterGroup) return true;
+                                            const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                                                ? client.groupName._id
+                                                : client.groupName;
+                                            return clientGroupId === filterGroup;
+                                        })
+                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                        .map(client => (
+                                            <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
+                                        ))}
                                 </Select>
                             </FilterRow>
                         </Box>
@@ -177,29 +200,16 @@ export const ClientContactDetail: React.FC = () => {
                                 </Select>
                             </FilterRow>
                             <FilterRow label="Search" inputId="filter-search-text">
-                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                                    <Select
-                                        size="small"
-                                        value={filterSearchType}
-                                        onChange={(e) => setFilterSearchType(e.target.value)}
-                                        sx={{ width: { xs: '100%', sm: '150px' }, borderRadius: '8px' }}
-                                        inputProps={{ 'aria-label': 'Search Category' }}
-                                    >
-                                        <MenuItem value="name">By Contact Name</MenuItem>
-                                        <MenuItem value="mobile">By Contact Number</MenuItem>
-                                        <MenuItem value="email">By Email</MenuItem>
-                                    </Select>
-                                    <TextField
-                                        id="filter-search-text"
-                                        fullWidth
-                                        size="small"
-                                        placeholder="Enter name..."
-                                        value={filterSearchText}
-                                        onChange={(e) => setFilterSearchText(e.target.value)}
-                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                        inputProps={{ 'aria-label': 'Search Text' }}
-                                    />
-                                </Box>
+                                <TextField
+                                    id="filter-search-text"
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, email, phone, contact..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
                             </FilterRow>
                         </Box>
                     </Box>

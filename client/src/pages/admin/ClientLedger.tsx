@@ -95,6 +95,11 @@ export const ClientLedger: React.FC = () => {
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
 
+    // Reset client filter when group changes
+    React.useEffect(() => {
+        setSelectedClient('');
+    }, [selectedGroup]);
+
     const years = Array.from({ length: 10 }, (_, i) => (new Date().getFullYear() - i).toString());
     const months = [
         { value: '1', label: 'January' }, { value: '2', label: 'February' }, { value: '3', label: 'March' },
@@ -230,9 +235,18 @@ export const ClientLedger: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(client => (
-                                        <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
-                                    ))}
+                                    {[...clients]
+                                        .filter(client => {
+                                            if (!selectedGroup) return true;
+                                            const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                                                ? client.groupName._id
+                                                : client.groupName;
+                                            return clientGroupId === selectedGroup;
+                                        })
+                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                        .map(client => (
+                                            <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
+                                        ))}
                                 </Select>
                             </FilterRow>
                             <FilterRow label="Group Name" inputId="group-select">
