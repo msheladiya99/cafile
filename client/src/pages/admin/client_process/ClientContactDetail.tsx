@@ -254,22 +254,57 @@ export const ClientContactDetail: React.FC = () => {
                     title="Client Contacts"
                     icon={<FormatListBulletedIcon />}
                     actions={
-                        <Select
-                            size="small"
-                            value={sortOrder}
-                            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                            sx={{
-                                height: 28,
-                                borderRadius: '6px',
-                                fontSize: '0.75rem',
-                                bgcolor: '#fff',
-                                '& .MuiSelect-select': { py: 0.5, px: 1.5 }
-                            }}
-                            inputProps={{ 'aria-label': 'Sort Order' }}
-                        >
-                            <MenuItem value="asc" sx={{ fontSize: '0.75rem' }}>A to Z</MenuItem>
-                            <MenuItem value="desc" sx={{ fontSize: '0.75rem' }}>Z to A</MenuItem>
-                        </Select>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', sm: 'block' } }}>
+                                Sort:
+                            </Typography>
+                            <Box sx={{ display: 'flex', bgcolor: '#f1f5f9', p: '2px', borderRadius: '8px' }}>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('asc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'asc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'asc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'asc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'asc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    A - Z
+                                </Button>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('desc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'desc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'desc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'desc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'desc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    Z - A
+                                </Button>
+                            </Box>
+                        </Box>
                     }
                 >
                     {isLoading ? (
