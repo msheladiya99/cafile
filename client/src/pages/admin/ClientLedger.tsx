@@ -74,6 +74,7 @@ export const ClientLedger: React.FC = () => {
     const [selectedMonth, setSelectedMonth] = useState<string>('');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+    const [searchText, setSearchText] = useState<string>('');
 
     // Reset client filter when group changes
     React.useEffect(() => {
@@ -130,12 +131,43 @@ export const ClientLedger: React.FC = () => {
         },
     });
 
+    const filteredLedgers = React.useMemo(() => {
+        if (!ledgerData?.clientLedgers) return [];
+        if (!searchText) return ledgerData.clientLedgers;
+
+        const searchLower = searchText.toLowerCase();
+
+        return ledgerData.clientLedgers.filter((cl) => {
+            const clientInfo = clients.find(c => c._id === cl.client._id);
+            const nameMatch = cl.client.name?.toLowerCase().includes(searchLower) || false;
+            const emailMatch = cl.client.email?.toLowerCase().includes(searchLower) || false;
+            const codeMatch = (cl.client as any).clientCode?.toLowerCase().includes(searchLower) || clientInfo?.clientCode?.toLowerCase().includes(searchLower) || false;
+            const proprietorMatch = clientInfo?.proprietorName?.toLowerCase().includes(searchLower) || false;
+            const tradeNameMatch = clientInfo?.tradeName?.toLowerCase().includes(searchLower) || false;
+
+            let groupNameMatch = false;
+            if (clientInfo) {
+                const groupId = typeof clientInfo.groupName === 'object' && clientInfo.groupName !== null
+                    ? clientInfo.groupName._id
+                    : clientInfo.groupName;
+                const group = groups.find(g => g._id === groupId);
+                if (group?.groupName?.toLowerCase().includes(searchLower)) {
+                    groupNameMatch = true;
+                }
+            }
+
+            const phoneMatch = cl.client.phone?.includes(searchText) || clientInfo?.phone?.includes(searchText) || clientInfo?.phone2?.includes(searchText) || false;
+
+            return nameMatch || emailMatch || codeMatch || proprietorMatch || tradeNameMatch || groupNameMatch || phoneMatch;
+        });
+    }, [ledgerData?.clientLedgers, searchText, clients, groups]);
+
     const handleExport = () => {
-        if (!ledgerData?.clientLedgers) return;
+        if (!filteredLedgers.length) return;
 
         let csv = 'Client Name,Total Billed,Total Paid,Total Due,Total Overdue,Invoices,Paid,Pending,Overdue,Payment Rate %\n';
 
-        ledgerData.clientLedgers.forEach((cl: ClientLedgerRecord) => {
+        filteredLedgers.forEach((cl: ClientLedgerRecord) => {
             csv += `${cl.client.name},${cl.summary.totalBilled},${cl.summary.totalPaid},${cl.summary.totalDue},${cl.summary.totalOverdue},${cl.summary.totalInvoices},${cl.summary.paidInvoices},${cl.summary.pendingInvoices},${cl.summary.overdueInvoices},${cl.summary.paymentRate}\n`;
         });
 
@@ -174,7 +206,7 @@ export const ClientLedger: React.FC = () => {
                         size="small"
                         startIcon={<DownloadIcon />}
                         onClick={handleExport}
-                        disabled={!ledgerData?.clientLedgers?.length}
+                        disabled={!filteredLedgers.length}
                         sx={{ borderRadius: '8px', boxShadow: 'none' }}
                     >
                         Export CSV
@@ -270,6 +302,18 @@ export const ClientLedger: React.FC = () => {
 
                         {/* Right Column */}
                         <Box sx={{ flex: 1 }}>
+                            <FilterRow label="Search" inputId="filter-search-text">
+                                <TextField
+                                    id="filter-search-text"
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, group, firm, proprietor..."
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
+                            </FilterRow>
                             <FilterRow label="Year / Month">
                                 <Box sx={{ display: 'flex', gap: 2 }}>
                                     <Select
@@ -336,6 +380,7 @@ export const ClientLedger: React.FC = () => {
                                         setSelectedMonth('');
                                         setStartDate('');
                                         setEndDate('');
+                                        setSearchText('');
                                     }}
                                     startIcon={<ClearIcon />}
                                     sx={{ color: 'error.main', textTransform: 'none', fontWeight: 600 }}
@@ -448,10 +493,10 @@ export const ClientLedger: React.FC = () => {
                             )}
 
                             {/* Client Accordions */}
-                            {ledgerData.clientLedgers.length === 0 ? (
-                                <Alert severity="info">No ledger data found for the selected filters.</Alert>
+                            {filteredLedgers.length === 0 ? (
+                                <Alert severity="info">No ledger data found matching the selected filters.</Alert>
                             ) : (
-                                ledgerData.clientLedgers.map((clientLedger: ClientLedgerRecord) => (
+                                filteredLedgers.map((clientLedger: ClientLedgerRecord) => (
                                     <Accordion
                                         key={clientLedger.client._id}
                                         sx={{

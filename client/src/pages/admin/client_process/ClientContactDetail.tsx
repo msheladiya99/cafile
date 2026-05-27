@@ -85,7 +85,7 @@ export const ClientContactDetail: React.FC = () => {
             // Sub Master Filter
             if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
 
-            // Global Search Filter (searches name, code, email, phone, proprietor, username, and contact name, mobile, email)
+            // Global Search Filter (searches name, code, email, phone, proprietor, username, groupName, and contact name, mobile, email)
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
                 
@@ -98,6 +98,18 @@ export const ClientContactDetail: React.FC = () => {
                 const matchProprietor = client.proprietorName?.toLowerCase().includes(searchLower) || false;
                 const matchUsername = client.username?.toLowerCase().includes(searchLower) || false;
 
+                // Group Name match
+                let matchGroupName = false;
+                const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                    ? client.groupName._id
+                    : client.groupName;
+                if (typeof client.groupName === 'object' && client.groupName !== null && 'groupName' in client.groupName) {
+                    matchGroupName = client.groupName.groupName?.toLowerCase().includes(searchLower) || false;
+                } else if (clientGroupId) {
+                    const group = groups.find(g => g._id === clientGroupId);
+                    matchGroupName = group?.groupName?.toLowerCase().includes(searchLower) || false;
+                }
+
                 // Sub-contacts matches
                 const matchContactName = client.multipleContacts?.some(contact => 
                     contact.name?.toLowerCase().includes(searchLower)
@@ -109,7 +121,7 @@ export const ClientContactDetail: React.FC = () => {
                     contact.email?.toLowerCase().includes(searchLower)
                 ) || false;
 
-                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername &&
+                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername && !matchGroupName &&
                     !matchContactName && !matchContactMobile && !matchContactEmail) {
                     return false;
                 }
@@ -117,7 +129,7 @@ export const ClientContactDetail: React.FC = () => {
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSubMaster, filterSearchText]);
+    }, [clients, groups, filterGroup, filterClient, filterSubMaster, filterSearchText]);
 
     return (
         <PageContainer>
