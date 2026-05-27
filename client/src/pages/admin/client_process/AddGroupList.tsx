@@ -348,111 +348,119 @@ export const AddGroupList: React.FC = () => {
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 
                     {/* Add Group Form */}
-                    <Box sx={{ maxWidth: '800px', width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                         <Section title={isEditing ? "Edit Group" : "Add New Group"} icon={<AddCircleOutlineIcon />}>
-                            <FormRow label="Group Name" required>
-                                <TextField
-                                    name="groupName"
-                                    value={formData.groupName}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
+                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
+                                {/* Left Column */}
+                                <Box sx={{ flex: 1 }}>
+                                    <FormRow label="Group Name" required>
+                                        <TextField
+                                            name="groupName"
+                                            value={formData.groupName}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
 
-                            <FormRow label="Group Person Name">
-                                <TextField
-                                    name="groupPersonName"
-                                    value={formData.groupPersonName}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
+                                    <FormRow label="Group Person Name">
+                                        <TextField
+                                            name="groupPersonName"
+                                            value={formData.groupPersonName}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
 
-                            <FormRow label="Group Own By Firm">
-                                <TextField
-                                    select
-                                    name="groupOwnByFirm"
-                                    value={formData.groupOwnByFirm}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    SelectProps={{ native: false }}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {primaryFirm && primaryFirm._id && (
-                                        <MenuItem key={primaryFirm._id} value={primaryFirm._id}>
-                                            {primaryFirm.firmName}
-                                        </MenuItem>
-                                    )}
-                                    {multiFirms.map((mf) => (
-                                        <MenuItem key={mf._id} value={mf._id}>
-                                            {mf.firmName}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </FormRow>
+                                    <FormRow label="Group Own By Firm">
+                                        <TextField
+                                            select
+                                            name="groupOwnByFirm"
+                                            value={formData.groupOwnByFirm}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            size="small"
+                                            SelectProps={{ native: false }}
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {primaryFirm && primaryFirm._id && (
+                                                <MenuItem key={primaryFirm._id} value={primaryFirm._id}>
+                                                    {primaryFirm.firmName}
+                                                </MenuItem>
+                                            )}
+                                            {multiFirms.map((mf) => (
+                                                <MenuItem key={mf._id} value={mf._id}>
+                                                    {mf.firmName}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </FormRow>
 
-                            <FormRow label="Address">
-                                <TextField
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
-
-                            <FormRow label="Phone / Mobile" required>
-                                <TextField
-                                    name="mobileNumber"
-                                    value={formData.mobileNumber}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
-
-                            <FormRow label="Email Address">
-                                <TextField
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
-
-                            <FormRow label="Description">
-                                <TextField
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    multiline
-                                    rows={2}
-                                    size="small"
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </FormRow>
-
-                            <FormRow label="Status">
-                                <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: formData.status ? '#e8f5e9' : '#ffebee', borderRadius: 4, px: 2, height: 32, width: 'fit-content' }}>
-                                    <Switch size="small" color="primary" sx={{ ml: -1 }} checked={formData.status} onChange={handleStatusChange} />
-                                    <Typography variant="body2" sx={{ color: formData.status ? 'success.main' : 'error.main', ml: 0.5, fontWeight: 600 }}>{formData.status ? 'Active' : 'Inactive'}</Typography>
+                                    <FormRow label="Address">
+                                        <TextField
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            multiline
+                                            rows={3}
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
                                 </Box>
-                            </FormRow>
+
+                                {/* Right Column */}
+                                <Box sx={{ flex: 1 }}>
+                                    <FormRow label="Phone / Mobile" required>
+                                        <TextField
+                                            name="mobileNumber"
+                                            value={formData.mobileNumber}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
+
+                                    <FormRow label="Email Address">
+                                        <TextField
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
+
+                                    <FormRow label="Description">
+                                        <TextField
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleInputChange}
+                                            fullWidth
+                                            multiline
+                                            rows={3}
+                                            size="small"
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                        />
+                                    </FormRow>
+
+                                    <FormRow label="Status">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: formData.status ? '#e8f5e9' : '#ffebee', borderRadius: 4, px: 2, height: 32, width: 'fit-content' }}>
+                                            <Switch size="small" color="primary" sx={{ ml: -1 }} checked={formData.status} onChange={handleStatusChange} />
+                                            <Typography variant="body2" sx={{ color: formData.status ? 'success.main' : 'error.main', ml: 0.5, fontWeight: 600 }}>{formData.status ? 'Active' : 'Inactive'}</Typography>
+                                        </Box>
+                                    </FormRow>
+                                </Box>
+                            </Box>
                         </Section>
                     </Box>
 
