@@ -59,6 +59,22 @@ export const ClientContactDetail: React.FC = () => {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
+    const getGroupPersonName = (client: any) => {
+        const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+            ? client.groupName._id
+            : client.groupName;
+        const group = groups.find(g => g._id === clientGroupId);
+        return group?.groupPersonName || '-';
+    };
+
+    const getGroupMobile = (client: any) => {
+        const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+            ? client.groupName._id
+            : client.groupName;
+        const group = groups.find(g => g._id === clientGroupId);
+        return group?.mobileNumber || '-';
+    };
+
     // Reset page when filters change
     React.useEffect(() => {
         setPage(0);
@@ -85,7 +101,7 @@ export const ClientContactDetail: React.FC = () => {
             // Sub Master Filter
             if (filterSubMaster && client.subMaster !== filterSubMaster) return false;
 
-            // Global Search Filter (searches name, code, email, phone, proprietor, username, and contact name, mobile, email)
+            // Global Search Filter (searches name, code, email, phone, proprietor, username, groupName, and contact name, mobile, email)
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
                 
@@ -98,6 +114,18 @@ export const ClientContactDetail: React.FC = () => {
                 const matchProprietor = client.proprietorName?.toLowerCase().includes(searchLower) || false;
                 const matchUsername = client.username?.toLowerCase().includes(searchLower) || false;
 
+                // Group Name match
+                let matchGroupName = false;
+                const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                    ? client.groupName._id
+                    : client.groupName;
+                if (typeof client.groupName === 'object' && client.groupName !== null && 'groupName' in client.groupName) {
+                    matchGroupName = client.groupName.groupName?.toLowerCase().includes(searchLower) || false;
+                } else if (clientGroupId) {
+                    const group = groups.find(g => g._id === clientGroupId);
+                    matchGroupName = group?.groupName?.toLowerCase().includes(searchLower) || false;
+                }
+
                 // Sub-contacts matches
                 const matchContactName = client.multipleContacts?.some(contact => 
                     contact.name?.toLowerCase().includes(searchLower)
@@ -109,7 +137,7 @@ export const ClientContactDetail: React.FC = () => {
                     contact.email?.toLowerCase().includes(searchLower)
                 ) || false;
 
-                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername &&
+                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername && !matchGroupName &&
                     !matchContactName && !matchContactMobile && !matchContactEmail) {
                     return false;
                 }
@@ -117,7 +145,7 @@ export const ClientContactDetail: React.FC = () => {
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSubMaster, filterSearchText]);
+    }, [clients, groups, filterGroup, filterClient, filterSubMaster, filterSearchText]);
 
     return (
         <PageContainer>
@@ -239,7 +267,7 @@ export const ClientContactDetail: React.FC = () => {
                                     {
                                         name: client.name,
                                         designation: 'Primary',
-                                        mobile: client.phone2 ? `${client.phone}, ${client.phone2}` : client.phone,
+                                        mobile: [client.phone, client.phone2].filter(Boolean).join(', ') || '-',
                                         email: client.email,
                                         status: client.status,
                                         isPrimary: true
@@ -255,11 +283,15 @@ export const ClientContactDetail: React.FC = () => {
                                                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
                                                         {contact.name || (idx === 0 ? client.name : 'Unnamed Contact')}
                                                     </Typography>
-                                                    {idx === 0 && (
-                                                        <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                                            Client: {client.name}
-                                                        </Typography>
-                                                    )}
+                                                    <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                        Client: {client.name}
+                                                    </Typography>
+                                                    <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                        Group Person: {getGroupPersonName(client)}
+                                                    </Typography>
+                                                    <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                                        Group Mobile: {getGroupMobile(client)}
+                                                    </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', gap: 0.5 }}>
                                                     {idx === 0 && (
@@ -284,10 +316,6 @@ export const ClientContactDetail: React.FC = () => {
                                             
                                             <Stack spacing={0.8}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography variant="caption" color="text.secondary">Designation</Typography>
-                                                    <Typography variant="caption" sx={{ fontWeight: 600 }}>{contact.designation || '-'}</Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                     <Typography variant="caption" color="text.secondary">Mobile</Typography>
                                                     <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>{contact.mobile || '-'}</Typography>
                                                 </Box>
@@ -307,8 +335,8 @@ export const ClientContactDetail: React.FC = () => {
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: '#f1f5f9' }}>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Client Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Contact Name</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Designation</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Group Person Name</TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Group Mobile Number</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Mobile</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Email</TableCell>
                                         <TableCell sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.05em' }}>Status</TableCell>
@@ -321,7 +349,7 @@ export const ClientContactDetail: React.FC = () => {
                                             {
                                                 name: client.name,
                                                 designation: 'Primary',
-                                                mobile: client.phone2 ? `${client.phone}, ${client.phone2}` : client.phone,
+                                                mobile: [client.phone, client.phone2].filter(Boolean).join(', ') || '-',
                                                 email: client.email,
                                                 status: client.status,
                                                 isPrimary: true
@@ -334,15 +362,12 @@ export const ClientContactDetail: React.FC = () => {
                                                 <TableCell sx={{ fontWeight: idx === 0 ? 600 : 400, color: idx === 0 ? 'text.primary' : 'text.disabled' }}>
                                                     {idx === 0 ? client.name : ''}
                                                 </TableCell>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{contact.name || (idx === 0 ? client.name : '-')}</Typography>
-                                                        {('isPrimary' in contact && contact.isPrimary) && (
-                                                            <Chip label="Primary" size="small" color="primary" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700, bgcolor: '#eef2ff', color: '#6366f1' }} />
-                                                        )}
-                                                    </Box>
+                                                <TableCell sx={{ fontWeight: idx === 0 ? 500 : 400, color: idx === 0 ? 'text.secondary' : 'text.disabled' }}>
+                                                    {idx === 0 ? getGroupPersonName(client) : ''}
                                                 </TableCell>
-                                                <TableCell sx={{ color: 'text.secondary' }}>{contact.designation}</TableCell>
+                                                <TableCell sx={{ fontWeight: idx === 0 ? 500 : 400, color: idx === 0 ? 'text.secondary' : 'text.disabled' }}>
+                                                    {idx === 0 ? getGroupMobile(client) : ''}
+                                                </TableCell>
                                                 <TableCell sx={{ fontWeight: 500, color: 'primary.main' }}>{contact.mobile}</TableCell>
                                                 <TableCell sx={{ color: 'text.secondary' }}>{contact.email}</TableCell>
                                                 <TableCell>

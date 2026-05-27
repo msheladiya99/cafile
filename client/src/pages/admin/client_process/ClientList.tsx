@@ -143,7 +143,7 @@ export const ClientList: React.FC = () => {
             // Client Dropdown Filter (by _id)
             if (filterClient && client._id !== filterClient) return false;
 
-            // Global Search Filter (searches name, code, email, phone, proprietor, username)
+            // Global Search Filter (searches name, code, email, phone, proprietor, username, groupName)
             if (filterSearchText) {
                 const searchLower = filterSearchText.toLowerCase();
                 const matchName = client.name?.toLowerCase().includes(searchLower) || false;
@@ -154,7 +154,19 @@ export const ClientList: React.FC = () => {
                 const matchProprietor = client.proprietorName?.toLowerCase().includes(searchLower) || false;
                 const matchUsername = client.username?.toLowerCase().includes(searchLower) || false;
                 
-                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername) {
+                // Group Name match
+                let matchGroupName = false;
+                const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
+                    ? client.groupName._id
+                    : client.groupName;
+                if (typeof client.groupName === 'object' && client.groupName !== null && 'groupName' in client.groupName) {
+                    matchGroupName = client.groupName.groupName?.toLowerCase().includes(searchLower) || false;
+                } else if (clientGroupId) {
+                    const group = groups.find(g => g._id === clientGroupId);
+                    matchGroupName = group?.groupName?.toLowerCase().includes(searchLower) || false;
+                }
+                
+                if (!matchName && !matchEmail && !matchClientCode && !matchPhone1 && !matchPhone2 && !matchProprietor && !matchUsername && !matchGroupName) {
                     return false;
                 }
             }
@@ -174,7 +186,7 @@ export const ClientList: React.FC = () => {
 
             return true;
         });
-    }, [clients, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
