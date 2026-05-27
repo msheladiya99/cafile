@@ -239,8 +239,33 @@ clientSchema.index({ firmId: 1, clientType: 1, status: 1 });
 
 export const Client = mongoose.model<IClient>('Client', clientSchema);
 
-// Drop old conflicting unique email index if it exists, since email is an optional field
-Client.collection.dropIndex('email_1')
-    .then(() => console.log('[Client] Dropped old unique email index successfully'))
-    .catch(() => { /* Index didn't exist or already dropped — safe to ignore */ });
+// Drop old conflicting unique indexes if they exist
+mongoose.connection.once('open', async () => {
+    try {
+        const db = mongoose.connection.db;
+        if (!db) return;
+        const collections = await db.listCollections({ name: 'clients' }).toArray();
+        if (collections.length === 0) return;
+
+        const indexes = await db.collection('clients').indexes();
+        
+        // 1. Drop old email_1 index
+        if (indexes.some(idx => idx.name === 'email_1')) {
+            await db.collection('clients').dropIndex('email_1');
+            console.log('[Client] Dropped old unique email_1 index successfully');
+        }
+
+        // 2. Drop unique firmId_1_email_1 index
+        const firmIdEmailIdx = indexes.find(idx => idx.name === 'firmId_1_email_1');
+        if (firmIdEmailIdx && firmIdEmailIdx.unique) {
+            await db.collection('clients').dropIndex('firmId_1_email_1');
+            console.log('[Client] Dropped old unique firmId_1_email_1 index successfully');
+            // Rebuild indexes to ensure it is created as non-unique
+            await Client.createIndexes();
+        }
+    } catch (err: any) {
+        console.error('[Client] Error dropping unique indexes on startup:', err.message);
+    }
+});
+
 
