@@ -23,12 +23,14 @@ import {
     Checkbox,
     TablePagination,
     MenuItem,
+    Select,
 } from '@mui/material';
 import {
     AddCircleOutline as AddCircleOutlineIcon,
     FormatListBulleted as FormatListBulletedIcon,
     Delete as DeleteIcon,
-    Edit as EditIcon
+    Edit as EditIcon,
+    FilterList as FilterListIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ClientGroup } from '../../../services/clientGroupService';
@@ -58,6 +60,16 @@ export const AddGroupList: React.FC = () => {
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const [filterSearchText, setFilterSearchText] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterFirm, setFilterFirm] = useState('');
+    const [filterGroupName, setFilterGroupName] = useState('');
+
+    React.useEffect(() => {
+        setPage(0);
+        setSelectedGroups([]);
+    }, [filterSearchText, filterStatus, filterFirm, filterGroupName]);
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
         open: false,
@@ -93,6 +105,54 @@ export const AddGroupList: React.FC = () => {
         queryKey: ['firm'],
         queryFn: firmService.getFirm
     });
+
+    const sortedGroupsForFilter = React.useMemo(() => {
+        return [...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || ''));
+    }, [groups]);
+
+    const filteredGroups = React.useMemo(() => {
+        return groups.filter((group) => {
+            // Group Name Filter
+            if (filterGroupName && group._id !== filterGroupName) {
+                return false;
+            }
+
+            // Firm Filter
+            if (filterFirm) {
+                const groupFirmId = typeof group.groupOwnByFirm === 'object' && group.groupOwnByFirm !== null
+                    ? group.groupOwnByFirm._id
+                    : group.groupOwnByFirm;
+                if (groupFirmId !== filterFirm) return false;
+            }
+
+            // Status Filter
+            if (filterStatus !== 'all') {
+                const isActive = filterStatus === 'active';
+                if (group.status !== isActive) return false;
+            }
+
+            // Search Text Filter (Group Name, Person Name, Mobile, Email, Description)
+            if (filterSearchText) {
+                const searchLower = filterSearchText.toLowerCase();
+                const matchGroupName = group.groupName?.toLowerCase().includes(searchLower) || false;
+                const matchPersonName = group.groupPersonName?.toLowerCase().includes(searchLower) || false;
+                const matchMobile = group.mobileNumber?.includes(filterSearchText) || false;
+                const matchEmail = group.email?.toLowerCase().includes(searchLower) || false;
+                const matchDescription = group.description?.toLowerCase().includes(searchLower) || false;
+
+                const firmName = typeof group.groupOwnByFirm === 'object' && group.groupOwnByFirm
+                    ? group.groupOwnByFirm.firmName
+                    : '';
+                const matchFirm = firmName?.toLowerCase().includes(searchLower) || false;
+
+                if (!matchGroupName && !matchPersonName && !matchMobile && !matchEmail && !matchDescription && !matchFirm) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [groups, filterFirm, filterStatus, filterSearchText, filterGroupName]);
 
     const createGroupMutation = useMutation({
         mutationFn: clientGroupService.createGroup,
@@ -152,7 +212,7 @@ export const AddGroupList: React.FC = () => {
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
-            const currentViewIds = groups
+            const currentViewIds = filteredGroups
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((g) => g._id)
                 .filter((id): id is string => !!id);
@@ -285,11 +345,10 @@ export const AddGroupList: React.FC = () => {
 
             {/* Form & List Container */}
             <ContentContainer>
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 
                     {/* Add Group Form */}
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ maxWidth: '800px', width: '100%' }}>
                         <Section title={isEditing ? "Edit Group" : "Add New Group"} icon={<AddCircleOutlineIcon />}>
                             <FormRow label="Group Name" required>
                                 <TextField
@@ -397,8 +456,93 @@ export const AddGroupList: React.FC = () => {
                         </Section>
                     </Box>
 
+                    {/* Filters Section */}
+                    <Box sx={{ width: '100%' }}>
+                        <Section title="Filter Options" icon={<FilterListIcon />}>
+                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
+                                {/* Left Column */}
+                                <Box sx={{ flex: 1 }}>
+                                    <FormRow label="Search" inputId="filter-search-text">
+                                        <TextField
+                                            id="filter-search-text"
+                                            fullWidth
+                                            size="small"
+                                            placeholder="Search by group name, person, email, mobile..."
+                                            value={filterSearchText}
+                                            onChange={(e) => setFilterSearchText(e.target.value)}
+                                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                            inputProps={{ 'aria-label': 'Search Text' }}
+                                        />
+                                    </FormRow>
+                                    <FormRow label="Status" inputId="filter-status">
+                                        <Select
+                                            id="filter-status"
+                                            fullWidth
+                                            size="small"
+                                            value={filterStatus}
+                                            onChange={(e) => setFilterStatus(e.target.value)}
+                                            sx={{ borderRadius: '8px' }}
+                                            inputProps={{ 'aria-label': 'Group Status' }}
+                                        >
+                                            <MenuItem value="all">All Groups</MenuItem>
+                                            <MenuItem value="active">Active</MenuItem>
+                                            <MenuItem value="inactive">Inactive</MenuItem>
+                                        </Select>
+                                    </FormRow>
+                                </Box>
+
+                                {/* Right Column */}
+                                <Box sx={{ flex: 1 }}>
+                                    <FormRow label="Group Name" inputId="filter-group-name">
+                                        <Select
+                                            id="filter-group-name"
+                                            fullWidth
+                                            size="small"
+                                            displayEmpty
+                                            value={filterGroupName}
+                                            onChange={(e) => setFilterGroupName(e.target.value)}
+                                            sx={{ borderRadius: '8px', color: filterGroupName ? 'inherit' : 'text.secondary' }}
+                                            inputProps={{ 'aria-label': 'Group Name Filter' }}
+                                        >
+                                            <MenuItem value="">Choose a Group Name...</MenuItem>
+                                            {sortedGroupsForFilter.map((g) => (
+                                                <MenuItem key={g._id} value={g._id}>
+                                                    {g.groupName}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormRow>
+                                    <FormRow label="Own By Firm" inputId="filter-firm">
+                                        <Select
+                                            id="filter-firm"
+                                            fullWidth
+                                            size="small"
+                                            displayEmpty
+                                            value={filterFirm}
+                                            onChange={(e) => setFilterFirm(e.target.value)}
+                                            sx={{ borderRadius: '8px', color: filterFirm ? 'inherit' : 'text.secondary' }}
+                                            inputProps={{ 'aria-label': 'Firm Owner' }}
+                                        >
+                                            <MenuItem value="">Choose a Firm...</MenuItem>
+                                            {primaryFirm && primaryFirm._id && (
+                                                <MenuItem key={primaryFirm._id} value={primaryFirm._id}>
+                                                    {primaryFirm.firmName}
+                                                </MenuItem>
+                                            )}
+                                            {multiFirms.map((mf) => (
+                                                <MenuItem key={mf._id} value={mf._id}>
+                                                    {mf.firmName}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormRow>
+                                </Box>
+                            </Box>
+                        </Section>
+                    </Box>
+
                     {/* Group List */}
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ width: '100%' }}>
                         <Section title="Group List" icon={<FormatListBulletedIcon />}>
                             <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                                 <Table size="small">
@@ -409,11 +553,11 @@ export const AddGroupList: React.FC = () => {
                                                     color="primary"
                                                     indeterminate={
                                                         selectedGroups.length > 0 &&
-                                                        selectedGroups.length < groups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                                                        selectedGroups.length < filteredGroups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
                                                     }
                                                     checked={
-                                                        groups.length > 0 &&
-                                                        selectedGroups.length === groups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
+                                                        filteredGroups.length > 0 &&
+                                                        selectedGroups.length === filteredGroups.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length
                                                     }
                                                     onChange={handleSelectAllClick}
                                                 />
@@ -433,12 +577,12 @@ export const AddGroupList: React.FC = () => {
                                                     <CircularProgress size={24} />
                                                 </TableCell>
                                             </TableRow>
-                                        ) : groups.length === 0 ? (
+                                        ) : filteredGroups.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={7} align="center" sx={{ color: 'text.secondary', py: 3 }}>Group Not Found</TableCell>
                                             </TableRow>
                                         ) : (
-                                            groups
+                                            filteredGroups
                                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                                 .map((g) => (
                                                     <TableRow
@@ -491,27 +635,27 @@ export const AddGroupList: React.FC = () => {
                                                     </TableRow>
                                                 ))
                                         )}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                            {groups.length > 0 && (
-                                <TablePagination
-                                    rowsPerPageOptions={[5, 10, 20, 30, 40, 50]}
-                                    component="div"
-                                    count={groups.length}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    onPageChange={(_, newPage) => setPage(newPage)}
-                                    onRowsPerPageChange={(e) => {
-                                        setRowsPerPage(parseInt(e.target.value, 10));
-                                        setPage(0);
-                                    }}
-                                />
-                            )}
-                        </Section>
-                    </Box>
+                                     </TableBody>
+                                 </Table>
+                             </TableContainer>
+                             {filteredGroups.length > 0 && (
+                                 <TablePagination
+                                     rowsPerPageOptions={[5, 10, 20, 30, 40, 50]}
+                                     component="div"
+                                     count={filteredGroups.length}
+                                     rowsPerPage={rowsPerPage}
+                                     page={page}
+                                     onPageChange={(_, newPage) => setPage(newPage)}
+                                     onRowsPerPageChange={(e) => {
+                                         setRowsPerPage(parseInt(e.target.value, 10));
+                                         setPage(0);
+                                     }}
+                                 />
+                             )}
+                         </Section>
+                     </Box>
 
-                </Box>
+                 </Box>
             </ContentContainer>
 
             <Snackbar
