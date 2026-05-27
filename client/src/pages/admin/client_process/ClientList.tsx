@@ -88,7 +88,6 @@ export const ClientList: React.FC = () => {
     const [filterMasterType, setFilterMasterType] = React.useState('');
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
     const [filterStatus, setFilterStatus] = React.useState('all');
-    const [filterFYear, setFilterFYear] = React.useState('');
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
 
     // Pagination State
@@ -124,7 +123,7 @@ export const ClientList: React.FC = () => {
     React.useEffect(() => {
         setPage(0);
         setSelectedClients([]);
-    }, [filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+    }, [filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus]);
 
     // Reset client filter when group changes
     React.useEffect(() => {
@@ -183,7 +182,6 @@ export const ClientList: React.FC = () => {
                 if (client.status !== isActive) return false;
             }
 
-            if (filterFYear && client.financialYear !== filterFYear) return false;
 
             return true;
         });
@@ -192,7 +190,7 @@ export const ClientList: React.FC = () => {
             const cmp = (a.name || '').localeCompare(b.name || '');
             return sortOrder === 'asc' ? cmp : -cmp;
         });
-    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear, sortOrder]);
+    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, sortOrder]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
@@ -442,18 +440,6 @@ export const ClientList: React.FC = () => {
                                     ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Search" inputId="filter-search-text">
-                                <TextField
-                                    id="filter-search-text"
-                                    fullWidth
-                                    size="small"
-                                    placeholder="Search by name, code, email, phone, proprietor..."
-                                    value={filterSearchText}
-                                    onChange={(e) => setFilterSearchText(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                    inputProps={{ 'aria-label': 'Search Text' }}
-                                />
-                            </FilterRow>
                         </Box>
 
                         {/* Right Column */}
@@ -490,22 +476,19 @@ export const ClientList: React.FC = () => {
                                     <MenuItem value="inactive">Inactive</MenuItem>
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="F Year" inputId="filter-financial-year">
-                                <Select
-                                    id="filter-financial-year"
+                            <FilterRow label="Search" inputId="filter-search-text">
+                                <TextField
+                                    id="filter-search-text"
                                     fullWidth
                                     size="small"
-                                    displayEmpty
-                                    value={filterFYear}
-                                    onChange={(e) => setFilterFYear(e.target.value)}
-                                    sx={{ borderRadius: '8px', color: filterFYear ? 'inherit' : 'text.secondary' }}
-                                    inputProps={{ 'aria-label': 'Financial Year' }}
-                                >
-                                    <MenuItem value="">Choose a Period...</MenuItem>
-                                    <MenuItem value="april-march">April - March</MenuItem>
-                                    <MenuItem value="jan-dec">January - December</MenuItem>
-                                </Select>
+                                    placeholder="Search by name, code, email, phone, proprietor..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
                             </FilterRow>
+
                         </Box>
                     </Box>
                 </Section>
