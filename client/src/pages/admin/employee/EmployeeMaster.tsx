@@ -255,7 +255,10 @@ export const EmployeeMaster: React.FC = () => {
 
     const [openDesignationDialog, setOpenDesignationDialog] = useState(false);
     const [designations, setDesignations] = useState([
-        { id: 1, name: 'Staff', description: '', status: true }
+        { id: 1, name: 'Admin', description: '', status: true },
+        { id: 2, name: 'Manager', description: '', status: true },
+        { id: 3, name: 'Staff', description: '', status: true },
+        { id: 4, name: 'Intern', description: '', status: true }
     ]);
     const [editingDesignationId, setEditingDesignationId] = useState<number | null>(null);
     const [openFieldMasterDialog, setOpenFieldMasterDialog] = useState(false);
@@ -745,10 +748,9 @@ export const EmployeeMaster: React.FC = () => {
                                         sx={{ borderRadius: '8px', color: formData.designation ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Designation</MenuItem>
-                                        <MenuItem value="Admin">Admin</MenuItem>
-                                        <MenuItem value="Manager">Manager</MenuItem>
-                                        <MenuItem value="Staff">Staff</MenuItem>
-                                        <MenuItem value="Intern">Intern</MenuItem>
+                                        {designations.filter(d => d.status).map(d => (
+                                            <MenuItem key={d.id} value={d.name}>{d.name}</MenuItem>
+                                        ))}
                                     </Select>
                                 </FormRow>
                                 <FormRow label="Joining Date">
