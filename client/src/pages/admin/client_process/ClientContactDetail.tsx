@@ -54,7 +54,7 @@ export const ClientContactDetail: React.FC = () => {
     const [filterSearchType, setFilterSearchType] = React.useState('name');
     const [filterSearchText, setFilterSearchText] = React.useState('');
 
-    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership Firm', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'];
 
     // Pagination State
     const [page, setPage] = React.useState(0);
@@ -133,7 +133,7 @@ export const ClientContactDetail: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
-                                    {groups.map(group => (
+                                    {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
@@ -150,7 +150,7 @@ export const ClientContactDetail: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {clients.map(client => (
+                                    {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
                                     ))}
                                 </Select>

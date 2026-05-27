@@ -800,7 +800,7 @@ export const ClientMaster: React.FC = () => {
                                         sx={{ borderRadius: '8px', color: formData.groupName ? 'text.primary' : 'text.secondary' }}
                                     >
                                         <MenuItem value="" disabled>Choose a Group...</MenuItem>
-                                        {groups.map((group) => (
+                                        {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map((group) => (
                                             <MenuItem key={group._id} value={group._id}>
                                                 {group.groupName}
                                             </MenuItem>

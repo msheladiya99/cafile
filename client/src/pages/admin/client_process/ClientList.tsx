@@ -118,7 +118,7 @@ export const ClientList: React.FC = () => {
 
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, open: false }));
 
-    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership Firm', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Association of Persons', 'Body of Individuals', 'Local Authority', 'Artificial Juridical Person', 'Co-operative Society', 'Trust', 'Other'];
+    const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'];
 
     // Reset page and selection when filters change to avoid empty views
     React.useEffect(() => {
@@ -364,7 +364,7 @@ export const ClientList: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
-                                    {groups.map(group => (
+                                    {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
@@ -381,7 +381,7 @@ export const ClientList: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {clients.map(client => (
+                                    {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
                                     ))}
                                 </Select>

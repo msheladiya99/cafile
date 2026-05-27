@@ -107,7 +107,7 @@ export const UDINList: React.FC = () => {
                             <Typography sx={{ width: 140, color: 'text.secondary', fontSize: '0.9rem' }}>Client</Typography>
                             <Select size="small" fullWidth displayEmpty value={client} onChange={(e) => setClient(e.target.value)}>
                                 <MenuItem value=""><em>Choose a Client...</em></MenuItem>
-                                {clients.map((c: Client) => (
+                                {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (
                                     <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                 ))}
                             </Select>

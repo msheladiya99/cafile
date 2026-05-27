@@ -77,7 +77,7 @@ export const FreeClientList: React.FC = () => {
                             onChange={(e) => setGroupName(e.target.value)}
                         >
                             <MenuItem value="">Choose a Group...</MenuItem>
-                            {clientGroups.map((g: any) => (
+                            {[...clientGroups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map((g: any) => (
                                 <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                             ))}
                         </Select>
@@ -92,7 +92,7 @@ export const FreeClientList: React.FC = () => {
                             onChange={(e) => setClientName(e.target.value)}
                         >
                             <MenuItem value="">Choose a Client...</MenuItem>
-                            {clients.map((c: Client) => (
+                            {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (
                                 <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                             ))}
                         </Select>

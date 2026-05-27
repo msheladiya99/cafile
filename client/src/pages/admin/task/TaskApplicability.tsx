@@ -392,7 +392,7 @@ export const TaskApplicability: React.FC = () => {
                                 <Select size="small" fullWidth displayEmpty value={singleGroupName}
                                     onChange={(e) => { setSingleGroupName(e.target.value); setSingleClientName(''); }}>
                                     <MenuItem value=""><span>Choose a Group...</span></MenuItem>
-                                    {clientGroups.map((g: { _id: string; groupName: string }) => (
+                                    {[...clientGroups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map((g: { _id: string; groupName: string }) => (
                                         <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                     ))}
                                 </Select>
@@ -408,7 +408,7 @@ export const TaskApplicability: React.FC = () => {
                                 <Select size="small" fullWidth displayEmpty value={singleClientName}
                                     onChange={(e) => setSingleClientName(e.target.value)}>
                                     <MenuItem value=""><span>Choose a Client...</span></MenuItem>
-                                    {singleFilteredClients.map((c: Client) => (  // ✅ Fixed: filtered by group
+                                    {[...singleFilteredClients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (  // ✅ Fixed: filtered by group
                                         <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                     ))}
                                 </Select>
@@ -598,7 +598,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Select size="small" fullWidth displayEmpty value={groupName}
                                             onChange={(e) => setGroupName(e.target.value)}>
                                             <MenuItem value=""><span>All Groups</span></MenuItem>
-                                            {clientGroups.map((g: { _id: string; groupName: string }) => (
+                                            {[...clientGroups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map((g: { _id: string; groupName: string }) => (
                                                 <MenuItem key={g._id} value={g._id}>{g.groupName}</MenuItem>
                                             ))}
                                         </Select>
@@ -642,7 +642,7 @@ export const TaskApplicability: React.FC = () => {
                                         <Select size="small" fullWidth displayEmpty value={singleClientName}
                                             onChange={(e) => { setSingleClientName(e.target.value); setSelectedTaskIds([]); }}>
                                             <MenuItem value=""><span>Choose a Client...</span></MenuItem>
-                                            {clients.map((c: Client) => (
+                                            {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((c: Client) => (
                                                 <MenuItem key={c._id} value={c._id}>{c.name}</MenuItem>
                                             ))}
                                         </Select>

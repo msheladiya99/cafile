@@ -230,7 +230,7 @@ export const ClientLedger: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Client Name' }}
                                 >
                                     <MenuItem value="">Choose a Client...</MenuItem>
-                                    {clients.map(client => (
+                                    {[...clients].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(client => (
                                         <MenuItem key={client._id} value={client._id}>{client.name}</MenuItem>
                                     ))}
                                 </Select>
@@ -247,7 +247,7 @@ export const ClientLedger: React.FC = () => {
                                     inputProps={{ 'aria-label': 'Group Name' }}
                                 >
                                     <MenuItem value="">Choose a Group...</MenuItem>
-                                    {groups.map(group => (
+                                    {[...groups].sort((a, b) => (a.groupName || '').localeCompare(b.groupName || '')).map(group => (
                                         <MenuItem key={group._id} value={group._id}>{group.groupName}</MenuItem>
                                     ))}
                                 </Select>
