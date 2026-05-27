@@ -65,6 +65,7 @@ export const AddGroupList: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterFirm, setFilterFirm] = useState('');
     const [filterGroupName, setFilterGroupName] = useState('');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     React.useEffect(() => {
         setPage(0);
@@ -111,7 +112,7 @@ export const AddGroupList: React.FC = () => {
     }, [groups]);
 
     const filteredGroups = React.useMemo(() => {
-        return groups.filter((group) => {
+        const filtered = groups.filter((group) => {
             // Group Name Filter
             if (filterGroupName && group._id !== filterGroupName) {
                 return false;
@@ -152,7 +153,12 @@ export const AddGroupList: React.FC = () => {
 
             return true;
         });
-    }, [groups, filterFirm, filterStatus, filterSearchText, filterGroupName]);
+
+        return filtered.sort((a, b) => {
+            const cmp = (a.groupName || '').localeCompare(b.groupName || '');
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [groups, filterFirm, filterStatus, filterSearchText, filterGroupName, sortOrder]);
 
     const createGroupMutation = useMutation({
         mutationFn: clientGroupService.createGroup,
@@ -549,9 +555,65 @@ export const AddGroupList: React.FC = () => {
                         </Section>
                     </Box>
 
-                    {/* Group List */}
-                    <Box sx={{ width: '100%' }}>
-                        <Section title="Group List" icon={<FormatListBulletedIcon />}>
+                     {/* Group List */}
+                     <Box sx={{ width: '100%' }}>
+                         <Section
+                             title="Group List"
+                             icon={<FormatListBulletedIcon />}
+                             actions={
+                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                     <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', sm: 'block' } }}>
+                                         Sort:
+                                     </Typography>
+                                     <Box sx={{ display: 'flex', bgcolor: '#f1f5f9', p: '2px', borderRadius: '8px' }}>
+                                         <Button
+                                             size="small"
+                                             onClick={() => setSortOrder('asc')}
+                                             sx={{
+                                                 minWidth: 'auto',
+                                                 height: 24,
+                                                 px: 1.5,
+                                                 fontSize: '0.7rem',
+                                                 fontWeight: 700,
+                                                 textTransform: 'none',
+                                                 borderRadius: '6px',
+                                                 bgcolor: sortOrder === 'asc' ? '#fff' : 'transparent',
+                                                 color: sortOrder === 'asc' ? '#6366f1' : '#64748b',
+                                                 boxShadow: sortOrder === 'asc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                 '&:hover': {
+                                                     bgcolor: sortOrder === 'asc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                                 },
+                                                 transition: 'all 0.2s ease'
+                                             }}
+                                         >
+                                             A - Z
+                                         </Button>
+                                         <Button
+                                             size="small"
+                                             onClick={() => setSortOrder('desc')}
+                                             sx={{
+                                                 minWidth: 'auto',
+                                                 height: 24,
+                                                 px: 1.5,
+                                                 fontSize: '0.7rem',
+                                                 fontWeight: 700,
+                                                 textTransform: 'none',
+                                                 borderRadius: '6px',
+                                                 bgcolor: sortOrder === 'desc' ? '#fff' : 'transparent',
+                                                 color: sortOrder === 'desc' ? '#6366f1' : '#64748b',
+                                                 boxShadow: sortOrder === 'desc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                 '&:hover': {
+                                                     bgcolor: sortOrder === 'desc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                                 },
+                                                 transition: 'all 0.2s ease'
+                                             }}
+                                         >
+                                             Z - A
+                                         </Button>
+                                     </Box>
+                                 </Box>
+                             }
+                         >
                             <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                                 <Table size="small">
                                     <TableHead>

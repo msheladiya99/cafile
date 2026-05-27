@@ -52,6 +52,7 @@ export const ClientContactDetail: React.FC = () => {
     const [filterClient, setFilterClient] = React.useState('');
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
     const [filterSearchText, setFilterSearchText] = React.useState('');
+    const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
 
     const subMasterOptions = ['Individual', 'Proprietorship', 'HUF', 'Partnership', 'Company', 'Private Limited', 'Limited Liability Partnership', 'Trust', 'AOP/BOI', 'Local Authority', 'Artificial Juridical Person', 'Firm', 'Co-operative Society', 'Other'];
 
@@ -87,7 +88,7 @@ export const ClientContactDetail: React.FC = () => {
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
-        return clients.filter((client) => {
+        const filtered = clients.filter((client) => {
             // Group Filter
             if (filterGroup) {
                 const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
@@ -145,7 +146,12 @@ export const ClientContactDetail: React.FC = () => {
 
             return true;
         });
-    }, [clients, groups, filterGroup, filterClient, filterSubMaster, filterSearchText]);
+
+        return filtered.sort((a, b) => {
+            const cmp = (a.name || '').localeCompare(b.name || '');
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [clients, groups, filterGroup, filterClient, filterSubMaster, filterSearchText, sortOrder]);
 
     return (
         <PageContainer>
@@ -244,7 +250,63 @@ export const ClientContactDetail: React.FC = () => {
                 </Section>
 
                 {/* List Section */}
-                <Section title="Client Contacts" icon={<FormatListBulletedIcon />}>
+                <Section
+                    title="Client Contacts"
+                    icon={<FormatListBulletedIcon />}
+                    actions={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', sm: 'block' } }}>
+                                Sort:
+                            </Typography>
+                            <Box sx={{ display: 'flex', bgcolor: '#f1f5f9', p: '2px', borderRadius: '8px' }}>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('asc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'asc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'asc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'asc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'asc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    A - Z
+                                </Button>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('desc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'desc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'desc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'desc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'desc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    Z - A
+                                </Button>
+                            </Box>
+                        </Box>
+                    }
+                >
                     {isLoading ? (
                         <Box sx={{ p: 4, textAlign: 'center' }}>
                             <CircularProgress size={30} />

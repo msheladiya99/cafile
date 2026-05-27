@@ -89,6 +89,7 @@ export const ClientList: React.FC = () => {
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
     const [filterStatus, setFilterStatus] = React.useState('all');
     const [filterFYear, setFilterFYear] = React.useState('');
+    const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
 
     // Pagination State
     const [page, setPage] = React.useState(0);
@@ -132,7 +133,7 @@ export const ClientList: React.FC = () => {
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
-        return clients.filter((client) => {
+        const filtered = clients.filter((client) => {
             // Group Filter
             if (filterGroup) {
                 const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
@@ -186,7 +187,12 @@ export const ClientList: React.FC = () => {
 
             return true;
         });
-    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+
+        return filtered.sort((a, b) => {
+            const cmp = (a.name || '').localeCompare(b.name || '');
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear, sortOrder]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
@@ -419,18 +425,6 @@ export const ClientList: React.FC = () => {
                                         ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Search" inputId="filter-search-text">
-                                <TextField
-                                    id="filter-search-text"
-                                    fullWidth
-                                    size="small"
-                                    placeholder="Search by name, code, email, phone, proprietor..."
-                                    value={filterSearchText}
-                                    onChange={(e) => setFilterSearchText(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                    inputProps={{ 'aria-label': 'Search Text' }}
-                                />
-                            </FilterRow>
                             <FilterRow label="Master Type" inputId="filter-master-type">
                                 <Select
                                     id="filter-master-type"
@@ -447,6 +441,18 @@ export const ClientList: React.FC = () => {
                                         <MenuItem key={type} value={type}>{type}</MenuItem>
                                     ))}
                                 </Select>
+                            </FilterRow>
+                            <FilterRow label="Search" inputId="filter-search-text">
+                                <TextField
+                                    id="filter-search-text"
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, code, email, phone, proprietor..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
                             </FilterRow>
                         </Box>
 
@@ -505,7 +511,64 @@ export const ClientList: React.FC = () => {
                 </Section>
 
                 {/* List Section */}
-                <Section title="List" icon={<FormatListBulletedIcon />} noPad>
+                <Section
+                    title="List"
+                    icon={<FormatListBulletedIcon />}
+                    noPad
+                    actions={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', sm: 'block' } }}>
+                                Sort:
+                            </Typography>
+                            <Box sx={{ display: 'flex', bgcolor: '#f1f5f9', p: '2px', borderRadius: '8px' }}>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('asc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'asc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'asc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'asc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'asc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    A - Z
+                                </Button>
+                                <Button
+                                    size="small"
+                                    onClick={() => setSortOrder('desc')}
+                                    sx={{
+                                        minWidth: 'auto',
+                                        height: 24,
+                                        px: 1.5,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        borderRadius: '6px',
+                                        bgcolor: sortOrder === 'desc' ? '#fff' : 'transparent',
+                                        color: sortOrder === 'desc' ? '#6366f1' : '#64748b',
+                                        boxShadow: sortOrder === 'desc' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: sortOrder === 'desc' ? '#fff' : 'rgba(0,0,0,0.02)',
+                                        },
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    Z - A
+                                </Button>
+                            </Box>
+                        </Box>
+                    }
+                >
                     {isMobile ? (
                         <Stack spacing={2}>
                             {isLoading ? (
