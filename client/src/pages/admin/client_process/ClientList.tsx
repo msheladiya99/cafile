@@ -425,18 +425,6 @@ export const ClientList: React.FC = () => {
                                         ))}
                                 </Select>
                             </FilterRow>
-                            <FilterRow label="Search" inputId="filter-search-text">
-                                <TextField
-                                    id="filter-search-text"
-                                    fullWidth
-                                    size="small"
-                                    placeholder="Search by name, code, email, phone, proprietor..."
-                                    value={filterSearchText}
-                                    onChange={(e) => setFilterSearchText(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                    inputProps={{ 'aria-label': 'Search Text' }}
-                                />
-                            </FilterRow>
                             <FilterRow label="Master Type" inputId="filter-master-type">
                                 <Select
                                     id="filter-master-type"
@@ -453,6 +441,18 @@ export const ClientList: React.FC = () => {
                                         <MenuItem key={type} value={type}>{type}</MenuItem>
                                     ))}
                                 </Select>
+                            </FilterRow>
+                            <FilterRow label="Search" inputId="filter-search-text">
+                                <TextField
+                                    id="filter-search-text"
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, code, email, phone, proprietor..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                    inputProps={{ 'aria-label': 'Search Text' }}
+                                />
                             </FilterRow>
                         </Box>
 
