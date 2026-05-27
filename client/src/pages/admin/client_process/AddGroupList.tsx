@@ -65,6 +65,7 @@ export const AddGroupList: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterFirm, setFilterFirm] = useState('');
     const [filterGroupName, setFilterGroupName] = useState('');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     React.useEffect(() => {
         setPage(0);
@@ -111,7 +112,7 @@ export const AddGroupList: React.FC = () => {
     }, [groups]);
 
     const filteredGroups = React.useMemo(() => {
-        return groups.filter((group) => {
+        const filtered = groups.filter((group) => {
             // Group Name Filter
             if (filterGroupName && group._id !== filterGroupName) {
                 return false;
@@ -152,7 +153,12 @@ export const AddGroupList: React.FC = () => {
 
             return true;
         });
-    }, [groups, filterFirm, filterStatus, filterSearchText, filterGroupName]);
+
+        return filtered.sort((a, b) => {
+            const cmp = (a.groupName || '').localeCompare(b.groupName || '');
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [groups, filterFirm, filterStatus, filterSearchText, filterGroupName, sortOrder]);
 
     const createGroupMutation = useMutation({
         mutationFn: clientGroupService.createGroup,
@@ -549,9 +555,30 @@ export const AddGroupList: React.FC = () => {
                         </Section>
                     </Box>
 
-                    {/* Group List */}
-                    <Box sx={{ width: '100%' }}>
-                        <Section title="Group List" icon={<FormatListBulletedIcon />}>
+                     {/* Group List */}
+                     <Box sx={{ width: '100%' }}>
+                         <Section
+                             title="Group List"
+                             icon={<FormatListBulletedIcon />}
+                             actions={
+                                 <Select
+                                     size="small"
+                                     value={sortOrder}
+                                     onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                                     sx={{
+                                         height: 28,
+                                         borderRadius: '6px',
+                                         fontSize: '0.75rem',
+                                         bgcolor: '#fff',
+                                         '& .MuiSelect-select': { py: 0.5, px: 1.5 }
+                                     }}
+                                     inputProps={{ 'aria-label': 'Sort Order' }}
+                                 >
+                                     <MenuItem value="asc" sx={{ fontSize: '0.75rem' }}>A to Z</MenuItem>
+                                     <MenuItem value="desc" sx={{ fontSize: '0.75rem' }}>Z to A</MenuItem>
+                                 </Select>
+                             }
+                         >
                             <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                                 <Table size="small">
                                     <TableHead>

@@ -89,6 +89,7 @@ export const ClientList: React.FC = () => {
     const [filterSubMaster, setFilterSubMaster] = React.useState('');
     const [filterStatus, setFilterStatus] = React.useState('all');
     const [filterFYear, setFilterFYear] = React.useState('');
+    const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
 
     // Pagination State
     const [page, setPage] = React.useState(0);
@@ -132,7 +133,7 @@ export const ClientList: React.FC = () => {
 
     // Computed Filtered Clients
     const filteredClients = React.useMemo(() => {
-        return clients.filter((client) => {
+        const filtered = clients.filter((client) => {
             // Group Filter
             if (filterGroup) {
                 const clientGroupId = typeof client.groupName === 'object' && client.groupName !== null
@@ -186,7 +187,12 @@ export const ClientList: React.FC = () => {
 
             return true;
         });
-    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear]);
+
+        return filtered.sort((a, b) => {
+            const cmp = (a.name || '').localeCompare(b.name || '');
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [clients, groups, filterGroup, filterClient, filterSearchText, filterMasterType, filterSubMaster, filterStatus, filterFYear, sortOrder]);
 
     const handleResetPassword = async (clientId: string) => {
         setConfirmDialog({
@@ -505,7 +511,29 @@ export const ClientList: React.FC = () => {
                 </Section>
 
                 {/* List Section */}
-                <Section title="List" icon={<FormatListBulletedIcon />} noPad>
+                <Section
+                    title="List"
+                    icon={<FormatListBulletedIcon />}
+                    noPad
+                    actions={
+                        <Select
+                            size="small"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                            sx={{
+                                height: 28,
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                bgcolor: '#fff',
+                                '& .MuiSelect-select': { py: 0.5, px: 1.5 }
+                            }}
+                            inputProps={{ 'aria-label': 'Sort Order' }}
+                        >
+                            <MenuItem value="asc" sx={{ fontSize: '0.75rem' }}>A to Z</MenuItem>
+                            <MenuItem value="desc" sx={{ fontSize: '0.75rem' }}>Z to A</MenuItem>
+                        </Select>
+                    }
+                >
                     {isMobile ? (
                         <Stack spacing={2}>
                             {isLoading ? (
