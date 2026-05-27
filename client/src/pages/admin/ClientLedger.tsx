@@ -40,37 +40,17 @@ import {
     FormatListBulleted as FormatListBulletedIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { billingService } from '../../services/billingService';
+import { billingService, type ClientLedger as IBillingClientLedger } from '../../services/billingService';
 import type { Client, User } from '../../types';
 import { adminService } from '../../services/adminService';
 import { clientGroupService, type ClientGroup } from '../../services/clientGroupService';
 import firmService, { type IMultiFirmData } from '../../services/firmService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../components/common/UIComponents';
 
-interface ClientLedgerRecord {
-    client: Client;
-    summary: {
-        totalBilled: number;
-        totalPaid: number;
-        totalDue: number;
-        totalOverdue: number;
-        totalInvoices: number;
-        paidInvoices: number;
-        pendingInvoices: number;
-        overdueInvoices: number;
-        paymentRate: number | string;
-        avgPaymentDays?: number | string;
+interface ClientLedgerRecord extends Omit<IBillingClientLedger, 'client'> {
+    client: IBillingClientLedger['client'] & {
+        logoUrl?: string;
     };
-    ledgerEntries: {
-        date: string;
-        type: string;
-        description: string;
-        debit: number;
-        credit: number;
-        balance: number;
-        status?: string;
-        dueDate?: string;
-    }[];
 }
 
 
@@ -135,16 +115,19 @@ export const ClientLedger: React.FC = () => {
     // Fetch client ledger
     const { data: ledgerData, isLoading, error } = useQuery({
         queryKey: ['clientLedger', selectedClient, selectedStaff, startDate, endDate, selectedGroup, selectedFirm, selectedYear, selectedMonth],
-        queryFn: () => billingService.getClientLedger({
-            clientId: selectedClient || undefined,
-            staffId: selectedStaff || undefined,
-            startDate: startDate || undefined,
-            endDate: endDate || undefined,
-            groupId: selectedGroup || undefined,
-            firmId: selectedFirm || undefined,
-            year: selectedYear || undefined,
-            month: selectedMonth || undefined,
-        }),
+        queryFn: async () => {
+            const data = await billingService.getClientLedger({
+                clientId: selectedClient || undefined,
+                staffId: selectedStaff || undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                groupId: selectedGroup || undefined,
+                firmId: selectedFirm || undefined,
+                year: selectedYear || undefined,
+                month: selectedMonth || undefined,
+            });
+            return data as unknown as { clientLedgers: ClientLedgerRecord[]; overallSummary: Record<string, number>; generatedAt: string };
+        },
     });
 
     const handleExport = () => {
