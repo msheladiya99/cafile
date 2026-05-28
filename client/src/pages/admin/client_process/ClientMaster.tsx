@@ -16,6 +16,12 @@ import {
     Snackbar,
     Alert,
     Autocomplete,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
 } from '@mui/material';
 import {
     GridView as GridViewIcon,
@@ -38,6 +44,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientGroupService, type ClientGroup } from '../../../services/clientGroupService';
 import { masterService, type SubMaster } from '../../../services/masterService';
 import { adminService } from '../../../services/adminService';
+import settingsService from '../../../services/settingsService';
 import { API_URL } from '../../../services/api';
 import type { CreateClientData, User, CreateClientResponse } from '../../../types';
 import { BulkImportModal } from './BulkImportModal';
@@ -225,6 +232,17 @@ export const ClientMaster: React.FC = () => {
     const [tabValue, setTabValue] = useState(0);
     const [subMasterModalOpen, setSubMasterModalOpen] = useState(false);
     const [bulkImportOpen, setBulkImportOpen] = useState(false);
+    const [openFieldMasterDialog, setOpenFieldMasterDialog] = useState(false);
+    const [extraFieldLabels, setExtraFieldLabels] = useState({
+        field1: 'Field 1',
+        field2: 'Field 2',
+        field3: 'Field 3',
+        field4: 'Field 4',
+        field5: 'Field 5',
+        field6: 'Field 6',
+        field7: 'Field 7'
+    });
+    const [tempFieldLabels, setTempFieldLabels] = useState({ ...extraFieldLabels });
     const [profileImage, setProfileImage] = useState<File | null>(null);
     const [shouldRemoveProfileImage, setShouldRemoveProfileImage] = useState(false);
     const [pendingLegalFiles, setPendingLegalFiles] = useState<{ file: File, fileName: string }[]>([]);
@@ -350,6 +368,36 @@ export const ClientMaster: React.FC = () => {
         }
 
         handleCancelContactForm();
+    };
+
+
+    React.useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const settings = await settingsService.getSettings();
+                if (settings.clientExtraFields) {
+                    setExtraFieldLabels(settings.clientExtraFields);
+                    setTempFieldLabels(settings.clientExtraFields);
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const handleSaveFieldLabels = async () => {
+        try {
+            await settingsService.updateSettings({
+                clientExtraFields: tempFieldLabels
+            });
+            setExtraFieldLabels(tempFieldLabels);
+            setOpenFieldMasterDialog(false);
+            showSnackbar('Field labels updated successfully');
+        } catch (error) {
+            console.error('Error saving field labels:', error);
+            showSnackbar('Error updating field labels', 'error');
+        }
     };
 
 
@@ -732,6 +780,10 @@ export const ClientMaster: React.FC = () => {
                             sx={{ boxShadow: 'none' }}>
                             Add New
                         </CommonButton>
+                        <CommonButton variant="contained" size="small" onClick={() => setOpenFieldMasterDialog(true)} 
+                            sx={{ boxShadow: 'none' }}>
+                            Field Master
+                        </CommonButton>
                         <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/list')} 
                             sx={{ boxShadow: 'none' }}>
                             List
@@ -1076,16 +1128,20 @@ export const ClientMaster: React.FC = () => {
                                 </FormRow>
                             </Section>
 
-                            <Section title="Extra Fields" icon={<AddBoxIcon />}>
-                                {([1, 2, 3, 4, 5, 6, 7] as const).map((num) => {
-                                    const fieldName = `extraField${num}` as keyof CreateClientData;
-                                    return (
-                                        <FormRow key={num} label={`Field ${num}`}>
-                                            <TextField name={fieldName} value={formData[fieldName]} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                        </FormRow>
-                                    );
-                                })}
-                            </Section>
+                            {Object.values(extraFieldLabels).some(label => !!label.trim()) && (
+                                <Section title="Extra Fields" icon={<AddBoxIcon />}>
+                                    {([1, 2, 3, 4, 5, 6, 7] as const).map((num) => {
+                                        const label = extraFieldLabels[`field${num}` as keyof typeof extraFieldLabels];
+                                        if (!label || !label.trim()) return null;
+                                        const fieldName = `extraField${num}` as keyof CreateClientData;
+                                        return (
+                                            <FormRow key={num} label={label}>
+                                                <TextField name={fieldName} value={formData[fieldName] as string} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                            </FormRow>
+                                        );
+                                    })}
+                                </Section>
+                            )}
 
                             {id && (
                                 <Section title="Login Security" icon={<GridViewIcon />}>
@@ -1384,6 +1440,77 @@ export const ClientMaster: React.FC = () => {
                 staffList={staffList}
                 showSnackbar={showSnackbar}
             />
+            {/* Client Extra Fields Dialog */}
+            <Dialog
+                open={openFieldMasterDialog}
+                onClose={() => setOpenFieldMasterDialog(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '12px', overflow: 'hidden' } }}
+            >
+                <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5 }}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                        Client Extra Fields
+                    </Typography>
+                    <IconButton 
+                        size="small" 
+                        onClick={() => setOpenFieldMasterDialog(false)} 
+                        aria-label="Close dialog"
+                        title="Close dialog"
+                        sx={{ color: 'inherit', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}
+                    >
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+
+                <DialogContent sx={{ p: 2 }}>
+                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0', mb: 3 }}>
+                        <Table size="small">
+                            <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 600, color: '#64748b', width: '30%' }}>Fields</TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Label Name</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                                    <TableRow key={num}>
+                                        <TableCell sx={{ color: '#64748b', fontSize: '0.85rem' }}>Field {num}</TableCell>
+                                        <TableCell>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                value={tempFieldLabels[`field${num}` as keyof typeof tempFieldLabels]}
+                                                onChange={(e) => setTempFieldLabels(prev => ({ ...prev, [`field${num}`]: e.target.value }))}
+                                                placeholder={`Enter label for Field ${num}`}
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <CommonButton
+                            variant="contained"
+                            onClick={handleSaveFieldLabels}
+                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', px: 4, boxShadow: 'none' }}
+                        >
+                            Save
+                        </CommonButton>
+                        <CommonButton
+                            variant="contained"
+                            onClick={() => setOpenFieldMasterDialog(false)}
+                            sx={{ bgcolor: '#ff6c60', color: 'white', px: 4, boxShadow: 'none', '&:hover': { bgcolor: '#e56156' } }}
+                        >
+                            Cancel
+                        </CommonButton>
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
             <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
                 <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px' }}>{snackbar.message}</Alert>
             </Snackbar>
