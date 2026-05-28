@@ -53,14 +53,22 @@ export const EmployeeList: React.FC = () => {
         }
     });
 
-    const employees = staffData.map(emp => ({
-        id: emp._id,
-        name: emp.name,
-        code: emp.employeeCode,
-        loginId: emp.username,
-        designation: emp.designation || emp.role,
-        status: emp.status !== false ? 'Active' : 'Inactive'
-    })).filter(emp => {
+    const employees = staffData.map(emp => {
+        // Derive a human-readable designation: prefer the saved designation field,
+        // fall back to converting the role enum (STAFF → Staff, MANAGER → Manager …)
+        const roleLabel: Record<string, string> = {
+            ADMIN: 'Admin', MANAGER: 'Manager', STAFF: 'Staff', INTERN: 'Intern'
+        };
+        const designation = emp.designation || roleLabel[emp.role as string] || emp.role || '-';
+        return {
+            id: emp._id,
+            name: emp.name,
+            code: emp.employeeCode,
+            loginId: emp.username,
+            designation,
+            status: emp.status !== false ? 'Active' : 'Inactive'
+        };
+    }).filter(emp => {
         if (filterDesignation && emp.designation !== filterDesignation) return false;
         if (filterStatus !== 'all') {
             const isActive = filterStatus === 'active';
@@ -68,6 +76,19 @@ export const EmployeeList: React.FC = () => {
         }
         return true;
     });
+
+    // Compute unique designations from actual staff data for the filter dropdown
+    const uniqueDesignations = React.useMemo(() => {
+        const roleLabel: Record<string, string> = {
+            ADMIN: 'Admin', MANAGER: 'Manager', STAFF: 'Staff', INTERN: 'Intern'
+        };
+        const seen = new Set<string>();
+        staffData.forEach(emp => {
+            const d = emp.designation || roleLabel[emp.role as string] || emp.role;
+            if (d) seen.add(d);
+        });
+        return Array.from(seen).sort();
+    }, [staffData]);
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this employee?')) {
@@ -124,9 +145,9 @@ export const EmployeeList: React.FC = () => {
                                     sx={{ borderRadius: '8px', color: filterDesignation ? 'inherit' : 'text.secondary' }}
                                 >
                                     <MenuItem value="">Choose a Designation...</MenuItem>
-                                    <MenuItem value="Staff">Staff</MenuItem>
-                                    <MenuItem value="Manager">Manager</MenuItem>
-                                    <MenuItem value="Admin">Admin</MenuItem>
+                                    {uniqueDesignations.map(d => (
+                                        <MenuItem key={d} value={d}>{d}</MenuItem>
+                                    ))}
                                 </Select>
                             </FilterRow>
                         </Box>

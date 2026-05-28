@@ -35,7 +35,7 @@ router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respon
         const firmId = req.firmId || req.user?.firmId;
         if (!firmId) return res.status(400).json({ message: 'Firm context required' });
 
-        const { companyName, address, email, phone, logoUrl, employeeExtraFields } = req.body;
+        const { companyName, address, email, phone, logoUrl, employeeExtraFields, clientExtraFields } = req.body;
 
         let settings = await Settings.findOne({ firmId });
         if (!settings) {
@@ -52,6 +52,13 @@ router.put('/', authenticate, requireAdmin, async (req: AuthRequest, res: Respon
             settings.employeeExtraFields = {
                 ...settings.employeeExtraFields,
                 ...employeeExtraFields
+            };
+        }
+
+        if (clientExtraFields) {
+            settings.clientExtraFields = {
+                ...settings.clientExtraFields,
+                ...clientExtraFields
             };
         }
 
