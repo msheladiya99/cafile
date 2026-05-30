@@ -27,11 +27,13 @@ import { staffService } from '../../../services/staffService';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
 import { BulkImportEmployeeModal } from './BulkImportEmployeeModal';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export const EmployeeList: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const navigate = useNavigate();
+    const { hasPermission } = useAuth();
     const [filterDesignation, setFilterDesignation] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterSearchText, setFilterSearchText] = useState('');
@@ -94,6 +96,21 @@ export const EmployeeList: React.FC = () => {
             }
         }
         return true;
+    }).sort((a, b) => {
+        const codeA = a.code || '';
+        const codeB = b.code || '';
+        
+        if (!codeA && codeB) return 1;
+        if (codeA && !codeB) return -1;
+        if (!codeA && !codeB) return 0;
+        
+        const numA = parseInt(codeA, 10);
+        const numB = parseInt(codeB, 10);
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+        }
+        
+        return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     // Use static designations matching Employee Master
@@ -118,22 +135,26 @@ export const EmployeeList: React.FC = () => {
                 title="Employee List"
                 actions={
                     <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                        <CommonButton
-                            variant="contained"
-                            size="small"
-                            onClick={() => setBulkImportOpen(true)}
-                            sx={{ bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
-                        >
-                            Import Excel
-                        </CommonButton>
-                        <CommonButton
-                            variant="contained"
-                            size="small"
-                            onClick={() => navigate('/admin/employee/master')}
-                            sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
-                        >
-                            + Add New
-                        </CommonButton>
+                        {hasPermission('employee.add') && (
+                            <>
+                                <CommonButton
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => setBulkImportOpen(true)}
+                                    sx={{ bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
+                                >
+                                    Import Excel
+                                </CommonButton>
+                                <CommonButton
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => navigate('/admin/employee/master')}
+                                    sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', borderRadius: '8px', boxShadow: 'none' }}
+                                >
+                                    + Add New
+                                </CommonButton>
+                            </>
+                        )}
                     </Box>
                 }
             />
@@ -247,12 +268,16 @@ export const EmployeeList: React.FC = () => {
                                         </Box>
 
                                         <Box display="flex" justifyContent="flex-end" pt={1.5} borderTop="1px solid #f0f0f0">
-                                            <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
+                                            {hasPermission('employee.edit') && (
+                                                <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                            {hasPermission('employee.delete') && (
+                                                <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
                                         </Box>
                                     </Paper>
                                 ))
@@ -307,12 +332,16 @@ export const EmployeeList: React.FC = () => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell align="right">
-                                                <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
+                                                {hasPermission('employee.edit') && (
+                                                    <IconButton size="small" sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }} onClick={() => navigate(`/admin/employee/master/${emp.id}`)}>
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                                {hasPermission('employee.delete') && (
+                                                    <IconButton size="small" sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }} onClick={() => handleDelete(emp.id as string)}>
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))

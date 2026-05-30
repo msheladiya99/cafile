@@ -45,6 +45,7 @@ import type { Client } from '../../../types';
 import type { ClientGroup } from '../../../services/clientGroupService';
 import { PageHeader, PageContainer, ContentContainer, Section, FilterRow, CommonButton } from '../../../components/common/UIComponents';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../../contexts/AuthContext';
 
 
 export const ClientList: React.FC = () => {
@@ -52,6 +53,7 @@ export const ClientList: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const queryClient = useQueryClient();
+    const { hasPermission } = useAuth();
 
     const { data: clients = [], isLoading } = useQuery<Client[]>({
         queryKey: ['clients'],
@@ -352,22 +354,26 @@ export const ClientList: React.FC = () => {
                                 >
                                     Send Email ({selectedClients.length})
                                 </Button>
-                                <Button
-                                variant="contained"
-                                size="small"
-                                color="error"
-                                onClick={handleBulkDelete}
-                                disabled={bulkDeleteMutation.isPending}
-                                startIcon={<DeleteIcon />}
-                                sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, boxShadow: 'none', fontSize: '0.85rem' }}
-                            >
-                                    Delete Selected ({selectedClients.length})
-                                </Button>
+                                {hasPermission('client.delete') && (
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        color="error"
+                                        onClick={handleBulkDelete}
+                                        disabled={bulkDeleteMutation.isPending}
+                                        startIcon={<DeleteIcon />}
+                                        sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 600, boxShadow: 'none', fontSize: '0.85rem' }}
+                                    >
+                                        Delete Selected ({selectedClients.length})
+                                    </Button>
+                                )}
                             </>
                         )}
-                        <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ boxShadow: 'none' }}>
-                            + Add New
-                        </CommonButton>
+                        {hasPermission('client.add') && (
+                            <CommonButton variant="contained" size="small" onClick={() => navigate('/admin/client/master')} sx={{ boxShadow: 'none' }}>
+                                + Add New
+                            </CommonButton>
+                        )}
                     </Box>
                 }
             />
@@ -608,35 +614,40 @@ export const ClientList: React.FC = () => {
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                     <Typography variant="caption" color="text.secondary">Group Name</Typography>
                                                     <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                                        {(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}
+                                                {(typeof client.groupName === 'object' && client.groupName !== null) ? client.groupName.groupName : (client.groupName || '-')}
                                                     </Typography>
                                                 </Box>
                                             </Stack>
 
                                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', bgcolor: '#f8fafc', m: -2, mt: 0, p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
-
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: '#f59e0b', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
-                                                    onClick={() => handleResetPassword(client._id)}
-                                                >
-                                                    <LockResetIcon sx={{ fontSize: 18 }} />
-                                                </IconButton>
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: '#06b6d4', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
-                                                    onClick={() => navigate(`/admin/client/master/${client._id}`)}
-                                                >
-                                                    <EditIcon sx={{ fontSize: 18 }} />
-                                                </IconButton>
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: '#ef4444', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
-                                                    onClick={() => handleDeleteClient(client._id, client.name || '')}
-                                                    disabled={deleteClientMutation.isPending}
-                                                >
-                                                    <DeleteIcon sx={{ fontSize: 18 }} />
-                                                </IconButton>
+                                                {hasPermission('client.edit') && (
+                                                    <>
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={{ color: '#f59e0b', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
+                                                            onClick={() => handleResetPassword(client._id)}
+                                                        >
+                                                            <LockResetIcon sx={{ fontSize: 18 }} />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={{ color: '#06b6d4', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
+                                                            onClick={() => navigate(`/admin/client/master/${client._id}`)}
+                                                        >
+                                                            <EditIcon sx={{ fontSize: 18 }} />
+                                                        </IconButton>
+                                                    </>
+                                                )}
+                                                {hasPermission('client.delete') && (
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: '#ef4444', bgcolor: 'white', border: '1px solid', borderColor: '#e2e8f0', '&:hover': { bgcolor: '#f1f5f9' } }}
+                                                        onClick={() => handleDeleteClient(client._id, client.name || '')}
+                                                        disabled={deleteClientMutation.isPending}
+                                                    >
+                                                        <DeleteIcon sx={{ fontSize: 18 }} />
+                                                    </IconButton>
+                                                )}
                                             </Box>
                                         </CardContent>
                                     </Card>
@@ -723,33 +734,38 @@ export const ClientList: React.FC = () => {
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell align="right">
-
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
-                                                        onClick={() => handleResetPassword(client._id)}
-                                                        aria-label="Reset password"
-                                                        title="Reset & Send Email"
-                                                    >
-                                                        <LockResetIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}
-                                                        onClick={() => navigate(`/admin/client/master/${client._id}`)}
-                                                        aria-label="Edit client"
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
-                                                        aria-label="Delete client"
-                                                        onClick={() => handleDeleteClient(client._id, client.name || '')}
-                                                        disabled={deleteClientMutation.isPending}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
+                                                    {hasPermission('client.edit') && (
+                                                        <>
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{ color: 'warning.main', bgcolor: 'warning.50', mr: 1, '&:hover': { bgcolor: 'warning.100' } }}
+                                                                onClick={() => handleResetPassword(client._id)}
+                                                                aria-label="Reset password"
+                                                                title="Reset & Send Email"
+                                                            >
+                                                                <LockResetIcon fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{ color: 'info.main', bgcolor: 'info.50', mr: 1, '&:hover': { bgcolor: 'info.100' } }}
+                                                                onClick={() => navigate(`/admin/client/master/${client._id}`)}
+                                                                aria-label="Edit client"
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </>
+                                                    )}
+                                                    {hasPermission('client.delete') && (
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={{ color: 'error.main', bgcolor: 'error.50', '&:hover': { bgcolor: 'error.100' } }}
+                                                            aria-label="Delete client"
+                                                            onClick={() => handleDeleteClient(client._id, client.name || '')}
+                                                            disabled={deleteClientMutation.isPending}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         )})

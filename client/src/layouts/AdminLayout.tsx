@@ -104,7 +104,7 @@ export const AdminLayout: React.FC = () => {
                 { text: 'Client Master', path: '/admin/client/master', perm: 'client.add', shortcut: 'Alt+C' },
                 { text: 'Client List', path: '/admin/client/list', perm: 'client.view', shortcut: 'Alt+L' },
                 { text: 'Client Contact Detail', path: '/admin/client/contact-detail', perm: 'client.view', shortcut: 'Alt+V' },
-                ...(isAdmin ? [{ text: 'Client Ledger', path: '/admin/client-ledger', perm: 'client.ledger', shortcut: 'Alt+K' }] : []),
+                { text: 'Client Ledger', path: '/admin/client-ledger', perm: 'client.ledger', shortcut: 'Alt+K' },
             ]
         },
         {

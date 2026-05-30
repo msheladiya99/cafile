@@ -1,10 +1,18 @@
 import { Fab, Tooltip, Zoom } from '@mui/material';
 import { WhatsApp as WhatsAppIcon } from '@mui/icons-material';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Floating WhatsApp Support Button
  */
 const WhatsAppButton = () => {
+    const location = useLocation();
+
+    // Hide WhatsApp button for admin/firm panel (firm login)
+    if (location.pathname.startsWith('/admin')) {
+        return null;
+    }
+
     const phoneNumber = '919537994439';
     const message = encodeURIComponent("Hello! I'm interested in My CA File software. Can I get more details?");
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;

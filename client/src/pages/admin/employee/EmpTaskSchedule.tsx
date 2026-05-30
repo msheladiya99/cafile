@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Box,
     Paper,
@@ -22,7 +22,8 @@ import {
     LinearProgress,
     IconButton,
     Collapse,
-    alpha
+    alpha,
+    TablePagination
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -296,6 +297,8 @@ export const EmpTaskSchedule: React.FC = () => {
         dateTo: ''
     });
     const [applied, setApplied] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     // — Data fetches —
     const { data: clients = [], isLoading: loadingClients } = useQuery({
@@ -331,7 +334,7 @@ export const EmpTaskSchedule: React.FC = () => {
 
     const clientMap = useMemo(() => {
         const m: Record<string, string> = {};
-        clients.forEach((c: Client) => { m[c._id] = c.name; });
+        clients.forEach((c: Client) => { m[c._id] = c.name || ''; });
         return m;
     }, [clients]);
 
@@ -358,18 +361,24 @@ export const EmpTaskSchedule: React.FC = () => {
         return true;
     }), [tasks, filterData.year, filterData.dateFrom, filterData.dateTo, filterData.dateType]);
 
+    useEffect(() => {
+        setPage(0);
+    }, [filterData, tasks]);
+
     const handleChange = (field: string) => (e: { target: { value: unknown } }) => {
         setFilterData(prev => ({ ...prev, [field]: e.target.value as string }));
     };
 
     const handleSearch = () => {
         setApplied(true);
+        setPage(0);
         refetch();
     };
 
     const handleClear = () => {
         setFilterData({ clientName: '', employee: '', frequency: '', year: '', status: '', dateType: '', dateFrom: '', dateTo: '' });
         setApplied(false);
+        setPage(0);
     };
 
     // Summary counts
@@ -576,27 +585,42 @@ export const EmpTaskSchedule: React.FC = () => {
                         </Typography>
                     </Box>
                 ) : (
-                    <TableContainer>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                    <TableCell sx={{ width: 36 }} />
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Task</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Client</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Assigned To</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Target Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', width: 100 }}>Progress</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Time</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredTasks.map((task: Task) => (
-                                    <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} />
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                        <TableCell sx={{ width: 36 }} />
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Task</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Client</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Assigned To</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Target Date</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', width: 100 }}>Progress</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Time</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredTasks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((task: Task) => (
+                                        <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} />
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 25, 50, 100]}
+                            component="div"
+                            count={filteredTasks.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={(_, newPage) => setPage(newPage)}
+                            onRowsPerPageChange={(e) => {
+                                setRowsPerPage(parseInt(e.target.value, 10));
+                                setPage(0);
+                            }}
+                            sx={{ borderTop: '1px solid #e2e8f0' }}
+                        />
+                    </>
                 )}
             </Paper>
         </Box>

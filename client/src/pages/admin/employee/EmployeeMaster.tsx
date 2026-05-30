@@ -54,6 +54,7 @@ import {
     VisibilityOff,
 } from '@mui/icons-material';
 import { CommonButton } from '../../../components/common/UIComponents';
+import type { User } from '../../../types';
 
 interface TabPanelProps {
     children?: React.ReactNode;
