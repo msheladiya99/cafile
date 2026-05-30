@@ -94,6 +94,21 @@ export const EmployeeList: React.FC = () => {
             }
         }
         return true;
+    }).sort((a, b) => {
+        const codeA = a.code || '';
+        const codeB = b.code || '';
+        
+        if (!codeA && codeB) return 1;
+        if (codeA && !codeB) return -1;
+        if (!codeA && !codeB) return 0;
+        
+        const numA = parseInt(codeA, 10);
+        const numB = parseInt(codeB, 10);
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+        }
+        
+        return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     // Use static designations matching Employee Master
