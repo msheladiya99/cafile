@@ -207,6 +207,7 @@ const initialFormData = {
     pfNumber: '',
     esiNumber: '',
     aadharNumber: '',
+    panNumber: '',
     drivingLicenceNo: '',
 
     passport: false,
@@ -721,6 +722,12 @@ export const EmployeeMaster: React.FC = () => {
                                 <FormRow label="Birth Date">
                                     <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
+                                <FormRow label="PAN Card Number">
+                                    <TextField name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Aadhar Card Number">
+                                    <TextField name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
                             </Section>
 
                             <Section title="Joining Information" icon={<WorkIcon />}>
@@ -776,6 +783,24 @@ export const EmployeeMaster: React.FC = () => {
                                         <Switch size="small" color="primary" sx={{ ml: -1 }} checked={formData.status} onChange={e => handleSwitchChange('status', e.target.checked)} />
                                         <Typography variant="body2" sx={{ color: formData.status ? 'success.main' : 'error.main', ml: 0.5, fontWeight: 600 }}>{formData.status ? 'Active' : 'Inactive'}</Typography>
                                     </Box>
+                                </FormRow>
+                            </Section>
+
+                            <Section title="Bank Details" icon={<AccountBalanceIcon />}>
+                                <FormRow label="Bank Name">
+                                    <TextField name="bankName" value={formData.bankName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Bank Branch">
+                                    <TextField name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="A/C Holder Name">
+                                    <TextField name="accountHolderName" value={formData.accountHolderName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Bank A/C No">
+                                    <TextField name="accountNo" value={formData.accountNo || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Bank IFS Code">
+                                    <TextField name="ifscCode" value={formData.ifscCode || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
 
@@ -1291,6 +1316,11 @@ export const EmployeeMaster: React.FC = () => {
                                 <Grid size={{ xs: 12, md: 6 }}>
                                     <FormRow label="Aadhar Number">
                                         <TextField fullWidth size="small" name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                    </FormRow>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <FormRow label="PAN Number">
+                                        <TextField fullWidth size="small" name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </FormRow>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
