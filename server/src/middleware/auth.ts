@@ -110,6 +110,24 @@ export const requireRoles = (roles: UserRole[]) => {
     };
 };
 
+export const requirePermission = (permission: string) => {
+    return (req: AuthRequest, res: Response, next: NextFunction): void => {
+        if (!req.user) {
+            res.status(401).json({ message: 'Authentication required' });
+            return;
+        }
+        if (['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+            next();
+            return;
+        }
+        if (!req.user.permissions || !req.user.permissions.includes(permission)) {
+            res.status(403).json({ message: `Access denied. Requires permission: ${permission}` });
+            return;
+        }
+        next();
+    };
+};
+
 export const requireSuperAdmin = requireRoles(['SUPER_ADMIN']);
 export const requireAdmin = requireRoles(['ADMIN']);
 export const requireClient = requireRoles(['CLIENT']);

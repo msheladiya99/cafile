@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import { User } from '../models/User';
 import { Firm } from '../models/Firm';
-import { AuthRequest, authenticate, requireAdmin } from '../middleware/auth';
+import { AuthRequest, authenticate, requireAdmin, requirePermission } from '../middleware/auth';
 import { getTenantDriveService } from '../services/googleDrive';
 import { sendEmployeeWelcomeEmail, sendEmployeePasswordResetEmail } from '../services/emailService';
 
@@ -17,12 +17,12 @@ const upload = multer({
     },
 });
 
-// All staff management routes require authentication and admin role
-router.use(authenticate, requireAdmin);
+// Authenticate all routes
+router.use(authenticate);
 
 // Upload staff document to Google Drive
 // Saves to: MyCAFile > FirmName > Employees > EmployeeName > file
-router.post('/upload-document', upload.single('file'), async (req: AuthRequest, res: Response) => {
+router.post('/upload-document', requirePermission('employee.edit'), upload.single('file'), async (req: AuthRequest, res: Response) => {
     try {
         const { employeeName } = req.body;
         const uploadedFile = req.file;
@@ -77,7 +77,7 @@ router.post('/upload-document', upload.single('file'), async (req: AuthRequest, 
 });
 
 // Delete staff document from Google Drive
-router.delete('/delete-document/:fileId', async (req: AuthRequest, res: Response) => {
+router.delete('/delete-document/:fileId', requirePermission('employee.edit'), async (req: AuthRequest, res: Response) => {
     try {
         const { fileId } = req.params;
         const firm = await Firm.findById(req.firmId).select('googleDriveRootFolderId').lean();
@@ -112,7 +112,7 @@ const generateUsername = (name: string): string => {
 };
 
 // Create staff member
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', requirePermission('employee.add'), async (req: AuthRequest, res: Response) => {
     try {
         const {
             firstName, lastName, email, phone, role, permissions,
@@ -260,7 +260,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Get all staff members
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get('/', requirePermission('employee.view'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const staff = await UserModel.find({
@@ -277,7 +277,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Get staff member by id
-router.get('/:id', async (req: AuthRequest, res: Response) => {
+router.get('/:id', requirePermission('employee.view'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const staff = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId }).select('-passwordHash').lean();
@@ -294,7 +294,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 });
 
 // Reset staff password
-router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
+router.post('/:id/reset-password', requirePermission('employee.edit'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
@@ -351,7 +351,7 @@ router.post('/:id/reset-password', async (req: AuthRequest, res: Response) => {
 });
 
 // Update staff member
-router.patch('/:id', async (req: AuthRequest, res: Response) => {
+router.patch('/:id', requirePermission('employee.edit'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const {
@@ -457,7 +457,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 
 // Upload staff profile image to Google Drive
 // Saves to: MyCAFile > FirmName > Employees > EmployeeName > profile_<id>.jpg
-router.post('/:id/profile-image', upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
+router.post('/:id/profile-image', requirePermission('employee.edit'), upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });
@@ -513,7 +513,7 @@ router.post('/:id/profile-image', upload.single('profileImage'), async (req: Aut
 });
 
 // Bulk create staff members
-router.post('/bulk-create', async (req: AuthRequest, res: Response) => {
+router.post('/bulk-create', requirePermission('employee.add'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const { staff } = req.body;
@@ -676,7 +676,7 @@ router.post('/bulk-create', async (req: AuthRequest, res: Response) => {
 });
 
 // Delete staff member
-router.delete('/:id', async (req: AuthRequest, res: Response) => {
+router.delete('/:id', requirePermission('employee.delete'), async (req: AuthRequest, res: Response) => {
     try {
         const { User: UserModel } = (req as any).models;
         const user = await UserModel.findOne({ _id: req.params.id, firmId: req.firmId });

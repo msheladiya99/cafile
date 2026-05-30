@@ -294,10 +294,10 @@ const AppRoutes: React.FC = () => {
           <Route path="reports" element={<MonthlyReports />} />
           <Route path="clients" element={<Clients />} />
           <Route path="client">
-            <Route path="add-group" element={<AddGroupList />} />
-            <Route path="master" element={<ClientMaster />} />
-            <Route path="master/:id" element={<ClientMaster />} />
-            <Route path="list" element={<ClientList />} />
+            <Route path="add-group" element={<ProtectedRoute requirePermission="client.group"><AddGroupList /></ProtectedRoute>} />
+            <Route path="master" element={<ProtectedRoute requirePermission="client.add"><ClientMaster /></ProtectedRoute>} />
+            <Route path="master/:id" element={<ProtectedRoute requirePermission="client.edit"><ClientMaster /></ProtectedRoute>} />
+            <Route path="list" element={<ProtectedRoute requirePermission="client.view"><ClientList /></ProtectedRoute>} />
             <Route path="contact-detail" element={<ClientContactDetail />} />
           </Route>
           <Route path="tasks">
@@ -326,13 +326,13 @@ const AppRoutes: React.FC = () => {
           <Route path="reminders" element={<Reminders />} />
           <Route path="billing" element={<Billing />} />
           <Route path="subscription" element={<SubscriptionDetails />} />
-          <Route path="client-ledger" element={<ProtectedRoute requireAdmin><ClientLedger /></ProtectedRoute>} />
+          <Route path="client-ledger" element={<ProtectedRoute requirePermission="client.ledger"><ClientLedger /></ProtectedRoute>} />
           <Route path="fileregister" element={<FileRegister />} />
           <Route path="firm-master" element={<ProtectedRoute requireAdmin><FirmMasterPage /></ProtectedRoute>} />
           <Route path="employee">
-            <Route path="master" element={<EmployeeMaster />} />
-            <Route path="master/:id" element={<EmployeeMaster />} />
-            <Route path="list" element={<EmployeeList />} />
+            <Route path="master" element={<ProtectedRoute requirePermission="employee.add"><EmployeeMaster /></ProtectedRoute>} />
+            <Route path="master/:id" element={<ProtectedRoute requirePermission="employee.edit"><EmployeeMaster /></ProtectedRoute>} />
+            <Route path="list" element={<ProtectedRoute requirePermission="employee.view"><EmployeeList /></ProtectedRoute>} />
             <Route path="tasks" element={<EmpTaskSchedule />} />
             <Route path="timesheet">
               <Route path="entry" element={<EntryWiseTimesheet />} />

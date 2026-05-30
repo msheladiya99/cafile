@@ -8,7 +8,7 @@ import { ClientGroup } from '../models/ClientGroup';
 import { ITStatus } from '../models/ITStatus';
 import { SubMaster } from '../models/SubMaster';
 import { ActivityLog } from '../models/ActivityLog';
-import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles } from '../middleware/auth';
+import { AuthRequest, authenticate, requireAdmin, requireStaff, requireRoles, requirePermission } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import { sendFileUploadEmail, sendWelcomeEmail, sendPasswordChangeEmail } from '../services/emailService';
 import { Firm } from '../models/Firm';
@@ -81,7 +81,7 @@ const generateUsername = (name?: string): string => {
 };
 
 // Create client (Admin and Manager only)
-router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+router.post('/create-client', requirePermission('client.add'), async (req: AuthRequest, res: Response) => {
     try {
         const { Client, User } = (req as any).models;
 
@@ -218,7 +218,7 @@ router.post('/create-client', requireRoles(['ADMIN', 'MANAGER']), async (req: Au
     }
 });
 // Bulk create clients (Admin and Manager only)
-router.post('/bulk-create-clients', requireRoles(['ADMIN', 'MANAGER']), async (req: AuthRequest, res: Response) => {
+router.post('/bulk-create-clients', requirePermission('client.add'), async (req: AuthRequest, res: Response) => {
     try {
         const { Client, User } = (req as any).models;
 
@@ -692,7 +692,7 @@ router.get('/clients/:id', async (req: AuthRequest, res: Response) => {
 });
 
 // Update client details (Admin, Manager, and Staff)
-router.patch('/clients/:id', requireRoles(['ADMIN', 'MANAGER', 'STAFF']), async (req: AuthRequest, res: Response) => {
+router.patch('/clients/:id', requirePermission('client.edit'), async (req: AuthRequest, res: Response) => {
     try {
         const { Client } = (req as any).models;
 
@@ -1154,7 +1154,7 @@ router.post('/clients/:clientId/reset-password', requireRoles(['ADMIN', 'MANAGER
 });
 
 // Delete client (Admin only)
-router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
+router.delete('/clients/:id', requirePermission('client.delete'), async (req: AuthRequest, res: Response) => {
     try {
         const { Client, User, File } = (req as any).models;
         const { id } = req.params;
@@ -1197,7 +1197,7 @@ router.delete('/clients/:id', requireAdmin, async (req: AuthRequest, res: Respon
 });
 
 // Bulk Delete clients (Admin only)
-router.post('/clients/bulk-delete', requireAdmin, async (req: AuthRequest, res: Response) => {
+router.post('/clients/bulk-delete', requirePermission('client.delete'), async (req: AuthRequest, res: Response) => {
     try {
         const { Client, User, File } = (req as any).models;
         const { clientIds } = req.body;
