@@ -14,6 +14,7 @@ import {
     useMediaQuery,
     useTheme,
     Paper,
+    TextField,
 } from '@mui/material';
 import {
     FormatListBulleted as FormatListBulletedIcon,
@@ -33,6 +34,8 @@ export const EmployeeList: React.FC = () => {
     const navigate = useNavigate();
     const [filterDesignation, setFilterDesignation] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [filterSearchText, setFilterSearchText] = useState('');
+    const [filterEmployee, setFilterEmployee] = useState('');
 
     const queryClient = useQueryClient();
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -66,29 +69,35 @@ export const EmployeeList: React.FC = () => {
             code: emp.employeeCode,
             loginId: emp.username,
             designation,
-            status: emp.status !== false ? 'Active' : 'Inactive'
+            status: emp.status !== false ? 'Active' : 'Inactive',
+            mobileNumber: emp.mobileNumber || '',
+            email: emp.email || ''
         };
     }).filter(emp => {
+        if (filterEmployee && emp.id !== filterEmployee) return false;
         if (filterDesignation && emp.designation !== filterDesignation) return false;
         if (filterStatus !== 'all') {
             const isActive = filterStatus === 'active';
             if ((emp.status === 'Active') !== isActive) return false;
         }
+        if (filterSearchText) {
+            const searchLower = filterSearchText.toLowerCase();
+            const matchName = emp.name?.toLowerCase().includes(searchLower) || false;
+            const matchCode = emp.code?.toLowerCase().includes(searchLower) || false;
+            const matchLoginId = emp.loginId?.toLowerCase().includes(searchLower) || false;
+            const matchDesignation = emp.designation?.toLowerCase().includes(searchLower) || false;
+            const matchMobile = emp.mobileNumber?.includes(filterSearchText) || false;
+            const matchEmail = emp.email?.toLowerCase().includes(searchLower) || false;
+
+            if (!matchName && !matchCode && !matchLoginId && !matchDesignation && !matchMobile && !matchEmail) {
+                return false;
+            }
+        }
         return true;
     });
 
-    // Compute unique designations from actual staff data for the filter dropdown
-    const uniqueDesignations = React.useMemo(() => {
-        const roleLabel: Record<string, string> = {
-            ADMIN: 'Admin', MANAGER: 'Manager', STAFF: 'Staff', INTERN: 'Intern'
-        };
-        const seen = new Set<string>();
-        staffData.forEach(emp => {
-            const d = emp.designation || roleLabel[emp.role as string] || emp.role;
-            if (d) seen.add(d);
-        });
-        return Array.from(seen).sort();
-    }, [staffData]);
+    // Use static designations matching Employee Master
+    const uniqueDesignations = ['Admin', 'Manager', 'Staff', 'Intern'];
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this employee?')) {
@@ -135,6 +144,23 @@ export const EmployeeList: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 0, md: 4 } }}>
                         {/* Left Column */}
                         <Box sx={{ flex: 1 }}>
+                            <FilterRow label="Employee Name">
+                                <Select
+                                    fullWidth
+                                    size="small"
+                                    displayEmpty
+                                    value={filterEmployee}
+                                    onChange={(e) => setFilterEmployee(e.target.value)}
+                                    sx={{ borderRadius: '8px', color: filterEmployee ? 'inherit' : 'text.secondary' }}
+                                >
+                                    <MenuItem value="">Choose an Employee...</MenuItem>
+                                    {[...staffData]
+                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                        .map(emp => (
+                                            <MenuItem key={emp._id} value={emp._id}>{emp.name}</MenuItem>
+                                        ))}
+                                </Select>
+                            </FilterRow>
                             <FilterRow label="Designation">
                                 <Select
                                     fullWidth
@@ -166,6 +192,16 @@ export const EmployeeList: React.FC = () => {
                                     <MenuItem value="active">Active</MenuItem>
                                     <MenuItem value="inactive">Inactive</MenuItem>
                                 </Select>
+                            </FilterRow>
+                            <FilterRow label="Search">
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="Search by name, code, email, mobile..."
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                />
                             </FilterRow>
                         </Box>
                     </Box>
