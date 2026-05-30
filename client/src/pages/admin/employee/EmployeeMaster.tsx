@@ -722,10 +722,10 @@ export const EmployeeMaster: React.FC = () => {
                                 <FormRow label="Birth Date">
                                     <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
-                                <FormRow label="PAN Card Number">
+                                <FormRow label="PAN No.">
                                     <TextField name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Aadhar Card Number">
+                                <FormRow label="Aadhar No.">
                                     <TextField name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
@@ -1314,12 +1314,12 @@ export const EmployeeMaster: React.FC = () => {
                                     </FormRow>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Aadhar Number">
+                                    <FormRow label="Aadhar No.">
                                         <TextField fullWidth size="small" name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </FormRow>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="PAN Number">
+                                    <FormRow label="PAN No.">
                                         <TextField fullWidth size="small" name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                     </FormRow>
                                 </Grid>
