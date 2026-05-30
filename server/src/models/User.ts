@@ -26,6 +26,7 @@ export interface IUser extends Document {
     mobileNumber?: string;
     birthDate?: string;
     designation?: string;
+    panNumber?: string;
     joiningDate?: string;
     monthlySalary?: string;
     ratePerHours?: string;
@@ -175,6 +176,7 @@ export const userSchema = new Schema<IUser>({
     pfNumber: { type: String, trim: true },
     esiNumber: { type: String, trim: true },
     aadharNumber: { type: String, trim: true },
+    panNumber: { type: String, trim: true },
     drivingLicenceNo: { type: String, trim: true },
 
     passport: { type: Boolean, default: false },

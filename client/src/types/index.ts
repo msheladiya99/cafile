@@ -183,6 +183,8 @@ export interface User {
     postalCode?: string;
     mobileNumber?: string;
     birthDate?: string;
+    aadharNumber?: string;
+    panNumber?: string;
     designation?: string;
     joiningDate?: string;
     monthlySalary?: string;

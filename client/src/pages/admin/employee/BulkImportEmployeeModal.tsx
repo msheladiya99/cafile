@@ -22,7 +22,7 @@ const EXCEL_FIELDS = [
     'First Name', 'Last Name', 'Email', 'Mobile Number', 'Phone', 'Employee Code', 'Role (ADMIN/MANAGER/STAFF/INTERN)', 'Designation',
     'Custom Username', 'Custom Password', 'Address', 'Country', 'State', 'City', 'Postal Code',
     'Birth Date', 'Joining Date', 'Monthly Salary', 'Rate Per Hours', 'Leaving Date', 'Reference', 'Description', 'Status (Active/Inactive)',
-    'PF Number', 'ESI Number', 'Aadhar Number', 'Driving Licence No',
+    'PF Number', 'ESI Number', 'Aadhar No.', 'PAN No.', 'Driving Licence No',
     'Passport No', 'Passport Authority', 'Passport Date From', 'Passport Date To',
     'Visa No', 'Visa Authority', 'Visa Date From', 'Visa Date To',
     'EID No', 'EID Authority', 'EID Date From', 'EID Date To',
@@ -123,7 +123,8 @@ export const BulkImportEmployeeModal: React.FC<BulkImportEmployeeModalProps> = (
 
                         pfNumber: getVal(['pf number', 'pf']),
                         esiNumber: getVal(['esi number', 'esi']),
-                        aadharNumber: getVal(['aadhar number', 'aadhar']),
+                        aadharNumber: getVal(['aadhar number', 'aadhar', 'aadhar no.']),
+                        panNumber: getVal(['pan number', 'pan', 'pan no.']),
                         drivingLicenceNo: getVal(['driving licence no', 'licence']),
 
                         passport: !!passportNoVal,
