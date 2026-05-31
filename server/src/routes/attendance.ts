@@ -7,11 +7,125 @@ const router = express.Router();
 router.use(authenticate);
 router.use(requireStaff);
 
+// Download format
+router.get('/format', async (req, res) => {
+    try {
+        const path = require('path');
+        const fs = require('fs');
+        const filePath = path.join(__dirname, '../../../09 DECEMBER 2025 Monthly_Performance_Report.xls');
+        if (fs.existsSync(filePath)) {
+            res.download(filePath, '09 DECEMBER 2025 Monthly_Performance_Report.xls');
+        } else {
+            res.status(404).json({ message: 'Format template file not found on server.' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
+
+// Bulk save attendance records from parsed Excel
+router.post('/bulk', async (req, res) => {
+    try {
+        const { Attendance, User: UserModel } = (req as any).models;
+        const { records } = req.body; // Array of { employeeCode, employeeName, date, inTime, outTime, status, description }
+
+        if (!Array.isArray(records) || records.length === 0) {
+            res.status(400).json({ message: 'No records provided' });
+            return;
+        }
+
+        const firmId = (req as any).firmId;
+
+        // Fetch all staff members of this firm
+        const employees = await UserModel.find({
+            firmId,
+            role: { $in: ['ADMIN', 'MANAGER', 'STAFF', 'INTERN'] }
+        }).select('_id firstName lastName name employeeCode').lean();
+
+        // Build mapping: employeeCode -> ID, name -> ID
+        const employeeMap: Record<string, string> = {};
+        for (const emp of employees) {
+            if (emp.employeeCode) {
+                employeeMap[emp.employeeCode.trim()] = emp._id.toString();
+            }
+            const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim().toLowerCase();
+            employeeMap[fullName] = emp._id.toString();
+            if (emp.name) {
+                employeeMap[emp.name.trim().toLowerCase()] = emp._id.toString();
+            }
+        }
+
+        const toInsert = [];
+        const results = {
+            successful: 0,
+            failed: 0,
+            errors: [] as string[]
+        };
+
+        for (let i = 0; i < records.length; i++) {
+            const r = records[i];
+            const codeKey = r.employeeCode ? String(r.employeeCode).trim() : '';
+            const nameKey = r.employeeName ? String(r.employeeName).trim().toLowerCase() : '';
+
+            const employeeId = employeeMap[codeKey] || employeeMap[nameKey];
+
+            if (!employeeId) {
+                results.failed++;
+                results.errors.push(`Row ${i + 1}: Employee not found for Code '${codeKey}' or Name '${r.employeeName}'`);
+                continue;
+            }
+
+            if (!r.date) {
+                results.failed++;
+                results.errors.push(`Row ${i + 1}: Date is required`);
+                continue;
+            }
+
+            toInsert.push({
+                firmId,
+                employee: employeeId,
+                date: new Date(r.date),
+                inTime: r.inTime || undefined,
+                outTime: r.outTime || undefined,
+                status: r.status || 'Present',
+                description: r.description || 'Imported from performance sheet',
+                workHours: r.workHours || '00:00',
+                breakTime: r.breakTime || '00:00',
+                overtime: r.overtime || '00:00',
+            });
+            results.successful++;
+        }
+
+        if (toInsert.length > 0) {
+            // Delete pre-existing records to overwrite them and prevent duplicate logs
+            const deletePromises = toInsert.map(item =>
+                Attendance.deleteMany({
+                    firmId,
+                    employee: item.employee,
+                    date: item.date
+                })
+            );
+            await Promise.all(deletePromises);
+
+            await Attendance.insertMany(toInsert);
+        }
+
+        res.json({
+            message: `Processed ${records.length} records`,
+            ...results
+        });
+
+    } catch (error: any) {
+        console.error('Attendance bulk import error:', error);
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
+
 // Create new attendance
 router.post('/', async (req, res) => {
     try {
         const { Attendance } = (req as any).models;
-        const { employee, date, inTime, outTime, description } = req.body;
+        const { employee, date, inTime, outTime, description, status, workHours, breakTime, overtime } = req.body;
 
         const newAttendance = new Attendance({
             firmId: (req as any).firmId,
@@ -19,7 +133,11 @@ router.post('/', async (req, res) => {
             date,
             inTime,
             outTime,
-            description
+            description,
+            status,
+            workHours,
+            breakTime,
+            overtime
         });
 
         const savedAttendance = await newAttendance.save();
@@ -133,11 +251,11 @@ router.get('/form108', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { Attendance } = (req as any).models;
-        const { employee, date, inTime, outTime, description } = req.body;
+        const { employee, date, inTime, outTime, description, status, workHours, breakTime, overtime } = req.body;
 
         const updated = await Attendance.findOneAndUpdate(
             { _id: req.params.id, firmId: (req as any).firmId },
-            { employee, date, inTime, outTime, description },
+            { employee, date, inTime, outTime, description, status, workHours, breakTime, overtime },
             { new: true }
         ).populate('employee', 'firstName lastName name');
 

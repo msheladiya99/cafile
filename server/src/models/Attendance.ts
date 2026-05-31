@@ -7,6 +7,9 @@ export interface IAttendance extends Document {
     outTime?: string;
     description?: string;
     status?: string;
+    workHours?: string;
+    breakTime?: string;
+    overtime?: string;
     createdAt: Date;
     updatedAt: Date;
     firmId: mongoose.Types.ObjectId;
@@ -41,6 +44,18 @@ const AttendanceSchema = new Schema(
         status: {
             type: String,
             default: 'Present'
+        },
+        workHours: {
+            type: String,
+            default: '00:00'
+        },
+        breakTime: {
+            type: String,
+            default: '00:00'
+        },
+        overtime: {
+            type: String,
+            default: '00:00'
         }
     },
     {

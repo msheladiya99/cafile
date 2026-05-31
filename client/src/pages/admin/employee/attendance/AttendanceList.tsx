@@ -20,6 +20,9 @@ import {
     DialogContent,
     DialogActions,
     Checkbox,
+    Snackbar,
+    Alert,
+    Chip,
 } from '@mui/material';
 import { FormatListBulleted as ListIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +31,7 @@ import { staffService } from '../../../../services/staffService';
 import { attendanceService } from '../../../../services/attendanceService';
 import type { AttendanceData } from '../../../../services/attendanceService';
 import { format, isValid, parseISO } from 'date-fns';
+import { BulkImportAttendanceModal } from './BulkImportAttendanceModal';
 
 interface AttendanceRecord {
     _id: string;
@@ -36,6 +40,10 @@ interface AttendanceRecord {
     inTime?: string;
     outTime?: string;
     description?: string;
+    status?: string;
+    workHours?: string;
+    breakTime?: string;
+    overtime?: string;
 }
 
 const safeFormatDate = (dateStr: string) => {
@@ -62,12 +70,20 @@ export const AttendanceList: React.FC = () => {
     const [editForm, setEditForm] = useState({
         employee: '',
         date: '',
-        inTimeChecked: false,
         inTime: '09:00',
-        outTimeChecked: false,
         outTime: '18:00',
         description: '',
+        status: 'Present',
+        workHours: '00:00',
+        breakTime: '00:00',
+        overtime: '00:00',
     });
+
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
+    const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
 
     const { data: staffList } = useQuery({
         queryKey: ['staff'],
@@ -119,11 +135,13 @@ export const AttendanceList: React.FC = () => {
         setEditForm({
             employee: record.employee?._id || '',
             date: record.date ? record.date.split('T')[0] : '',
-            inTimeChecked: !!record.inTime,
-            inTime: record.inTime || '09:00',
-            outTimeChecked: !!record.outTime,
-            outTime: record.outTime || '18:00',
+            inTime: record.inTime || '',
+            outTime: record.outTime || '',
             description: record.description || '',
+            status: record.status || 'Present',
+            workHours: record.workHours || '00:00',
+            breakTime: record.breakTime || '00:00',
+            overtime: record.overtime || '00:00',
         });
         setEditOpen(true);
     };
@@ -143,9 +161,13 @@ export const AttendanceList: React.FC = () => {
             data: {
                 employee: editForm.employee,
                 date: editForm.date,
-                inTime: editForm.inTimeChecked ? editForm.inTime : undefined,
-                outTime: editForm.outTimeChecked ? editForm.outTime : undefined,
+                inTime: editForm.inTime || undefined,
+                outTime: editForm.outTime || undefined,
                 description: editForm.description,
+                status: editForm.status,
+                workHours: editForm.workHours,
+                breakTime: editForm.breakTime,
+                overtime: editForm.overtime,
             }
         });
     };
@@ -165,9 +187,14 @@ export const AttendanceList: React.FC = () => {
             <Paper sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                 <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="600">Employee Attendance List</Typography>
-                    <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>
-                        Add New
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => setBulkImportOpen(true)}>
+                            Import Excel
+                        </Button>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>
+                            Add New
+                        </Button>
+                    </Box>
                 </Box>
 
                 {/* Filters */}
@@ -228,18 +255,21 @@ export const AttendanceList: React.FC = () => {
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Date</TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>In Time</TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Out Time</TableCell>
-                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Hours Worked</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Work Hours</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Break</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>OT</TableCell>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Status</TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
+                                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
                                 </TableRow>
                             ) : (!attendanceList || attendanceList.length === 0) ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
+                                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
                                 </TableRow>
                             ) : (
                                 (attendanceList as AttendanceRecord[]).map((record, idx) => (
@@ -263,8 +293,25 @@ export const AttendanceList: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Box component="span" sx={{ bgcolor: '#ede7f6', color: '#4527a0', px: 1.5, py: 0.3, borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
-                                                {calculateHours(record.inTime, record.outTime)}
+                                                {record.workHours || calculateHours(record.inTime, record.outTime)}
                                             </Box>
+                                        </TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                                            {record.breakTime || '00:00'}
+                                        </TableCell>
+                                        <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                                            {record.overtime || '00:00'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {record.status === 'Present' ? (
+                                                <Chip label="Present" color="success" size="small" sx={{ borderRadius: '6px', fontWeight: 600 }} />
+                                            ) : record.status === 'Absent' ? (
+                                                <Chip label="Absent" color="error" size="small" sx={{ borderRadius: '6px', fontWeight: 600 }} />
+                                            ) : record.status === 'Weekly Off' ? (
+                                                <Chip label="Weekly Off" color="primary" size="small" sx={{ borderRadius: '6px', fontWeight: 600 }} />
+                                            ) : (
+                                                <Chip label="Present" color="success" size="small" sx={{ borderRadius: '6px', fontWeight: 600 }} />
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -331,43 +378,82 @@ export const AttendanceList: React.FC = () => {
                         {/* In Time */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>In Time</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-                                <Checkbox
-                                    name="inTimeChecked"
-                                    checked={editForm.inTimeChecked}
-                                    onChange={handleEditChange}
-                                    sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: 0.5 }}
-                                />
-                                <TextField
-                                    size="small" type="time"
-                                    name="inTime"
-                                    value={editForm.inTime}
-                                    onChange={handleEditChange}
-                                    disabled={!editForm.inTimeChecked}
-                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </Box>
+                            <TextField
+                                fullWidth size="small" type="time"
+                                name="inTime"
+                                value={editForm.inTime}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
                         </Box>
 
                         {/* Out Time */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>Out Time</Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-                                <Checkbox
-                                    name="outTimeChecked"
-                                    checked={editForm.outTimeChecked}
-                                    onChange={handleEditChange}
-                                    sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: 0.5 }}
-                                />
-                                <TextField
-                                    size="small" type="time"
-                                    name="outTime"
-                                    value={editForm.outTime}
-                                    onChange={handleEditChange}
-                                    disabled={!editForm.outTimeChecked}
-                                    sx={{ width: 180, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                                />
-                            </Box>
+                            <TextField
+                                fullWidth size="small" type="time"
+                                name="outTime"
+                                value={editForm.outTime}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
+                        </Box>
+
+                        {/* Status */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>
+                                Status <span style={{ color: 'red' }}>*</span>
+                            </Typography>
+                            <Select
+                                fullWidth size="small"
+                                name="status"
+                                value={editForm.status}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value as string }))}
+                                sx={{ borderRadius: '8px' }}
+                            >
+                                <MenuItem value="Present">Present</MenuItem>
+                                <MenuItem value="Absent">Absent</MenuItem>
+                                <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                            </Select>
+                        </Box>
+
+                        {/* Work Hours */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>Work Hours</Typography>
+                            <TextField
+                                fullWidth size="small"
+                                name="workHours"
+                                placeholder="e.g. 09:28"
+                                value={editForm.workHours}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
+                        </Box>
+
+                        {/* Break Time */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>Break Time</Typography>
+                            <TextField
+                                fullWidth size="small"
+                                name="breakTime"
+                                placeholder="e.g. 00:00"
+                                value={editForm.breakTime}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
+                        </Box>
+
+                        {/* Overtime */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: '110px', flexShrink: 0 }}>Overtime (OT)</Typography>
+                            <TextField
+                                fullWidth size="small"
+                                name="overtime"
+                                placeholder="e.g. 00:00"
+                                value={editForm.overtime}
+                                onChange={handleEditChange}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
                         </Box>
 
                         {/* Description */}
@@ -401,6 +487,18 @@ export const AttendanceList: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <BulkImportAttendanceModal
+                open={bulkImportOpen}
+                onClose={() => setBulkImportOpen(false)}
+                showSnackbar={showSnackbar}
+            />
+
+            <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+                <Alert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '8px' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

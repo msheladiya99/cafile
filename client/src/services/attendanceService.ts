@@ -8,6 +8,9 @@ export interface AttendanceData {
     outTime?: string;
     description?: string;
     status?: string;
+    workHours?: string;
+    breakTime?: string;
+    overtime?: string;
 }
 
 export const attendanceService = {
@@ -43,5 +46,23 @@ export const attendanceService = {
     deleteAttendance: async (id: string) => {
         const response = await api.delete(`/attendance/${id}`);
         return response.data;
+    },
+
+    bulkCreateAttendance: async (data: { records: Record<string, unknown>[] }): Promise<{ message: string; successful: number; failed: number; errors: string[] }> => {
+        const response = await api.post('/attendance/bulk', data);
+        return response.data;
+    },
+
+    downloadFormat: async () => {
+        const response = await api.get('/attendance/format', {
+            responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'Monthly_Performance_Report_Format.xls');
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
     }
 };
