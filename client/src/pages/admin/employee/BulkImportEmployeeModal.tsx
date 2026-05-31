@@ -274,6 +274,11 @@ export const BulkImportEmployeeModal: React.FC<BulkImportEmployeeModalProps> = (
                                         <TableCell sx={{ fontWeight: 'bold' }}>Designation</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>PAN No.</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Aadhar No.</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>Driving Licence No</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>PF Number</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>ESI Number</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -288,6 +293,11 @@ export const BulkImportEmployeeModal: React.FC<BulkImportEmployeeModalProps> = (
                                                 <TableCell>{(row.designation as string) || '-'}</TableCell>
                                                 <TableCell>{(row.email as string) || '-'}</TableCell>
                                                 <TableCell>{(row.username as string) || '-'}</TableCell>
+                                                <TableCell>{(row.panNumber as string) || '-'}</TableCell>
+                                                <TableCell>{(row.aadharNumber as string) || '-'}</TableCell>
+                                                <TableCell>{(row.drivingLicenceNo as string) || '-'}</TableCell>
+                                                <TableCell>{(row.pfNumber as string) || '-'}</TableCell>
+                                                <TableCell>{(row.esiNumber as string) || '-'}</TableCell>
                                                 <TableCell>
                                                     {isError ? <Chip size="small" label="Missing Required" color="error" /> : <Chip size="small" label="Ready" color="success" />}
                                                 </TableCell>
