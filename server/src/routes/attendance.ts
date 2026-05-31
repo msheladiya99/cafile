@@ -268,6 +268,27 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// Bulk delete attendance records
+router.post('/delete-bulk', async (req, res) => {
+    try {
+        const { Attendance } = (req as any).models;
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'No record IDs provided' });
+        }
+
+        const result = await Attendance.deleteMany({
+            _id: { $in: ids },
+            firmId: (req as any).firmId
+        });
+
+        res.json({ message: `Successfully deleted ${result.deletedCount} attendance records` });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Server error' });
+    }
+});
+
 // Delete attendance
 router.delete('/:id', async (req, res) => {
     try {

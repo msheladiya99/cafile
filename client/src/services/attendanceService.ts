@@ -64,5 +64,10 @@ export const attendanceService = {
         document.body.appendChild(link);
         link.click();
         link.parentNode?.removeChild(link);
+    },
+
+    deleteBulkAttendance: async (ids: string[]): Promise<{ message: string }> => {
+        const response = await api.post('/attendance/delete-bulk', { ids });
+        return response.data;
     }
 };

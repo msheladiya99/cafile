@@ -69,6 +69,9 @@ export const AttendanceList: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
+    // Selection state
+    const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
+
     // Edit dialog state
     const [editOpen, setEditOpen] = useState(false);
     const [editRecord, setEditRecord] = useState<AttendanceRecord | null>(null);
@@ -111,6 +114,24 @@ export const AttendanceList: React.FC = () => {
         }
     });
 
+    const deleteBulkMutation = useMutation({
+        mutationFn: attendanceService.deleteBulkAttendance,
+        onSuccess: (res: any) => {
+            queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            setSelectedRecords([]);
+            showSnackbar(res.message || 'Selected records deleted successfully', 'success');
+        },
+        onError: () => {
+            showSnackbar('Failed to delete selected records.', 'error');
+        }
+    });
+
+    const handleDeleteSelected = () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedRecords.length} selected attendance records?`)) {
+            deleteBulkMutation.mutate(selectedRecords);
+        }
+    };
+
     const updateMutation = useMutation({
         mutationFn: ({ id, data }: { id: string; data: Omit<AttendanceData, '_id'> }) =>
             attendanceService.updateAttendance(id, data),
@@ -133,6 +154,24 @@ export const AttendanceList: React.FC = () => {
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this attendance record?')) {
             deleteMutation.mutate(id);
+            setSelectedRecords(prev => prev.filter(item => item !== id));
+        }
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked && attendanceList) {
+            const ids = (attendanceList as AttendanceRecord[]).map(r => r._id);
+            setSelectedRecords(ids);
+        } else {
+            setSelectedRecords([]);
+        }
+    };
+
+    const handleSelectRecord = (id: string, checked: boolean) => {
+        if (checked) {
+            setSelectedRecords(prev => [...prev, id]);
+        } else {
+            setSelectedRecords(prev => prev.filter(item => item !== id));
         }
     };
 
@@ -194,6 +233,11 @@ export const AttendanceList: React.FC = () => {
                 <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', color: '#1e293b', px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h5" fontWeight="600">Employee Attendance List</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                        {selectedRecords.length > 0 && (
+                            <Button size="small" variant="contained" sx={{ bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, color: 'white', textTransform: 'none', boxShadow: 'none', fontWeight: 600 }} onClick={handleDeleteSelected}>
+                                Delete Selected ({selectedRecords.length})
+                            </Button>
+                        )}
                         <Button size="small" variant="contained" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => setBulkImportOpen(true)}>
                             Import Excel
                         </Button>
@@ -259,6 +303,14 @@ export const AttendanceList: React.FC = () => {
                     <Table size="small">
                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                             <TableRow>
+                                <TableCell sx={{ fontWeight: 700, py: 1.5, width: '40px' }}>
+                                    <Checkbox
+                                        indeterminate={selectedRecords.length > 0 && selectedRecords.length < (attendanceList?.length || 0)}
+                                        checked={attendanceList ? (selectedRecords.length === attendanceList.length && attendanceList.length > 0) : false}
+                                        onChange={handleSelectAll}
+                                        sx={{ p: 0 }}
+                                    />
+                                </TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>#</TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Employee Name</TableCell>
                                 <TableCell sx={{ fontWeight: 700, py: 1.5 }}>Date</TableCell>
@@ -274,15 +326,22 @@ export const AttendanceList: React.FC = () => {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
+                                    <TableCell colSpan={11} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
                                 </TableRow>
                             ) : (!attendanceList || attendanceList.length === 0) ? (
                                 <TableRow>
-                                    <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
+                                    <TableCell colSpan={11} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
                                 </TableRow>
                             ) : (
                                 (attendanceList as AttendanceRecord[]).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((record, idx) => (
                                     <TableRow key={record._id} hover sx={{ '&:hover': { bgcolor: '#f0f4ff' } }}>
+                                        <TableCell sx={{ py: 1, width: '40px' }}>
+                                            <Checkbox
+                                                checked={selectedRecords.includes(record._id)}
+                                                onChange={(e) => handleSelectRecord(record._id, e.target.checked)}
+                                                sx={{ p: 0 }}
+                                            />
+                                        </TableCell>
                                         <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{(page * rowsPerPage) + idx + 1}</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>{record.employee?.firstName} {record.employee?.lastName}</TableCell>
                                         <TableCell>{record.date ? safeFormatDate(record.date) : '-'}</TableCell>
