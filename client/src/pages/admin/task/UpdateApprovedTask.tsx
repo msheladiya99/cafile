@@ -634,14 +634,66 @@ export const UpdateApprovedTask: React.FC = () => {
                                         <Typography variant="body2" fontWeight={500}>{task.title}</Typography>
                                         <Typography variant="caption" color="textSecondary">{task.frequency} • {task.priority}</Typography>
                                     </TableCell>
-                                    <TableCell>
-                                        <AvatarGroup max={2} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.65rem' } }}>
-                                            {(task.assignedTo as User[] || []).map((u: User) => (
-                                                <Avatar key={u._id} sx={{ bgcolor: '#6366f1' }}>
-                                                    {(u.name || u.username || '?').charAt(0).toUpperCase()}
-                                                </Avatar>
+                                    <TableCell onClick={(e) => e.stopPropagation()}>
+                                        <Select
+                                            multiple
+                                            value={(task.assignedTo as User[] || []).map((u: User) => u._id)}
+                                            onChange={async (event) => {
+                                                const newAssignees = event.target.value as string[];
+                                                try {
+                                                    await taskService.updateTask(task._id, { assignedTo: newAssignees });
+                                                    toast.success('Task assignment updated successfully');
+                                                    refetch();
+                                                } catch (err: any) {
+                                                    console.error('Error updating task assignees:', err);
+                                                    toast.error('Failed to update task assignment: ' + err.message);
+                                                }
+                                            }}
+                                            displayEmpty
+                                            renderValue={(selected) => {
+                                                if (selected.length === 0) {
+                                                    return <Typography variant="caption" sx={{ color: 'text.disabled' }}>Unassigned</Typography>;
+                                                }
+                                                return (
+                                                    <AvatarGroup max={2} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.65rem' } }}>
+                                                        {selected.map((uId: string) => {
+                                                            const u = staffUsers.find(user => user._id === uId);
+                                                            return (
+                                                                <Avatar key={uId} sx={{ bgcolor: '#6366f1' }}>
+                                                                    {(u?.name || u?.username || '?').charAt(0).toUpperCase()}
+                                                                </Avatar>
+                                                            );
+                                                        })}
+                                                    </AvatarGroup>
+                                                );
+                                            }}
+                                            size="small"
+                                            sx={{
+                                                minWidth: 100,
+                                                maxWidth: 160,
+                                                borderRadius: '8px',
+                                                '& .MuiSelect-select': {
+                                                    py: 0.5,
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                },
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    border: 'none'
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    border: '1px solid #cbd5e1'
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    border: '1px solid #6366f1'
+                                                }
+                                            }}
+                                        >
+                                            {staffUsers.map((s: User) => (
+                                                <MenuItem key={s._id} value={s._id} sx={{ fontSize: '0.85rem' }}>
+                                                    {s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim() || s.username}
+                                                </MenuItem>
                                             ))}
-                                        </AvatarGroup>
+                                        </Select>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2" fontWeight={600} color="primary">{task.department || '-'}</Typography>

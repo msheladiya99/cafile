@@ -42,6 +42,7 @@ import { adminService } from '../../../services/adminService';
 import { staffService } from '../../../services/staffService';
 import { taskService } from '../../../services/taskService';
 import type { User, Task, Client } from '../../../types';
+import toast from 'react-hot-toast';
 
 
 // ─── Status config ──────────────────────────────────────────────
@@ -85,7 +86,13 @@ const fmtMins = (mins: number) => {
 };
 
 // ─── Expandable row ──────────────────────────────────────────────
-const TaskRow: React.FC<{ task: Task; staffMap: Record<string, string>; clientMap: Record<string, string> }> = ({ task, staffMap, clientMap }) => {
+const TaskRow: React.FC<{ 
+    task: Task; 
+    staffMap: Record<string, string>; 
+    clientMap: Record<string, string>;
+    staffList: User[];
+    refetch: () => void;
+}> = ({ task, staffMap, clientMap, staffList, refetch }) => {
     const [open, setOpen] = useState(false);
     const status = STATUS_CONFIG[task.status] ?? { label: task.status, color: '#374151', bg: '#f3f4f6' };
     const priority = PRIORITY_CONFIG[task.priority] ?? { color: '#6b7280', dot: '#9ca3af' };
@@ -136,29 +143,74 @@ const TaskRow: React.FC<{ task: Task; staffMap: Record<string, string>; clientMa
                     </Box>
                 </TableCell>
 
-                {/* Assigned To */}
-                <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {(task.assignedTo ?? []).slice(0, 2).map((uid: string | User) => {
-                            const uId = typeof uid === 'object' ? (uid as { _id: string })._id : uid;
-                            const name = staffMap[uId] ?? uId;
+                {/* Assigned To (Select Dropdown) */}
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Select
+                        multiple
+                        value={(task.assignedTo ?? []).map((uid: string | User) => typeof uid === 'object' ? (uid as { _id: string })._id : uid)}
+                        onChange={async (event) => {
+                            const newAssignees = event.target.value as string[];
+                            try {
+                                await taskService.updateTask(task._id, { assignedTo: newAssignees });
+                                toast.success('Task assignment updated successfully');
+                                refetch();
+                            } catch (err) {
+                                console.error('Error updating task assignees:', err);
+                                toast.error('Failed to update task assignment');
+                            }
+                        }}
+                        displayEmpty
+                        renderValue={(selected) => {
+                            if (selected.length === 0) {
+                                return <Typography variant="caption" sx={{ color: 'text.disabled' }}>Unassigned</Typography>;
+                            }
                             return (
-                                <Tooltip key={uId} title={name}>
-                                    <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
-                                        {name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                                    </Avatar>
-                                </Tooltip>
+                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                    {selected.slice(0, 2).map((uId: string) => {
+                                        const name = staffMap[uId] ?? uId;
+                                        return (
+                                            <Tooltip key={uId} title={name}>
+                                                <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1' }}>
+                                                    {name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                                                </Avatar>
+                                            </Tooltip>
+                                        );
+                                    })}
+                                    {selected.length > 2 && (
+                                        <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#9ca3af' }}>
+                                            +{selected.length - 2}
+                                        </Avatar>
+                                    )}
+                                </Box>
                             );
-                        })}
-                        {(task.assignedTo ?? []).length > 2 && (
-                            <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#9ca3af' }}>
-                                +{task.assignedTo.length - 2}
-                            </Avatar>
-                        )}
-                        {(!task.assignedTo || task.assignedTo.length === 0) && (
-                            <Typography variant="caption" sx={{ color: 'text.disabled' }}>Unassigned</Typography>
-                        )}
-                    </Box>
+                        }}
+                        size="small"
+                        sx={{
+                            minWidth: 120,
+                            maxWidth: 180,
+                            borderRadius: '8px',
+                            '& .MuiSelect-select': {
+                                py: 0.5,
+                                display: 'flex',
+                                alignItems: 'center'
+                            },
+                            '& .MuiOutlinedInput-notchedOutline': {
+                                border: 'none'
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                border: '1px solid #cbd5e1'
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                border: '1px solid #6366f1'
+                            }
+                        }}
+                    >
+                        {staffList.map((s: User) => (
+                            <MenuItem key={s._id} value={s._id} sx={{ fontSize: '0.85rem' }}>
+                                {s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()}
+                            </MenuItem>
+                        ))}
+                    </Select>
                 </TableCell>
 
                 {/* Target Date */}
@@ -602,8 +654,8 @@ export const EmpTaskSchedule: React.FC = () => {
                                 </TableHead>
                                 <TableBody>
                                     {filteredTasks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((task: Task) => (
-                                        <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} />
-                                    ))}
+                                         <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} staffList={staff} refetch={refetch} />
+                                     ))}
                                 </TableBody>
                             </Table>
                         </TableContainer>
