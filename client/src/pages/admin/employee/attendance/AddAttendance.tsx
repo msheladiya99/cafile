@@ -3,28 +3,92 @@ import {
     Box,
     Paper,
     Typography,
-    Grid,
     Select,
     MenuItem,
     Button,
     TextField,
-    Checkbox,
+    Snackbar,
+    Alert,
 } from '@mui/material';
+import { BulkImportAttendanceModal } from './BulkImportAttendanceModal';
+import { GridView as GridViewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { staffService } from '../../../../services/staffService';
 import { attendanceService } from '../../../../services/attendanceService';
 
+interface FormRowProps {
+    label: string;
+    required?: boolean;
+    children?: React.ReactNode;
+    vertical?: boolean;
+}
+
+const FormRow = ({ label, required, children, vertical }: FormRowProps) => {
+    const childIsElement = React.isValidElement(children);
+    return (
+        <Box sx={{ mb: 2 }}>
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: { xs: 'flex-start', sm: vertical ? 'flex-start' : 'center' }, 
+                flexDirection: { xs: 'column', sm: vertical ? 'column' : 'row' }, 
+                gap: { xs: 1, sm: vertical ? 0.5 : 0 } 
+            }}>
+                <Typography sx={{ 
+                    width: { xs: '100%', sm: vertical ? '100%' : '160px' }, 
+                    color: 'text.secondary', 
+                    fontSize: '0.85rem', 
+                    fontWeight: 600, 
+                    pt: { xs: 0, sm: !vertical && childIsElement && (children as React.ReactElement<{ multiline?: boolean }>).props.multiline ? 1 : 0 }, 
+                    flexShrink: 0 
+                }}>
+                    {label} {required && <span style={{ color: 'red' }}>*</span>}
+                </Typography>
+                <Box sx={{ flex: 1, width: '100%' }}>
+                    {children}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+interface SectionProps {
+    title: string;
+    icon: React.ReactElement<{ sx?: Record<string, unknown> }>;
+    children?: React.ReactNode;
+}
+
+const Section = ({ title, icon, children }: SectionProps) => (
+    <Paper variant="outlined" sx={{ mb: 3, borderRadius: '12px', overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: '#f5f7fa', px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+            {React.cloneElement(icon, { sx: { width: 20, height: 20, color: 'text.secondary' } })}
+            <Typography variant="subtitle2" fontWeight="700" color="text.primary" sx={{ fontSize: '0.9rem' }}>{title}</Typography>
+        </Box>
+        <Box sx={{ p: 2, bgcolor: '#ffffff' }}>
+            {children}
+        </Box>
+    </Paper>
+);
+
 export const AddAttendance: React.FC = () => {
     const navigate = useNavigate();
+    
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
+    const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
+
     const [formData, setFormData] = useState({
         employee: '',
         date: new Date().toISOString().split('T')[0],
-        inTimeChecked: false,
         inTime: '10:17',
-        outTimeChecked: false,
         outTime: '22:17',
-        description: ''
+        description: '',
+        status: 'Present',
+        workHours: '00:00',
+        breakTime: '00:00',
+        overtime: '00:00'
     });
 
     const { data: staffList } = useQuery({
@@ -61,9 +125,13 @@ export const AddAttendance: React.FC = () => {
         saveMutation.mutate({
             employee: formData.employee,
             date: formData.date,
-            inTime: formData.inTimeChecked ? formData.inTime : undefined,
-            outTime: formData.outTimeChecked ? formData.outTime : undefined,
-            description: formData.description
+            inTime: formData.inTime || undefined,
+            outTime: formData.outTime || undefined,
+            description: formData.description,
+            status: formData.status,
+            workHours: formData.workHours,
+            breakTime: formData.breakTime,
+            overtime: formData.overtime
         });
     };
 
@@ -75,17 +143,17 @@ export const AddAttendance: React.FC = () => {
                     <Typography variant="h5" fontWeight="600">Add Attendance</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>Add New</Button>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => setBulkImportOpen(true)}>
+                            Import Excel
+                        </Button>
                         <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/list')}>List</Button>
                     </Box>
                 </Box>
             </Paper>
 
-            <Paper sx={{ p: 4, mb: 3, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
-                <Grid container spacing={4} sx={{ maxWidth: 800 }}>
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
-                            Employee <span style={{ color: 'red' }}>*</span>
-                        </Typography>
+            <Box sx={{ maxWidth: 800 }}>
+                <Section title="Attendance Details" icon={<GridViewIcon />}>
+                    <FormRow label="Employee" required>
                         <Select
                             fullWidth
                             size="small"
@@ -93,7 +161,7 @@ export const AddAttendance: React.FC = () => {
                             name="employee"
                             value={formData.employee}
                             onChange={handleInputChange}
-                            sx={{ borderRadius: '8px' }}
+                            sx={{ borderRadius: '8px', color: formData.employee ? 'text.primary' : 'text.secondary' }}
                         >
                             <MenuItem value="" disabled>Choose a Employee...</MenuItem>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -103,12 +171,9 @@ export const AddAttendance: React.FC = () => {
                                 </MenuItem>
                             ))}
                         </Select>
-                    </Grid>
+                    </FormRow>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
-                            Date <span style={{ color: 'red' }}>*</span>
-                        </Typography>
+                    <FormRow label="Date" required>
                         <TextField
                             fullWidth
                             size="small"
@@ -118,60 +183,84 @@ export const AddAttendance: React.FC = () => {
                             onChange={handleInputChange}
                             sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                         />
-                    </Grid>
+                    </FormRow>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
-                            In Time <span style={{ color: 'red' }}>*</span>
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, width: { xs: '100%', sm: 'auto' } }}>
-                            <Checkbox
-                                name="inTimeChecked"
-                                checked={formData.inTimeChecked}
-                                onChange={handleInputChange}
-                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: { xs: 0, sm: 1 } }}
-                            />
-                            <TextField
-                                size="small"
-                                fullWidth
-                                type="time"
-                                name="inTime"
-                                value={formData.inTime}
-                                onChange={handleInputChange}
-                                disabled={!formData.inTimeChecked}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                            />
-                        </Box>
-                    </Grid>
+                    <FormRow label="In Time">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="time"
+                            name="inTime"
+                            value={formData.inTime}
+                            onChange={handleInputChange}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        />
+                    </FormRow>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 0.5, sm: 2 } }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0 }}>
-                            Out Time
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, width: { xs: '100%', sm: 'auto' } }}>
-                            <Checkbox
-                                name="outTimeChecked"
-                                checked={formData.outTimeChecked}
-                                onChange={handleInputChange}
-                                sx={{ color: '#667eea', '&.Mui-checked': { color: '#667eea' }, p: { xs: 0, sm: 1 } }}
-                            />
-                            <TextField
-                                size="small"
-                                fullWidth
-                                type="time"
-                                name="outTime"
-                                value={formData.outTime}
-                                onChange={handleInputChange}
-                                disabled={!formData.outTimeChecked}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-                            />
-                        </Box>
-                    </Grid>
+                    <FormRow label="Out Time">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="time"
+                            name="outTime"
+                            value={formData.outTime}
+                            onChange={handleInputChange}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        />
+                    </FormRow>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start', gap: { xs: 0.5, sm: 2 } }}>
-                        <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem', width: { xs: '100%', sm: '120px' }, flexShrink: 0, pt: { xs: 0, sm: 1 } }}>
-                            Description
-                        </Typography>
+                    <FormRow label="Status" required>
+                        <Select
+                            fullWidth
+                            size="small"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleInputChange}
+                            sx={{ borderRadius: '8px' }}
+                        >
+                            <MenuItem value="Present">Present</MenuItem>
+                            <MenuItem value="Absent">Absent</MenuItem>
+                            <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                        </Select>
+                    </FormRow>
+
+                    <FormRow label="Work Hours">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="workHours"
+                            placeholder="e.g. 09:28"
+                            value={formData.workHours}
+                            onChange={handleInputChange}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        />
+                    </FormRow>
+
+                    <FormRow label="Break Time">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="breakTime"
+                            placeholder="e.g. 00:00"
+                            value={formData.breakTime}
+                            onChange={handleInputChange}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        />
+                    </FormRow>
+
+                    <FormRow label="Overtime (OT)">
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="overtime"
+                            placeholder="e.g. 00:00"
+                            value={formData.overtime}
+                            onChange={handleInputChange}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        />
+                    </FormRow>
+
+                    <FormRow label="Description">
                         <TextField
                             fullWidth
                             size="small"
@@ -182,31 +271,43 @@ export const AddAttendance: React.FC = () => {
                             onChange={handleInputChange}
                             sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                         />
-                    </Grid>
+                    </FormRow>
+                </Section>
 
-                    <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
-                        <Button
-                            variant="contained"
-                            onClick={handleSave}
-                            sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none' }}
-                        >
-                            Save
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={() => navigate('/admin/employee/attendance/list')}
-                            sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
-                        >
-                            Cancel
-                        </Button>
-                    </Grid>
-                </Grid>
-            </Paper>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleSave}
+                        disabled={saveMutation.isPending}
+                        sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none' }}
+                    >
+                        {saveMutation.isPending ? 'Saving...' : 'Save'}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => navigate('/admin/employee/attendance/list')}
+                        sx={{ bgcolor: '#ff6c60', color: 'white', textTransform: 'none', px: 4, borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}
+                    >
+                        Cancel
+                    </Button>
+                </Box>
+            </Box>
+
+            <BulkImportAttendanceModal
+                open={bulkImportOpen}
+                onClose={() => {
+                    setBulkImportOpen(false);
+                    // Redirect to lists to show the newly imported records
+                    navigate('/admin/employee/attendance/list');
+                }}
+                showSnackbar={showSnackbar}
+            />
+
+            <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+                <Alert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '8px' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
-
-
-
-
-
