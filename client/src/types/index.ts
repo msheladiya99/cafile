@@ -185,6 +185,9 @@ export interface User {
     birthDate?: string;
     aadharNumber?: string;
     panNumber?: string;
+    pfNumber?: string;
+    esiNumber?: string;
+    drivingLicenceNo?: string;
     designation?: string;
     joiningDate?: string;
     monthlySalary?: string;

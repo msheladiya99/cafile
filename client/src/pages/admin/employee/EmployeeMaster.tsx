@@ -52,6 +52,7 @@ import {
     GetApp as GetAppIcon,
     Visibility,
     VisibilityOff,
+    Fingerprint as FingerprintIcon,
 } from '@mui/icons-material';
 import { CommonButton } from '../../../components/common/UIComponents';
 import type { User } from '../../../types';
@@ -639,8 +640,6 @@ export const EmployeeMaster: React.FC = () => {
                     >
                         <Tab label="Information" />
                         <Tab label="Document" />
-                        <Tab label="Other Detail" />
-                        <Tab label="Rule" />
                     </Tabs>
                 </Box>
             </Paper>
@@ -714,20 +713,29 @@ export const EmployeeMaster: React.FC = () => {
                                 <FormRow label="Mobile Number">
                                     <TextField name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
-                                <FormRow label="Phone">
-                                    <TextField name="phone" value={formData.phone} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                </FormRow>
                                 <FormRow label="Email" helperText='Separate multiple Email with "," (Comma).'>
                                     <TextField name="email" value={formData.email} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Birth Date">
                                     <TextField name="birthDate" value={formData.birthDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
+                            </Section>
+
+                            <Section title="Personal Details" icon={<FingerprintIcon />}>
                                 <FormRow label="PAN No.">
                                     <TextField name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Aadhar No.">
                                     <TextField name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Driving Licence No">
+                                    <TextField name="drivingLicenceNo" value={formData.drivingLicenceNo || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="PF Number">
+                                    <TextField name="pfNumber" value={formData.pfNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="ESI Number">
+                                    <TextField name="esiNumber" value={formData.esiNumber || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                             </Section>
 
@@ -1296,218 +1304,7 @@ export const EmployeeMaster: React.FC = () => {
                     </Box>
                 </CustomTabPanel>
 
-                <CustomTabPanel value={tabValue} index={2}>
-                    <Box sx={{ px: 3, pb: 3 }}>
-                        
-                        <SummaryHeader data={formData} id={id} isEditMode={isEditMode} />
 
-                        {/* Identification Section */}
-                        <Section title="Identification & Social Security" icon={<GridViewIcon />}>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="PF Number">
-                                        <TextField fullWidth size="small" name="pfNumber" value={formData.pfNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="ESI Number">
-                                        <TextField fullWidth size="small" name="esiNumber" value={formData.esiNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Aadhar No.">
-                                        <TextField fullWidth size="small" name="aadharNumber" value={formData.aadharNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="PAN No.">
-                                        <TextField fullWidth size="small" name="panNumber" value={formData.panNumber || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Driving Licence No">
-                                        <TextField fullWidth size="small" name="drivingLicenceNo" value={formData.drivingLicenceNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                            </Grid>
-                        </Section>
-                        {/* Travel Documents Section */}
-                        <Section title="Travel Documents" icon={<WorkIcon />}>
-                            <Grid container spacing={3}>
-                                {/* Passport */}
-                                <Grid size={{ xs: 12 }}>
-                                    <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Checkbox size="small" checked={!!formData.passport} onChange={(e) => handleSwitchChange('passport', e.target.checked)} sx={{ p: 0 }} />
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>Passport Details</Typography>
-                                    </Box>
-                                    <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Passport No" vertical>
-                                                <TextField fullWidth size="small" name="passportNo" value={formData.passportNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Authority" vertical>
-                                                <TextField fullWidth size="small" name="passportAuthority" value={formData.passportAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Validity Period" vertical>
-                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                    <TextField type="date" fullWidth size="small" name="passportDateFrom" value={formData.passportDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', '& fieldset': { borderRight: 'none' } } }} />
-                                                    <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#f8fafc', borderTop: '1px solid #ced4da', borderBottom: '1px solid #ced4da', display: 'flex', alignItems: 'center' }}>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>To</Typography>
-                                                    </Box>
-                                                    <TextField type="date" fullWidth size="small" name="passportDateTo" value={formData.passportDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', '& fieldset': { borderLeft: 'none' } } }} />
-                                                </Box>
-                                            </FormRow>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-
-                                <Grid size={{ xs: 12 }}><Divider sx={{ opacity: 0.6 }} /></Grid>
-
-                                {/* Visa */}
-                                <Grid size={{ xs: 12 }}>
-                                    <Box sx={{ mb: 2, mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Checkbox size="small" checked={!!formData.visa} onChange={(e) => handleSwitchChange('visa', e.target.checked)} sx={{ p: 0 }} />
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>Visa Details</Typography>
-                                    </Box>
-                                    <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Visa No" vertical>
-                                                <TextField fullWidth size="small" name="visaNo" value={formData.visaNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Authority" vertical>
-                                                <TextField fullWidth size="small" name="visaAuthority" value={formData.visaAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Validity Period" vertical>
-                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                    <TextField type="date" fullWidth size="small" name="visaDateFrom" value={formData.visaDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', '& fieldset': { borderRight: 'none' } } }} />
-                                                    <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#f8fafc', borderTop: '1px solid #ced4da', borderBottom: '1px solid #ced4da', display: 'flex', alignItems: 'center' }}>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>To</Typography>
-                                                    </Box>
-                                                    <TextField type="date" fullWidth size="small" name="visaDateTo" value={formData.visaDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', '& fieldset': { borderLeft: 'none' } } }} />
-                                                </Box>
-                                            </FormRow>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-
-                                <Grid size={{ xs: 12 }}><Divider sx={{ opacity: 0.6 }} /></Grid>
-
-                                {/* EID */}
-                                <Grid size={{ xs: 12 }}>
-                                    <Box sx={{ mb: 2, mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Checkbox size="small" checked={!!formData.eid} onChange={(e) => handleSwitchChange('eid', e.target.checked)} sx={{ p: 0 }} />
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>EID Details</Typography>
-                                    </Box>
-                                    <Grid container spacing={2}>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="EID No" vertical>
-                                                <TextField fullWidth size="small" name="eidNo" value={formData.eidNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Authority" vertical>
-                                                <TextField fullWidth size="small" name="eidAuthority" value={formData.eidAuthority || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                            </FormRow>
-                                        </Grid>
-                                        <Grid size={{ xs: 12, md: 4 }}>
-                                            <FormRow label="Validity Period" vertical>
-                                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                    <TextField type="date" fullWidth size="small" name="eidDateFrom" value={formData.eidDateFrom || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRadius: '8px', '& fieldset': { borderRight: 'none' } } }} />
-                                                    <Box sx={{ px: 1.5, py: 0.8, bgcolor: '#f8fafc', borderTop: '1px solid #ced4da', borderBottom: '1px solid #ced4da', display: 'flex', alignItems: 'center' }}>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>To</Typography>
-                                                    </Box>
-                                                    <TextField type="date" fullWidth size="small" name="eidDateTo" value={formData.eidDateTo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderRadius: '8px', '& fieldset': { borderLeft: 'none' } } }} />
-                                                </Box>
-                                            </FormRow>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Section>
-
-                        {/* Bank Detail Section */}
-                        <Section title="Bank Details" icon={<AccountBalanceIcon />}>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Bank Name" vertical>
-                                        <TextField fullWidth size="small" name="bankName" value={formData.bankName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Bank Branch" vertical>
-                                        <TextField fullWidth size="small" name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="A/C Holder Name" vertical>
-                                        <TextField fullWidth size="small" name="accountHolderName" value={formData.accountHolderName || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Bank A/C No" vertical>
-                                        <TextField fullWidth size="small" name="accountNo" value={formData.accountNo || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
-                                    <FormRow label="Bank IFS Code" vertical>
-                                        <TextField fullWidth size="small" name="ifscCode" value={formData.ifscCode || ''} onChange={handleInputChange} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                    </FormRow>
-                                </Grid>
-                            </Grid>
-                        </Section>
-
-                        {/* Footer Buttons */}
-                        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
-                            <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: '8px', boxShadow: 'none', height: 44 }}>
-                                {isEditMode ? 'Update' : 'Save'}
-                            </CommonButton>
-                            <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
-                                Cancel
-                            </CommonButton>
-                        </Box>
-                    </Box>
-                </CustomTabPanel>
-
-                <CustomTabPanel value={tabValue} index={3}>
-                    <Box sx={{ px: 3, pb: 3 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <SummaryHeader data={formData} id={id} isEditMode={isEditMode} />
-
-                            {/* Row 2: Checkbox */}
-                            <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1.5, sm: 0 } }}>
-                                <Typography sx={{ width: { xs: '100%', sm: '300px' }, color: 'text.secondary', fontSize: '0.85rem', fontWeight: 600, flexShrink: 0 }}>
-                                    Start Single Task Approval Allow Popup Access
-                                </Typography>
-                                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                                    <Box sx={{ width: 28, height: 28, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)' }}>
-                                        <Box component="svg" viewBox="0 0 24 24" fill="white" sx={{ width: 18, height: 18 }}>
-                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                        </Box>
-                                    </Box>
-                                    <Typography variant="caption" sx={{ ml: 1.5, color: '#667eea', fontWeight: 700 }}>Enabled</Typography>
-                                </Box>
-                            </Box>
-                            <Divider sx={{ mt: 1 }} />
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center', gap: 2, mt: 4, pb: 2, px: isMobile ? 3 : 0 }}>
-                            <CommonButton variant="contained" fullWidth={isMobile} onClick={handleSaveEmployee} loading={saveMutation.isPending} sx={{ px: 4, bgcolor: '#56b6ed', borderRadius: '8px', boxShadow: 'none', height: 44 }}>
-                                {isEditMode ? 'Update' : 'Save'}
-                            </CommonButton>
-                            <CommonButton variant="contained" fullWidth={isMobile} onClick={() => navigate('/admin/employee/list')} sx={{ px: 4, bgcolor: '#ff6c60', borderRadius: '8px', boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' }, height: 44 }}>
-                                Cancel
-                            </CommonButton>
-                        </Box>
-                    </Box>
-                </CustomTabPanel>
             </Paper>
 
             {/* Add Designation Dialog */}
