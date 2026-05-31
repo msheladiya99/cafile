@@ -39,12 +39,55 @@ export const BulkImportAttendanceModal: React.FC<BulkImportAttendanceModalProps>
     const [fileName, setFileName] = useState('');
     const [importResults, setImportResults] = useState<{ successful: number, failed: number, errors: string[] } | null>(null);
 
-    const handleDownloadFormat = async () => {
+    const handleDownloadFormat = () => {
         try {
-            await attendanceService.downloadFormat();
+            const currentDate = new Date();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const reportMonth = `${monthNames[currentDate.getMonth()]}-${currentDate.getFullYear()}`;
+
+            // Build columns for 31 days
+            const days = ['', ...Array.from({ length: 31 }, (_, idx) => idx + 1)];
+            const weekdays = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'];
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const sheetData: any[] = [];
+
+            // Generate 5 blank employee blocks
+            for (let i = 0; i < 5; i++) {
+                sheetData.push(
+                    // Row 0
+                    ['Dept. Name', '', '', 'CompName', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Report Month', reportMonth],
+                    // Row 1
+                    ['Empcode', '', 'Name', '', '', 'Present', '0', 'WO', '0', 'Absent', '0', 'Total Work', '00:00', 'Total OT', '00:00'],
+                    // Row 2: Days 1 to 31
+                    days,
+                    // Row 3: Weekdays
+                    weekdays,
+                    // Row 4: IN
+                    ['IN', ...Array(31).fill('--:--')],
+                    // Row 5: OUT
+                    ['OUT', ...Array(31).fill('--:--')],
+                    // Row 6: WORK
+                    ['WORK', ...Array(31).fill('00:00')],
+                    // Row 7: Break
+                    ['Break', ...Array(31).fill('00:00')],
+                    // Row 8: OT
+                    ['OT', ...Array(31).fill('00:00')],
+                    // Row 9: Status
+                    ['Status', ...Array(31).fill('')],
+                    // Spacer row
+                    []
+                );
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Attendance Format');
+            XLSX.writeFile(wb, 'Monthly_Attendance_Format.xlsx');
+            showSnackbar('Sample attendance format downloaded successfully!', 'success');
         } catch (error) {
-            console.error('Error downloading format template:', error);
-            showSnackbar('Failed to download sample template from server.', 'error');
+            console.error('Error generating format template:', error);
+            showSnackbar('Failed to generate sample format template.', 'error');
         }
     };
 
