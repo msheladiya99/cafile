@@ -8,7 +8,10 @@ import {
     Button,
     TextField,
     Checkbox,
+    Snackbar,
+    Alert,
 } from '@mui/material';
+import { BulkImportAttendanceModal } from './BulkImportAttendanceModal';
 import { GridView as GridViewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -70,6 +73,13 @@ const Section = ({ title, icon, children }: SectionProps) => (
 
 export const AddAttendance: React.FC = () => {
     const navigate = useNavigate();
+    
+    const [bulkImportOpen, setBulkImportOpen] = useState(false);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'success' });
+    const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
+
     const [formData, setFormData] = useState({
         employee: '',
         date: new Date().toISOString().split('T')[0],
@@ -134,6 +144,9 @@ export const AddAttendance: React.FC = () => {
                     <Typography variant="h5" fontWeight="600">Add Attendance</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/add')}>Add New</Button>
+                        <Button size="small" variant="contained" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => setBulkImportOpen(true)}>
+                            Import Excel
+                        </Button>
                         <Button size="small" variant="contained" sx={{ bgcolor: '#1e293b', '&:hover': { bgcolor: '#334155' }, color: 'white', textTransform: 'none', boxShadow: 'none' }} onClick={() => navigate('/admin/employee/attendance/list')}>List</Button>
                     </Box>
                 </Box>
@@ -280,6 +293,22 @@ export const AddAttendance: React.FC = () => {
                     </Button>
                 </Box>
             </Box>
+
+            <BulkImportAttendanceModal
+                open={bulkImportOpen}
+                onClose={() => {
+                    setBulkImportOpen(false);
+                    // Redirect to lists to show the newly imported records
+                    navigate('/admin/employee/attendance/list');
+                }}
+                showSnackbar={showSnackbar}
+            />
+
+            <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+                <Alert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '8px' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

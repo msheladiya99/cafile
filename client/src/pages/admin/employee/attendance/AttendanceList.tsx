@@ -62,8 +62,10 @@ export const AttendanceList: React.FC = () => {
 
     // Filter state
     const [selectedEmployee, setSelectedEmployee] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState('');
     const [fromDate, setFromDate] = useState('');
-    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+    const [toDate, setToDate] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('');
 
     // Pagination state
     const [page, setPage] = useState(0);
@@ -98,6 +100,33 @@ export const AttendanceList: React.FC = () => {
         queryFn: () => staffService.getStaff()
     });
 
+    const getDatesForMonth = (monthStr: string) => {
+        if (!monthStr) return { start: '', end: '' };
+        const [year, month] = monthStr.split('-').map(Number);
+        const start = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const end = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        return { start, end };
+    };
+
+    const getMonthOptions = () => {
+        const options = [];
+        const date = new Date();
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        for (let i = 0; i < 12; i++) {
+            const m = date.getMonth();
+            const y = date.getFullYear();
+            const label = `${monthNames[m]} ${y}`;
+            const value = `${y}-${String(m + 1).padStart(2, '0')}`;
+            options.push({ label, value });
+            date.setMonth(date.getMonth() - 1);
+        }
+        return options;
+    };
+
     const { data: attendanceList, isLoading } = useQuery({
         queryKey: ['attendance', selectedEmployee, fromDate, toDate],
         queryFn: () => attendanceService.getAttendance({
@@ -105,6 +134,11 @@ export const AttendanceList: React.FC = () => {
             startDate: fromDate || undefined,
             endDate: toDate || undefined
         })
+    });
+
+    const filteredList = (attendanceList || []).filter((record: AttendanceRecord) => {
+        if (selectedStatus && record.status !== selectedStatus) return false;
+        return true;
     });
 
     const deleteMutation = useMutation({
@@ -146,8 +180,10 @@ export const AttendanceList: React.FC = () => {
 
     const handleClearFilters = () => {
         setSelectedEmployee('');
+        setSelectedMonth('');
         setFromDate('');
-        setToDate(new Date().toISOString().split('T')[0]);
+        setToDate('');
+        setSelectedStatus('');
         setPage(0);
     };
 
@@ -159,8 +195,8 @@ export const AttendanceList: React.FC = () => {
     };
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked && attendanceList) {
-            const ids = (attendanceList as AttendanceRecord[]).map(r => r._id);
+        if (e.target.checked && filteredList) {
+            const ids = (filteredList as AttendanceRecord[]).map(r => r._id);
             setSelectedRecords(ids);
         } else {
             setSelectedRecords([]);
@@ -249,8 +285,10 @@ export const AttendanceList: React.FC = () => {
 
                 {/* Filters */}
                 <Box sx={{ p: 3, bgcolor: '#fff' }}>
-                    <Grid container spacing={2} alignItems="center">
-                        <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Grid container spacing={2.5} alignItems="center">
+                        {/* Row 1 */}
+                        {/* Employee Filter */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '80px', flexShrink: 0 }}>Employee</Typography>
                             <Select
                                 fullWidth size="small" displayEmpty
@@ -269,19 +307,107 @@ export const AttendanceList: React.FC = () => {
                             </Select>
                         </Grid>
 
-                        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>From</Typography>
-                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(0); }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                        {/* Month Filter */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '60px', flexShrink: 0 }}>Month</Typography>
+                            <Select
+                                fullWidth size="small" displayEmpty
+                                value={selectedMonth}
+                                onChange={(e) => {
+                                    const val = e.target.value as string;
+                                    setSelectedMonth(val);
+                                    setPage(0);
+                                    if (val) {
+                                        const { start, end } = getDatesForMonth(val);
+                                        setFromDate(start);
+                                        setToDate(end);
+                                    } else {
+                                        setFromDate('');
+                                        setToDate('');
+                                    }
+                                }}
+                                sx={{ borderRadius: '8px' }}
+                            >
+                                <MenuItem value="">All Months</MenuItem>
+                                {getMonthOptions().map((opt) => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
                         </Grid>
 
-                        <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>To</Typography>
-                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(0); }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                        {/* Status Filter */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '60px', flexShrink: 0 }}>Status</Typography>
+                            <Select
+                                fullWidth size="small" displayEmpty
+                                value={selectedStatus}
+                                onChange={(e) => {
+                                    setSelectedStatus(e.target.value as string);
+                                    setPage(0);
+                                }}
+                                sx={{ borderRadius: '8px' }}
+                            >
+                                <MenuItem value="">All Statuses</MenuItem>
+                                <MenuItem value="Present">Present</MenuItem>
+                                <MenuItem value="Absent">Absent</MenuItem>
+                                <MenuItem value="Weekly Off">Weekly Off</MenuItem>
+                            </Select>
                         </Grid>
 
-                        <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button variant="contained" onClick={handleClearFilters} sx={{ bgcolor: '#ff6c60', color: 'white', minWidth: '40px', p: 1, boxShadow: 'none', '&:hover': { bgcolor: '#e55a4f' } }}>
-                                <CloseIcon fontSize="small" />
+                        {/* Row 2 */}
+                        {/* From Date Filter */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '80px', flexShrink: 0 }}>From</Typography>
+                            <TextField
+                                fullWidth size="small" type="date"
+                                value={fromDate}
+                                onChange={(e) => {
+                                    setFromDate(e.target.value);
+                                    setSelectedMonth('');
+                                    setPage(0);
+                                }}
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
+                        </Grid>
+
+                        {/* To Date Filter */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', width: '60px', flexShrink: 0 }}>To</Typography>
+                            <TextField
+                                fullWidth size="small" type="date"
+                                value={toDate}
+                                onChange={(e) => {
+                                    setToDate(e.target.value);
+                                    setSelectedMonth('');
+                                    setPage(0);
+                                }}
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                            />
+                        </Grid>
+
+                        {/* Clear Button */}
+                        <Grid size={{ xs: 12, sm: 4, md: 4 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleClearFilters}
+                                startIcon={<CloseIcon fontSize="small" />}
+                                sx={{
+                                    borderColor: '#ff6c60',
+                                    color: '#ff6c60',
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    height: '38px',
+                                    '&:hover': {
+                                        bgcolor: '#fff5f5',
+                                        borderColor: '#e55a4f',
+                                        color: '#e55a4f'
+                                    }
+                                }}
+                            >
+                                Clear Filters
                             </Button>
                         </Grid>
                     </Grid>
@@ -328,12 +454,12 @@ export const AttendanceList: React.FC = () => {
                                 <TableRow>
                                     <TableCell colSpan={11} align="center" sx={{ py: 4, color: 'text.secondary' }}>Loading...</TableCell>
                                 </TableRow>
-                            ) : (!attendanceList || attendanceList.length === 0) ? (
+                            ) : (!filteredList || filteredList.length === 0) ? (
                                 <TableRow>
                                     <TableCell colSpan={11} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
                                 </TableRow>
                             ) : (
-                                (attendanceList as AttendanceRecord[]).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((record, idx) => (
+                                (filteredList as AttendanceRecord[]).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((record, idx) => (
                                     <TableRow key={record._id} hover sx={{ '&:hover': { bgcolor: '#f0f4ff' } }}>
                                         <TableCell sx={{ py: 1, width: '40px' }}>
                                             <Checkbox
@@ -400,7 +526,7 @@ export const AttendanceList: React.FC = () => {
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25, 50, 100]}
                     component="div"
-                    count={attendanceList ? attendanceList.length : 0}
+                    count={filteredList ? filteredList.length : 0}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={(_e, newPage) => setPage(newPage)}
