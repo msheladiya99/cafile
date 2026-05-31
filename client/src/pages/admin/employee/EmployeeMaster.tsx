@@ -772,15 +772,6 @@ export const EmployeeMaster: React.FC = () => {
                                 <FormRow label="Joining Date">
                                     <TextField name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
                                 </FormRow>
-                                <FormRow label="Monthly Salary">
-                                    <TextField name="monthlySalary" value={formData.monthlySalary} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                </FormRow>
-                                <FormRow label="Rate Per Hours">
-                                    <TextField name="ratePerHours" value={formData.ratePerHours} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                </FormRow>
-                                <FormRow label="Leaving Date">
-                                    <TextField name="leavingDate" value={formData.leavingDate} onChange={handleInputChange} type="date" fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} InputLabelProps={{ shrink: true }} />
-                                </FormRow>
                                 <FormRow label="Reference">
                                     <TextField name="reference" value={formData.reference} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
@@ -796,17 +787,17 @@ export const EmployeeMaster: React.FC = () => {
                             </Section>
 
                             <Section title="Bank Details" icon={<AccountBalanceIcon />}>
-                                <FormRow label="Bank Name">
-                                    <TextField name="bankName" value={formData.bankName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                </FormRow>
-                                <FormRow label="Bank Branch">
-                                    <TextField name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
-                                </FormRow>
                                 <FormRow label="A/C Holder Name">
                                     <TextField name="accountHolderName" value={formData.accountHolderName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Bank A/C No">
                                     <TextField name="accountNo" value={formData.accountNo || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Bank Name">
+                                    <TextField name="bankName" value={formData.bankName || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                                </FormRow>
+                                <FormRow label="Bank Branch">
+                                    <TextField name="bankBranch" value={formData.bankBranch || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                                 </FormRow>
                                 <FormRow label="Bank IFS Code">
                                     <TextField name="ifscCode" value={formData.ifscCode || ''} onChange={handleInputChange} fullWidth size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
