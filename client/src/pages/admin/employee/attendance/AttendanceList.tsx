@@ -23,6 +23,7 @@ import {
     Snackbar,
     Alert,
     Chip,
+    TablePagination,
 } from '@mui/material';
 import { FormatListBulleted as ListIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,10 @@ export const AttendanceList: React.FC = () => {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Pagination state
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     // Edit dialog state
     const [editOpen, setEditOpen] = useState(false);
@@ -122,6 +127,7 @@ export const AttendanceList: React.FC = () => {
         setSelectedEmployee('');
         setFromDate('');
         setToDate(new Date().toISOString().split('T')[0]);
+        setPage(0);
     };
 
     const handleDelete = (id: string) => {
@@ -205,7 +211,10 @@ export const AttendanceList: React.FC = () => {
                             <Select
                                 fullWidth size="small" displayEmpty
                                 value={selectedEmployee}
-                                onChange={(e) => setSelectedEmployee(e.target.value as string)}
+                                onChange={(e) => {
+                                    setSelectedEmployee(e.target.value as string);
+                                    setPage(0);
+                                }}
                                 sx={{ borderRadius: '8px' }}
                             >
                                 <MenuItem value="">All Employees</MenuItem>
@@ -218,12 +227,12 @@ export const AttendanceList: React.FC = () => {
 
                         <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>From</Typography>
-                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                            <TextField fullWidth size="small" type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(0); }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 3 }} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', flexShrink: 0 }}>To</Typography>
-                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
+                            <TextField fullWidth size="small" type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(0); }} sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} />
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -272,9 +281,9 @@ export const AttendanceList: React.FC = () => {
                                     <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary', fontWeight: 600 }}>No Record Found</TableCell>
                                 </TableRow>
                             ) : (
-                                (attendanceList as AttendanceRecord[]).map((record, idx) => (
+                                (attendanceList as AttendanceRecord[]).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((record, idx) => (
                                     <TableRow key={record._id} hover sx={{ '&:hover': { bgcolor: '#f0f4ff' } }}>
-                                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{idx + 1}</TableCell>
+                                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{(page * rowsPerPage) + idx + 1}</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>{record.employee?.firstName} {record.employee?.lastName}</TableCell>
                                         <TableCell>{record.date ? safeFormatDate(record.date) : '-'}</TableCell>
                                         <TableCell>
@@ -329,6 +338,19 @@ export const AttendanceList: React.FC = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                    component="div"
+                    count={attendanceList ? attendanceList.length : 0}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={(_e, newPage) => setPage(newPage)}
+                    onRowsPerPageChange={(e) => {
+                        setRowsPerPage(parseInt(e.target.value, 10));
+                        setPage(0);
+                    }}
+                    sx={{ borderTop: '1px solid #e2e8f0' }}
+                />
             </Paper>
 
             {/* ─── Edit Dialog ─── */}
