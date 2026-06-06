@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -41,33 +41,97 @@ const EyeOffIcon = () => (
   </svg>
 );
 
+const PhoneIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+    <line x1="12" y1="18" x2="12.01" y2="18"/>
+  </svg>
+);
+
 const SuperAdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const { login: setAuth } = useAuth();
 
+  const [loginMethod, setLoginMethod] = useState<'otp' | 'password'>('otp');
+  const [identifier, setIdentifier] = useState(''); // Email or mobile
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'request' | 'verify'>('request');
+  const [countdown, setCountdown] = useState(0);
+  
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [focusIdentifier, setFocusIdentifier] = useState(false);
   const [focusEmail, setFocusEmail] = useState(false);
   const [focusPassword, setFocusPassword] = useState(false);
+  const [focusOtp, setFocusOtp] = useState(false);
   const [hovering, setHovering] = useState(false);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const handleSendOtp = async () => {
+    if (!identifier.trim()) {
+      setError('Please enter your Email Address or Mobile Number');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+    setMessage('');
+    try {
+      await axios.post(`${API_URL}/super-admin/send-otp`, { identifier });
+      setStep('verify');
+      setCountdown(60);
+      setMessage('Verification code sent to registered email and mobile.');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send verification code. Please check your inputs.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setError('Please fill in all fields'); return; }
-    setIsLoading(true);
     setError('');
-    try {
-      const res = await axios.post(`${API_URL}/super-admin/login`, { email, password });
-      setAuth(res.data.token, res.data.user);
-      navigate('/super-admin/dashboard');
-    } catch (err: unknown) {
-      const msg = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
-      setError(msg || 'Invalid email or password.');
-    } finally {
-      setIsLoading(false);
+    setMessage('');
+
+    if (loginMethod === 'password') {
+      if (!email || !password) { setError('Please fill in all fields'); return; }
+      setIsLoading(true);
+      try {
+        const res = await axios.post(`${API_URL}/super-admin/login`, { email, password });
+        setAuth(res.data.token, res.data.user);
+        navigate('/super-admin/dashboard');
+      } catch (err: unknown) {
+        const msg = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+        setError(msg || 'Invalid email or password.');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      if (step === 'request') {
+        await handleSendOtp();
+      } else {
+        if (!otp.trim()) { setError('Please enter the verification code'); return; }
+        setIsLoading(true);
+        try {
+          const res = await axios.post(`${API_URL}/super-admin/login-otp`, { identifier, otp });
+          setAuth(res.data.token, res.data.user);
+          navigate('/super-admin/dashboard');
+        } catch (err: any) {
+          setError(err.response?.data?.message || 'Invalid or expired verification code.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
     }
   };
 
@@ -199,7 +263,7 @@ const SuperAdminLogin: React.FC = () => {
             Super Admin · MyCAFile
           </p>
 
-          {/* Error */}
+          {/* Messages */}
           {error && (
             <div style={{
               background: '#fef2f2', border: '1px solid #fecaca',
@@ -209,84 +273,200 @@ const SuperAdminLogin: React.FC = () => {
               {error}
             </div>
           )}
+          {message && (
+            <div style={{
+              background: '#f0fdf4', border: '1px solid #bbf7d0',
+              borderRadius: 8, padding: '10px 14px', marginBottom: 20,
+              color: '#16a34a', fontSize: 13, fontWeight: 500,
+            }}>
+              {message}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
-            {/* Email */}
-            <div style={{ position: 'relative', marginBottom: 12 }}>
-              <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
-                <MailIcon />
-              </div>
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onFocus={() => setFocusEmail(true)}
-                onBlur={() => setFocusEmail(false)}
-                disabled={isLoading}
-                required
-                style={inputStyle(focusEmail)}
-              />
-            </div>
+            {loginMethod === 'otp' ? (
+              <>
+                {/* Email / Mobile Identifier */}
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+                    <MailIcon />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Email or Mobile Number"
+                    value={identifier}
+                    onChange={e => setIdentifier(e.target.value)}
+                    onFocus={() => setFocusIdentifier(true)}
+                    onBlur={() => setFocusIdentifier(false)}
+                    disabled={isLoading || step === 'verify'}
+                    required
+                    style={inputStyle(focusIdentifier)}
+                  />
+                  {step === 'verify' && (
+                    <button
+                      type="button"
+                      onClick={() => { setStep('request'); setOtp(''); setMessage(''); }}
+                      style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7c3aed', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Change
+                    </button>
+                  )}
+                </div>
 
-            {/* Password */}
-            <div style={{ position: 'relative', marginBottom: 8 }}>
-              <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
-                <LockIcon />
-              </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onFocus={() => setFocusPassword(true)}
-                onBlur={() => setFocusPassword(false)}
-                disabled={isLoading}
-                required
-                style={inputStyle(focusPassword)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
-              >
-                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
-            </div>
+                {/* OTP Field */}
+                {step === 'verify' && (
+                  <div style={{ position: 'relative', marginBottom: 16 }}>
+                    <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+                      <FingerprintIcon />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="6-Digit OTP Code"
+                      value={otp}
+                      onChange={e => setOtp(e.target.value)}
+                      onFocus={() => setFocusOtp(true)}
+                      onBlur={() => setFocusOtp(false)}
+                      maxLength={6}
+                      disabled={isLoading}
+                      required
+                      style={inputStyle(focusOtp)}
+                    />
+                  </div>
+                )}
 
-            {/* Forgot */}
-            <div style={{ marginBottom: 24 }}>
-              <button type="button" style={{ background: 'none', border: 'none', padding: 0, fontSize: 13, color: '#7c3aed', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
-                Forgot password?
-              </button>
-            </div>
+                {/* Resend and Actions */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, fontSize: 13 }}>
+                  {step === 'verify' && (
+                    <button
+                      type="button"
+                      disabled={countdown > 0 || isLoading}
+                      onClick={handleSendOtp}
+                      style={{ background: 'none', border: 'none', padding: 0, color: countdown > 0 ? '#aaa' : '#7c3aed', cursor: countdown > 0 ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                    >
+                      {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+                    </button>
+                  )}
+                </div>
 
-            {/* Submit */}
+                {/* OTP Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  onMouseEnter={() => setHovering(true)}
+                  onMouseLeave={() => setHovering(false)}
+                  style={{
+                    width: '100%', height: 52, borderRadius: 50, border: 'none',
+                    background: isLoading ? '#c4b5fd' : hovering
+                      ? 'linear-gradient(135deg, #6d28d9, #7c3aed)'
+                      : 'linear-gradient(135deg, #7c3aed, #9333ea)',
+                    color: '#fff', fontSize: 16, fontWeight: 700,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    transition: 'background 0.2s', fontFamily: 'Inter, sans-serif', letterSpacing: 0.3,
+                    boxShadow: isLoading ? 'none' : '0 6px 20px rgba(124,58,237,0.35)',
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
+                      {step === 'request' ? 'Sending Code...' : 'Verifying...'}
+                    </>
+                  ) : step === 'request' ? 'Send OTP' : 'Verify & Login'}
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Email */}
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+                    <MailIcon />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onFocus={() => setFocusEmail(true)}
+                    onBlur={() => setFocusEmail(false)}
+                    disabled={isLoading}
+                    required
+                    style={inputStyle(focusEmail)}
+                  />
+                </div>
+
+                {/* Password */}
+                <div style={{ position: 'relative', marginBottom: 24 }}>
+                  <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>
+                    <LockIcon />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    onFocus={() => setFocusPassword(true)}
+                    onBlur={() => setFocusPassword(false)}
+                    disabled={isLoading}
+                    required
+                    style={inputStyle(focusPassword)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
+                  >
+                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
+
+                {/* Password Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  onMouseEnter={() => setHovering(true)}
+                  onMouseLeave={() => setHovering(false)}
+                  style={{
+                    width: '100%', height: 52, borderRadius: 50, border: 'none',
+                    background: isLoading ? '#c4b5fd' : hovering
+                      ? 'linear-gradient(135deg, #6d28d9, #7c3aed)'
+                      : 'linear-gradient(135deg, #7c3aed, #9333ea)',
+                    color: '#fff', fontSize: 16, fontWeight: 700,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    transition: 'background 0.2s', fontFamily: 'Inter, sans-serif', letterSpacing: 0.3,
+                    boxShadow: isLoading ? 'none' : '0 6px 20px rgba(124,58,237,0.35)',
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
+                      Signing in...
+                    </>
+                  ) : 'Login'}
+                </button>
+              </>
+            )}
+          </form>
+
+          {/* Toggle between OTP and Password login */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
             <button
-              type="submit"
-              disabled={isLoading}
-              onMouseEnter={() => setHovering(true)}
-              onMouseLeave={() => setHovering(false)}
+              type="button"
+              onClick={() => {
+                setLoginMethod(loginMethod === 'otp' ? 'password' : 'otp');
+                setError('');
+                setMessage('');
+                setStep('request');
+                setOtp('');
+              }}
               style={{
-                width: '100%', height: 52, borderRadius: 50, border: 'none',
-                background: isLoading ? '#c4b5fd' : hovering
-                  ? 'linear-gradient(135deg, #6d28d9, #7c3aed)'
-                  : 'linear-gradient(135deg, #7c3aed, #9333ea)',
-                color: '#fff', fontSize: 16, fontWeight: 700,
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'background 0.2s', fontFamily: 'Inter, sans-serif', letterSpacing: 0.3,
-                boxShadow: isLoading ? 'none' : '0 6px 20px rgba(124,58,237,0.35)',
+                background: 'none', border: 'none', padding: 0, fontSize: 13,
+                color: '#7c3aed', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600
               }}
             >
-              {isLoading ? (
-                <>
-                  <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
-                  Signing in...
-                </>
-              ) : 'Login'}
+              {loginMethod === 'otp' ? 'Login with Password instead' : 'Login with OTP (Email/Mobile) instead'}
             </button>
-          </form>
+          </div>
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 0' }}>

@@ -17,16 +17,38 @@ export const connectDB = async (): Promise<void> => {
 
         console.log('✅ MongoDB connected successfully');
 
-        // Rename 'Super Admin' to 'Super Admin' in the users collection
+        // Rename 'System Super Admin' to 'Super Admin' in the users collection
         try {
             const db = mongoose.connection.db;
             if (db) {
                 const result = await db.collection('users').updateMany(
-                    { role: 'SUPER_ADMIN', name: 'Super Admin' },
+                    { role: 'SUPER_ADMIN', name: 'System Super Admin' },
                     { $set: { name: 'Super Admin' } }
                 );
                 if (result.modifiedCount > 0) {
                     console.log(`[Migration] Updated ${result.modifiedCount} superadmin user name(s) to 'Super Admin'`);
+                }
+
+                // If no superadmins exist in the superadmins collection, seed one
+                const count = await db.collection('superadmins').countDocuments();
+                if (count === 0) {
+                    const bcrypt = require('bcryptjs');
+                    const passwordHash = await bcrypt.hash('superpassword123', 10);
+                    await db.collection('superadmins').insertOne({
+                        email: 'meetjbs@gmail.com',
+                        passwordHash,
+                        name: 'Super Admin',
+                        role: 'SUPER_ADMIN',
+                        mobile: '9999999999',
+                        createdAt: new Date()
+                    });
+                    console.log('[Migration] Seeded default superadmin in superadmins collection');
+                } else {
+                    // Ensure the existing superadmin has a mobile number and name is updated
+                    await db.collection('superadmins').updateOne(
+                        { email: 'meetjbs@gmail.com' },
+                        { $set: { mobile: '9999999999', name: 'Super Admin' } }
+                    );
                 }
             }
         } catch (err) {
