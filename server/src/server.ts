@@ -107,10 +107,16 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Apply Tenant Middleware to all /api routes except health and super-admin
+// Apply Tenant Middleware to all /api routes except health, super-admin, and profile
 app.use('/api', (req, res, next) => {
-    if (req.path === '/health' || req.path.startsWith('/super-admin') || req.path.startsWith('/public')) {
-        return next();
+    if (
+        req.path === '/health' ||
+        req.path.startsWith('/super-admin') ||
+        req.path.startsWith('/public') ||
+        req.path.startsWith('/profile')  // Profile route handles Super Admin natively
+    ) {
+        // Still attach models (needed by profile route), but skip tenant resolution
+        return modelConnector(req, res, next);
     }
     tenantMiddleware(req, res, () => {
         modelConnector(req, res, next);
