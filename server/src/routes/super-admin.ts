@@ -69,6 +69,135 @@ router.post('/login', async (req, res: Response) => {
     }
 });
 
+// Send OTP to Super Admin (via both Email and SMS)
+router.post('/send-otp', async (req, res: Response) => {
+    try {
+        const { identifier } = req.body;
+        if (!identifier) return res.status(400).json({ message: 'Email or Mobile Number is required' });
+
+        const trimmed = identifier.trim().toLowerCase();
+
+        // Find Super Admin by email or mobile
+        const admin = await SuperAdmin.findOne({
+            $or: [
+                { email: trimmed },
+                { mobile: identifier.trim() }
+            ]
+        });
+
+        if (!admin) {
+            return res.status(404).json({ message: 'Super Admin not found with this email or mobile' });
+        }
+
+        // Generate 6-digit OTP
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        admin.otp = otpCode;
+        admin.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        await admin.save();
+
+        console.log(`🔑 [SuperAdmin OTP] Generated OTP: ${otpCode} for ${admin.email}`);
+
+        // Send OTP via Email
+        const { sendEmail } = await import('../utils/email');
+        const emailSubject = 'MyCAFile Super Admin - Verification Code';
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <h2 style="color: #7c3aed; text-align: center;">MyCAFile Super Admin Portal</h2>
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
+                <p>Hello <strong>${admin.name}</strong>,</p>
+                <p>You have requested a secure verification code to log in to the Super Admin portal.</p>
+                <div style="background-color: #f5f3ff; border: 1px dashed #7c3aed; border-radius: 8px; padding: 15px; margin: 25px 0; text-align: center;">
+                    <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #7c3aed;">${otpCode}</span>
+                </div>
+                <p style="color: #64748b; font-size: 13px;">This code is valid for 10 minutes. Please do not share this code with anyone.</p>
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
+                <p style="font-size: 11px; color: #94a3b8; text-align: center;">Authorized personnel only · MyCAFile</p>
+            </div>
+        `;
+        
+        // Run send operations
+        const sendPromises: Promise<any>[] = [];
+        
+        sendPromises.push(sendEmail(admin.email, emailSubject, emailHtml));
+
+        // Send OTP via SMS if mobile is configured
+        if (admin.mobile) {
+            const { sendSms } = await import('../services/notification.service');
+            const smsMessage = `Your MyCAFile Super Admin OTP is ${otpCode}. Valid for 10 minutes.`;
+            sendPromises.push(sendSms(admin.mobile, smsMessage));
+        }
+
+        await Promise.all(sendPromises);
+
+        res.json({ message: 'Verification OTP sent to registered email and mobile' });
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Verify OTP & Login
+router.post('/login-otp', async (req, res: Response) => {
+    try {
+        const { identifier, otp } = req.body;
+        if (!identifier || !otp) {
+            return res.status(400).json({ message: 'Identifier and OTP are required' });
+        }
+
+        const trimmed = identifier.trim().toLowerCase();
+
+        // Find Super Admin
+        const admin = await SuperAdmin.findOne({
+            $or: [
+                { email: trimmed },
+                { mobile: identifier.trim() }
+            ]
+        });
+
+        if (!admin) {
+            return res.status(404).json({ message: 'Super Admin not found' });
+        }
+
+        // Verify OTP
+        if (!admin.otp || admin.otp !== otp || !admin.otpExpires || admin.otpExpires < new Date()) {
+            return res.status(401).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Clear OTP fields
+        admin.otp = undefined;
+        admin.otpExpires = undefined;
+        await admin.save();
+
+        const token = jwt.sign(
+            { userId: admin._id, role: 'SUPER_ADMIN' },
+            process.env.JWT_SECRET!,
+            { expiresIn: '1d' }
+        );
+
+        // Log login activity
+        await ActivityLog.create({
+            userId: admin._id,
+            action: 'LOGIN',
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+            details: 'Super Admin logged in successfully via OTP'
+        });
+
+        res.json({
+            token,
+            user: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: 'SUPER_ADMIN'
+            }
+        });
+    } catch (error) {
+        console.error('OTP login error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Dashboard Summary & Charts
 router.get('/dashboard', authenticate, requireSuperAdmin, async (req, res: Response) => {
     try {

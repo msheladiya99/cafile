@@ -5,6 +5,9 @@ export interface ISuperAdmin extends Document {
     passwordHash: string;
     name: string;
     role: string;
+    mobile?: string;
+    otp?: string;
+    otpExpires?: Date;
     createdAt: Date;
 }
 
@@ -13,6 +16,9 @@ const superAdminSchema = new Schema<ISuperAdmin>({
     passwordHash: { type: String, required: true },
     name: { type: String, required: true },
     role: { type: String, default: 'SUPER_ADMIN' },
+    mobile: { type: String, trim: true },
+    otp: { type: String },
+    otpExpires: { type: Date },
     createdAt: { type: Date, default: Date.now }
 });
 
