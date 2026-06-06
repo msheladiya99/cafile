@@ -98,7 +98,7 @@ router.post('/send-otp', async (req, res: Response) => {
         console.log(`🔑 [SuperAdmin OTP] Generated OTP: ${otpCode} for ${admin.email}`);
 
         // Send OTP via Email in background
-        const { sendEmail } = await import('../utils/email');
+        const { sendEmail } = await import('../services/emailService');
         const emailSubject = 'MyCAFile Super Admin - Verification Code';
         const emailHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
@@ -116,7 +116,7 @@ router.post('/send-otp', async (req, res: Response) => {
         `;
         
         // Run send operations in background to prevent hanging the response
-        sendEmail(admin.email, emailSubject, emailHtml).catch(err => console.error('Background email OTP error:', err));
+        sendEmail({ to: admin.email, subject: emailSubject, html: emailHtml }).catch(err => console.error('Background email OTP error:', err));
 
         if (admin.mobile) {
             const mobileNumber = admin.mobile;
