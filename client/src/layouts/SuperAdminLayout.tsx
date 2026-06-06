@@ -19,6 +19,7 @@ import {
     CreditCard as CreditCardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import AccountMenu from '../components/common/AccountMenu';
 
 const NAV = [
     { label: 'Dashboard',     icon: <DashboardIcon  />, path: '/super-admin/dashboard' },
@@ -91,6 +92,7 @@ function Sidebar({ collapsed, onToggle, onNavigate, currentPath }: {
 }) {
     const { user, logout, remainingTime } = useAuth();
     const navigate = useNavigate();
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     return (
         <Box sx={{
@@ -179,7 +181,10 @@ function Sidebar({ collapsed, onToggle, onNavigate, currentPath }: {
             <Box sx={{ p: collapsed ? 1 : 2, borderTop: '1px solid #f1f5f9' }}>
                 {collapsed ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800 }}>
+                        <Avatar 
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
+                            sx={{ width: 32, height: 32, bgcolor: '#6366f1', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
+                        >
                             {user?.name?.charAt(0) || 'S'}
                         </Avatar>
                         <Tooltip title="Logout" placement="right">
@@ -191,18 +196,23 @@ function Sidebar({ collapsed, onToggle, onNavigate, currentPath }: {
                 ) : (
                     <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                            <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: '0.85rem', fontWeight: 800 }}>
-                                {user?.name?.charAt(0) || 'S'}
-                            </Avatar>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {user?.name || 'Super Admin'}
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981', flexShrink: 0 }} />
-                                    <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>
-                                        {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
+                            <Box 
+                                onClick={(e) => setAnchorEl(e.currentTarget)}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0, cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
+                            >
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#6366f1', fontSize: '0.85rem', fontWeight: 800 }}>
+                                    {user?.name?.charAt(0) || 'S'}
+                                </Avatar>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {user?.name || 'Super Admin'}
                                     </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981', flexShrink: 0 }} />
+                                        <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>
+                                            {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')} left
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             </Box>
                             <IconButton onClick={logout} size="small" sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}>
@@ -217,6 +227,14 @@ function Sidebar({ collapsed, onToggle, onNavigate, currentPath }: {
                     </Box>
                 )}
             </Box>
+            <AccountMenu 
+                anchorEl={anchorEl}
+                open={anchorEl !== null}
+                onClose={() => setAnchorEl(null)}
+                user={user}
+                logout={logout}
+                remainingTime={remainingTime}
+            />
         </Box>
     );
 }

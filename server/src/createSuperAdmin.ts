@@ -35,7 +35,7 @@ const createSuperAdmin = async () => {
             username,
             passwordHash,
             role: 'SUPER_ADMIN',
-            name: 'System Super Admin',
+            name: 'Super Admin',
             email: 'meetjbs@gmail.com',
             status: true
         });

@@ -1337,7 +1337,7 @@ router.get('/employee/free-list', requireRoles(['ADMIN', 'MANAGER']), async (req
     try {
         // Find tasks that are not DONE or CANCELLED
         const { Task, User } = (req as any).models;
-        const activeTasks = await Task.find({ status: { $in: ['PENDING', 'STARTED', 'UNDER_REVIEW'] }, firmId: req.firmId });
+        const activeTasks = await Task.find({ status: { $nin: ['DONE', 'CANCELLED'] }, firmId: req.firmId });
 
 
         let busyUserIds: any[] = [];

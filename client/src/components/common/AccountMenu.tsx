@@ -120,19 +120,24 @@ const AccountMenu: React.FC<AccountMenuProps> = ({
 
                 {/* Navigation Items (STRICTLY ONLY PLANS, BILLING, SETTINGS) */}
                 <Box sx={{ py: 1 }}>
-                    <MenuItem onClick={() => { onClose(); navigate('/admin/subscription'); }}>
-                        <ListItemIcon><PlansIcon sx={{ fontSize: 20 }} /></ListItemIcon>
-                        <Typography>Plans</Typography>
-                    </MenuItem>
-                    <MenuItem onClick={() => { onClose(); navigate('/admin/billing'); }}>
-                        <ListItemIcon><BillingIcon sx={{ fontSize: 20 }} /></ListItemIcon>
-                        <Typography>Billing</Typography>
-                    </MenuItem>
+                    {user?.role !== 'SUPER_ADMIN' && user?.role !== 'CLIENT' && (
+                        <>
+                            <MenuItem onClick={() => { onClose(); navigate('/admin/subscription'); }}>
+                                <ListItemIcon><PlansIcon sx={{ fontSize: 20 }} /></ListItemIcon>
+                                <Typography>Plans</Typography>
+                            </MenuItem>
+                            <MenuItem onClick={() => { onClose(); navigate('/admin/billing'); }}>
+                                <ListItemIcon><BillingIcon sx={{ fontSize: 20 }} /></ListItemIcon>
+                                <Typography>Billing</Typography>
+                            </MenuItem>
+                        </>
+                    )}
                     <MenuItem onClick={() => { onClose(); navigate(getProfilePath()); }}>
                         <ListItemIcon><SettingsIcon sx={{ fontSize: 20 }} /></ListItemIcon>
                         <Typography>Settings</Typography>
                     </MenuItem>
                 </Box>
+
 
                 <Divider sx={{ borderColor: '#f1f5f9' }} />
 

@@ -3,10 +3,21 @@ import type { LoginData, LoginResponse, User } from '../types';
 
 export type LoginCredentials = LoginData;
 
+const sanitizeUser = (user: User): User => {
+    if (user && user.name === 'Super Admin') {
+        return { ...user, name: 'Super Admin' };
+    }
+    return user;
+};
+
 export const authService = {
     login: async (credentials: LoginData): Promise<LoginResponse> => {
         const response = await api.post('/auth/login', credentials);
-        return response.data;
+        const data = response.data;
+        if (data && data.user) {
+            data.user = sanitizeUser(data.user);
+        }
+        return data;
     },
 
     logout: () => {
@@ -16,7 +27,13 @@ export const authService = {
 
     getStoredUser: () => {
         const userStr = localStorage.getItem('user');
-        return userStr ? JSON.parse(userStr) : null;
+        if (!userStr) return null;
+        try {
+            const user = JSON.parse(userStr);
+            return sanitizeUser(user);
+        } catch {
+            return null;
+        }
     },
 
     getStoredToken: () => {
@@ -24,12 +41,13 @@ export const authService = {
     },
 
     storeAuth: (token: string, user: User) => {
+        const sanitizedUser = sanitizeUser(user);
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(sanitizedUser));
     },
 
     getCurrentUser: async (): Promise<User> => {
         const response = await api.get('/auth/me');
-        return response.data;
+        return sanitizeUser(response.data);
     },
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Button, CircularProgress, Chip, TextField,
     MenuItem, Alert, Stack, Dialog, IconButton
@@ -126,7 +126,9 @@ const FirmDetails: React.FC = () => {
         googleDriveType: 'app' as 'app' | 'personal',
         googleDriveRootFolderId: ''
     });
-    const [resetPassword, setResetPassword] = useState('');
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [loginId, setLoginId] = useState('');
+    const [newPassword, setNewPassword] = useState('');
     const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
 
     const { data, isLoading } = useQuery({
@@ -139,6 +141,8 @@ const FirmDetails: React.FC = () => {
         refetchOnWindowFocus: false,
     });
 
+    const { firm, users, stats } = data || {};
+
     const updateFirmMutation = useMutation({
         mutationFn: async (d: typeof formData) => api.patch(`/super-admin/firms/${id}`, d),
         onSuccess: () => {
@@ -150,15 +154,16 @@ const FirmDetails: React.FC = () => {
         onError: () => toast.error('Failed to save changes'),
     });
 
-    const resetPasswordMutation = useMutation({
-        mutationFn: async (password: string) =>
-            api.post(`/super-admin/firms/${id}/reset-password`, { newPassword: password }),
+    const updateCredentialsMutation = useMutation({
+        mutationFn: async (payload: { userId: string; newUsername: string; newPassword?: string; oldUsername: string }) =>
+            api.post(`/super-admin/firms/${id}/update-credentials`, payload),
         onSuccess: () => {
-            toast.success('Password reset successfully!');
-            setResetPassword('');
+            queryClient.invalidateQueries({ queryKey: ['sa-firm', id] });
+            toast.success('Credentials updated successfully!');
+            setNewPassword('');
         },
         onError: (err: AxiosError<{ message: string }>) =>
-            toast.error(err.response?.data?.message || 'Reset failed'),
+            toast.error(err.response?.data?.message || 'Update failed'),
     });
 
     const { data: plans } = useQuery({
@@ -208,9 +213,37 @@ const FirmDetails: React.FC = () => {
         setEditMode(!editMode);
     };
 
-    const handleResetPassword = () => {
-        if (!resetPassword.trim()) return toast.error('Enter a new password');
-        resetPasswordMutation.mutate(resetPassword);
+    useEffect(() => {
+        if (users && users.length > 0) {
+            const adminUser = users.find((u: any) => u.role === 'ADMIN') || users[0];
+            if (adminUser) {
+                setSelectedUserId(adminUser._id);
+                setLoginId(adminUser.email || adminUser.username || '');
+            }
+        }
+    }, [users]);
+
+    const handleUserSelect = (userId: string) => {
+        setSelectedUserId(userId);
+        const u = users.find((x: any) => x._id === userId);
+        if (u) {
+            setLoginId(u.email || u.username || '');
+        }
+    };
+
+    const handleUpdateCredentials = () => {
+        if (!selectedUserId) return toast.error('Please select an admin user');
+        if (!loginId.trim()) return toast.error('Login ID is required');
+
+        const oldUser = users.find((u: any) => u._id === selectedUserId);
+        const oldUsername = oldUser ? (oldUser.email || oldUser.username || '') : '';
+
+        updateCredentialsMutation.mutate({
+            userId: selectedUserId,
+            newUsername: loginId,
+            newPassword: newPassword.trim() ? newPassword : undefined,
+            oldUsername
+        });
     };
 
     if (isLoading) return (
@@ -224,7 +257,6 @@ const FirmDetails: React.FC = () => {
         </Box>
     );
 
-    const { firm, users, stats } = data;
     const ps = planStyle(firm.plan);
     const isActive = firm.status?.toLowerCase() === 'active';
 
@@ -525,29 +557,63 @@ const FirmDetails: React.FC = () => {
                             <Typography sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.925rem' }}>Security Control</Typography>
                         </Box>
                         <Box sx={{ p: 3 }}>
-                            <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, mb: 1.5 }}>
-                                Reset the admin password for this firm's portal.
+                            <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, mb: 2 }}>
+                                View and manage the login ID and password of the firm's administrators.
                             </Typography>
-                            <Stack spacing={1.5}>
+                            <Stack spacing={2}>
+                                {users && users.length > 1 && (
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
+                                        label="Select Admin User"
+                                        value={selectedUserId}
+                                        onChange={e => handleUserSelect(e.target.value)}
+                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                                    >
+                                        {users.map((u: any) => (
+                                            <MenuItem key={u._id} value={u._id}>
+                                                {u.name || u.email || u.username} ({u.role})
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                )}
                                 <TextField
-                                    fullWidth size="small" label="New Admin Password" type="password"
-                                    value={resetPassword}
-                                    onChange={e => setResetPassword(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
+                                    fullWidth
+                                    size="small"
+                                    label="Admin Login ID (Email)"
+                                    value={loginId}
+                                    onChange={e => setLoginId(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                                />
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="New Admin Password"
+                                    type="password"
+                                    placeholder="Leave blank to keep current"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleUpdateCredentials()}
                                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                                 />
                                 <Button
-                                    fullWidth variant="contained"
-                                    onClick={handleResetPassword}
-                                    disabled={resetPasswordMutation.isPending || !resetPassword.trim()}
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={handleUpdateCredentials}
+                                    disabled={updateCredentialsMutation.isPending || !loginId.trim()}
                                     startIcon={<AdminIcon />}
                                     sx={{
-                                        borderRadius: '12px', textTransform: 'none', fontWeight: 700,
-                                        bgcolor: '#1e293b', '&:hover': { bgcolor: '#0f172a' }, boxShadow: 'none',
+                                        borderRadius: '12px',
+                                        textTransform: 'none',
+                                        fontWeight: 700,
+                                        bgcolor: '#1e293b',
+                                        '&:hover': { bgcolor: '#0f172a' },
+                                        boxShadow: 'none',
                                         '&:disabled': { bgcolor: '#f1f5f9', color: '#94a3b8' },
                                     }}
                                 >
-                                    {resetPasswordMutation.isPending ? 'Resetting…' : 'Reset Password'}
+                                    {updateCredentialsMutation.isPending ? 'Updating...' : 'Save Credentials'}
                                 </Button>
                             </Stack>
                         </Box>

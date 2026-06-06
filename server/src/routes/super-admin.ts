@@ -430,15 +430,72 @@ router.post('/firms/:id/reset-password', authenticate, requireSuperAdmin, async 
         const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        // Update all ADMIN users for this firm
-        await User.updateMany(
-            { firmId: firm._id, role: 'ADMIN' },
-            { passwordHash: hashedPassword }
-        );
+        if (firm.dbType === 'personal') {
+            const tenantConn = await getTenantConnection(firm);
+            const TenantUser = getModelFromConnection(tenantConn, 'User', rawUserSchema);
+            await TenantUser.updateMany(
+                { firmId: firm._id, role: 'ADMIN' },
+                { passwordHash: hashedPassword }
+            );
+        } else {
+            // Update all ADMIN users for this firm
+            await User.updateMany(
+                { firmId: firm._id, role: 'ADMIN' },
+                { passwordHash: hashedPassword }
+            );
+        }
 
         res.json({ message: 'Firm admin password reset successfully' });
     } catch (error) {
         console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update Firm Admin Credentials (Username/Email & Password)
+router.post('/firms/:id/update-credentials', authenticate, requireSuperAdmin, async (req, res: Response) => {
+    try {
+        const { userId, newUsername, newPassword, oldUsername } = req.body;
+        if (!userId) return res.status(400).json({ message: 'User ID is required' });
+
+        const firm = await Firm.findById(req.params.id);
+        if (!firm) return res.status(404).json({ message: 'Firm not found' });
+
+        const updates: any = {};
+        if (newUsername) {
+            const trimmedUsername = newUsername.trim().toLowerCase();
+            updates.username = trimmedUsername;
+            updates.email = trimmedUsername;
+        }
+        if (newPassword) {
+            const bcrypt = await import('bcryptjs');
+            updates.passwordHash = await bcrypt.hash(newPassword, 10);
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ message: 'No updates provided' });
+        }
+
+        let updatedUser;
+        if (firm.dbType === 'personal') {
+            const tenantConn = await getTenantConnection(firm);
+            const TenantUser = getModelFromConnection(tenantConn, 'User', rawUserSchema);
+            updatedUser = await TenantUser.findByIdAndUpdate(userId, updates, { new: true });
+        } else {
+            updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+        }
+
+        if (!updatedUser) return res.status(404).json({ message: 'Admin user not found' });
+
+        // Sync the firm's main email if it matches the old username/email
+        if (newUsername && oldUsername && firm.email === oldUsername.trim().toLowerCase()) {
+            firm.email = newUsername.trim().toLowerCase();
+            await firm.save();
+        }
+
+        res.json({ message: 'Credentials updated successfully', user: { id: updatedUser._id, username: updatedUser.username } });
+    } catch (error) {
+        console.error('Update credentials error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

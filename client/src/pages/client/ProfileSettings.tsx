@@ -356,6 +356,7 @@ export const ProfileSettings: React.FC = () => {
                                                         label="Username"
                                                         variant="outlined"
                                                         value={username}
+                                                        disabled={profile?.role === 'SUPER_ADMIN'}
                                                         onChange={(e) => setUsername(e.target.value)}
                                                         InputProps={{
                                                             sx: { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.01)' },
@@ -399,6 +400,7 @@ export const ProfileSettings: React.FC = () => {
                                                         label="Phone Number"
                                                         variant="outlined"
                                                         value={phone}
+                                                        disabled={profile?.role === 'SUPER_ADMIN'}
                                                         onChange={(e) => setPhone(e.target.value)}
                                                         InputProps={{
                                                             sx: { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.01)' },

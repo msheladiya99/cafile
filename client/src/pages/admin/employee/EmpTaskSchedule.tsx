@@ -23,7 +23,8 @@ import {
     IconButton,
     Collapse,
     alpha,
-    TablePagination
+    TablePagination,
+    Checkbox
 } from '@mui/material';
 import {
     FormatListBulleted as ListIcon,
@@ -92,7 +93,9 @@ const TaskRow: React.FC<{
     clientMap: Record<string, string>;
     staffList: User[];
     refetch: () => void;
-}> = ({ task, staffMap, clientMap, staffList, refetch }) => {
+    isSelected: boolean;
+    onSelectToggle: (taskId: string) => void;
+}> = ({ task, staffMap, clientMap, staffList, refetch, isSelected, onSelectToggle }) => {
     const [open, setOpen] = useState(false);
     const status = STATUS_CONFIG[task.status] ?? { label: task.status, color: '#374151', bg: '#f3f4f6' };
     const priority = PRIORITY_CONFIG[task.priority] ?? { color: '#6b7280', dot: '#9ca3af' };
@@ -111,6 +114,15 @@ const TaskRow: React.FC<{
                 }}
                 onClick={() => setOpen(o => !o)}
             >
+                {/* Checkbox column */}
+                <TableCell sx={{ width: 48, p: 0 }} onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                        checked={isSelected}
+                        onChange={() => onSelectToggle(task._id)}
+                        size="small"
+                    />
+                </TableCell>
+
                 {/* # */}
                 <TableCell sx={{ width: 36, color: 'text.disabled', fontSize: '0.75rem' }}>
                     <IconButton size="small" sx={{ p: 0 }}>
@@ -146,41 +158,35 @@ const TaskRow: React.FC<{
                 {/* Assigned To (Select Dropdown) */}
                 <TableCell onClick={(e) => e.stopPropagation()}>
                     <Select
-                        multiple
-                        value={(task.assignedTo ?? []).map((uid: string | User) => typeof uid === 'object' ? (uid as { _id: string })._id : uid)}
+                        value={(() => {
+                            const first = task.assignedTo?.[0];
+                            if (!first) return '';
+                            return typeof first === 'object' ? (first as { _id: string })._id : first;
+                        })()}
                         onChange={async (event) => {
-                            const newAssignees = event.target.value as string[];
+                            const newAssignee = event.target.value as string;
                             try {
-                                await taskService.updateTask(task._id, { assignedTo: newAssignees });
-                                toast.success('Task assignment updated successfully');
+                                await taskService.updateTask(task._id, { assignedTo: newAssignee ? [newAssignee] : [] });
+                                toast.success('Task transferred successfully');
                                 refetch();
                             } catch (err) {
-                                console.error('Error updating task assignees:', err);
-                                toast.error('Failed to update task assignment');
+                                console.error('Error transferring task:', err);
+                                toast.error('Failed to transfer task');
                             }
                         }}
                         displayEmpty
                         renderValue={(selected) => {
-                            if (selected.length === 0) {
+                            if (!selected) {
                                 return <Typography variant="caption" sx={{ color: 'text.disabled' }}>Unassigned</Typography>;
                             }
+                            const name = staffMap[selected] ?? '—';
                             return (
-                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                    {selected.slice(0, 2).map((uId: string) => {
-                                        const name = staffMap[uId] ?? uId;
-                                        return (
-                                            <Tooltip key={uId} title={name}>
-                                                <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1' }}>
-                                                    {name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                                                </Avatar>
-                                            </Tooltip>
-                                        );
-                                    })}
-                                    {selected.length > 2 && (
-                                        <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#9ca3af' }}>
-                                            +{selected.length - 2}
+                                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                                    <Tooltip title={name}>
+                                        <Avatar sx={{ width: 26, height: 26, fontSize: '0.65rem', bgcolor: '#6366f1' }}>
+                                            {name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                                         </Avatar>
-                                    )}
+                                    </Tooltip>
                                 </Box>
                             );
                         }}
@@ -271,7 +277,7 @@ const TaskRow: React.FC<{
 
             {/* ── Expanded detail row ── */}
             <TableRow>
-                <TableCell colSpan={8} sx={{ p: 0, border: 0 }}>
+                <TableCell colSpan={9} sx={{ p: 0, border: 0 }}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <Box sx={{ bgcolor: '#f8fafc', px: 4, py: 2, borderBottom: '1px solid #e2e8f0' }}>
                             <Grid container spacing={3}>
@@ -352,6 +358,10 @@ export const EmpTaskSchedule: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
+    const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+    const [transferEmployeeId, setTransferEmployeeId] = useState<string>('');
+    const [isTransferring, setIsTransferring] = useState(false);
+
     // — Data fetches —
     const { data: clients = [], isLoading: loadingClients } = useQuery({
         queryKey: ['clients'], queryFn: adminService.getClients
@@ -424,6 +434,7 @@ export const EmpTaskSchedule: React.FC = () => {
     const handleSearch = () => {
         setApplied(true);
         setPage(0);
+        setSelectedTaskIds([]);
         refetch();
     };
 
@@ -431,6 +442,29 @@ export const EmpTaskSchedule: React.FC = () => {
         setFilterData({ clientName: '', employee: '', frequency: '', year: '', status: '', dateType: '', dateFrom: '', dateTo: '' });
         setApplied(false);
         setPage(0);
+        setSelectedTaskIds([]);
+    };
+
+    const handleBatchTransfer = async () => {
+        if (!transferEmployeeId || selectedTaskIds.length === 0) return;
+        setIsTransferring(true);
+        const loadingToast = toast.loading(`Transferring ${selectedTaskIds.length} tasks...`);
+        try {
+            await Promise.all(
+                selectedTaskIds.map(taskId => 
+                    taskService.updateTask(taskId, { assignedTo: [transferEmployeeId] })
+                )
+            );
+            toast.success(`Successfully transferred ${selectedTaskIds.length} tasks!`, { id: loadingToast });
+            setSelectedTaskIds([]);
+            setTransferEmployeeId('');
+            refetch();
+        } catch (err) {
+            console.error('Error transferring tasks:', err);
+            toast.error('Failed to transfer one or more tasks.', { id: loadingToast });
+        } finally {
+            setIsTransferring(false);
+        }
     };
 
     // Summary counts
@@ -623,6 +657,82 @@ export const EmpTaskSchedule: React.FC = () => {
                     <Chip label={`${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`} size="small" sx={{ bgcolor: '#6366f1', '&:hover': { bgcolor: '#4338ca' }, color: 'white', fontWeight: 700 }} />
                 </Box>
 
+                {selectedTaskIds.length > 0 && (
+                    <Box sx={{ 
+                        bgcolor: alpha('#6366f1', 0.08), 
+                        borderBottom: '1px solid', 
+                        borderColor: alpha('#6366f1', 0.2), 
+                        px: 3, 
+                        py: 1.5, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: 2
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton size="small" onClick={() => setSelectedTaskIds([])} sx={{ color: '#6366f1' }}>
+                                <ClearIcon fontSize="small" />
+                            </IconButton>
+                            <Typography variant="body2" fontWeight={700} sx={{ color: '#6366f1' }}>
+                                {selectedTaskIds.length} task{selectedTaskIds.length !== 1 ? 's' : ''} selected
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                Transfer to Employee:
+                            </Typography>
+                            <FormControl size="small" sx={{ minWidth: 200 }}>
+                                <Select
+                                    value={transferEmployeeId}
+                                    onChange={(e) => setTransferEmployeeId(e.target.value as string)}
+                                    displayEmpty
+                                    sx={{ 
+                                        borderRadius: '8px', 
+                                        bgcolor: '#ffffff',
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: alpha('#6366f1', 0.3)
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#6366f1'
+                                        }
+                                    }}
+                                >
+                                    <MenuItem value="" disabled>Select Employee...</MenuItem>
+                                    {staff.map((s: User) => (
+                                        <MenuItem key={s._id} value={s._id}>
+                                            {s.name || `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Button
+                                variant="contained"
+                                onClick={handleBatchTransfer}
+                                disabled={!transferEmployeeId || isTransferring}
+                                size="small"
+                                sx={{ 
+                                    textTransform: 'none', 
+                                    borderRadius: '8px', 
+                                    px: 2.5,
+                                    height: 36,
+                                    fontWeight: 700,
+                                    bgcolor: '#6366f1',
+                                    color: '#fff',
+                                    '&:hover': { bgcolor: '#4f46e5' },
+                                    boxShadow: 'none',
+                                    '&.Mui-disabled': {
+                                        bgcolor: '#e2e8f0',
+                                        color: '#94a3b8'
+                                    }
+                                }}
+                            >
+                                {isTransferring ? 'Transferring...' : 'Transfer Now'}
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+
                 {loadingTasks ? (
                     <Box sx={{ py: 6, textAlign: 'center' }}>
                         <CircularProgress size={36} sx={{ color: '#667eea' }} />
@@ -642,6 +752,20 @@ export const EmpTaskSchedule: React.FC = () => {
                             <Table size="small">
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                        <TableCell sx={{ width: 48, p: 0 }} align="center">
+                                            <Checkbox
+                                                indeterminate={selectedTaskIds.length > 0 && selectedTaskIds.length < filteredTasks.length}
+                                                checked={filteredTasks.length > 0 && selectedTaskIds.length === filteredTasks.length}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedTaskIds(filteredTasks.map(t => t._id));
+                                                    } else {
+                                                        setSelectedTaskIds([]);
+                                                    }
+                                                }}
+                                                size="small"
+                                            />
+                                        </TableCell>
                                         <TableCell sx={{ width: 36 }} />
                                         <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Task</TableCell>
                                         <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>Client</TableCell>
@@ -654,7 +778,20 @@ export const EmpTaskSchedule: React.FC = () => {
                                 </TableHead>
                                 <TableBody>
                                     {filteredTasks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((task: Task) => (
-                                         <TaskRow key={task._id} task={task} staffMap={staffMap} clientMap={clientMap} staffList={staff} refetch={refetch} />
+                                         <TaskRow 
+                                             key={task._id} 
+                                             task={task} 
+                                             staffMap={staffMap} 
+                                             clientMap={clientMap} 
+                                             staffList={staff} 
+                                             refetch={refetch} 
+                                             isSelected={selectedTaskIds.includes(task._id)}
+                                             onSelectToggle={(tId) => {
+                                                 setSelectedTaskIds(prev => 
+                                                     prev.includes(tId) ? prev.filter(id => id !== tId) : [...prev, tId]
+                                                 );
+                                             }}
+                                         />
                                      ))}
                                 </TableBody>
                             </Table>
