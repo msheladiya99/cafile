@@ -16,6 +16,22 @@ export const connectDB = async (): Promise<void> => {
         });
 
         console.log('✅ MongoDB connected successfully');
+
+        // Rename 'Super Admin' to 'Super Admin' in the users collection
+        try {
+            const db = mongoose.connection.db;
+            if (db) {
+                const result = await db.collection('users').updateMany(
+                    { role: 'SUPER_ADMIN', name: 'Super Admin' },
+                    { $set: { name: 'Super Admin' } }
+                );
+                if (result.modifiedCount > 0) {
+                    console.log(`[Migration] Updated ${result.modifiedCount} superadmin user name(s) to 'Super Admin'`);
+                }
+            }
+        } catch (err) {
+            console.error('Error running name migration:', err);
+        }
     } catch (error) {
         console.error('❌ MongoDB connection error:', error);
         console.error('TIP: Check if your current IP Address is whitelisted in MongoDB Atlas.');
