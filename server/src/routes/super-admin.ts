@@ -97,7 +97,7 @@ router.post('/send-otp', async (req, res: Response) => {
 
         console.log(`🔑 [SuperAdmin OTP] Generated OTP: ${otpCode} for ${admin.email}`);
 
-        // Send OTP via Email
+        // Send OTP via Email in background
         const { sendEmail } = await import('../utils/email');
         const emailSubject = 'MyCAFile Super Admin - Verification Code';
         const emailHtml = `
@@ -115,19 +115,16 @@ router.post('/send-otp', async (req, res: Response) => {
             </div>
         `;
         
-        // Run send operations
-        const sendPromises: Promise<any>[] = [];
-        
-        sendPromises.push(sendEmail(admin.email, emailSubject, emailHtml));
+        // Run send operations in background to prevent hanging the response
+        sendEmail(admin.email, emailSubject, emailHtml).catch(err => console.error('Background email OTP error:', err));
 
-        // Send OTP via SMS if mobile is configured
         if (admin.mobile) {
-            const { sendSms } = await import('../services/notification.service');
-            const smsMessage = `Your MyCAFile Super Admin OTP is ${otpCode}. Valid for 10 minutes.`;
-            sendPromises.push(sendSms(admin.mobile, smsMessage));
+            const mobileNumber = admin.mobile;
+            import('../services/notification.service').then(({ sendSms }) => {
+                const smsMessage = `Your MyCAFile Super Admin OTP is ${otpCode}. Valid for 10 minutes.`;
+                sendSms(mobileNumber, smsMessage).catch(err => console.error('Background SMS OTP error:', err));
+            }).catch(err => console.error('Failed to import notification service:', err));
         }
-
-        await Promise.all(sendPromises);
 
         res.json({ message: 'Verification OTP sent to registered email and mobile' });
     } catch (error) {
