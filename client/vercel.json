@@ -25,7 +25,15 @@
     ],
     "rewrites": [
         {
+            "source": "/admin",
+            "destination": "/index.html"
+        },
+        {
             "source": "/admin/(.*)",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/super-admin",
             "destination": "/index.html"
         },
         {
@@ -33,11 +41,23 @@
             "destination": "/index.html"
         },
         {
+            "source": "/superadmin",
+            "destination": "/index.html"
+        },
+        {
             "source": "/superadmin/(.*)",
             "destination": "/index.html"
         },
         {
+            "source": "/super_admin",
+            "destination": "/index.html"
+        },
+        {
             "source": "/super_admin/(.*)",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/client",
             "destination": "/index.html"
         },
         {
